@@ -31,7 +31,7 @@ Typography: system sans stack (`Inter` if bundled later, otherwise platform UI s
 
 Spacing: 4, 8, 12, 16, 24, 32, 48 px. Radius: 8 fields/buttons, 12 surfaces, 16 large panels, pill only for badges/chips. Border: 1px. Shadow: dialog only, 0 20px 70px rgba(23,43,40,.18). Touch controls minimum 48px height; web compact table actions at least 40px. Use 48px targets on coarse pointers.
 
-Icons: use a consistent outlined family at 20px for navigation and 16px beside labels. Web uses Lucide (`LayoutGrid`, `Utensils`, `Package`, `ChartColumn`, `Printer`, `Search`, `Plus`, `Minus`, `Check`, `X`). Flutter uses equivalent outlined Material icons with the same semantic labels; don't mix filled and outlined styles on one screen. Keep visible navigation text and accessible names for icon-only actions. Prototype navigation symbols are lightweight placeholders; production icons should come from these maintained libraries, not hand-drawn paths.
+Icons: use a consistent outlined family at 20px for navigation and 16px beside labels. Web uses Lucide (`LayoutGrid`, `Utensils`, `Package`, `ChartColumn`, `Printer`, `Search`, `Plus`, `Minus`, `Check`, `X`). Flutter uses equivalent outlined Material icons with the same semantic labels; don't mix filled and outlined styles on one screen. Keep visible navigation text and accessible names for icon-only actions. The refined prototype embeds official Lucide SVGs locally, including product category illustrations; attribution is in ICONS-LICENSE.txt. No runtime icon/font CDN is required.
 
 ## Layout and navigation
 
@@ -82,3 +82,17 @@ Contrast target is WCAG AA (4.5:1 normal text, 3:1 large text); focus and import
 Owner should assess palette, density, typography, desktop navigation, phone stacking, product tiles and checkout clarity. #2 remains open/in QA pending that review; visual style is proposed, not approved. Backend work under #3/#4/#6/#7 can proceed from #1. Don't implement extra features from the prototype control panel.
 
 Implementation traceability: #5 web shell, #6 menu editor, #8 recipe UI, #11/#12 Flutter cashier/checkout, #13 stock, #14 reports, #15/#16 printer setup/queue. Implement these using tokens, not a direct copy of the prototype's plain-JS rendering. See [HANDOFF.md](HANDOFF.md) for the next steps and evidence.
+
+## Refinement 0.2 — UI/UX Pro Max
+
+This section supersedes the initial sizing/navigation rules above where they differ. Retain the warm neutral/deep teal palette; use the skill's Minimalism & Swiss Style guidance for an operational tool. Do not apply its marketing hero/CTA pattern or restaurant display-serif suggestion to checkout screens. The point-of-sale query matched kiosk/touchscreen guidance; the dashboard typography query reinforced readable sans-serif and clear numeric hierarchy. These are recommendations, not an approved owner style decision.
+
+- Type uses rem units with a 16px root, 15–16px working text, 32px desktop page headings, 28px phone page headings, and 12–13px secondary copy. Essential mobile item names/prices stay at 15px or larger. Explicit 200% review text size reflows into a single-column product list; it does not zoom a fixed canvas.
+- Controls use `controlBorder: #788B81` for field boundaries, keeping the lighter border for decorative separators. Financial values use tabular numerals. Stock status remains textual, including a visible out-of-stock label.
+- Phone navigation has five labeled icon destinations in a bottom bar with safe-area clearance. A separate order-total dock provides a Review order action. The cashier reserves bottom padding for both bars, modal dialogs hide the order dock, and 200% text removes the fixed bars in favor of normal document flow. Tablet/desktop retain their workspace navigation.
+- A native Preview controls disclosure contains screen-state, network and text-size simulators. They are hidden by default to keep the POS workspace calm. They remain review-only features.
+- Buttons provide color/border feedback within 120ms without moving layout. Reduced-motion disables transitions. Native focus indicators remain visible. Quantity/category/product actions retain keyboard focus after re-render, while page navigation moves focus to the main heading region.
+- Navigation writes a page hash and supports browser Back without losing the demo cart. Each navigation icon is decorative beside its visible label; remove/quantity/close controls have item-specific accessible names.
+- No new business features, payment providers or backend behavior are implied by these refinements. Native Flutter SafeArea/LayoutBuilder/Semantics and TalkBack verification remain implementation work under #11.
+
+See [UX_REFINEMENT.md](UX_REFINEMENT.md) for search provenance, implementation notes and verification evidence.
