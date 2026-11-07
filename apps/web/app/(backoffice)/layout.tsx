@@ -27,7 +27,7 @@ export default function BackOfficeLayout({ children }: Readonly<{ children: Reac
             <UserMenu />
           </div>
         </aside>
-        <main className="flex-1 px-4 py-6 sm:px-8 lg:px-10">{children}</main>
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 lg:px-10">{children}</main>
       </div>
     </AuthGate>
   );

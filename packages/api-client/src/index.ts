@@ -37,6 +37,11 @@ export interface ApiClient {
   signOut(): Promise<void>;
   getMe(): Promise<ApiSchemas['User']>;
   getOutlet(outletId: string): Promise<ApiSchemas['Outlet']>;
+  getSettings(outletId: string): Promise<ApiSchemas['Settings']>;
+  updateSettings(
+    outletId: string,
+    settings: ApiSchemas['SettingsUpdate'],
+  ): Promise<ApiSchemas['Settings']>;
 }
 
 function parseErrorBody(text: string): unknown {
@@ -105,5 +110,12 @@ export function createApiClient({
     getMe: () => request<ApiSchemas['User']>('/v1/auth/me'),
     getOutlet: (outletId) =>
       request<ApiSchemas['Outlet']>(`/v1/outlets/${encodeURIComponent(outletId)}`),
+    getSettings: (outletId) =>
+      request<ApiSchemas['Settings']>(`/v1/outlets/${encodeURIComponent(outletId)}/settings`),
+    updateSettings: (outletId, settings) =>
+      request<ApiSchemas['Settings']>(`/v1/outlets/${encodeURIComponent(outletId)}/settings`, {
+        method: 'PATCH',
+        body: JSON.stringify(settings),
+      }),
   };
 }

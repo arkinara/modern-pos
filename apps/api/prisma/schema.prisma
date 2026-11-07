@@ -40,6 +40,8 @@ model Outlet {
   currency       String   @default("IDR")
   currencyExponent Int    @default(0)
   receiptAddress String   @default("")
+  receiptHeader  String   @default("")
+  receiptFooter  String   @default("")
   taxBps         Int      @default(0)
   serviceBps     Int      @default(0)
   pricingMode    String   @default("EXCLUSIVE")

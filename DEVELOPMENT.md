@@ -225,6 +225,24 @@ Auth endpoints: `POST /v1/auth/mobile/login`, `POST /v1/auth/mobile/refresh`,
 `POST /v1/auth/web/login`, `POST /v1/auth/web/refresh`, `POST /v1/auth/logout`,
 `GET /v1/auth/me`.
 
+## Business settings and back-office shell (#5)
+
+Implementation lives in `apps/api/src/settings` and the web back-office route group.
+
+- `GET /v1/outlets/:outletId/settings` reads the business name plus outlet receipt identity,
+  currency, timezone and tax/service basis points under the authenticated outlet scope.
+- `PATCH /v1/outlets/:outletId/settings` is owner-only. It validates the payload, checks the
+  supplied `version`, updates the outlet and business name in one transaction, and returns the
+  authoritative record. A stale version returns `409 VERSION_CONFLICT`.
+- The server validates timezones as IANA identifiers and owns the minor-unit exponent for the
+  selected currency. The web form never calculates sale totals or tax amounts.
+- Migration `20261107190000_business_settings` adds receipt header/footer text to outlets. The
+  seed sets synthetic defaults and remains re-runnable.
+- Web navigation is Menu, Stock, Sales, Reports, Printers and Settings. Sales/Reports are
+  read-only scaffolds for mobile-originated records; catalog, stock and reporting depth remain
+  deferred to #6, #7 and #14. Printer discovery and physical printing remain deferred to
+  #15/#16. Unknown URLs show a not-found page that links back to Menu.
+
 Known M04 limits: no registration/self-signup, OAuth/SSO, MFA, password-reset email, or
 multi-outlet UI. There is no public password or role mutation endpoint; when administrative
 password/role changes are added, they must call `AuthService.revokeAllSessionsForUser` (or
