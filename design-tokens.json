@@ -1,59 +1,63 @@
 {
   "name": "Modern POS",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "status": "proposed-owner-review",
   "color": {
-    "canvas": "#F5F6F3",
+    "canvas": "#F5F3EF",
     "surface": "#FFFFFF",
-    "surfaceMuted": "#EEF1EC",
-    "text": "#172B28",
-    "textMuted": "#536660",
-    "border": "#D8E0DA",
-    "accent": "#145C4F",
-    "accentHover": "#0E493F",
-    "accentSoft": "#E3F0E8",
-    "danger": "#A63232",
-    "dangerSoft": "#FBEDEC",
-    "warning": "#805711",
-    "warningSoft": "#FFF3D6",
-    "focus": "#145C4F",
-    "controlBorder": "#788B81"
+    "surfaceMuted": "#ECE9E3",
+    "text": "#242925",
+    "textMuted": "#64685F",
+    "border": "#DDDCD4",
+    "accent": "#A74327",
+    "accentHover": "#87341D",
+    "accentSoft": "#F7E8DE",
+    "danger": "#A12D32",
+    "dangerSoft": "#FAE9E8",
+    "warning": "#805510",
+    "warningSoft": "#FBF0D9",
+    "focus": "#A74327",
+    "controlBorder": "#8A8C80"
   },
   "spacing": [
     4,
     8,
     12,
     16,
+    20,
     24,
+    28,
     32,
+    36,
+    40,
     48
   ],
   "radius": {
-    "control": 8,
-    "surface": 12,
+    "control": 10,
+    "surface": 14,
     "panel": 16
   },
   "font": {
     "family": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
     "size": {
       "caption": 12,
-      "body": 16,
+      "body": 15,
       "input": 16,
-      "section": 20,
-      "page": 32,
-      "total": 36
+      "section": 18,
+      "page": 38,
+      "total": 24
     },
     "lineHeight": 1.5
   },
   "control": {
     "touchMin": 48,
-    "compactMin": 40,
+    "compactMin": 48,
     "focusWidth": 3,
     "focusOffset": 3
   },
   "layout": {
-    "sidebar": 224,
-    "cart": 360,
+    "sidebar": 218,
+    "cart": 346,
     "breakpoint": {
       "phone": 720,
       "expanded": 1100
@@ -61,8 +65,8 @@
     "mobileNavigation": "bottom-safe-area"
   },
   "motion": {
-    "fast": 120,
-    "standard": 180,
+    "fast": 160,
+    "standard": 200,
     "reducedMotion": "none"
   },
   "icons": {
@@ -70,5 +74,355 @@
     "size": 20,
     "stroke": 1.75,
     "license": "ICONS-LICENSE.txt"
-  }
+  },
+  "description": "Counter collection handoff tokens. Brace references are aliases; resolve before platform export. Not loaded by prototype.html.",
+  "primitive": {
+    "color": {
+      "canvas": {
+        "type": "color",
+        "value": "#F5F3EF"
+      },
+      "surface": {
+        "type": "color",
+        "value": "#FFFFFF"
+      },
+      "surface-muted": {
+        "type": "color",
+        "value": "#ECE9E3"
+      },
+      "surface-tint": {
+        "type": "color",
+        "value": "#FAF9F6"
+      },
+      "text": {
+        "type": "color",
+        "value": "#242925"
+      },
+      "muted": {
+        "type": "color",
+        "value": "#64685F"
+      },
+      "border": {
+        "type": "color",
+        "value": "#DDDCD4"
+      },
+      "control-border": {
+        "type": "color",
+        "value": "#8A8C80"
+      },
+      "accent": {
+        "type": "color",
+        "value": "#A74327"
+      },
+      "accent-hover": {
+        "type": "color",
+        "value": "#87341D"
+      },
+      "soft": {
+        "type": "color",
+        "value": "#F7E8DE"
+      },
+      "danger": {
+        "type": "color",
+        "value": "#A12D32"
+      },
+      "danger-soft": {
+        "type": "color",
+        "value": "#FAE9E8"
+      },
+      "warning": {
+        "type": "color",
+        "value": "#805510"
+      },
+      "warning-soft": {
+        "type": "color",
+        "value": "#FBF0D9"
+      },
+      "ink": {
+        "type": "color",
+        "value": "#232E29"
+      },
+      "ink-muted": {
+        "type": "color",
+        "value": "#B7C1B9"
+      },
+      "success": {
+        "type": "color",
+        "value": "#386044"
+      },
+      "success-soft": {
+        "type": "color",
+        "value": "#EAF0E7"
+      },
+      "nav-selected": {
+        "type": "color",
+        "value": "#F4D9B9"
+      },
+      "nav-selected-text": {
+        "type": "color",
+        "value": "#302B22"
+      },
+      "nav-text": {
+        "type": "color",
+        "value": "#C4CEC6"
+      }
+    },
+    "space": {
+      "4": {
+        "type": "dimension",
+        "value": "4px"
+      },
+      "8": {
+        "type": "dimension",
+        "value": "8px"
+      },
+      "12": {
+        "type": "dimension",
+        "value": "12px"
+      },
+      "16": {
+        "type": "dimension",
+        "value": "16px"
+      },
+      "20": {
+        "type": "dimension",
+        "value": "20px"
+      },
+      "24": {
+        "type": "dimension",
+        "value": "24px"
+      },
+      "28": {
+        "type": "dimension",
+        "value": "28px"
+      },
+      "32": {
+        "type": "dimension",
+        "value": "32px"
+      },
+      "36": {
+        "type": "dimension",
+        "value": "36px"
+      },
+      "40": {
+        "type": "dimension",
+        "value": "40px"
+      }
+    },
+    "radius": {
+      "5": {
+        "type": "dimension",
+        "value": "5px"
+      },
+      "9": {
+        "type": "dimension",
+        "value": "9px"
+      },
+      "10": {
+        "type": "dimension",
+        "value": "10px"
+      },
+      "12": {
+        "type": "dimension",
+        "value": "12px"
+      },
+      "14": {
+        "type": "dimension",
+        "value": "14px"
+      },
+      "16": {
+        "type": "dimension",
+        "value": "16px"
+      },
+      "18": {
+        "type": "dimension",
+        "value": "18px"
+      }
+    },
+    "duration": {
+      "fast": {
+        "type": "duration",
+        "value": "160ms"
+      },
+      "standard": {
+        "type": "duration",
+        "value": "200ms"
+      }
+    }
+  },
+  "semantic": {
+    "color": {
+      "canvas": {
+        "type": "color",
+        "value": "{primitive.color.canvas}"
+      },
+      "surface": {
+        "type": "color",
+        "value": "{primitive.color.surface}"
+      },
+      "surface-muted": {
+        "type": "color",
+        "value": "{primitive.color.surface-muted}"
+      },
+      "surface-tint": {
+        "type": "color",
+        "value": "{primitive.color.surface-tint}"
+      },
+      "text": {
+        "type": "color",
+        "value": "{primitive.color.text}"
+      },
+      "muted": {
+        "type": "color",
+        "value": "{primitive.color.muted}"
+      },
+      "border": {
+        "type": "color",
+        "value": "{primitive.color.border}"
+      },
+      "control-border": {
+        "type": "color",
+        "value": "{primitive.color.control-border}"
+      },
+      "accent": {
+        "type": "color",
+        "value": "{primitive.color.accent}"
+      },
+      "accent-hover": {
+        "type": "color",
+        "value": "{primitive.color.accent-hover}"
+      },
+      "soft": {
+        "type": "color",
+        "value": "{primitive.color.soft}"
+      },
+      "danger": {
+        "type": "color",
+        "value": "{primitive.color.danger}"
+      },
+      "danger-soft": {
+        "type": "color",
+        "value": "{primitive.color.danger-soft}"
+      },
+      "warning": {
+        "type": "color",
+        "value": "{primitive.color.warning}"
+      },
+      "warning-soft": {
+        "type": "color",
+        "value": "{primitive.color.warning-soft}"
+      },
+      "ink": {
+        "type": "color",
+        "value": "{primitive.color.ink}"
+      },
+      "ink-muted": {
+        "type": "color",
+        "value": "{primitive.color.ink-muted}"
+      },
+      "success": {
+        "type": "color",
+        "value": "{primitive.color.success}"
+      },
+      "success-soft": {
+        "type": "color",
+        "value": "{primitive.color.success-soft}"
+      },
+      "nav-selected": {
+        "type": "color",
+        "value": "{primitive.color.nav-selected}"
+      },
+      "nav-selected-text": {
+        "type": "color",
+        "value": "{primitive.color.nav-selected-text}"
+      },
+      "nav-text": {
+        "type": "color",
+        "value": "{primitive.color.nav-text}"
+      }
+    },
+    "motion": {
+      "fast": {
+        "type": "duration",
+        "value": "{primitive.duration.fast}"
+      },
+      "standard": {
+        "type": "duration",
+        "value": "{primitive.duration.standard}"
+      }
+    }
+  },
+  "component": {
+    "button": {
+      "primary-background": {
+        "type": "color",
+        "value": "{semantic.color.accent}"
+      },
+      "primary-hover": {
+        "type": "color",
+        "value": "{semantic.color.accent-hover}"
+      },
+      "primary-text": {
+        "type": "color",
+        "value": "{semantic.color.surface}"
+      },
+      "radius": {
+        "type": "dimension",
+        "value": "{primitive.radius.10}"
+      }
+    },
+    "table-action": {
+      "min-height": {
+        "type": "dimension",
+        "value": "48px"
+      },
+      "min-width": {
+        "type": "dimension",
+        "value": "5.5rem"
+      },
+      "label-wrap": {
+        "type": "string",
+        "value": "nowrap"
+      }
+    },
+    "panel": {
+      "background": {
+        "type": "color",
+        "value": "{semantic.color.surface}"
+      },
+      "border": {
+        "type": "color",
+        "value": "{semantic.color.border}"
+      },
+      "radius": {
+        "type": "dimension",
+        "value": "{primitive.radius.14}"
+      }
+    },
+    "input": {
+      "border": {
+        "type": "color",
+        "value": "{semantic.color.control-border}"
+      },
+      "min-height": {
+        "type": "dimension",
+        "value": "48px"
+      }
+    },
+    "focus": {
+      "color": {
+        "type": "color",
+        "value": "{semantic.color.accent}"
+      },
+      "width": {
+        "type": "dimension",
+        "value": "3px"
+      },
+      "offset": {
+        "type": "dimension",
+        "value": "3px"
+      }
+    }
+  },
+  "compatibility": "Top-level color and sizing fields retain the existing foundation validator contract; primitive, semantic and component groups provide the new handoff structure."
 }
