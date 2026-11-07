@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 import '../../theme/app_theme.dart';
+import '../auth/auth_controller.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -16,6 +17,14 @@ class DashboardScreen extends ConsumerWidget {
         backgroundColor: PosColors.ink,
         foregroundColor: PosColors.surface,
         title: const Text('Modern POS'),
+        actions: [
+          IconButton(
+            tooltip: 'Sign out',
+            onPressed: () =>
+                ref.read(authControllerProvider.notifier).signOut(),
+            icon: const Icon(Icons.logout),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),

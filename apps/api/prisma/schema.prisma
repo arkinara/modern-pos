@@ -1,5 +1,5 @@
-// Minimum plumbing schema for ticket #3.
-// Domain models for catalog, stock, sales, reports and printing land in #6-#10.
+// Identity and authorization schema for ticket #4.
+// Catalog, stock, sales, reports and printing domain models land in #6-#10.
 
 generator client {
   provider = "prisma-client-js"
@@ -15,6 +15,11 @@ enum Role {
   CASHIER
 }
 
+enum SessionPlatform {
+  WEB
+  MOBILE
+}
+
 model Business {
   id        String   @id @default(uuid()) @db.Uuid
   name      String
@@ -28,12 +33,19 @@ model Business {
 }
 
 model Outlet {
-  id         String   @id @default(uuid()) @db.Uuid
-  businessId String   @db.Uuid
-  name       String
-  timezone   String   @default("Asia/Jakarta")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String   @id @default(uuid()) @db.Uuid
+  businessId     String   @db.Uuid
+  name           String
+  timezone       String   @default("Asia/Jakarta")
+  currency       String   @default("IDR")
+  currencyExponent Int    @default(0)
+  receiptAddress String   @default("")
+  taxBps         Int      @default(0)
+  serviceBps     Int      @default(0)
+  pricingMode    String   @default("EXCLUSIVE")
+  version        Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   users    User[]
@@ -43,18 +55,45 @@ model Outlet {
 }
 
 model User {
-  id         String   @id @default(uuid()) @db.Uuid
-  businessId String   @db.Uuid
-  outletId   String?  @db.Uuid
-  email      String
-  name       String
-  role       Role     @default(CASHIER)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String   @id @default(uuid()) @db.Uuid
+  businessId   String   @db.Uuid
+  outletId     String?  @db.Uuid
+  email        String   @unique
+  name         String
+  passwordHash String   @default("")
+  role         Role     @default(CASHIER)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  outlet   Outlet?  @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet?   @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  sessions Session[]
 
-  @@unique([businessId, email])
   @@map("users")
+}
+
+// Opaque refresh tokens are stored only as SHA-256 hashes. Rotation replaces a
+// session row with a new row in the same family; replaying a used token revokes
+// the whole family.
+model Session {
+  id           String          @id @default(uuid()) @db.Uuid
+  userId       String          @db.Uuid
+  familyId     String          @db.Uuid
+  tokenHash    String          @unique
+  csrfHash     String?
+  platform     SessionPlatform
+  deviceId     String?         @db.Uuid
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?         @db.Uuid
+  createdAt    DateTime        @default(now())
+  lastUsedAt   DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, familyId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("sessions")
 }

@@ -49,7 +49,7 @@ export interface paths {
         put?: never;
         /**
          * Sign in web owner session
-         * @description Sets HttpOnly Secure SameSite=Lax refresh cookie; access token is held in memory. Same-origin/CSRF protections apply.
+         * @description Sets HttpOnly Secure SameSite=Lax refresh cookie pos_refresh; access token is held in memory. Also sets a readable pos_csrf cookie used as the double-submit value for POST /auth/web/refresh. Same-origin/CSRF protections apply.
          */
         post: operations["auth_webLogin"];
         delete?: never;
@@ -1385,6 +1385,8 @@ export interface operations {
             /** @description Success */
             200: {
                 headers: {
+                    /** @description Rotated refresh and CSRF cookies. The refresh cookie is HttpOnly. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1477,6 +1479,8 @@ export interface operations {
             /** @description Success; no response body. */
             204: {
                 headers: {
+                    /** @description Clears the refresh and CSRF cookies. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content?: never;
