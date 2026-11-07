@@ -6,7 +6,8 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import type { PrismaService } from '../prisma/prisma.service';
 import { SettingsController } from './settings.controller';
 import type { SettingsUpdateDto } from './dto/settings-update.dto';
-import { currencyExponentFor, isValidTimeZone, SettingsService } from './settings.service';
+import { currencyExponentFor, SettingsService } from './settings.service';
+import { isValidTimeZone } from '../common/timezone';
 import { ROLES_KEY } from '../common/decorators/roles.decorator';
 
 const BUSINESS_ID = '00000000-0000-4000-8000-000000000001';

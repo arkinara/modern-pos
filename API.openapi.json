@@ -5851,7 +5851,8 @@
             "maxLength": 200
           },
           "receiptAddress": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 1000
           },
           "taxBps": {
             "type": "integer",

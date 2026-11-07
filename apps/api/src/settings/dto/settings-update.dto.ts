@@ -1,8 +1,6 @@
 import { Transform } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
-
-const trim = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? value.trim() : value;
+import { trim } from '../../common/transforms';
 
 export class SettingsUpdateDto {
   @Transform(trim)

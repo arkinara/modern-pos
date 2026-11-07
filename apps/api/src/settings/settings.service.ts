@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { apiError } from '../common/api-error';
+import { isValidTimeZone, TIMEZONE_VALIDATION_MESSAGE } from '../common/timezone';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsUpdateDto } from './dto/settings-update.dto';
 
@@ -49,15 +50,6 @@ export function currencyExponentFor(currency: string): number {
   return CURRENCY_EXPONENTS[currency] ?? 2;
 }
 
-export function isValidTimeZone(timeZone: string): boolean {
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone }).format();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 @Injectable()
 export class SettingsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -82,7 +74,7 @@ export class SettingsService {
   ): Promise<SettingsResponse> {
     if (!isValidTimeZone(dto.timezone)) {
       throw apiError(400, 'VALIDATION_ERROR', 'Request validation failed', {
-        details: { issues: ['timezone must be a valid IANA time zone'] },
+        details: { issues: [TIMEZONE_VALIDATION_MESSAGE] },
       });
     }
 
