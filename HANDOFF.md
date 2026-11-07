@@ -54,3 +54,7 @@ Browser-verified on 7 November 2026 against the GitHub Pages demo:
 Review URL: [Open the interactive prototype](https://arkinara.github.io/modern-pos/prototype.html). GitHub Pages serves the static public repository from main; changes to the prototype publish through its Pages deployment. There are no live business services behind this site.
 
 Still required: owner visual approval (#2), native Flutter behavior/large text verification (#11), full accessibility audit, generated-client/OpenAPI validation in CI (#3), and every production verification listed in #18. The final touch-target refinement is included in the follow-up main commit.
+
+## UI/UX Pro Max refinement 0.2
+
+The live prototype and design tokens now include consistent locally embedded Lucide icons, larger rem-based typography, a less cluttered review header, mobile bottom navigation/order access, keyboard focus retention, browser history and reduced-motion rules. Read [UX_REFINEMENT.md](UX_REFINEMENT.md) for applied skill recommendations and bounded verification evidence. The refinement preserves the existing palette, architecture, demo business rules and pending owner approval. Use the refined [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) when picking up #5/#11 after that approval.

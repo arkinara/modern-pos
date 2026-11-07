@@ -25,10 +25,11 @@
     "danger/dangerSoft: 5.90:1",
     "warning/warningSoft: 5.79:1"
   ],
+  "controlBoundaryContrast": "3.62:1",
   "errors": [],
   "limitations": [
     "This structural contract check is not a complete OpenAPI meta-schema validator.",
     "No backend, Flutter application, database or real printer is implemented by these deliverables.",
-    "Browser interaction and responsive checks are recorded separately in HANDOFF.md."
+    "Browser interaction and responsive checks are recorded separately in HANDOFF.md and UX_REFINEMENT.md."
   ]
 }

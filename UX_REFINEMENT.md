@@ -27,7 +27,19 @@ The new dark-mode requirement is deliberately not claimed: this review candidate
 
 ## Verification
 
-Structural/script and contrast checks run through `node verify-foundation.cjs`. Browser checks and final evidence are recorded after publishing the refinement to the existing GitHub Pages review URL. The initial architecture tests are not rerun or marked as implemented by this UI change.
+Structural/script and contrast checks run through `node verify-foundation.cjs`. Seven core text pairs pass 4.5:1; input/control borders measure 3.62:1 against white. No API/backend behavior changed, and no backend concurrency test is claimed by this UI pass.
+
+Browser verification on the deployed refinement:
+
+- All five screens at 320×812, 375×812, 812×375 landscape, 1024×768 and 1440×1000: no document-level horizontal overflow (25 screen/viewport checks).
+- Phone cashier at 200% text: single-column product grid, normal-flow navigation and no horizontal overflow. Native Flutter Dynamic Type/TalkBack remain untested implementation work.
+- Increase Flat white quantity: keyboard focus remains on the increase control after rendering.
+- Cashier → Menu → Stock → browser Back returns to Menu and preserves the in-memory cart.
+- Sale with 2 Flat whites and 1 Almond croissant totals Rp80,000; Rp100,000 cash yields Rp20,000 change; Reports shows the completed amount.
+- Phone Review order action focuses the current order and provides an alternative to scrolling through the product list.
+- Desktop and phone layouts visually inspected. Final small refinements fix heading levels, singular item labels, large-text logo clearance and disclosure focus dismissal.
+
+Reduced-motion behavior is specified by the CSS media query (no spatial animation; transitions disabled when requested). Runtime OS-level preference switching, native screen readers, a full accessibility audit and dark-mode design are outside this static review pass. The review is explicitly light-only.
 
 ## Sources
 
