@@ -1,0 +1,507 @@
+[
+  {
+    "id": "M01",
+    "phase": 1,
+    "area": "Foundation",
+    "title": "Define architecture, domain model, and API contracts",
+    "priority": "P0",
+    "depends": [],
+    "scope": "Document and validate the selected Flutter/Dart Android app, Next.js/TypeScript web back office, NestJS REST/OpenAPI modular backend, and PostgreSQL/Prisma database. Record architecture decisions before scaffolding.",
+    "acceptance": [
+      "Model business, outlet, user, menu, variant, stock item, recipe, order, sale, payment record, stock movement, and print job.",
+      "Define versioned API contracts, money in integer minor units, decimal quantities, outlet timezone, and sale state transitions.",
+      "Document online-only MVP boundary, offline roadmap, deployment approach, and printer integration risks.",
+      "Record the selected stack in TECH_STACK.md and define Flutter UI/repository boundaries, shared OpenAPI contracts, and authoritative backend business rules."
+    ]
+  },
+  {
+    "id": "M02",
+    "phase": 1,
+    "area": "Design",
+    "title": "Create minimalist design system and core flow prototypes",
+    "priority": "P0",
+    "depends": [
+      "M01"
+    ],
+    "scope": "Establish a slick, modern visual foundation shared across web management and Android cashier.",
+    "acceptance": [
+      "Define neutral surfaces, one accent color, typography, spacing, icons, and reusable component states.",
+      "Prototype menu editing, stock adjustment, cashier cart, checkout, reports, and printer setup.",
+      "Provide accessible contrast, keyboard support on web, large touch targets, loading/empty/error states, and compact/expanded layouts."
+    ]
+  },
+  {
+    "id": "M03",
+    "phase": 1,
+    "area": "Foundation",
+    "title": "Scaffold Next.js web, Flutter Android app, NestJS API, and PostgreSQL",
+    "priority": "P0",
+    "depends": [
+      "M01"
+    ],
+    "scope": "Create the selected stack with pnpm workspaces for TypeScript apps, Flutter tooling for mobile, Prisma migrations, local Docker Compose, and synthetic demo data.",
+    "acceptance": [
+      "Web, Android, and API run using documented commands with validated environment examples.",
+      "Database migrations and a repeatable synthetic seed are included; no production credentials or data are committed.",
+      "CI builds apps and checks formatting, types, and critical domain tests.",
+      "Pin compatible stable dependencies; CI runs Next.js/NestJS checks and Flutter analyze/test/build. Generate or validate TypeScript and Dart contracts from OpenAPI."
+    ]
+  },
+  {
+    "id": "M04",
+    "phase": 1,
+    "area": "Security",
+    "title": "Implement authentication, owner/cashier roles, and outlet isolation",
+    "priority": "P0",
+    "depends": [
+      "M03"
+    ],
+    "scope": "Provide minimum secure access for owner back office and cashier mobile app.",
+    "acceptance": [
+      "Users can sign in and out; sessions expire and revoked access is rejected.",
+      "Backend authorizes every request and isolates business/outlet records.",
+      "Cashiers cannot edit stock, prices, permissions, or reports beyond their granted access; authentication is rate limited."
+    ]
+  },
+  {
+    "id": "M05",
+    "phase": 1,
+    "area": "Web",
+    "title": "Build responsive back-office shell and business settings",
+    "priority": "P1",
+    "depends": [
+      "M02",
+      "M04"
+    ],
+    "scope": "Implement navigation, account controls, and a single-outlet MVP configuration with extension points for more outlets.",
+    "acceptance": [
+      "Owner can navigate Menu, Stock, Sales, Reports, and Printers with clear selected states.",
+      "Business name, receipt identity, currency, timezone, and configured tax/service rules are editable with validation.",
+      "Pages work on desktop and smaller screens; failed requests offer safe retry."
+    ]
+  },
+  {
+    "id": "M06",
+    "phase": 1,
+    "area": "Menu",
+    "title": "Implement menu categories, products, variants, and availability",
+    "priority": "P0",
+    "depends": [
+      "M03",
+      "M04"
+    ],
+    "scope": "Create shared catalog APIs and owner-facing menu management.",
+    "acceptance": [
+      "Owner can create, edit, archive, search, and categorize products with prices and variants.",
+      "Archived products remain readable on historical sales but cannot be newly sold.",
+      "Every purchasable variant has a stable ID and explicit stock policy; changes appear after Android catalog refresh."
+    ]
+  },
+  {
+    "id": "M07",
+    "phase": 1,
+    "area": "Stock",
+    "title": "Implement stock items, units, opening balances, and stock ledger",
+    "priority": "P0",
+    "depends": [
+      "M03",
+      "M04"
+    ],
+    "scope": "Track inventory using auditable movements rather than directly overwriting balances.",
+    "acceptance": [
+      "Owner can define stock items, base units, precision, opening quantities, and reorder thresholds.",
+      "Receipts and positive/negative adjustments require reason, actor, timestamp, outlet, and reference.",
+      "Balance equals the movement sum; invalid quantities and incompatible units are rejected."
+    ]
+  },
+  {
+    "id": "M08",
+    "phase": 1,
+    "area": "Stock",
+    "title": "Connect menu variants to stock through direct links and recipes",
+    "priority": "P0",
+    "depends": [
+      "M06",
+      "M07"
+    ],
+    "scope": "Allow finished goods to consume a stock item and prepared menu items to consume multiple ingredients.",
+    "acceptance": [
+      "Owner can link a variant directly to stock or define ingredient quantities per sold unit.",
+      "Unit conversion is explicit and validated; fractional ingredient consumption is supported.",
+      "Sale stock calculations use a snapshot of the applicable recipe; later recipe edits never rewrite historical consumption."
+    ]
+  },
+  {
+    "id": "M09",
+    "phase": 1,
+    "area": "Sales",
+    "title": "Implement sale calculation and payment recording API",
+    "priority": "P0",
+    "depends": [
+      "M04",
+      "M06"
+    ],
+    "scope": "Record completed sales with cash or manually recorded external payment; integrated payment processing belongs in Phase 2.",
+    "acceptance": [
+      "Server calculates item totals, configured tax/service charges, rounding, amount due, tender, and change.",
+      "Sale lines preserve product names, variant, price, and calculation rules as historical snapshots.",
+      "Insufficient cash, invalid totals, duplicate checkout keys with changed payloads, and unauthorized requests are rejected."
+    ]
+  },
+  {
+    "id": "M10",
+    "phase": 1,
+    "area": "Stock",
+    "title": "Deduct stock atomically and exactly once when a sale completes",
+    "priority": "P0",
+    "depends": [
+      "M08",
+      "M09"
+    ],
+    "scope": "Make sale completion and its stock ledger entries a single database transaction.",
+    "acceptance": [
+      "Selling 2 products consuming 3 units each reduces the stock balance by exactly 6.",
+      "Retries with the same checkout key return the original result and never duplicate sales or stock movements.",
+      "Concurrent sales cannot oversell when negative stock is blocked; failed transactions change neither sale nor stock.",
+      "Draft/cancelled carts do not deduct stock; menu availability reflects the limiting ingredient after refresh."
+    ]
+  },
+  {
+    "id": "M11",
+    "phase": 1,
+    "area": "Android",
+    "title": "Build cashier app shell, catalog browsing, and cart",
+    "priority": "P0",
+    "depends": [
+      "M02",
+      "M04",
+      "M06"
+    ],
+    "scope": "Create a touch-friendly Android cashier UI for phone and tablet.",
+    "acceptance": [
+      "Cashier can browse categories, search items, select variants, change quantity, and remove cart lines.",
+      "Unavailable items are visibly disabled and totals remain clear while editing.",
+      "Catalog refresh and expired-session handling preserve or explicitly resolve unsent cart work."
+    ]
+  },
+  {
+    "id": "M12",
+    "phase": 1,
+    "area": "Android",
+    "title": "Connect checkout, completion receipt, and uncertain-outcome recovery",
+    "priority": "P0",
+    "depends": [
+      "M10",
+      "M11"
+    ],
+    "scope": "Complete real API-backed cashier sales using cash or manual non-cash recording.",
+    "acceptance": [
+      "Cashier can enter tender, view change, submit once, and see a sale reference and receipt.",
+      "Timeout recovery checks the existing checkout key before permitting a retry or new attempt.",
+      "Online-only MVP clearly blocks completion without a confirmed server connection; print failure never repeats checkout."
+    ]
+  },
+  {
+    "id": "M13",
+    "phase": 1,
+    "area": "Web",
+    "title": "Build stock overview, receiving, adjustments, and low-stock states",
+    "priority": "P1",
+    "depends": [
+      "M07",
+      "M08",
+      "M10"
+    ],
+    "scope": "Expose connected stock and menu availability clearly in the back office.",
+    "acceptance": [
+      "Owner can filter stock by status and inspect the full movement history with sale references.",
+      "Receiving and adjustments update balances and availability with reason capture and validation.",
+      "A completed mobile sale is reflected in the web stock view after refresh; raw stock and estimated sellable menu quantities are distinguished."
+    ]
+  },
+  {
+    "id": "M14",
+    "phase": 1,
+    "area": "Reporting",
+    "title": "Build sales history, receipt detail, and basic daily reporting",
+    "priority": "P1",
+    "depends": [
+      "M09",
+      "M10",
+      "M12"
+    ],
+    "scope": "Provide owner reports from persisted sales, not client-side counters.",
+    "acceptance": [
+      "Filter sales by outlet-local date and inspect line items, tender, tax/service, and sale reference.",
+      "Show gross sales, net sales, sale count, average bill, menu quantities, and payment-method totals with definitions.",
+      "CSV export matches filtered results and report totals reconcile to completed sales and stock movement references."
+    ]
+  },
+  {
+    "id": "M15",
+    "phase": 1,
+    "area": "Printing",
+    "title": "Validate printer hardware and implement Android receipt connection",
+    "priority": "P0",
+    "depends": [
+      "M01",
+      "M03"
+    ],
+    "scope": "Choose and verify one actual printer model and transport for MVP; prefer a documented thermal receipt protocol where supported.",
+    "acceptance": [
+      "Record model, paper width, encoding, command support, Android version, and required permissions.",
+      "Cashier can discover/configure the supported connection, connect, test print, and see actionable failure states.",
+      "Verify on real hardware; Bluetooth/LAN/USB are not all claimed supported unless individually tested. Additional transports belong in Phase 2.",
+      "Implement a Flutter printer adapter with Android runtime permissions and documented real-device verification."
+    ]
+  },
+  {
+    "id": "M16",
+    "phase": 1,
+    "area": "Printing",
+    "title": "Implement receipt layout, print queue, retry, and reprints",
+    "priority": "P0",
+    "depends": [
+      "M12",
+      "M15"
+    ],
+    "scope": "Print persisted sale receipts with durable job state independent of checkout.",
+    "acceptance": [
+      "Receipt shows identity, reference, local date, items, quantity, prices, tax/service, total, tender, and change.",
+      "Jobs survive app restart and expose queued/sent/failed or uncertain states; a disconnect does not lose the sale.",
+      "Manual reprint is marked COPY and audited; uncertain physical delivery is shown to the cashier rather than claiming guaranteed exactly-once paper output."
+    ]
+  },
+  {
+    "id": "M17",
+    "phase": 1,
+    "area": "Operations",
+    "title": "Implement controlled sale reversal and stock restoration",
+    "priority": "P0",
+    "depends": [
+      "M10",
+      "M14"
+    ],
+    "scope": "Provide owner-only full sale reversal as the minimum safe correction path; complex refunds are deferred.",
+    "acceptance": [
+      "Owner must supply a reason; original sale remains immutable and linked to its reversal.",
+      "Stock is restored only for returned/restockable goods selected under an explicit policy; consumed ingredients are not blindly replenished.",
+      "Repeated reversal requests do not repeat financial or stock movements; reports show reversals separately.",
+      "Manual non-cash reversal records do not claim money was returned by a payment provider."
+    ]
+  },
+  {
+    "id": "M18",
+    "phase": 1,
+    "area": "Release",
+    "title": "Verify MVP end-to-end, deploy staging, and document ownership",
+    "priority": "P0",
+    "depends": [
+      "M05",
+      "M13",
+      "M14",
+      "M16",
+      "M17"
+    ],
+    "scope": "Prove the core sales, stock, reports, and printing loop before production use.",
+    "acceptance": [
+      "Verify catalog setup to Android sale to stock deduction to report to real printed receipt.",
+      "Test concurrent stock contention, duplicate requests, checkout timeout, app restart, printer disconnect, and reversal.",
+      "Provide staging setup, Android build instructions, migration/backup/restore procedure, owner guide, and known limitations.",
+      "Use synthetic data; a production launch is a separate explicit release decision."
+    ]
+  },
+  {
+    "id": "C01",
+    "phase": 2,
+    "area": "Android",
+    "title": "Add offline sales and reliable synchronization",
+    "priority": "P1",
+    "depends": [
+      "M18"
+    ],
+    "scope": "Design and implement explicit multi-device offline stock and conflict policy.",
+    "acceptance": [
+      "Encrypted local storage persists pending orders and sales across restart.",
+      "Synchronization is idempotent, shows pending/conflict states, and reconciles reports and stock.",
+      "Document whether stock is reserved, allocated per device, or can oversell offline; verify reconnect and concurrent edits."
+    ]
+  },
+  {
+    "id": "C02",
+    "phase": 2,
+    "area": "Sales",
+    "title": "Add tables, open orders, item transfers, and split bills",
+    "priority": "P1",
+    "depends": [
+      "M18"
+    ],
+    "scope": "Extend counter sales to full dine-in workflows.",
+    "acceptance": [
+      "Open and transfer table orders with permissions and an audit trail.",
+      "Split items/quantities across bills without duplicating payment or stock consumption.",
+      "Define reservation and cancellation behavior before final payment."
+    ]
+  },
+  {
+    "id": "C03",
+    "phase": 2,
+    "area": "Sales",
+    "title": "Add promotions, advanced modifiers, partial refunds, and approval rules",
+    "priority": "P1",
+    "depends": [
+      "M18"
+    ],
+    "scope": "Extend pricing and corrections with controlled rules.",
+    "acceptance": [
+      "Support percentage/fixed promotions and explicit eligibility, stacking, and rounding rules.",
+      "Support partial item refunds with separate money-return and restock decisions.",
+      "Require elevated approval where configured and retain original sale snapshots and audit history."
+    ]
+  },
+  {
+    "id": "C04",
+    "phase": 2,
+    "area": "Payments",
+    "title": "Integrate QRIS or selected payment provider and reconciliation",
+    "priority": "P1",
+    "depends": [
+      "M18"
+    ],
+    "scope": "Choose a provider and implement actual online payment lifecycle separately from manual recording.",
+    "acceptance": [
+      "Use provider sandbox, verified webhooks, idempotency, and explicit pending/succeeded/failed states.",
+      "Handle payment success with lost client connection and reconciliation without charging twice.",
+      "Validate refunds, settlement reporting, and credential storage; provider selection and commercial setup remain prerequisites."
+    ]
+  },
+  {
+    "id": "C05",
+    "phase": 2,
+    "area": "Operations",
+    "title": "Add shifts, cash reconciliation, attendance, and granular roles",
+    "priority": "P1",
+    "depends": [
+      "M18"
+    ],
+    "scope": "Support daily staff operation and cash accountability.",
+    "acceptance": [
+      "Track opening float, cash in/out, expected cash, closing count, and discrepancies.",
+      "Separate attendance from cashier shifts and record accountable actors.",
+      "Add permission matrix, approval limits, shift reports, and audit search."
+    ]
+  },
+  {
+    "id": "C06",
+    "phase": 2,
+    "area": "Stock",
+    "title": "Add suppliers, purchase orders, stock counts, waste, and transfers",
+    "priority": "P1",
+    "depends": [
+      "M18"
+    ],
+    "scope": "Expand inventory purchasing and control beyond manual receiving.",
+    "acceptance": [
+      "Support purchase order to partial receipt with unit conversion and supplier reference.",
+      "Stock count variance and waste generate ledger entries with reasons.",
+      "Outlet transfers preserve quantities through dispatched/received states without double counting."
+    ]
+  },
+  {
+    "id": "C07",
+    "phase": 2,
+    "area": "Printing",
+    "title": "Add kitchen routing and additional printer transports",
+    "priority": "P1",
+    "depends": [
+      "M16",
+      "M18"
+    ],
+    "scope": "Extend the verified MVP receipt connection to kitchen stations and other tested hardware.",
+    "acceptance": [
+      "Route menu items to stations and print amendments/cancellations with order references.",
+      "Validate each added Bluetooth/LAN/USB transport against documented supported hardware.",
+      "Queue and reprint station jobs independently without duplicating sales or stock deductions."
+    ]
+  },
+  {
+    "id": "C08",
+    "phase": 2,
+    "area": "Back office",
+    "title": "Add multi-outlet management, bookkeeping, and advanced reporting",
+    "priority": "P1",
+    "depends": [
+      "M18"
+    ],
+    "scope": "Extend the single-outlet foundation with consolidated management.",
+    "acceptance": [
+      "Scope menus, prices, stock, staff, and reporting by outlet with consolidated owner views.",
+      "Define inventory costing and expense categories before presenting profit/margin figures.",
+      "Export auditable sales, reversal, payment, and accounting summaries with clear calculation definitions."
+    ]
+  },
+  {
+    "id": "C09",
+    "phase": 2,
+    "area": "Integrations",
+    "title": "Add online ordering, customer records, and digital receipts",
+    "priority": "P2",
+    "depends": [
+      "M18"
+    ],
+    "scope": "Plan complementary ordering and customer-facing connections after the operational core.",
+    "acceptance": [
+      "Select supported channels and define order acceptance, cancellation, payment, and stock ownership.",
+      "Deduplicate incoming orders and preserve channel references.",
+      "Add opt-in customer records and digital receipts with configurable retention and access controls."
+    ]
+  },
+  {
+    "id": "I01",
+    "phase": 3,
+    "area": "Discovery",
+    "title": "Collect operator feedback and prioritize measured improvements",
+    "priority": "P1",
+    "depends": [
+      "M18"
+    ],
+    "scope": "Keep improvement scope open until real usage evidence exists.",
+    "acceptance": [
+      "Observe cashier and owner workflows and record friction without collecting unnecessary customer data.",
+      "Define baselines for checkout time, errors, stock discrepancies, and support incidents.",
+      "Rank opportunities by user impact and effort; create approved implementation tickets before building."
+    ]
+  },
+  {
+    "id": "I02",
+    "phase": 3,
+    "area": "Design",
+    "title": "Refine cashier speed and back-office usability from feedback",
+    "priority": "P2",
+    "depends": [
+      "I01"
+    ],
+    "scope": "Placeholder for validated UI improvements rather than predetermined feature promises.",
+    "acceptance": [
+      "Choose improvements from the measured backlog and define success criteria.",
+      "Prototype and test with representative cashiers/owners across supported screen sizes.",
+      "Verify accessibility and demonstrate improvement against the selected baseline."
+    ]
+  },
+  {
+    "id": "I03",
+    "phase": 3,
+    "area": "Reliability",
+    "title": "Improve performance and operational reliability from production evidence",
+    "priority": "P2",
+    "depends": [
+      "I01"
+    ],
+    "scope": "Address measured bottlenecks in synchronization, checkout, reports, or printing.",
+    "acceptance": [
+      "Choose specific latency/failure targets from observed usage.",
+      "Implement changes with realistic load and failure recovery checks.",
+      "Verify no regression in stock integrity, sale idempotency, or historical report reconciliation."
+    ]
+  }
+]
