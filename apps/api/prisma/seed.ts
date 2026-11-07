@@ -24,7 +24,9 @@ const OTHER_CASHIER_ID = '00000000-0000-4000-8000-000000000013';
 const outletDefaults = {
   currency: 'IDR',
   currencyExponent: 0,
-  receiptAddress: '',
+  receiptAddress: 'Jl. Example No. 1, Jakarta',
+  receiptHeader: 'Modern POS Demo',
+  receiptFooter: 'Thank you for your visit',
   taxBps: 0,
   serviceBps: 0,
   pricingMode: 'EXCLUSIVE',

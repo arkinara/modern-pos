@@ -60,6 +60,9 @@ doc/Sale.md
 doc/SaleLine.md
 doc/SalePage.md
 doc/SalesApi.md
+doc/Settings.md
+doc/SettingsApi.md
+doc/SettingsUpdate.md
 doc/Stock.md
 doc/StockApi.md
 doc/StockChange.md
@@ -82,6 +85,7 @@ lib/api/printing_api.dart
 lib/api/recipe_api.dart
 lib/api/reports_api.dart
 lib/api/sales_api.dart
+lib/api/settings_api.dart
 lib/api/stock_api.dart
 lib/api_client.dart
 lib/api_exception.dart
@@ -140,6 +144,8 @@ lib/model/reversal_write.dart
 lib/model/sale.dart
 lib/model/sale_line.dart
 lib/model/sale_page.dart
+lib/model/settings.dart
+lib/model/settings_update.dart
 lib/model/stock.dart
 lib/model/stock_change.dart
 lib/model/stock_page.dart

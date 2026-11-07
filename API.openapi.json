@@ -3,7 +3,7 @@
   "info": {
     "title": "Modern POS API baseline",
     "version": "0.2.0",
-    "description": "Implementation contract for M04 authentication. Auth/session and outlet-scope operations are implemented in apps/api; remaining domain operations are implementation targets for later tickets. Read ARCHITECTURE.md for rules and authorization."
+    "description": "Implementation contract for M04 authentication and M05 business settings. Auth/session, outlet-scope and settings operations are implemented in apps/api; remaining domain operations are implementation targets for later tickets. Read ARCHITECTURE.md for rules and authorization."
   },
   "servers": [
     {
@@ -5380,6 +5380,245 @@
           }
         }
       }
+    },
+    "/outlets/{outletId}/settings": {
+      "get": {
+        "operationId": "settings_get",
+        "summary": "Read business and outlet settings",
+        "tags": [
+          "settings"
+        ],
+        "x-roles": [
+          "OWNER",
+          "CASHIER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error 503; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "settings_update",
+        "summary": "Update business and outlet settings",
+        "tags": [
+          "settings"
+        ],
+        "x-roles": [
+          "OWNER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error 503; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5612,7 +5851,8 @@
             "maxLength": 200
           },
           "receiptAddress": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 1000
           },
           "taxBps": {
             "type": "integer",
@@ -7165,6 +7405,144 @@
         "required": [
           "items",
           "nextCursor"
+        ]
+      },
+      "Settings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "outletId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outletName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "businessName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "currencyExponent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "receiptHeader": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "receiptFooter": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "receiptAddress": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "taxBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "serviceBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "pricingMode": {
+            "type": "string",
+            "enum": [
+              "EXCLUSIVE"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "outletId",
+          "outletName",
+          "businessName",
+          "currency",
+          "currencyExponent",
+          "timezone",
+          "receiptHeader",
+          "receiptFooter",
+          "receiptAddress",
+          "taxBps",
+          "serviceBps",
+          "pricingMode",
+          "version"
+        ]
+      },
+      "SettingsUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "businessName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "receiptHeader": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "receiptFooter": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "receiptAddress": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "taxBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "serviceBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "businessName",
+          "currency",
+          "timezone",
+          "receiptHeader",
+          "receiptFooter",
+          "receiptAddress",
+          "taxBps",
+          "serviceBps",
+          "version"
         ]
       }
     }

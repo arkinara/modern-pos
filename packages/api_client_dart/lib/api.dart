@@ -37,6 +37,7 @@ part 'api/printing_api.dart';
 part 'api/recipe_api.dart';
 part 'api/reports_api.dart';
 part 'api/sales_api.dart';
+part 'api/settings_api.dart';
 part 'api/stock_api.dart';
 
 part 'model/adjustment.dart';
@@ -88,6 +89,8 @@ part 'model/reversal_write.dart';
 part 'model/sale.dart';
 part 'model/sale_line.dart';
 part 'model/sale_page.dart';
+part 'model/settings.dart';
+part 'model/settings_update.dart';
 part 'model/stock.dart';
 part 'model/stock_change.dart';
 part 'model/stock_page.dart';

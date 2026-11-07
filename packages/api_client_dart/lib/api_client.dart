@@ -281,6 +281,10 @@ class ApiClient {
           return SaleLine.fromJson(value);
         case 'SalePage':
           return SalePage.fromJson(value);
+        case 'Settings':
+          return Settings.fromJson(value);
+        case 'SettingsUpdate':
+          return SettingsUpdate.fromJson(value);
         case 'Stock':
           return Stock.fromJson(value);
         case 'StockChange':

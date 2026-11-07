@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Outlet } from '@prisma/client';
 import { apiError } from '../common/api-error';
+import { isValidTimeZone, TIMEZONE_VALIDATION_MESSAGE } from '../common/timezone';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutletUpdateDto } from './dto/outlet-update.dto';
@@ -39,6 +40,12 @@ export class OutletsService {
     dto: OutletUpdateDto,
     user: AuthenticatedUser,
   ): Promise<OutletResponse> {
+    if (!isValidTimeZone(dto.timezone)) {
+      throw apiError(400, 'VALIDATION_ERROR', 'Request validation failed', {
+        details: { issues: [TIMEZONE_VALIDATION_MESSAGE] },
+      });
+    }
+
     const result = await this.prisma.outlet.updateMany({
       where: { id: outletId, businessId: user.businessId, version: dto.version },
       data: {
