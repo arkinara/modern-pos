@@ -1,0 +1,61 @@
+{
+  "name": "Modern POS",
+  "version": "0.1.0",
+  "status": "proposed-owner-review",
+  "color": {
+    "canvas": "#F5F6F3",
+    "surface": "#FFFFFF",
+    "surfaceMuted": "#EEF1EC",
+    "text": "#172B28",
+    "textMuted": "#536660",
+    "border": "#D8E0DA",
+    "accent": "#145C4F",
+    "accentHover": "#0E493F",
+    "accentSoft": "#E3F0E8",
+    "danger": "#A63232",
+    "dangerSoft": "#FBEDEC",
+    "warning": "#805711",
+    "warningSoft": "#FFF3D6",
+    "focus": "#145C4F"
+  },
+  "spacing": [
+    4,
+    8,
+    12,
+    16,
+    24,
+    32,
+    48
+  ],
+  "radius": {
+    "control": 8,
+    "surface": 12,
+    "panel": 16
+  },
+  "font": {
+    "family": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+    "size": {
+      "caption": 12,
+      "body": 14,
+      "input": 16,
+      "section": 20,
+      "page": 28,
+      "total": 36
+    },
+    "lineHeight": 1.5
+  },
+  "control": {
+    "touchMin": 48,
+    "compactMin": 40,
+    "focusWidth": 3,
+    "focusOffset": 3
+  },
+  "layout": {
+    "sidebar": 224,
+    "cart": 360,
+    "breakpoint": {
+      "phone": 720,
+      "expanded": 1100
+    }
+  }
+}

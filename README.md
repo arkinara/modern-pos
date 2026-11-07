@@ -63,3 +63,9 @@ docs/           # architecture, product specifications, operational guides
 3. Deliver menu, stock ledger, recipe linking, and sale completion before mobile checkout wiring.
 4. Verify real printer behavior and complete the M18 release gate before production use.
 
+## Architecture and design review package
+
+Start with [HANDOFF.md](HANDOFF.md), then [ARCHITECTURE.md](ARCHITECTURE.md) and the [OpenAPI contract](API.openapi.json). The proposed [design system](DESIGN_SYSTEM.md) and [tokens](design-tokens.json) accompany the interactive [prototype](prototype.html).
+
+The prototype is a static browser design review using synthetic session-only data. It is not the Flutter implementation or a production POS. Issue #2 remains open for owner style review; issue #3 is the next implementation step.
+
