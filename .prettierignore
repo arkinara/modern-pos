@@ -1,0 +1,17 @@
+node_modules
+.next
+dist
+build
+coverage
+pnpm-lock.yaml
+packages/api-client/src/schema.d.ts
+packages/api_client_dart
+apps/mobile
+API.openapi.json
+design-tokens.json
+backlog.json
+VALIDATION.json
+verify-*.cjs
+*.md
+prototype.html
+next-env.d.ts
