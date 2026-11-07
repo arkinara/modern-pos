@@ -3,8 +3,8 @@
 #
 
 name: 'modern_pos_api_client'
-version: '0.1.0'
-description: 'Generated Dart client for the Modern POS OpenAPI contract (v0.1.0).'
+version: '0.2.0'
+description: 'Generated Dart client for the Modern POS OpenAPI contract (v0.2.0).'
 homepage: 'homepage'
 environment:
   sdk: '>=2.17.0 <4.0.0'

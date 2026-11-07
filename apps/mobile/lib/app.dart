@@ -1,17 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'features/auth/auth_controller.dart';
+import 'features/auth/sign_in_screen.dart';
 import 'routes/router.dart';
 import 'theme/app_theme.dart';
 
-class ModernPosApp extends StatelessWidget {
+class ModernPosApp extends ConsumerWidget {
   const ModernPosApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authControllerProvider);
+    final theme = buildAppTheme();
+
+    if (auth.isLoading && !auth.hasValue) {
+      return MaterialApp(
+        title: 'Modern POS',
+        theme: theme,
+        home: const _StartupScreen(),
+      );
+    }
+
+    if (auth.value == null) {
+      return MaterialApp(
+        title: 'Modern POS',
+        theme: theme,
+        home: const SignInScreen(),
+      );
+    }
+
     return MaterialApp.router(
       title: 'Modern POS',
-      theme: buildAppTheme(),
+      theme: theme,
       routerConfig: appRouter,
+    );
+  }
+}
+
+class _StartupScreen extends StatelessWidget {
+  const _StartupScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Restoring session'),
+          ],
+        ),
+      ),
     );
   }
 }

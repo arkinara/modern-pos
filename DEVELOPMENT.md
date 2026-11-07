@@ -50,6 +50,13 @@ export ANDROID_SDK_ROOT=/home/ubuntu/android-sdk
 | `WEB_ORIGIN` | API CORS allowlist | `http://localhost:3000,http://localhost:3001` |
 | `NEXT_PUBLIC_API_URL` | `apps/web/.env.local` | `http://localhost:4000` |
 | `API_BASE_URL` | Flutter `--dart-define` | `http://10.0.2.2:4000` on the Android emulator |
+| `JWT_SECRET` | API process | local-development placeholder in `.env.example` |
+| `ACCESS_TOKEN_TTL_SECONDS` | API process | `600` |
+| `REFRESH_TOKEN_TTL_SECONDS` | API process | `604800` (7 days, absolute) |
+| `COOKIE_SECURE` | API process | `false` locally; must be `true` behind HTTPS |
+| `SIGN_IN_MAX_ATTEMPTS` | API process | `5` failures per IP + email |
+| `SIGN_IN_WINDOW_SECONDS` | API process | `900` |
+| `SEED_PASSWORD` | API seed | synthetic demo password only |
 
 Copy the examples before running locally:
 
@@ -92,8 +99,8 @@ delete the database volume.
 
 ## Database workflow
 
-Prisma schema: `apps/api/prisma/schema.prisma`. Ticket #3 keeps only the plumbing models
-(`Business`, `Outlet`, `User`); domain tables arrive in #6-#10.
+Prisma schema: `apps/api/prisma/schema.prisma`. Ticket #4 adds credential fields, outlet
+settings required by the contract, and the `Session` model. Domain tables arrive in #6-#10.
 
 ```bash
 # Create/apply a development migration
@@ -106,8 +113,23 @@ pnpm --filter @modern-pos/api exec prisma migrate deploy
 pnpm --filter @modern-pos/api seed
 ```
 
-The seed uses fixed UUIDs and upserts. It creates one synthetic business, one outlet, one owner
-and one cashier. It contains no production data.
+The seed uses fixed UUIDs and upserts. It creates two synthetic businesses, three outlets, and
+one owner plus one cashier for every outlet (six users). It contains no production data. All
+seeded users share `SEED_PASSWORD`, which defaults to a synthetic local value.
+
+Seeded accounts:
+
+| Email | Role | Outlet |
+| --- | --- | --- |
+| `owner@example.test` | OWNER | Main Outlet |
+| `cashier@example.test` | CASHIER | Main Outlet |
+| `owner.second@example.test` | OWNER | Second Outlet |
+| `cashier.second@example.test` | CASHIER | Second Outlet |
+| `owner.other@example.test` | OWNER | Other Tenant Outlet |
+| `cashier.other@example.test` | CASHIER | Other Tenant Outlet |
+
+Main Outlet and Second Outlet share a business; Other Tenant Outlet belongs to a second business
+so cross-tenant isolation can be tested locally.
 
 ## Build, type and test commands
 
@@ -132,7 +154,7 @@ flutter build apk --debug
 
 ## OpenAPI contract workflow
 
-The root `API.openapi.json` (v0.1.0) remains the contract. Generated clients are committed so a
+The root `API.openapi.json` (v0.2.0) remains the contract. Generated clients are committed so a
 clean clone builds without regenerating first.
 
 ```bash
@@ -164,14 +186,53 @@ and changes only the host, not the repository.
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs formatting, TypeScript checks, the NestJS build and health test,
-Prisma migrations and the seed twice, the Next.js production build, OpenAPI validation,
-client generation and drift comparison, Dart analyze, Flutter analyze/test, and an Android debug
-APK build. Every command is also listed above for local reproduction.
+`.github/workflows/ci.yml` runs formatting, TypeScript checks, health and authentication unit
+tests, the NestJS build, Prisma migrations and the seed twice, a live API health check, the
+Next.js production build, OpenAPI validation, client generation and drift comparison, Dart
+analyze, Flutter analyze/test, and an Android debug APK build. Every command is also listed
+above for local reproduction.
+
+## Authentication and authorization (#4)
+
+Implementation lives in `apps/api/src/auth` and `apps/api/src/common/guards`.
+
+- Password hashes use Argon2id. Unknown accounts still perform a dummy Argon2id verification so
+  sign-in timing does not reveal whether an email exists.
+- Access tokens are Passport JWTs valid for 10 minutes (configurable). Every protected request
+  reloads the session and user from PostgreSQL, so sign-out, refresh rotation, password changes
+  and role changes revoke access immediately rather than waiting for JWT expiry.
+- Refresh tokens are opaque random values stored only as SHA-256 hashes. Rotation is atomic and
+  single-use. Replaying a rotated or revoked token revokes the whole session family.
+- Session lifetime is absolute: rotated sessions inherit the original seven-day expiry.
+- Web login sets `pos_refresh` as an HttpOnly, SameSite=Lax cookie (path `/v1/auth`) and
+  `pos_csrf` as a readable double-submit cookie. Web refresh requires `X-CSRF-Token` to match both
+  the CSRF cookie and the session record. The access token is kept in browser memory.
+- Flutter keeps the refresh token in platform secure storage and the access token in memory.
+  Refresh rotates the stored token; a 401 clears local credentials and returns to sign-in.
+- Sign-in is rate limited in-process per client IP + normalized email. After
+  `SIGN_IN_MAX_ATTEMPTS` failures in `SIGN_IN_WINDOW_SECONDS`, the API returns `429 RATE_LIMITED`
+  with a retry hint. A successful sign-in resets the counter. This limiter is deliberately
+  bounded to 10,000 keys and resets on restart; a shared store is required before running
+  multiple API replicas.
+- Every request is authorized server-side by global guards. Missing/invalid sessions return 401,
+  insufficient roles return 403, and out-of-scope outlet IDs return **404** so another tenant
+  cannot probe for record existence. Owner identities are limited to their business's outlets;
+  cashiers are limited to their assigned outlet.
+- `GET /v1/outlets/:outletId`, `PATCH /v1/outlets/:outletId` (owner-only), and the six auth
+  endpoints are implemented. Other operations in the OpenAPI contract remain later-ticket work.
+
+Auth endpoints: `POST /v1/auth/mobile/login`, `POST /v1/auth/mobile/refresh`,
+`POST /v1/auth/web/login`, `POST /v1/auth/web/refresh`, `POST /v1/auth/logout`,
+`GET /v1/auth/me`.
+
+Known M04 limits: no registration/self-signup, OAuth/SSO, MFA, password-reset email, or
+multi-outlet UI. There is no public password or role mutation endpoint; when administrative
+password/role changes are added, they must call `AuthService.revokeAllSessionsForUser` (or
+`SessionService.revokeAllForUser`) in the same operation. Error payloads follow
+`{code,message,requestId,retryable}`; request IDs are echoed in `X-Request-Id`.
 
 ## Scope boundaries
 
-- No authentication is implemented yet; #4 adds JWT/session behavior and outlet isolation.
 - Web is the owner back office. It has no sale, tender or cart routes; the Android app owns
   cashier flows.
 - Catalog, recipe, stock-ledger and sale transaction rules are server-owned and arrive in

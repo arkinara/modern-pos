@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Modern POS API baseline",
-    "version": "0.1.0",
-    "description": "Design contract for M01, not a deployed service. Read ARCHITECTURE.md for rules and authorization. Printer tests/physical print are device-local."
+    "version": "0.2.0",
+    "description": "Implementation contract for M04 authentication. Auth/session and outlet-scope operations are implemented in apps/api; remaining domain operations are implementation targets for later tickets. Read ARCHITECTURE.md for rules and authorization."
   },
   "servers": [
     {
@@ -127,7 +127,13 @@
             }
           }
         },
-        "security": []
+        "security": [],
+        "x-rate-limit": {
+          "limit": 5,
+          "windowSeconds": 900,
+          "key": "client IP + normalized email",
+          "response": 429
+        }
       }
     },
     "/auth/mobile/refresh": {
@@ -396,7 +402,13 @@
           }
         },
         "security": [],
-        "description": "Sets HttpOnly Secure SameSite=Lax refresh cookie; access token is held in memory. Same-origin/CSRF protections apply."
+        "description": "Sets HttpOnly Secure SameSite=Lax refresh cookie pos_refresh; access token is held in memory. Also sets a readable pos_csrf cookie used as the double-submit value for POST /auth/web/refresh. Same-origin/CSRF protections apply.",
+        "x-rate-limit": {
+          "limit": 5,
+          "windowSeconds": 900,
+          "key": "client IP + normalized email",
+          "response": 429
+        }
       }
     },
     "/auth/web/refresh": {
@@ -427,6 +439,14 @@
                 "schema": {
                   "$ref": "#/components/schemas/WebSession"
                 }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Rotated refresh and CSRF cookies. The refresh cookie is HttpOnly."
               }
             }
           },
@@ -532,7 +552,15 @@
         "parameters": [],
         "responses": {
           "204": {
-            "description": "Success; no response body."
+            "description": "Success; no response body.",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Clears the refresh and CSRF cookies."
+              }
+            }
           },
           "400": {
             "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",

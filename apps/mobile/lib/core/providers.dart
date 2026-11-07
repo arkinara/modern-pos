@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:modern_pos_api_client/api.dart';
 
 import 'database/app_database.dart';
@@ -23,6 +24,10 @@ final dioProvider = Provider<Dio>((ref) {
 
 final contractClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(basePath: '$apiBaseUrl/v1');
+});
+
+final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
+  return const FlutterSecureStorage();
 });
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {

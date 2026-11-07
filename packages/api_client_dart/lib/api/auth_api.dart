@@ -206,7 +206,7 @@ class AuthApi {
 
   /// Sign in web owner session
   ///
-  /// Sets HttpOnly Secure SameSite=Lax refresh cookie; access token is held in memory. Same-origin/CSRF protections apply.
+  /// Sets HttpOnly Secure SameSite=Lax refresh cookie pos_refresh; access token is held in memory. Also sets a readable pos_csrf cookie used as the double-submit value for POST /auth/web/refresh. Same-origin/CSRF protections apply.
   ///
   /// Note: This method returns the HTTP [Response].
   ///
@@ -241,7 +241,7 @@ class AuthApi {
 
   /// Sign in web owner session
   ///
-  /// Sets HttpOnly Secure SameSite=Lax refresh cookie; access token is held in memory. Same-origin/CSRF protections apply.
+  /// Sets HttpOnly Secure SameSite=Lax refresh cookie pos_refresh; access token is held in memory. Also sets a readable pos_csrf cookie used as the double-submit value for POST /auth/web/refresh. Same-origin/CSRF protections apply.
   ///
   /// Parameters:
   ///

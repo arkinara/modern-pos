@@ -33,10 +33,17 @@ Android check.
 `packages/api_client_dart` is generated from the root `API.openapi.json`. Regenerate from the
 repository root with `pnpm openapi:generate`. Do not hand-edit the generated package.
 
+## Authentication (#4)
+
+The app starts with a cashier sign-in screen. The refresh token and a generated device UUID live in
+`flutter_secure_storage`; the access token stays in memory. Refresh rotates the stored token before
+the 10-minute access token expires. A 401 on any protected request clears local credentials and
+returns to sign-in. The sign-out action revokes the server session and clears secure storage.
+
 ## Scope
 
-This ticket delivers a compiling shell and connectivity check only. Menu, stock and sale screens,
-offline reconciliation, printer transport and real authentication arrive in #4/#6/#7/#11/#12/#15.
+Authentication is implemented. Menu, stock and sale screens, offline reconciliation, printer
+transport and the full cashier shell arrive in #6/#7/#11/#12/#15.
 
 ## arm64 Linux hosts
 

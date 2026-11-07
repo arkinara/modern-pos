@@ -4,6 +4,16 @@ Next.js App Router shell for the owner back office. Navigation placeholders are 
 Reports and Printers. This app does not own sale, tender, cart or receipt flows; the Flutter
 Android app is the cashier surface.
 
+## Authentication (#4)
+
+`/login` is the only public page. Protected routes live in the `app/(backoffice)` route group and
+are wrapped by `AuthGate`, which restores the session, redirects unauthenticated visitors to
+`/login`, and holds the access token in memory only. The API owns the HttpOnly `pos_refresh`
+cookie and the readable `pos_csrf` double-submit cookie; Next.js never stores or decodes the
+refresh token. Sign-out revokes server-side, clears the shell and rotates once if the access
+token has already expired so the cookie cannot restore the session. All authorization and
+financial rules remain server-side.
+
 ## Design contract
 
 `app/globals.css` maps the root `design-tokens.json` palette, radii, focus ring, spacing tokens
