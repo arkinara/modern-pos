@@ -17,15 +17,15 @@
     "scriptSyntax": "valid"
   },
   "contrast": [
-    "text/surface: 14.87:1",
-    "textMuted/surface: 6.11:1",
-    "textMuted/canvas: 5.63:1",
-    "surface/accent: 7.85:1",
-    "accent/accentSoft: 6.69:1",
-    "danger/dangerSoft: 5.90:1",
-    "warning/warningSoft: 5.79:1"
+    "text/surface: 14.80:1",
+    "textMuted/surface: 5.70:1",
+    "textMuted/canvas: 5.14:1",
+    "surface/accent: 6.04:1",
+    "accent/accentSoft: 5.05:1",
+    "danger/dangerSoft: 6.09:1",
+    "warning/warningSoft: 5.76:1"
   ],
-  "controlBoundaryContrast": "3.62:1",
+  "controlBoundaryContrast": "3.42:1",
   "errors": [],
   "limitations": [
     "This structural contract check is not a complete OpenAPI meta-schema validator.",

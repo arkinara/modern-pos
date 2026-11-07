@@ -22,13 +22,13 @@ Architecture baseline and design review package. No production backend, Flutter 
 
 ## Visual review walkthrough
 
-Open the prototype and inspect the initial Flutter cashier view. Switch to Menu, edit a name or price, then return to Cashier. Under Stock, adjust a quantity with a reason; menu availability should change. Create a cash or manual external demo sale; inspect its receipt and Reports. Under Printers, simulate connection success/failure. Use the review-only Screen state and Connection selectors to inspect failure and empty states. Resize to phone/tablet/desktop widths.
+Open the prototype on Menu. Edit a name or price, then adjust stock with a reason. Reports contains a synthetic mobile sale for receipt detail and CSV export; selecting another date shows the empty state. Printers retains simulated configuration/test controls. Use Screen state and Connection controls, and resize to phone/tablet/desktop widths.
 
-The design direction is warm neutral surfaces, deep teal actions and generous touch spacing. #2 stays open for the owner's review; do not interpret completed design artifacts as approval to lock the style. Owner feedback should go on #2 with a screen name and specific change requested.
+The web prototype has no cashier, cart, tender or checkout. These belong exclusively to Flutter under #11/#12. The separate mobile design and remaining web Sales/settings flows are tracked in #2. The warm neutral/terracotta design remains In QA for owner review; #3 scaffolding can proceed independently.
 
 ## Prototype boundaries
 
-All data is synthetic and lives in browser memory. Reload resets edits, cart, sales, stock and printer state. No real payments, production data, real devices, offline synchronization, persisted accounts or backend services are connected. Tax/service are deliberately 0 in the demo. Receipts/stock/report interactions illustrate the design; backend integrity and security must be implemented separately.
+All data is synthetic and held in browser memory. Reload resets edits and printer state. The sample mobile sale is a fixed fixture, not a sale recorded by the web app. Printer controls simulate feedback only; Android owns discovery, permissions and physical printing under #15/#16. No production services or real payments are connected.
 
 ## Outstanding operational inputs
 
@@ -40,7 +40,7 @@ Structural contract/reference checks, JavaScript parse and seven core text-contr
 
 Reproduce these dependency-free checks with `node verify-foundation.cjs` from the repository root. It refreshes VALIDATION.json and exits nonzero on structural, script syntax or contrast failures.
 
-Browser-verified on 7 November 2026 against the GitHub Pages demo:
+Historical verification of the earlier mixed-platform prototype (superseded by the back-office-only revision; these results do not verify the current UI):
 
 - Cashier: Rp52,000 sale from Rp60,000 cash produces Rp8,000 change; insufficient cash is rejected.
 - Stock: sale changes coffee 450→432g, milk 1,200→1,020ml, and almond croissant 8→7. A 500ml adjustment succeeds; an adjustment below zero is rejected with a visible error and preserved form.
@@ -58,3 +58,7 @@ Still required: owner visual approval (#2), native Flutter behavior/large text v
 ## UI/UX Pro Max refinement 0.2
 
 The live prototype and design tokens now include consistent locally embedded Lucide icons, larger rem-based typography, a less cluttered review header, mobile bottom navigation/order access, keyboard focus retention, browser history and reduced-motion rules. Read [UX_REFINEMENT.md](UX_REFINEMENT.md) for applied skill recommendations and bounded verification evidence. The refinement preserves the existing palette, architecture, demo business rules and pending owner approval. Use the refined [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) when picking up #5/#11 after that approval.
+
+## Back-office scope verification
+
+Run `node verify-backoffice.cjs` for route/history fallback, all four screen renderers and preview states, sample receipt/report, menu edit, stock adjustment and offline banner regression checks. These use a DOM stub. `node verify-foundation.cjs` checks syntax/contracts/contrast. Current live browser checks remain outstanding because the browser access host was unavailable.

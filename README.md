@@ -69,5 +69,5 @@ Start with [HANDOFF.md](HANDOFF.md), then [ARCHITECTURE.md](ARCHITECTURE.md) and
 
 The prototype is a static browser design review using synthetic session-only data. It is not the Flutter implementation or a production POS. Issue #2 remains open for owner style review; issue #3 is the next implementation step.
 
-**[Open the interactive design review](https://arkinara.github.io/modern-pos/prototype.html)** — switch between Cashier, Menu, Stock, Reports and Printers. The review-only controls expose loading, empty, error and offline states. All demo changes reset on reload.
+**[Open the interactive design review](https://arkinara.github.io/modern-pos/prototype.html)** — switch between Menu, Stock, Reports and Printers. Cashier/cart/checkout belong exclusively to the Flutter mobile app. The review-only controls expose loading, empty, error and offline states. All demo changes reset on reload.
 

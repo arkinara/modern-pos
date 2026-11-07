@@ -4,7 +4,7 @@ Version: Counter collection 0.3. Scope: the local `prototype.html` design candid
 
 ## 1. Product principles
 
-A calm, fast workspace for everyday sales. Keep the catalog scannable, the current order visible, and payment the strongest action. Back-office pages prioritize readable records and clear status over decoration.
+A calm, fast workspace for everyday sales. Keep menu records scannable and stock/report information readable. Cashier cart and checkout belong exclusively to the Flutter mobile app. Back-office pages prioritize readable records and clear status over decoration.
 
 Use warm neutral surfaces, ink navigation, and terracotta for primary actions. Semantic success, warning, and danger colors communicate status with text. Keep promotional copy out of error messages and financial actions. Use direct labels: “Edit”, “Adjust”, “Save settings”, “Continue to payment”.
 
@@ -16,7 +16,7 @@ Use warm neutral surfaces, ink navigation, and terracotta for primary actions. S
 | Earlier inline style blocks | Shared foundations, accessibility, mobile table layout, and 200% text behavior still used by the prototype |
 | `iconSet`, `icon()`, `productIcon()` | Inline SVG icons; no remote asset dependency |
 | `heading()`, `badge()`, `footer()` | Shared markup |
-| `cashierScreen()`, `menuScreen()`, `stockScreen()`, `reportsScreen()`, `printerScreen()` | Screen renderers |
+| `menuScreen()`, `stockScreen()`, `reportsScreen()`, `printerScreen()` | Screen renderers |
 | `render()`, document event handlers | Navigation, state rendering, and demo interactions |
 | `design-tokens.json` | Portable handoff values and aliases; not loaded by the HTML |
 
@@ -121,17 +121,15 @@ Keyboard focus uses a 3 px accent outline offset 3 px. Sidebar focus uses the pa
 
 Apply `action-column` to both the action header and its cells. The old fixed 90/100 px columns left only 42/52 px after horizontal padding and inherited `overflow-wrap:anywhere`, breaking labels. Do not restore those widths, clip labels, or use ellipsis. Table content may wrap; action labels may not. For future multi-action or translated content, allow the column to grow or switch to a stacked row layout.
 
-### Catalog and order
+### Platform ownership
 
-- Product cards are whole-card buttons with category, title, stock availability, price, and decorative SVG art.
-- Variants open a size dialog before adding. Unavailable products remain visible and disabled, with explicit “Out of stock” text.
-- Category chips expose `aria-pressed`; counts reflect catalog categories, while the result count reflects the current search.
-- Order lines show variant, unit price, line total, quantity controls, and remove action. Keep the final total and payment CTA visually strongest.
-- Disable payment for empty carts and offline state. Announce order-total changes through the live region.
+Web navigation contains Menu, Stock, Reports and Printers. Menu uses editable management rows; reports use synthetic mobile-sale fixtures. Legacy cashier links fall back to Menu. No cart, tender, checkout or new-sale control belongs in this web prototype.
+
+Flutter owns catalog browsing, variants, cart, payment entry and completion. Its separate mobile design remains tracked under #2/#11/#12. Shared tokens may support those components without exposing them in the web app.
 
 ### Tables, metrics, and status
 
-Use `.panel` with `.panel-head`, semantic table headers, readable item names, and right-aligned action cells. Mobile rows become stacked records; preserve `data-label` text on numeric/detail cells. Status always includes a text label. Do not infer trends or percentages from absent data. Report values come from the current demo session; empty reports explain how to create a sale.
+Use `.panel` with `.panel-head`, semantic table headers, readable item names, and right-aligned action cells. Mobile rows become stacked records; preserve `data-label` text on numeric/detail cells. Status always includes a text label. Do not infer trends or percentages from absent data. Report values come from synthetic mobile-sale fixtures; empty reports explain that mobile sales appear after refresh.
 
 ### Forms and dialogs
 
@@ -166,8 +164,8 @@ The demo stores everything in memory and resets on reload. It does not implement
 - Inspect Cashier, Menu, Stock, Reports, and Printers at 375, 768, 1024, and 1440 px; include 200% text and browser zoom.
 - Confirm “Edit”, “Adjust”, and longer action labels stay readable, centered, and unbroken; inspect row boundaries for overlap.
 - Navigate by keyboard, open/cancel dialogs, verify focus return, and inspect disabled controls.
-- Exercise search, category filtering, variant selection, quantities, stock adjustment, checkout, receipt, report, and printer failure.
-- Check loading/empty/error/offline states; offline checkout must remain disabled.
+- Exercise menu editing, stock adjustment, sample receipt, report/date filtering, and simulated printer failure.
+- Check loading/empty/error/offline states and legacy cashier-link fallback to Menu.
 - Check contrast, reduced motion, touch targets, long names, and localized labels.
 - Keep design changes separate from financial behavior; run relevant regression checks after logic changes.
 

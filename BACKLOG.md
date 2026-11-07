@@ -1,6 +1,6 @@
 # Draft backlog
 
-All tickets start unimplemented. Priorities: P0 = core dependency/release blocker; P1 = required within its phase; P2 = later refinement.
+Live board review: M01 is complete; M02 remains In QA; M03 is ready to start. Other implementation tickets remain Todo. Priorities: P0 = core dependency/release blocker; P1 = required within its phase; P2 = later refinement.
 
 ## M01 - Define architecture, domain model, and API contracts
 
@@ -35,61 +35,71 @@ Status: Draft specification; implementation has not started.
 ## M02 - Create minimalist design system and core flow prototypes
 
 ## Outcome
-
-Establish a slick, modern visual foundation shared across web management and Android cashier.
+Establish a slick, modern visual foundation shared across the Next.js back office and Flutter Android cashier.
 
 ## Planning
-
 - Draft ID: M02
-- Phase: 1 - MVP
+- Phase: 1 — MVP
 - Area: Design
 - Priority: P0
-- Depends on: M01
+- Depends on: M01 (#1)
 
 ## Acceptance criteria
+- [x] Define neutral surfaces, one accent color, typography, spacing, icons, and reusable component states.
+- [x] Deliver a web back-office prototype for menu editing, stock adjustment, reports/receipt detail and simulated printer settings.
+- [ ] Complete a separate Flutter mobile cashier design for catalog/cart, tender/checkout, completion/recovery and device printer setup. Cashier functionality must not appear in the web prototype.
+- [ ] Review the remaining web Sales history and business settings flows required by #5/#14.
+- [ ] Verify the revised web prototype visually at desktop/tablet/phone widths, keyboard and 200% text; verify the separate mobile design on phone/tablet. Static contrast and script checks pass, but do not constitute current browser/native verification.
 
-- [ ] Define neutral surfaces, one accent color, typography, spacing, icons, and reusable component states.
-- [ ] Prototype menu editing, stock adjustment, cashier cart, checkout, reports, and printer setup.
-- [ ] Provide accessible contrast, keyboard support on web, large touch targets, loading/empty/error states, and compact/expanded layouts.
+Status: Design package delivered; In QA for owner visual review. Production UI implementation remains in #5, #11 and the related tickets.
 
-## Definition of done
+## Owner review
+- [ ] Owner confirms or requests changes to the palette, density, typography, desktop navigation and phone layout.
 
-- Acceptance criteria are verified with evidence appropriate to the change.
-- Critical transactional changes include meaningful failure/retry/concurrency checks.
-- User-facing changes follow the design system and include loading, empty, and failure states.
-- Documentation reflects supported behavior and limitations.
+## Deliverables
+- [Design system](https://github.com/arkinara/modern-pos/blob/main/DESIGN_SYSTEM.md) and [tokens](https://github.com/arkinara/modern-pos/blob/main/design-tokens.json)
+- [Interactive prototype](https://arkinara.github.io/modern-pos/prototype.html)
+- [Developer handoff](https://github.com/arkinara/modern-pos/blob/main/HANDOFF.md)
+## Scope correction and implementation readiness
+The web prototype is back office only: Menu, Stock, Reports and Printers. Cashier/cart/checkout belong exclusively to Flutter under #11/#12. Historical mixed-platform prototype checks do not approve the current revision. Keep this issue In QA until the remaining design checks and owner review are complete. #3 scaffolding may start independently because its dependency #1 is complete; final web/mobile UI sign-off remains gated here.
 
-Status: Draft specification; implementation has not started.
+
 
 ## M03 - Scaffold Next.js web, Flutter Android app, NestJS API, and PostgreSQL
 
 ## Outcome
-
 Create the selected stack with pnpm workspaces for TypeScript apps, Flutter tooling for mobile, Prisma migrations, local Docker Compose, and synthetic demo data.
 
 ## Planning
-
 - Draft ID: M03
-- Phase: 1 - MVP
+- Phase: 1
 - Area: Foundation
 - Priority: P0
-- Depends on: M01
+- Depends on: M01 (#1)
 
 ## Acceptance criteria
-
 - [ ] Web, Android, and API run using documented commands with validated environment examples.
 - [ ] Database migrations and a repeatable synthetic seed are included; no production credentials or data are committed.
 - [ ] CI builds apps and checks formatting, types, and critical domain tests.
 - [ ] Pin compatible stable dependencies; CI runs Next.js/NestJS checks and Flutter analyze/test/build. Generate or validate TypeScript and Dart contracts from OpenAPI.
 
 ## Definition of done
-
-- Acceptance criteria are verified with evidence appropriate to the change.
-- Critical transactional changes include meaningful failure/retry/concurrency checks.
-- User-facing changes follow the design system and include loading, empty, and failure states.
-- Documentation reflects supported behavior and limitations.
+- Acceptance criteria verified with relevant evidence.
+- Critical transaction changes include failure, retry, and concurrency checks.
+- UI follows the design system, including loading, empty, and failure states.
+- Documentation describes supported behavior and limitations.
 
 Status: Draft specification; implementation has not started.
+## Implementation entry gate
+M01 (#1) is complete; scaffolding can begin while #2 stays In QA. Establish separate `apps/web` (Next.js owner back office), `apps/mobile` (Flutter Android cashier), and `apps/api` (NestJS) boundaries, or document equivalent paths. Web must not expose a cashier/cart/checkout route. Both clients consume the versioned API; transactional rules remain server-owned.
+
+- [ ] A clean clone can start the database/API/web and build the Android debug app with documented commands.
+- [ ] CI validates the OpenAPI document and generates/compiles both TypeScript and Dart clients; document generation commands and prevent contract drift.
+- [ ] Record toolchain versions, environment variables, migration/seed commands, and health checks. Use synthetic data only.
+
+Completion of this ticket enables #4, #6/#7 and the hardware spike #15; it does not mark production business flows or visual approval complete.
+
+
 
 ## M04 - Implement authentication, owner/cashier roles, and outlet isolation
 
@@ -123,31 +133,34 @@ Status: Draft specification; implementation has not started.
 ## M05 - Build responsive back-office shell and business settings
 
 ## Outcome
-
 Implement navigation, account controls, and a single-outlet MVP configuration with extension points for more outlets.
 
 ## Planning
-
 - Draft ID: M05
-- Phase: 1 - MVP
+- Phase: 1
 - Area: Web
 - Priority: P1
-- Depends on: M02, M04
+- Depends on: M02 (#2), M04 (#4)
 
 ## Acceptance criteria
-
 - [ ] Owner can navigate Menu, Stock, Sales, Reports, and Printers with clear selected states.
 - [ ] Business name, receipt identity, currency, timezone, and configured tax/service rules are editable with validation.
 - [ ] Pages work on desktop and smaller screens; failed requests offer safe retry.
 
 ## Definition of done
-
-- Acceptance criteria are verified with evidence appropriate to the change.
-- Critical transactional changes include meaningful failure/retry/concurrency checks.
-- User-facing changes follow the design system and include loading, empty, and failure states.
-- Documentation reflects supported behavior and limitations.
+- Acceptance criteria verified with relevant evidence.
+- Critical transaction changes include failure, retry, and concurrency checks.
+- UI follows the design system, including loading, empty, and failure states.
+- Documentation describes supported behavior and limitations.
 
 Status: Draft specification; implementation has not started.
+## Platform boundary
+- [ ] Web navigation has no Cashier entry, cart, tender entry, checkout or New sale action, including at phone widths and through direct URLs/history.
+- [ ] Default landing page is Menu; Sales/Reports inspect mobile-originated sales. Empty reports do not link to web checkout.
+- [ ] Printer web screens manage outlet configuration/receipt identity and display status only. Android discovery, pairing, runtime permissions and physical printing belong to #15/#16.
+- [ ] Sales history and settings screens are reviewed under #2 before UI sign-off; the current static prototype is a partial reference, not proof these screens are delivered.
+
+
 
 ## M06 - Implement menu categories, products, variants, and availability
 
@@ -298,60 +311,63 @@ Status: Draft specification; implementation has not started.
 ## M11 - Build cashier app shell, catalog browsing, and cart
 
 ## Outcome
-
 Create a touch-friendly Android cashier UI for phone and tablet.
 
 ## Planning
-
 - Draft ID: M11
-- Phase: 1 - MVP
+- Phase: 1
 - Area: Android
 - Priority: P0
-- Depends on: M02, M04, M06
+- Depends on: M02 (#2), M04 (#4), M06 (#6)
 
 ## Acceptance criteria
-
 - [ ] Cashier can browse categories, search items, select variants, change quantity, and remove cart lines.
 - [ ] Unavailable items are visibly disabled and totals remain clear while editing.
 - [ ] Catalog refresh and expired-session handling preserve or explicitly resolve unsent cart work.
 
 ## Definition of done
-
-- Acceptance criteria are verified with evidence appropriate to the change.
-- Critical transactional changes include meaningful failure/retry/concurrency checks.
-- User-facing changes follow the design system and include loading, empty, and failure states.
-- Documentation reflects supported behavior and limitations.
+- Acceptance criteria verified with relevant evidence.
+- Critical transaction changes include failure, retry, and concurrency checks.
+- UI follows the design system, including loading, empty, and failure states.
+- Documentation describes supported behavior and limitations.
 
 Status: Draft specification; implementation has not started.
+## Mobile-only ownership
+- [ ] Cashier browsing, cart and sale initiation exist exclusively in the Flutter Android app. Responsive web layouts remain back-office management.
+- [ ] Review a separate mobile design under #2 for phone/tablet, touch targets, large text, variants, cart, empty/unavailable states, offline blocking and expired sessions before final UI sign-off.
+
+
 
 ## M12 - Connect checkout, completion receipt, and uncertain-outcome recovery
 
 ## Outcome
-
 Complete real API-backed cashier sales using cash or manual non-cash recording.
 
 ## Planning
-
 - Draft ID: M12
-- Phase: 1 - MVP
+- Phase: 1
 - Area: Android
 - Priority: P0
-- Depends on: M10, M11
+- Depends on: M10 (#10), M11 (#11)
 
 ## Acceptance criteria
-
 - [ ] Cashier can enter tender, view change, submit once, and see a sale reference and receipt.
 - [ ] Timeout recovery checks the existing checkout key before permitting a retry or new attempt.
 - [ ] Online-only MVP clearly blocks completion without a confirmed server connection; print failure never repeats checkout.
 
 ## Definition of done
-
-- Acceptance criteria are verified with evidence appropriate to the change.
-- Critical transactional changes include meaningful failure/retry/concurrency checks.
-- User-facing changes follow the design system and include loading, empty, and failure states.
-- Documentation reflects supported behavior and limitations.
+- Acceptance criteria verified with relevant evidence.
+- Critical transaction changes include failure, retry, and concurrency checks.
+- UI follows the design system, including loading, empty, and failure states.
+- Documentation describes supported behavior and limitations.
 
 Status: Draft specification; implementation has not started.
+## Recovery acceptance details
+- [ ] Persist the checkout key and submitted payload before the network request; app termination/restart during an unknown outcome resumes lookup with that same key before another sale is permitted.
+- [ ] Verify timeout after a server commit, retry, duplicate taps and restart produce one sale and one stock deduction, using the backend contract from #9/#10.
+- [ ] Checkout/tender/completion controls are Flutter Android only; owner web reports read the persisted result without initiating a sale.
+
+
 
 ## M13 - Build stock overview, receiving, adjustments, and low-stock states
 
@@ -414,32 +430,32 @@ Status: Draft specification; implementation has not started.
 ## M15 - Validate printer hardware and implement Android receipt connection
 
 ## Outcome
-
 Choose and verify one actual printer model and transport for MVP; prefer a documented thermal receipt protocol where supported.
 
 ## Planning
-
 - Draft ID: M15
-- Phase: 1 - MVP
+- Phase: 1
 - Area: Printing
 - Priority: P0
-- Depends on: M01, M03
+- Depends on: M01 (#1), M03 (#3)
 
 ## Acceptance criteria
-
 - [ ] Record model, paper width, encoding, command support, Android version, and required permissions.
 - [ ] Cashier can discover/configure the supported connection, connect, test print, and see actionable failure states.
 - [ ] Verify on real hardware; Bluetooth/LAN/USB are not all claimed supported unless individually tested. Additional transports belong in Phase 2.
 - [ ] Implement a Flutter printer adapter with Android runtime permissions and documented real-device verification.
 
 ## Definition of done
-
-- Acceptance criteria are verified with evidence appropriate to the change.
-- Critical transactional changes include meaningful failure/retry/concurrency checks.
-- User-facing changes follow the design system and include loading, empty, and failure states.
-- Documentation reflects supported behavior and limitations.
+- Acceptance criteria verified with relevant evidence.
+- Critical transaction changes include failure, retry, and concurrency checks.
+- UI follows the design system, including loading, empty, and failure states.
+- Documentation describes supported behavior and limitations.
 
 Status: Draft specification; implementation has not started.
+## Hardware input gate
+Record the selected printer model/transport and test Android device/version before adapter implementation. Hardware selection can run alongside #3; physical acceptance remains blocked until a real device is available. Web printer previews are simulations only and do not establish transport support.
+
+
 
 ## M16 - Implement receipt layout, print queue, retry, and reprints
 
@@ -503,32 +519,33 @@ Status: Draft specification; implementation has not started.
 ## M18 - Verify MVP end-to-end, deploy staging, and document ownership
 
 ## Outcome
-
 Prove the core sales, stock, reports, and printing loop before production use.
 
 ## Planning
-
 - Draft ID: M18
-- Phase: 1 - MVP
+- Phase: 1
 - Area: Release
 - Priority: P0
-- Depends on: M05, M13, M14, M16, M17
+- Depends on: M05 (#5), M13 (#13), M14 (#14), M16 (#16), M17 (#17)
 
 ## Acceptance criteria
-
 - [ ] Verify catalog setup to Android sale to stock deduction to report to real printed receipt.
 - [ ] Test concurrent stock contention, duplicate requests, checkout timeout, app restart, printer disconnect, and reversal.
 - [ ] Provide staging setup, Android build instructions, migration/backup/restore procedure, owner guide, and known limitations.
 - [ ] Use synthetic data; a production launch is a separate explicit release decision.
 
 ## Definition of done
-
-- Acceptance criteria are verified with evidence appropriate to the change.
-- Critical transactional changes include meaningful failure/retry/concurrency checks.
-- User-facing changes follow the design system and include loading, empty, and failure states.
-- Documentation reflects supported behavior and limitations.
+- Acceptance criteria verified with relevant evidence.
+- Critical transaction changes include failure, retry, and concurrency checks.
+- UI follows the design system, including loading, empty, and failure states.
+- Documentation describes supported behavior and limitations.
 
 Status: Draft specification; implementation has not started.
+## Cross-platform scope regression
+- [ ] Next.js desktop and narrow layouts, deep links and history never expose cashier/cart/checkout controls. Flutter owns sale initiation and physical printing; NestJS owns authorization, calculation and atomic persistence.
+- [ ] Complete an Android sale, then refresh owner web stock, sales and reports and reconcile the same persisted reference and quantities.
+
+
 
 ## C01 - Add offline sales and reliable synchronization
 
