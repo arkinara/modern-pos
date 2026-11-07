@@ -1,0 +1,6 @@
+{
+  "pubName": "modern_pos_api_client",
+  "pubVersion": "0.1.0",
+  "pubDescription": "Generated Dart client for the Modern POS OpenAPI contract (v0.1.0).",
+  "dateLibrary": "core"
+}

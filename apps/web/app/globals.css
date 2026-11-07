@@ -1,0 +1,98 @@
+@import 'tailwindcss';
+
+/*
+ * Values mirror the root design-tokens.json (v0.3.0). Components consume these
+ * CSS variables through Tailwind utilities; raw hex values live only here.
+ */
+:root {
+  --pos-canvas: #f5f3ef;
+  --pos-surface: #ffffff;
+  --pos-surface-muted: #ece9e3;
+  --pos-surface-tint: #faf9f6;
+  --pos-text: #242925;
+  --pos-muted: #64685f;
+  --pos-border: #dddcd4;
+  --pos-control-border: #8a8c80;
+  --pos-accent: #a74327;
+  --pos-accent-hover: #87341d;
+  --pos-accent-soft: #f7e8de;
+  --pos-danger: #a12d32;
+  --pos-danger-soft: #fae9e8;
+  --pos-warning: #805510;
+  --pos-warning-soft: #fbf0d9;
+  --pos-success: #386044;
+  --pos-success-soft: #eaf0e7;
+  --pos-ink: #232e29;
+  --pos-ink-muted: #b7c1b9;
+  --pos-nav-selected: #f4d9b9;
+  --pos-nav-selected-text: #302b22;
+  --pos-nav-text: #c4cec6;
+  --pos-radius-control: 10px;
+  --pos-radius-surface: 14px;
+  --pos-radius-panel: 16px;
+  --pos-sidebar: 218px;
+  --pos-focus-width: 3px;
+  --pos-focus-offset: 3px;
+  --pos-motion-fast: 160ms;
+  --pos-motion-standard: 200ms;
+}
+
+@theme inline {
+  --color-canvas: var(--pos-canvas);
+  --color-surface: var(--pos-surface);
+  --color-surface-muted: var(--pos-surface-muted);
+  --color-surface-tint: var(--pos-surface-tint);
+  --color-text: var(--pos-text);
+  --color-muted: var(--pos-muted);
+  --color-border: var(--pos-border);
+  --color-control: var(--pos-control-border);
+  --color-accent: var(--pos-accent);
+  --color-accent-hover: var(--pos-accent-hover);
+  --color-accent-soft: var(--pos-accent-soft);
+  --color-danger: var(--pos-danger);
+  --color-danger-soft: var(--pos-danger-soft);
+  --color-warning: var(--pos-warning);
+  --color-warning-soft: var(--pos-warning-soft);
+  --color-success: var(--pos-success);
+  --color-success-soft: var(--pos-success-soft);
+  --color-ink: var(--pos-ink);
+  --color-ink-muted: var(--pos-ink-muted);
+  --color-nav-selected: var(--pos-nav-selected);
+  --color-nav-selected-text: var(--pos-nav-selected-text);
+  --color-nav-text: var(--pos-nav-text);
+  --radius-control: var(--pos-radius-control);
+  --radius-surface: var(--pos-radius-surface);
+  --radius-panel: var(--pos-radius-panel);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+  border-color: var(--pos-border);
+}
+
+html {
+  background: var(--pos-canvas);
+}
+
+body {
+  min-height: 100vh;
+  background: var(--pos-canvas);
+  color: var(--pos-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: var(--pos-focus-width) solid var(--pos-accent);
+  outline-offset: var(--pos-focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

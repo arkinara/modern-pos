@@ -1,0 +1,60 @@
+// Minimum plumbing schema for ticket #3.
+// Domain models for catalog, stock, sales, reports and printing land in #6-#10.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  CASHIER
+}
+
+model Business {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  outlets Outlet[]
+  users   User[]
+
+  @@map("businesses")
+}
+
+model Outlet {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  name       String
+  timezone   String   @default("Asia/Jakarta")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  users    User[]
+
+  @@unique([businessId, name])
+  @@map("outlets")
+}
+
+model User {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  outletId   String?  @db.Uuid
+  email      String
+  name       String
+  role       Role     @default(CASHIER)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet?  @relation(fields: [outletId], references: [id], onDelete: SetNull)
+
+  @@unique([businessId, email])
+  @@map("users")
+}

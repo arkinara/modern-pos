@@ -1,0 +1,38 @@
+{
+  "name": "modern-pos",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": "22.23.1",
+    "pnpm": "9.12.3"
+  },
+  "scripts": {
+    "build": "pnpm --filter @modern-pos/web build && pnpm --filter @modern-pos/api build",
+    "build:api": "pnpm --filter @modern-pos/api build",
+    "build:web": "pnpm --filter @modern-pos/web build",
+    "dev:api": "pnpm --filter @modern-pos/api dev",
+    "dev:web": "pnpm --filter @modern-pos/web dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check apps/api apps/web packages/api-client .github package.json pnpm-workspace.yaml docker-compose.yml",
+    "typecheck": "pnpm --filter @modern-pos/api-client typecheck && pnpm --filter @modern-pos/api typecheck && pnpm --filter @modern-pos/web typecheck",
+    "test": "pnpm --filter @modern-pos/api test",
+    "openapi:validate": "swagger-cli validate API.openapi.json",
+    "openapi:generate:ts": "openapi-typescript API.openapi.json -o packages/api-client/src/schema.d.ts",
+    "openapi:generate:dart": "openapi-generator-cli generate -i API.openapi.json -g dart -c tools/openapi-dart-config.json -o packages/api_client_dart",
+    "openapi:generate": "pnpm openapi:generate:ts && pnpm openapi:generate:dart",
+    "openapi:check:dart": "cd packages/api_client_dart && dart pub get && dart analyze --no-fatal-warnings",
+    "openapi:check": "pnpm openapi:validate && pnpm openapi:generate && git diff --exit-code -- packages/api-client/src/schema.d.ts packages/api_client_dart && pnpm openapi:check:dart",
+    "mobile:format:check": "cd apps/mobile && dart format --output=none --set-exit-if-changed lib test",
+    "mobile:analyze": "cd apps/mobile && flutter analyze",
+    "mobile:test": "cd apps/mobile && flutter test",
+    "mobile:build": "cd apps/mobile && flutter build apk --debug"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-cli": "4.0.4",
+    "@openapitools/openapi-generator-cli": "2.42.0",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3"
+  }
+}
