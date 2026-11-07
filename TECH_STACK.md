@@ -24,7 +24,7 @@ Start with one database and one API deployment. Redis, event buses, microservice
 
 ## Authentication and deployment
 
-Owner and cashier identities are authorized server-side with business/outlet boundaries. Select a maintained Nest-compatible authentication implementation in M04; document access/refresh rotation, expiry and revocation. Web sessions use secure HTTP-only cookies where applicable; Flutter credentials use platform secure storage. Do not build custom cryptography or duplicate competing identity stores.
+Owner and cashier identities are authorized server-side with business/outlet boundaries. Use Nest Passport JWT strategies, Argon2id password hashes and server-tracked rotating opaque refresh sessions as specified in ARCHITECTURE.md; implement and verify these in M04. Web sessions use secure HTTP-only cookies where applicable; Flutter credentials use platform secure storage. Do not build custom cryptography or duplicate competing identity stores.
 
 Use pnpm workspaces for TypeScript projects; Flutter uses its own pub tooling in the same repository. Docker Compose supplies local PostgreSQL and optionally the API/web. CI runs TypeScript checks, Flutter checks, builds, and meaningful domain/integration tests. Hosting uses containerized web/API services and managed PostgreSQL; select the provider when staging requirements and budget are known.
 
@@ -41,4 +41,5 @@ Flutter meets the requested mobile direction and supports native printer integra
 
 ## Pending validation, not undecided stack
 
-Printer model/transport, authentication library configuration, hosting provider, and exact pinned dependency versions require implementation-time validation. Frameworks and database are selected. iOS support and full offline sales are outside Phase 1.
+Printer model/transport, detailed authentication configuration, hosting provider, and exact pinned dependency versions require implementation-time validation. Frameworks and database are selected. iOS support and full offline sales are outside Phase 1.
+

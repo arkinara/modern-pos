@@ -36,4 +36,21 @@ Printer model, transport, Android device/version, business-specific receipt/tax 
 
 ## Verification record
 
-Structural contract/reference checks, JavaScript parse and seven core text-contrast pairs pass; details are in VALIDATION.json. Browser interaction and responsive verification is being completed against the published static preview; final evidence will be appended here before issue handoff.
+Structural contract/reference checks, JavaScript parse and seven core text-contrast pairs pass; details are in VALIDATION.json. These structural checks do not constitute a full OpenAPI meta-schema validation or a production accessibility audit.
+
+Reproduce these dependency-free checks with `node verify-foundation.cjs` from the repository root. It refreshes VALIDATION.json and exits nonzero on structural, script syntax or contrast failures.
+
+Browser-verified on 7 November 2026 against the GitHub Pages demo:
+
+- Cashier: Rp52,000 sale from Rp60,000 cash produces Rp8,000 change; insufficient cash is rejected.
+- Stock: sale changes coffee 450→432g, milk 1,200→1,020ml, and almond croissant 8→7. A 500ml adjustment succeeds; an adjustment below zero is rejected with a visible error and preserved form.
+- Menu: blank name is rejected; editing Flat white to House flat white and price 28,000→29,000 updates the catalog. The prior receipt still shows its original name/price.
+- Reports: one sale reconciles to Rp52,000; selecting another date shows an empty result; CSV export downloads successfully.
+- Printers: failure leaves the sale intact; simulated connection/test succeeds; the old receipt can be reopened from Reports and printed/reprinted independently.
+- Connectivity/error: offline mode disables new checkout; error state offers safe retry.
+- Keyboard: Ctrl+K focuses search; Escape closes the variant dialog and restores focus to its product button.
+- Layouts: all five screens checked at 320, 1024 and 1440px with no document-level horizontal overflow. Phone layout also inspected at 390px. Screenshots accompany the review package.
+
+Review URL: [Open the interactive prototype](https://arkinara.github.io/modern-pos/prototype.html). GitHub Pages serves the static public repository from main; changes to the prototype publish through its Pages deployment. There are no live business services behind this site.
+
+Still required: owner visual approval (#2), native Flutter behavior/large text verification (#11), full accessibility audit, generated-client/OpenAPI validation in CI (#3), and every production verification listed in #18. The final touch-target refinement is included in the follow-up main commit.

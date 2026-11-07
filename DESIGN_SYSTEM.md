@@ -31,6 +31,8 @@ Typography: system sans stack (`Inter` if bundled later, otherwise platform UI s
 
 Spacing: 4, 8, 12, 16, 24, 32, 48 px. Radius: 8 fields/buttons, 12 surfaces, 16 large panels, pill only for badges/chips. Border: 1px. Shadow: dialog only, 0 20px 70px rgba(23,43,40,.18). Touch controls minimum 48px height; web compact table actions at least 40px. Use 48px targets on coarse pointers.
 
+Icons: use a consistent outlined family at 20px for navigation and 16px beside labels. Web uses Lucide (`LayoutGrid`, `Utensils`, `Package`, `ChartColumn`, `Printer`, `Search`, `Plus`, `Minus`, `Check`, `X`). Flutter uses equivalent outlined Material icons with the same semantic labels; don't mix filled and outlined styles on one screen. Keep visible navigation text and accessible names for icon-only actions. Prototype navigation symbols are lightweight placeholders; production icons should come from these maintained libraries, not hand-drawn paths.
+
 ## Layout and navigation
 
 Desktop back office >=1100px: 224px side navigation, fluid workspace, 32px padding, tables aligned to the same grid. Tablet 720–1099px: horizontally wrapped navigation, 24px padding, two-column editor where it fits. Phone <720px: header/navigation wraps, 16px padding, single-column forms and stacked rows with all key facts/actions retained. Data tables can scroll only if column semantics require it; no document-level horizontal overflow.

@@ -127,6 +127,8 @@ Main groups: auth/session; outlet config/devices; categories/menu variants; stoc
 
 Errors use `{code,message,requestId,details?,retryable}`; messages are human-readable, codes are stable. 400 malformed input, 401 session absent/expired, 403 insufficient role, 404 absent or out-of-scope record, 409 stale versions/stock/idempotency conflict, 422 semantic validation, 429 rate limit, 503 transient failure. Never leak another business's record through error details. CSV exports mitigate spreadsheet formula injection in text fields. Logs redact credentials and customer data.
 
+For non-checkout idempotent writes (receipts, adjustments, order creation, reversal and print metadata), scope keys by business/outlet + operation + device when supplied, persist the canonical request hash and committed result, and reject a changed payload with 409. Bind the original actor/session authorization on recovery. No idempotent endpoint may perform its side effect before its key/result record can commit atomically with that effect.
+
 ## 7. Identity/security baseline
 
 Use Nest Passport JWT strategies, Argon2id password hashes and opaque random refresh tokens stored hashed server-side. Short-lived access tokens (10 minutes), rotating refresh sessions (7-day absolute lifetime), immediate session revocation checked on protected operations. Implement rotation reuse detection and revoke the affected session family. Owner provisioning is a documented deployment/admin action in MVP; no public self-signup or role escalation endpoint.
