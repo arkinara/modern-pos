@@ -229,4 +229,37 @@ jobs:
 
       - name: Android debug build
         working-directory: apps/mobile
-        run: flutter build apk --debug
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The Gradle wrapper downloads gradle-9.3.1-all.zip from GitHub (via
+          # services.gradle.org). A transient 5xx response there fails the build
+          # before any project code runs. Retry once after clearing only that
+          # wrapper distribution; real build failures are not retried.
+          gradle_dist="$HOME/.gradle/wrapper/dists/gradle-9.3.1-all"
+          max_attempts=2
+          attempt=1
+          while true; do
+            echo "::group::flutter build apk --debug (attempt ${attempt}/${max_attempts})"
+            if flutter build apk --debug 2>&1 | tee /tmp/android-build.log; then
+              echo "::endgroup::"
+              exit 0
+            else
+              status=${PIPESTATUS[0]}
+              echo "::endgroup::"
+            fi
+
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "Android debug build failed after ${max_attempts} attempts" >&2
+              exit "$status"
+            fi
+
+            if ! grep -qE 'Server returned HTTP response code: 5[0-9][0-9] for URL: https://github.com/gradle/gradle-distributions/|Could not (GET|HEAD) .*services\.gradle\.org|Could not download gradle-9\.3\.1-all\.zip' /tmp/android-build.log; then
+              echo "Android debug build failed for a reason other than a transient Gradle distribution download; not retrying" >&2
+              exit "$status"
+            fi
+
+            echo "Detected transient Gradle distribution download failure; clearing the wrapper cache and retrying"
+            rm -rf "$gradle_dist"
+            attempt=$((attempt + 1))
+          done
