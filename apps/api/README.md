@@ -26,7 +26,15 @@ repository root.
 | `PATCH` | `/v1/outlets/{outletId}/menu/{menuId}` | Owner-only menu update with `revision` conflict check. |
 | `POST` | `/v1/outlets/{outletId}/menu/{menuId}/archive` | Owner-only soft archive with `revision` conflict check. |
 | `PATCH` | `/v1/outlets/{outletId}/variants/{variantId}` | Owner-only price, policy and enabled update with `revision`. |
-| `*` | `/v1/*` | Other OpenAPI v0.2.0 operations are implemented by later tickets. |
+| `POST` | `/v1/outlets/{outletId}/orders` | Cashier/owner draft order; required `Idempotency-Key`. |
+| `PUT` | `/v1/outlets/{outletId}/orders/{orderId}` | Replace draft lines with optimistic `version`. |
+| `POST` | `/v1/outlets/{outletId}/orders/{orderId}/cancel` | Cancel draft; returns 204. |
+| `POST` | `/v1/outlets/{outletId}/orders/{orderId}/quotes` | 60-second immutable quote from shared outlet settings. |
+| `POST` | `/v1/outlets/{outletId}/sales/finalize` | Cash/manual external sale; required `Idempotency-Key`. |
+| `GET` | `/v1/outlets/{outletId}/checkout-requests/{key}` | Recovery mapping; requires `deviceId` query. |
+| `GET` | `/v1/outlets/{outletId}/sales` | Cursor/date-filtered sales; cashiers see own sales. |
+| `GET` | `/v1/outlets/{outletId}/sales/{saleId}` | Immutable receipt snapshot. |
+| `*` | `/v1/*` | Other OpenAPI v0.3.0 operations are implemented by later tickets. |
 
 The global prefix `v1` is excluded for `/health` so container/orchestrator probes stay stable.
 
@@ -41,9 +49,9 @@ catalog:
 - `Category`, `MenuItem`, `MenuVariant`, `OutletMenu` (business-owned catalog plus per-outlet
   visibility and enabled flags)
 
-Recipes, stock ledger, orders, sales, reports and printing models belong to tickets #7-#10. Do
-not add transaction rules here until those tickets define them. Migrations are committed under
-`prisma/migrations/`.
+Recipes, reports and printing models belong to later tickets. Orders, quotes, sales, sale
+lines, payment records and checkout mappings are implemented under #9. Migrations are committed
+under `prisma/migrations/`.
 
 Catalog prices are PostgreSQL `BIGINT` minor units and are serialized as JSON safe integers.
 Category identities are business-owned; a menu item and its variants become visible in an outlet
@@ -74,6 +82,32 @@ seeded identities and rate-limit configuration.
   snapshots stay intact. Owner menu reads include archived records with `archived: true`.
   Cashier menu reads exclude archived items, archived categories and disabled variants, so the
   Android saleable catalog never includes archived products.
+
+## Orders, quotes and sales (#9)
+
+- Money is integer minor units (`BIGINT`), serialized as JSON safe integers. Calculation is
+  tax-exclusive with half-up rounding:
+  `subtotal = sum(price * qty)`, `service = half_up(subtotal * service_bps / 10000)`,
+  `tax = half_up((subtotal + service) * tax_bps / 10000)`, `total = subtotal + service + tax`.
+  Quotes and completed sales persist an immutable calculation-rule snapshot (`taxBps`,
+  `serviceBps`, `pricingMode`, currency exponent, `rounding`) taken from the same `Outlets` row
+  that `PATCH /settings` writes. Later settings changes never rewrite a quote or a sale.
+- Cash finalization requires `amountMinor == total` and `tenderedMinor >= total`; change is
+  derived. Manual external payments require `amountMinor == total` and no tender. One payment
+  per sale. Rejections are `422 PAYMENT_INVALID` and write nothing.
+- Quotes are immutable and expire after 60 seconds. Finalization returns `409 QUOTE_EXPIRED`
+  or `409 QUOTE_STALE` for expired quotes, order/settings version changes, or catalog price
+  changes. A quote is never silently repriced.
+- Sale lines snapshot product name, variant name, unit price, quantity and line subtotal; the
+  sale snapshots the calculation rules, currency, currency exponent and outlet timezone.
+  Catalog and settings edits never rewrite a completed sale. Both sale read operations return
+  the stored calculation rules alongside the amounts they produced.
+- Finalize uses a serializable transaction and a unique `(outlet, device, idempotencyKey)`
+  checkout mapping. Replays return the original sale even after quote expiry; a changed payload
+  is `409 IDEMPOTENCY_CONFLICT`; a different key for a completed order is
+  `409 ORDER_ALREADY_COMPLETED` with `details.saleId`. Recovery `404` is not proof of failure.
+- Stock is intentionally untouched in #9. `SalesService.applyStockConsumption` is the single
+  seam where #10 adds `SALE` movements and balance guards inside the same transaction.
 
 ## Local commands
 

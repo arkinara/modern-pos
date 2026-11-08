@@ -154,7 +154,7 @@ flutter build apk --debug
 
 ## OpenAPI contract workflow
 
-The root `API.openapi.json` (v0.2.0) remains the contract. Generated clients are committed so a
+The root `API.openapi.json` (v0.3.0) remains the contract. Generated clients are committed so a
 clean clone builds without regenerating first.
 
 ```bash
@@ -337,6 +337,74 @@ the contract and the TypeScript wrapper gained matching methods.
 Deferred to later tickets: recipe and variant links (#8), sale calculation (#9), `SALE` ledger
 movements and atomic checkout deduction (#10), low-stock overview polish (#13), purchase orders
 (#14) and reversals (#17). These endpoints never emit `SALE` or `REVERSAL` movements.
+
+## Orders, quotes, sale calculation and payment recording (#9)
+
+Implementation lives in `apps/api/src/sales`. The OpenAPI document is unchanged; all eight
+sales/order operations already existed in the contract and the tests exercise the contract
+shapes directly.
+
+- Operations: `POST /v1/outlets/:outletId/orders` (draft create, idempotent),
+  `PUT /v1/outlets/:outletId/orders/:orderId` (replace draft lines with `version`),
+  `POST /v1/outlets/:outletId/orders/:orderId/cancel` (204), and
+  `POST /v1/outlets/:outletId/orders/:orderId/quotes` (60-second quote). Sales are read with
+  `GET /v1/outlets/:outletId/sales` and `GET /v1/outlets/:outletId/sales/:saleId`;
+  `POST /v1/outlets/:outletId/sales/finalize` commits the sale and
+  `GET /v1/outlets/:outletId/checkout-requests/:key?deviceId=...` recovers a lost response.
+- Both owner and cashier roles may sell. A cashier can only read/update/cancel/finalize its own
+  draft orders and only read its own sales in that outlet; an owner sees all sales in the
+  business's outlet. Cross-outlet or cross-tenant IDs return `404` through the global guard and
+  business-filtered queries.
+- Money is an integer in currency minor units, stored as PostgreSQL `BIGINT` and serialized
+  only after checking the JavaScript safe-integer range (`2^53-1`). Prices are tax-exclusive:
+  `subtotal = sum(unit_price_minor * quantity)`,
+  `service = half_up(subtotal * service_bps / 10000)`,
+  `tax = half_up((subtotal + service) * tax_bps / 10000)`, and
+  `total = subtotal + service + tax`. Quotes capture an immutable calculation-rule snapshot
+  (`tax_bps`, `service_bps`, `pricing_mode`, currency exponent, half-up rounding rule) from
+  the same outlet settings row written by `PATCH /settings`; finalization stores the same rule
+  values on the sale next to the computed amounts. Only draft-order/catalog lookups and the
+  settings-version staleness check read live outlet data: a completed sale or an issued quote
+  never follows later settings changes, and both read operations expose the stored rules.
+  Calculations use integer `BigInt` math, never binary floating point, and reject overflow
+  with `422 MONEY_OUT_OF_RANGE`.
+- Cash requires `amountMinor == total` and `tenderedMinor >= total`; the response records
+  `changeMinor = tenderedMinor - total`. Manual external payment requires
+  `amountMinor == total` and omits tender/change. Invalid payments return `422 PAYMENT_INVALID`
+  with a reason and write nothing. One payment record is stored per sale.
+- A quote is immutable and expires after 60 seconds. Finalization rejects an expired quote with
+  `409 QUOTE_EXPIRED` and any order-version, settings-version, currency or catalog-price
+  mismatch with `409 QUOTE_STALE`; the client must request a new quote and show the new total.
+  A stale quote never silently re-prices the tender. Replaying an already-completed checkout
+  key is checked before quote expiry, so a retry still returns the original sale.
+- Sale and sale-line rows copy product name, variant name, quantity, unit price, line subtotal
+  and the calculation-rule/currency/exponent/outlet-timezone snapshot at completion. Later
+  catalog, price or settings edits do not change a completed receipt.
+- Draft orders use optimistic `version`; stale updates/cancel requests return
+  `409 VERSION_CONFLICT`, and any non-draft update/cancel returns `409 ORDER_NOT_DRAFT`.
+  Completing an order marks it `COMPLETED` in the same transaction as the sale, lines, payment
+  and checkout mapping.
+- Order creation has a required UUID `Idempotency-Key`, unique per `(outlet, device, key)`.
+  Finalization stores a durable `CheckoutRequest` keyed by `(outlet, device, key)` and the
+  canonical request hash in the same serializable transaction as the sale. Same key plus same
+  payload returns the original sale; same key plus changed payload returns
+  `409 IDEMPOTENCY_CONFLICT`; a different key for a completed order returns
+  `409 ORDER_ALREADY_COMPLETED` with `details.saleId`. A recovery `404` does not prove failure
+  while a request may still be in flight, so clients must retry or resubmit the same key and
+  payload rather than inventing a new key.
+- `sales_list` supports cursor pagination and optional `from`/`to` outlet-local dates. The range
+  is half-open `[start of from, start of day after to)` converted from the outlet IANA timezone
+  to UTC. `sales_get` returns the immutable receipt.
+- Finalization deliberately leaves stock untouched. A single marked seam,
+  `SalesService.applyStockConsumption`, is invoked inside the same serializable transaction so
+  #10 can add `SALE` movements and nonnegative balance guards without scattering writes.
+- The seed adds one deterministic completed cash sale per demo outlet with its order, quote,
+  sale lines, payment, and checkout mapping. Running the seed again updates those fixed rows
+  without duplicating them.
+
+Deferred to later tickets: recipe consumption and `SALE` stock movements (#10), cashier sale UI
+(#11), sales history/report/CSV pages (#14) and reversal/restock (#17). No web sale route is
+added by this ticket.
 
 ## Scope boundaries
 

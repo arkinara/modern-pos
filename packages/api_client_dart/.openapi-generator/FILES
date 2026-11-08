@@ -6,6 +6,7 @@ doc/Adjustment.md
 doc/AuthApi.md
 doc/AuthMobileRefreshRequest.md
 doc/AuthWebLoginRequest.md
+doc/CalculationRules.md
 doc/CatalogApi.md
 doc/CatalogArchiveRequest.md
 doc/Category.md
@@ -98,6 +99,7 @@ lib/auth/oauth.dart
 lib/model/adjustment.dart
 lib/model/auth_mobile_refresh_request.dart
 lib/model/auth_web_login_request.dart
+lib/model/calculation_rules.dart
 lib/model/catalog_archive_request.dart
 lib/model/category.dart
 lib/model/category_write.dart

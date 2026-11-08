@@ -189,6 +189,8 @@ class ApiClient {
           return AuthMobileRefreshRequest.fromJson(value);
         case 'AuthWebLoginRequest':
           return AuthWebLoginRequest.fromJson(value);
+        case 'CalculationRules':
+          return CalculationRules.fromJson(value);
         case 'CatalogArchiveRequest':
           return CatalogArchiveRequest.fromJson(value);
         case 'Category':

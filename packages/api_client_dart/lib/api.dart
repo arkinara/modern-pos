@@ -43,6 +43,7 @@ part 'api/stock_api.dart';
 part 'model/adjustment.dart';
 part 'model/auth_mobile_refresh_request.dart';
 part 'model/auth_web_login_request.dart';
+part 'model/calculation_rules.dart';
 part 'model/catalog_archive_request.dart';
 part 'model/category.dart';
 part 'model/category_write.dart';

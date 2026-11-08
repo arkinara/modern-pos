@@ -31,6 +31,32 @@ const OTHER_OUTLET_ID = '00000000-0000-4000-8000-000000000011';
 const OTHER_OWNER_ID = '00000000-0000-4000-8000-000000000012';
 const OTHER_CASHIER_ID = '00000000-0000-4000-8000-000000000013';
 
+const SEED_ORDER_ID = '00000000-0000-4000-8000-000000000090';
+const SEED_ORDER_DEVICE_ID = '00000000-0000-4000-8000-000000000091';
+const SEED_ORDER_KEY = '00000000-0000-4000-8000-000000000092';
+const SEED_ORDER_LINE_A_ID = '00000000-0000-4000-8000-000000000093';
+const SEED_ORDER_LINE_B_ID = '00000000-0000-4000-8000-000000000094';
+const SEED_QUOTE_ID = '00000000-0000-4000-8000-000000000095';
+const SEED_SALE_ID = '00000000-0000-4000-8000-000000000096';
+const SEED_SALE_LINE_A_ID = '00000000-0000-4000-8000-000000000097';
+const SEED_SALE_LINE_B_ID = '00000000-0000-4000-8000-000000000098';
+const SEED_PAYMENT_ID = '00000000-0000-4000-8000-000000000099';
+const SEED_CHECKOUT_ID = '00000000-0000-4000-8000-00000000009a';
+const SEED_FINALIZE_KEY = '00000000-0000-4000-8000-00000000009b';
+const SEED2_ORDER_ID = '00000000-0000-4000-8000-0000000000a0';
+const SEED2_ORDER_DEVICE_ID = '00000000-0000-4000-8000-0000000000a1';
+const SEED2_ORDER_KEY = '00000000-0000-4000-8000-0000000000a2';
+const SEED2_ORDER_LINE_A_ID = '00000000-0000-4000-8000-0000000000a3';
+const SEED2_ORDER_LINE_B_ID = '00000000-0000-4000-8000-0000000000a4';
+const SEED2_QUOTE_ID = '00000000-0000-4000-8000-0000000000a5';
+const SEED2_SALE_ID = '00000000-0000-4000-8000-0000000000a6';
+const SEED2_SALE_LINE_A_ID = '00000000-0000-4000-8000-0000000000a7';
+const SEED2_SALE_LINE_B_ID = '00000000-0000-4000-8000-0000000000a8';
+const SEED2_PAYMENT_ID = '00000000-0000-4000-8000-0000000000a9';
+const SEED2_CHECKOUT_ID = '00000000-0000-4000-8000-0000000000aa';
+const SEED2_FINALIZE_KEY = '00000000-0000-4000-8000-0000000000ab';
+const SEED_COMPLETED_AT = new Date('2026-01-01T10:00:00.000Z');
+
 const STOCK_COFFEE_ID = '00000000-0000-4000-8000-000000000050';
 const STOCK_MILK_ID = '00000000-0000-4000-8000-000000000051';
 const STOCK_CUPS_ID = '00000000-0000-4000-8000-000000000052';
@@ -389,8 +415,274 @@ async function main(): Promise<void> {
     }
   }
 
+  // One deterministic completed sale per demo outlet proves receipt snapshots,
+  // checkout recovery and cashier/owner sale list scoping without real data.
+  for (const outletId of [OUTLET_MAIN_ID, OUTLET_SECOND_ID]) {
+    const isMain = outletId === OUTLET_MAIN_ID;
+    const suffix = isMain ? 'main' : 'second';
+    const ids = isMain
+      ? {
+          order: SEED_ORDER_ID,
+          device: SEED_ORDER_DEVICE_ID,
+          orderKey: SEED_ORDER_KEY,
+          orderLineA: SEED_ORDER_LINE_A_ID,
+          orderLineB: SEED_ORDER_LINE_B_ID,
+          quote: SEED_QUOTE_ID,
+          sale: SEED_SALE_ID,
+          saleLineA: SEED_SALE_LINE_A_ID,
+          saleLineB: SEED_SALE_LINE_B_ID,
+          payment: SEED_PAYMENT_ID,
+          checkout: SEED_CHECKOUT_ID,
+          finalizeKey: SEED_FINALIZE_KEY,
+          cashierId: CASHIER_MAIN_ID,
+        }
+      : {
+          order: SEED2_ORDER_ID,
+          device: SEED2_ORDER_DEVICE_ID,
+          orderKey: SEED2_ORDER_KEY,
+          orderLineA: SEED2_ORDER_LINE_A_ID,
+          orderLineB: SEED2_ORDER_LINE_B_ID,
+          quote: SEED2_QUOTE_ID,
+          sale: SEED2_SALE_ID,
+          saleLineA: SEED2_SALE_LINE_A_ID,
+          saleLineB: SEED2_SALE_LINE_B_ID,
+          payment: SEED2_PAYMENT_ID,
+          checkout: SEED2_CHECKOUT_ID,
+          finalizeKey: SEED2_FINALIZE_KEY,
+          cashierId: CASHIER_SECOND_ID,
+        };
+    const quoteLines = [
+      {
+        variantId: VARIANT_ICED_COFFEE_REGULAR_ID,
+        name: 'Iced Coffee',
+        variantName: 'Regular',
+        quantity: 2,
+        unitPriceMinor: 18000,
+        lineSubtotalMinor: 36000,
+        recipeVersion: null,
+      },
+      {
+        variantId: VARIANT_CHICKEN_RICE_ID,
+        name: 'Chicken Rice',
+        variantName: 'Default',
+        quantity: 1,
+        unitPriceMinor: 35000,
+        lineSubtotalMinor: 35000,
+        recipeVersion: null,
+      },
+    ];
+
+    await prisma.order.upsert({
+      where: { id: ids.order },
+      update: {
+        businessId: BUSINESS_ID,
+        outletId,
+        cashierId: ids.cashierId,
+        deviceId: ids.device,
+        state: 'COMPLETED',
+        version: 2,
+        idempotencyKey: ids.orderKey,
+        requestHash: `seed-order-${suffix}`,
+      },
+      create: {
+        id: ids.order,
+        businessId: BUSINESS_ID,
+        outletId,
+        cashierId: ids.cashierId,
+        deviceId: ids.device,
+        state: 'COMPLETED',
+        version: 2,
+        idempotencyKey: ids.orderKey,
+        requestHash: `seed-order-${suffix}`,
+      },
+    });
+
+    for (const [lineId, line] of [
+      [ids.orderLineA, quoteLines[0]!],
+      [ids.orderLineB, quoteLines[1]!],
+    ] as const) {
+      await prisma.orderLine.upsert({
+        where: { id: lineId },
+        update: { orderId: ids.order, variantId: line.variantId, quantity: line.quantity },
+        create: {
+          id: lineId,
+          orderId: ids.order,
+          variantId: line.variantId,
+          quantity: line.quantity,
+        },
+      });
+    }
+
+    await prisma.quote.upsert({
+      where: { id: ids.quote },
+      update: {
+        businessId: BUSINESS_ID,
+        outletId,
+        orderId: ids.order,
+        orderVersion: 1,
+        settingsVersion: 1,
+        currency: 'IDR',
+        currencyExponent: 0,
+        taxBps: 0,
+        serviceBps: 0,
+        pricingMode: 'EXCLUSIVE',
+        rounding: 'HALF_UP',
+        expiresAt: SEED_COMPLETED_AT,
+        subtotalMinor: 71000n,
+        serviceMinor: 0n,
+        taxMinor: 0n,
+        totalMinor: 71000n,
+        lines: quoteLines,
+      },
+      create: {
+        id: ids.quote,
+        businessId: BUSINESS_ID,
+        outletId,
+        orderId: ids.order,
+        orderVersion: 1,
+        settingsVersion: 1,
+        currency: 'IDR',
+        currencyExponent: 0,
+        taxBps: 0,
+        serviceBps: 0,
+        pricingMode: 'EXCLUSIVE',
+        rounding: 'HALF_UP',
+        expiresAt: SEED_COMPLETED_AT,
+        subtotalMinor: 71000n,
+        serviceMinor: 0n,
+        taxMinor: 0n,
+        totalMinor: 71000n,
+        lines: quoteLines,
+      },
+    });
+
+    await prisma.sale.upsert({
+      where: { id: ids.sale },
+      update: {
+        businessId: BUSINESS_ID,
+        outletId,
+        orderId: ids.order,
+        cashierId: ids.cashierId,
+        deviceId: ids.device,
+        reference: `SALE-SEED-${suffix.toUpperCase()}`,
+        state: 'COMPLETED',
+        currency: 'IDR',
+        currencyExponent: 0,
+        taxBps: 0,
+        serviceBps: 0,
+        pricingMode: 'EXCLUSIVE',
+        rounding: 'HALF_UP',
+        timezone: 'Asia/Jakarta',
+        subtotalMinor: 71000n,
+        serviceMinor: 0n,
+        taxMinor: 0n,
+        totalMinor: 71000n,
+        completedAt: SEED_COMPLETED_AT,
+      },
+      create: {
+        id: ids.sale,
+        businessId: BUSINESS_ID,
+        outletId,
+        orderId: ids.order,
+        cashierId: ids.cashierId,
+        deviceId: ids.device,
+        reference: `SALE-SEED-${suffix.toUpperCase()}`,
+        state: 'COMPLETED',
+        currency: 'IDR',
+        currencyExponent: 0,
+        taxBps: 0,
+        serviceBps: 0,
+        pricingMode: 'EXCLUSIVE',
+        rounding: 'HALF_UP',
+        timezone: 'Asia/Jakarta',
+        subtotalMinor: 71000n,
+        serviceMinor: 0n,
+        taxMinor: 0n,
+        totalMinor: 71000n,
+        completedAt: SEED_COMPLETED_AT,
+      },
+    });
+
+    for (const [lineId, line] of [
+      [ids.saleLineA, quoteLines[0]!],
+      [ids.saleLineB, quoteLines[1]!],
+    ] as const) {
+      await prisma.saleLine.upsert({
+        where: { id: lineId },
+        update: {
+          saleId: ids.sale,
+          variantId: line.variantId,
+          name: line.name,
+          variantName: line.variantName,
+          quantity: line.quantity,
+          unitPriceMinor: BigInt(line.unitPriceMinor),
+          lineSubtotalMinor: BigInt(line.lineSubtotalMinor),
+          recipeVersion: null,
+        },
+        create: {
+          id: lineId,
+          saleId: ids.sale,
+          variantId: line.variantId,
+          name: line.name,
+          variantName: line.variantName,
+          quantity: line.quantity,
+          unitPriceMinor: BigInt(line.unitPriceMinor),
+          lineSubtotalMinor: BigInt(line.lineSubtotalMinor),
+          recipeVersion: null,
+        },
+      });
+    }
+
+    await prisma.paymentRecord.upsert({
+      where: { id: ids.payment },
+      update: {
+        saleId: ids.sale,
+        kind: 'CASH',
+        status: 'RECORDED',
+        amountMinor: 71000n,
+        tenderedMinor: 100000n,
+        changeMinor: 29000n,
+        reference: null,
+      },
+      create: {
+        id: ids.payment,
+        saleId: ids.sale,
+        kind: 'CASH',
+        status: 'RECORDED',
+        amountMinor: 71000n,
+        tenderedMinor: 100000n,
+        changeMinor: 29000n,
+        reference: null,
+      },
+    });
+
+    await prisma.checkoutRequest.upsert({
+      where: {
+        outletId_deviceId_idempotencyKey: {
+          outletId,
+          deviceId: ids.device,
+          idempotencyKey: ids.finalizeKey,
+        },
+      },
+      update: {
+        businessId: BUSINESS_ID,
+        requestHash: `seed-finalize-${suffix}`,
+        saleId: ids.sale,
+      },
+      create: {
+        id: ids.checkout,
+        businessId: BUSINESS_ID,
+        outletId,
+        deviceId: ids.device,
+        idempotencyKey: ids.finalizeKey,
+        requestHash: `seed-finalize-${suffix}`,
+        saleId: ids.sale,
+      },
+    });
+  }
+
   console.log(
-    `Synthetic demo data seeded: ${users.length} users across ${outlets.length} outlets and 2 businesses, ${categories.length} categories, ${menuItems.length} menu items, ${variants.length} variants and ${STOCK_ITEMS.length} stock items.`,
+    `Synthetic demo data seeded: ${users.length} users across ${outlets.length} outlets and 2 businesses, ${categories.length} categories, ${menuItems.length} menu items, ${variants.length} variants, ${STOCK_ITEMS.length} stock items and 2 completed demo sales.`,
   );
 }
 
