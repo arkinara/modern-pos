@@ -1412,7 +1412,11 @@ export class SalesService {
 
     const recipeByPin = new Map<
       string,
-      { variantId: string; version: number; lines: { stockItemId: string; quantityPerSaleUnit: Prisma.Decimal }[] }
+      {
+        variantId: string;
+        version: number;
+        lines: { stockItemId: string; quantityPerSaleUnit: Prisma.Decimal }[];
+      }
     >();
 
     if (pins.size > 0) {
@@ -1566,5 +1570,4 @@ export class SalesService {
       }
     }
   }
-
 }

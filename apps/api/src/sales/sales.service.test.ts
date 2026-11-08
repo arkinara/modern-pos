@@ -1630,12 +1630,7 @@ const STOCK_SECOND_ID = '00000000-0000-4000-8000-000000000051';
 const RECIPE_A_ID = '00000000-0000-4000-8000-0000000000c0';
 const RECIPE_B_ID = '00000000-0000-4000-8000-0000000000c1';
 
-function addStockItem(
-  state: FakeState,
-  id: string,
-  name: string,
-  quantityScale = 0,
-): void {
+function addStockItem(state: FakeState, id: string, name: string, quantityScale = 0): void {
   if (!state.stockItems.some((item) => item.id === id)) {
     state.stockItems.push({ id, businessId: BUSINESS_ID, name, quantityScale });
   }
@@ -1861,10 +1856,7 @@ test('insufficient stock rejects the sale with item-specific shortages and no wr
   assert.equal(state.sales.length, 0);
   assert.equal(state.movements.length, 0);
   assert.equal(state.checkouts.length, 0);
-  assert.equal(
-    state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity,
-    '5',
-  );
+  assert.equal(state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity, '5');
   assert.equal(state.orders.find((row) => row.id === order.id)?.state, OrderState.DRAFT);
 });
 
@@ -1903,10 +1895,7 @@ test('cancelled orders never deduct stock when finalization is attempted', async
 
   assert.equal(state.movements.length, 0);
   assert.equal(state.sales.length, 0);
-  assert.equal(
-    state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity,
-    '10',
-  );
+  assert.equal(state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity, '10');
 });
 
 test('simultaneous finalizations cannot oversell; only one sale and movement commit', async () => {
@@ -1918,12 +1907,8 @@ test('simultaneous finalizations cannot oversell; only one sale and movement com
     { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
   ]);
 
-  const first = await prepareOrder(service, KEY_ONE, [
-    { variantId: VARIANT_A, quantity: 2 },
-  ]);
-  const second = await prepareOrder(service, KEY_TWO, [
-    { variantId: VARIANT_A, quantity: 2 },
-  ]);
+  const first = await prepareOrder(service, KEY_ONE, [{ variantId: VARIANT_A, quantity: 2 }]);
+  const second = await prepareOrder(service, KEY_TWO, [{ variantId: VARIANT_A, quantity: 2 }]);
 
   let tail = Promise.resolve();
   const original = prisma.$transaction.bind(prisma) as unknown as (

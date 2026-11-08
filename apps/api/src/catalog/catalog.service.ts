@@ -414,10 +414,7 @@ export class CatalogService {
     return this.toMenu(menu, availability);
   }
 
-  private toMenu(
-    menu: MenuRecord,
-    availability: Map<string, number | null>,
-  ): MenuResponse {
+  private toMenu(menu: MenuRecord, availability: Map<string, number | null>): MenuResponse {
     return {
       id: menu.id,
       name: menu.name,
@@ -485,9 +482,7 @@ export class CatalogService {
 
     const stockItemIds = [
       ...new Set(
-        [...latest.values()].flatMap((recipe) =>
-          recipe.lines.map((line) => line.stockItemId),
-        ),
+        [...latest.values()].flatMap((recipe) => recipe.lines.map((line) => line.stockItemId)),
       ),
     ];
     const balances =
