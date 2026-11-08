@@ -22,9 +22,24 @@ completion flows; the Flutter Android app is the cashier surface.
   requests keep the current form values and offer an explicit retry; version conflicts offer a
   reload action instead of silently overwriting another edit.
 
+## Delivered in ticket #6
+
+- The Menu page manages categories, products and variants for the active outlet: search,
+  category filter, create category, create product, edit names/description/category, edit variant
+  name/price/stock policy/enabled state, and soft archive with confirmation.
+- Prices are entered as integer minor units. The page formats them with the server-owned currency
+  exponent and never performs financial calculations.
+- Stale menu or variant revisions surface `409 VERSION_CONFLICT` with an explicit reload action so
+  the user never silently overwrites another edit.
+- Archived products remain visible to the owner with an archived badge and are marked excluded
+  from the saleable Android catalog. `TRACKED` variants show that availability is unknown until
+  the stock ledger arrives in #7.
+- Loading, empty, no-match and error states are present; the layout is full width and uses only
+  semantic design tokens from `app/globals.css`.
+
 ## Deferred
 
-- Menu catalog and variants CRUD (#6), stock ledger (#7).
+- Stock ledger and receiving (#7), recipe availability (#8), orders and sales (#9/#10).
 - Sales history/reporting depth, filters and CSV export (#14).
 - Multi-outlet management UI, roles/permissions UI and owner visual approval (#2).
 - Android printer discovery, pairing and physical printing (#15/#16).

@@ -28,6 +28,34 @@ export function describeApiError(error: unknown, fallback: string): string {
   return `${fallback} (HTTP ${error.status})`;
 }
 
+export function describeCatalogError(error: unknown, fallback: string): string {
+  if (!(error instanceof ApiError)) {
+    return fallback;
+  }
+
+  if (error.status === 401) {
+    return 'Your session expired. Sign in again.';
+  }
+
+  if (error.status === 403) {
+    return 'Only an owner can change the menu.';
+  }
+
+  if (error.status === 404) {
+    return 'That catalog record could not be found for this outlet. Reload and try again.';
+  }
+
+  if (error.status === 409) {
+    return 'Another change saved first. Reload the latest menu, then apply your edits again.';
+  }
+
+  if (error.status === 400 || error.status === 422) {
+    return 'The server rejected these catalog values. Review the fields and try again.';
+  }
+
+  return `${fallback} (HTTP ${error.status})`;
+}
+
 export function isVersionConflict(error: unknown): boolean {
   return error instanceof ApiError && error.status === 409;
 }

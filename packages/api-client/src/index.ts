@@ -42,6 +42,38 @@ export interface ApiClient {
     outletId: string,
     settings: ApiSchemas['SettingsUpdate'],
   ): Promise<ApiSchemas['Settings']>;
+  getCategories(outletId: string): Promise<ApiSchemas['Category'][]>;
+  createCategory(
+    outletId: string,
+    category: ApiSchemas['CategoryWrite'],
+  ): Promise<ApiSchemas['Category']>;
+  listMenu(
+    outletId: string,
+    query?: { cursor?: string; limit?: number; search?: string },
+  ): Promise<ApiSchemas['MenuPage']>;
+  createMenu(outletId: string, menu: ApiSchemas['MenuWrite']): Promise<ApiSchemas['Menu']>;
+  updateMenu(
+    outletId: string,
+    menuId: string,
+    menu: ApiSchemas['MenuUpdate'],
+  ): Promise<ApiSchemas['Menu']>;
+  archiveMenu(outletId: string, menuId: string, revision: number): Promise<void>;
+  updateVariant(
+    outletId: string,
+    variantId: string,
+    variant: ApiSchemas['VariantUpdate'],
+  ): Promise<ApiSchemas['Variant']>;
+}
+
+function toQueryString(query: Record<string, string | number | undefined>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== '') {
+      params.set(key, String(value));
+    }
+  }
+  const serialized = params.toString();
+  return serialized.length > 0 ? `?${serialized}` : '';
 }
 
 function parseErrorBody(text: string): unknown {
@@ -117,5 +149,45 @@ export function createApiClient({
         method: 'PATCH',
         body: JSON.stringify(settings),
       }),
+    getCategories: (outletId) =>
+      request<ApiSchemas['Category'][]>(`/v1/outlets/${encodeURIComponent(outletId)}/categories`),
+    createCategory: (outletId, category) =>
+      request<ApiSchemas['Category']>(`/v1/outlets/${encodeURIComponent(outletId)}/categories`, {
+        method: 'POST',
+        body: JSON.stringify(category),
+      }),
+    listMenu: (outletId, query = {}) =>
+      request<ApiSchemas['MenuPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/menu${toQueryString(query)}`,
+      ),
+    createMenu: (outletId, menu) =>
+      request<ApiSchemas['Menu']>(`/v1/outlets/${encodeURIComponent(outletId)}/menu`, {
+        method: 'POST',
+        body: JSON.stringify(menu),
+      }),
+    updateMenu: (outletId, menuId, menu) =>
+      request<ApiSchemas['Menu']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/menu/${encodeURIComponent(menuId)}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(menu),
+        },
+      ),
+    archiveMenu: (outletId, menuId, revision) =>
+      request<void>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/menu/${encodeURIComponent(menuId)}/archive`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ revision }),
+        },
+      ),
+    updateVariant: (outletId, variantId, variant) =>
+      request<ApiSchemas['Variant']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/variants/${encodeURIComponent(variantId)}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(variant),
+        },
+      ),
   };
 }
