@@ -31,6 +31,46 @@ const OTHER_OUTLET_ID = '00000000-0000-4000-8000-000000000011';
 const OTHER_OWNER_ID = '00000000-0000-4000-8000-000000000012';
 const OTHER_CASHIER_ID = '00000000-0000-4000-8000-000000000013';
 
+const STOCK_COFFEE_ID = '00000000-0000-4000-8000-000000000050';
+const STOCK_MILK_ID = '00000000-0000-4000-8000-000000000051';
+const STOCK_CUPS_ID = '00000000-0000-4000-8000-000000000052';
+
+const STOCK_ITEMS = [
+  {
+    id: STOCK_COFFEE_ID,
+    name: 'Coffee Beans',
+    baseUnit: 'g' as const,
+    quantityScale: 0,
+    reorderThreshold: '5000',
+    opening: '10000',
+  },
+  {
+    id: STOCK_MILK_ID,
+    name: 'Fresh Milk',
+    baseUnit: 'ml' as const,
+    quantityScale: 0,
+    reorderThreshold: '4000',
+    opening: '12000',
+  },
+  {
+    id: STOCK_CUPS_ID,
+    name: 'Paper Cups',
+    baseUnit: 'each' as const,
+    quantityScale: 0,
+    reorderThreshold: '100',
+    opening: '500',
+  },
+];
+
+// Deterministic opening movements and references keep the seed repeatable.
+const STOCK_OPENING = STOCK_ITEMS.map((item, index) => ({
+  mainMovementId: `00000000-0000-4000-8000-00000000006${index}`,
+  secondMovementId: `00000000-0000-4000-8000-00000000007${index}`,
+  sourceId: `00000000-0000-4000-8000-00000000008${index}`,
+  stockItemId: item.id,
+  quantity: item.opening,
+}));
+
 const outletDefaults = {
   currency: 'IDR',
   currencyExponent: 0,
@@ -282,8 +322,75 @@ async function main(): Promise<void> {
     }
   }
 
+  for (const item of STOCK_ITEMS) {
+    await prisma.stockItem.upsert({
+      where: { id: item.id },
+      update: {
+        businessId: BUSINESS_ID,
+        name: item.name,
+        baseUnit: item.baseUnit,
+        quantityScale: item.quantityScale,
+        reorderThreshold: item.reorderThreshold,
+        archivedAt: null,
+      },
+      create: {
+        id: item.id,
+        businessId: BUSINESS_ID,
+        name: item.name,
+        baseUnit: item.baseUnit,
+        quantityScale: item.quantityScale,
+        reorderThreshold: item.reorderThreshold,
+      },
+    });
+  }
+
+  for (const opening of STOCK_OPENING) {
+    for (const outlet of [
+      { id: OUTLET_MAIN_ID, movementId: opening.mainMovementId },
+      { id: OUTLET_SECOND_ID, movementId: opening.secondMovementId },
+    ]) {
+      const existing = await prisma.stockMovement.findUnique({
+        where: { id: outlet.movementId },
+        select: { id: true },
+      });
+
+      if (!existing) {
+        await prisma.stockMovement.create({
+          data: {
+            id: outlet.movementId,
+            outletId: outlet.id,
+            stockItemId: opening.stockItemId,
+            delta: opening.quantity,
+            type: 'OPENING',
+            actorId: OWNER_MAIN_ID,
+            reason: 'Synthetic opening balance',
+            sourceId: opening.sourceId,
+          },
+        });
+      }
+
+      const summed = await prisma.stockMovement.aggregate({
+        where: { outletId: outlet.id, stockItemId: opening.stockItemId },
+        _sum: { delta: true },
+      });
+      const quantity = summed._sum.delta ?? 0;
+
+      await prisma.stockBalance.upsert({
+        where: {
+          outletId_stockItemId: { outletId: outlet.id, stockItemId: opening.stockItemId },
+        },
+        update: { quantity },
+        create: {
+          outletId: outlet.id,
+          stockItemId: opening.stockItemId,
+          quantity,
+        },
+      });
+    }
+  }
+
   console.log(
-    `Synthetic demo data seeded: ${users.length} users across ${outlets.length} outlets and 2 businesses, ${categories.length} categories, ${menuItems.length} menu items and ${variants.length} variants.`,
+    `Synthetic demo data seeded: ${users.length} users across ${outlets.length} outlets and 2 businesses, ${categories.length} categories, ${menuItems.length} menu items, ${variants.length} variants and ${STOCK_ITEMS.length} stock items.`,
   );
 }
 

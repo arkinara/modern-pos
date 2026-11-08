@@ -1,5 +1,5 @@
-// Identity, authorization, business settings and catalog schema.
-// Stock, recipes, sales, reports and printing domain models land in #7-#10.
+// Identity, authorization, business settings, catalog and stock schema.
+// Recipes, sales, reports and printing domain models land in #8-#10.
 
 generator client {
   provider = "prisma-client-js"
@@ -25,6 +25,20 @@ enum StockPolicy {
   UNTRACKED
 }
 
+enum StockBaseUnit {
+  g
+  ml
+  each
+}
+
+enum StockMovementType {
+  OPENING
+  RECEIPT
+  ADJUSTMENT
+  SALE
+  REVERSAL
+}
+
 model Business {
   id        String   @id @default(uuid()) @db.Uuid
   name      String
@@ -35,6 +49,7 @@ model Business {
   users      User[]
   categories Category[]
   menuItems  MenuItem[]
+  stockItems StockItem[]
 
   @@map("businesses")
 }
@@ -56,9 +71,11 @@ model Outlet {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  business    Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
   users       User[]
   outletMenus OutletMenu[]
+  balances    StockBalance[]
+  movements   StockMovement[]
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -76,9 +93,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  outlet   Outlet?   @relation(fields: [outletId], references: [id], onDelete: SetNull)
-  sessions Session[]
+  business  Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet    Outlet?         @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  sessions  Session[]
+  movements StockMovement[]
 
   @@map("users")
 }
@@ -176,4 +194,83 @@ model OutletMenu {
   @@id([outletId, variantId])
   @@index([variantId])
   @@map("outlet_menu")
+}
+
+// Stock quantities are fixed-point decimals(20,6). The base unit is immutable
+// after the first movement because every historical delta is expressed in it.
+model StockItem {
+  id               String        @id @default(uuid()) @db.Uuid
+  businessId       String        @db.Uuid
+  name             String
+  baseUnit         StockBaseUnit
+  quantityScale    Int
+  reorderThreshold Decimal       @db.Decimal(20, 6)
+  archivedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  business  Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  balances  StockBalance[]
+  movements StockMovement[]
+
+  @@unique([id, businessId])
+  @@index([businessId, archivedAt])
+  @@map("stock_items")
+}
+
+model StockBalance {
+  id          String   @id @default(uuid()) @db.Uuid
+  outletId    String   @db.Uuid
+  stockItemId String   @db.Uuid
+  quantity    Decimal  @default(0) @db.Decimal(20, 6)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  outlet    Outlet    @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  stockItem StockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+
+  @@unique([outletId, stockItemId])
+  @@index([stockItemId])
+  @@map("stock_balances")
+}
+
+// Append-only ledger. The migration adds a trigger that rejects UPDATE and
+// DELETE so a balance is always derivable from SUM(delta) per outlet+item.
+model StockMovement {
+  id           String            @id @default(uuid()) @db.Uuid
+  outletId     String            @db.Uuid
+  stockItemId  String            @db.Uuid
+  delta        Decimal           @db.Decimal(20, 6)
+  type         StockMovementType
+  actorId      String            @db.Uuid
+  reason       String
+  sourceId     String            @db.Uuid
+  sourceLineId String?           @db.Uuid
+  createdAt    DateTime          @default(now())
+
+  outlet    Outlet    @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  stockItem StockItem @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  actor     User      @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([outletId, stockItemId, createdAt])
+  @@index([stockItemId])
+  @@map("stock_movements")
+}
+
+// Durable idempotency mapping for stock writes. The unique (outletId, key)
+// pair reserves the key inside the same transaction as the movement.
+model StockIdempotency {
+  id           String   @id @default(uuid()) @db.Uuid
+  outletId     String   @db.Uuid
+  key          String   @db.Uuid
+  operation    String
+  requestHash  String
+  movementId   String?  @db.Uuid
+  responseBody Json?
+  createdAt    DateTime @default(now())
+
+  @@unique([outletId, key])
+  @@index([createdAt])
+  @@map("stock_idempotency")
 }

@@ -63,6 +63,31 @@ export interface ApiClient {
     variantId: string,
     variant: ApiSchemas['VariantUpdate'],
   ): Promise<ApiSchemas['Variant']>;
+  listStock(
+    outletId: string,
+    query?: { cursor?: string; limit?: number; search?: string },
+  ): Promise<ApiSchemas['StockPage']>;
+  createStock(outletId: string, stock: ApiSchemas['StockWrite']): Promise<ApiSchemas['Stock']>;
+  listStockMovements(
+    outletId: string,
+    stockItemId: string,
+    query?: { cursor?: string; limit?: number },
+  ): Promise<ApiSchemas['MovementPage']>;
+  recordOpeningBalance(
+    outletId: string,
+    idempotencyKey: string,
+    change: ApiSchemas['StockChange'],
+  ): Promise<ApiSchemas['Movement']>;
+  recordStockReceipt(
+    outletId: string,
+    idempotencyKey: string,
+    change: ApiSchemas['StockChange'],
+  ): Promise<ApiSchemas['Movement']>;
+  recordStockAdjustment(
+    outletId: string,
+    idempotencyKey: string,
+    adjustment: ApiSchemas['Adjustment'],
+  ): Promise<ApiSchemas['Movement']>;
 }
 
 function toQueryString(query: Record<string, string | number | undefined>): string {
@@ -187,6 +212,48 @@ export function createApiClient({
         {
           method: 'PATCH',
           body: JSON.stringify(variant),
+        },
+      ),
+    listStock: (outletId, query = {}) =>
+      request<ApiSchemas['StockPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stock${toQueryString(query)}`,
+      ),
+    createStock: (outletId, stock) =>
+      request<ApiSchemas['Stock']>(`/v1/outlets/${encodeURIComponent(outletId)}/stock`, {
+        method: 'POST',
+        body: JSON.stringify(stock),
+      }),
+    listStockMovements: (outletId, stockItemId, query = {}) =>
+      request<ApiSchemas['MovementPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stock/${encodeURIComponent(
+          stockItemId,
+        )}/movements${toQueryString(query)}`,
+      ),
+    recordOpeningBalance: (outletId, idempotencyKey, change) =>
+      request<ApiSchemas['Movement']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stock/opening-balances`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(change),
+        },
+      ),
+    recordStockReceipt: (outletId, idempotencyKey, change) =>
+      request<ApiSchemas['Movement']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stock/receipts`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(change),
+        },
+      ),
+    recordStockAdjustment: (outletId, idempotencyKey, adjustment) =>
+      request<ApiSchemas['Movement']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stock/adjustments`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(adjustment),
         },
       ),
   };

@@ -10,9 +10,10 @@ import { HealthController } from './health/health.controller';
 import { OutletsModule } from './outlets/outlets.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SettingsModule } from './settings/settings.module';
+import { StockModule } from './stock/stock.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, OutletsModule, SettingsModule, CatalogModule],
+  imports: [PrismaModule, AuthModule, OutletsModule, SettingsModule, CatalogModule, StockModule],
   controllers: [HealthController],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
