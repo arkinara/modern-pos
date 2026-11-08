@@ -85,7 +85,7 @@ void main() {
       );
       expect(updated!.id, variant.id);
       expect(updated.priceMinor, 12500);
-      expect(updated.availableUnits, isNull);
+      expect(updated.availableUnits, 0);
       print(
         'updated variant=${updated.id} price=${updated.priceMinor} '
         'policy=${updated.stockPolicy} availableUnits=${updated.availableUnits}',

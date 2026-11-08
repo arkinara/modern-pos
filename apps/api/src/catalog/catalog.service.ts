@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Role, StockPolicy } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
+import { Prisma, Role, StockPolicy } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { apiError } from '../common/api-error';
 import { PrismaService } from '../prisma/prisma.service';
@@ -157,8 +156,13 @@ export class CatalogService {
     const hasMore = rows.length > limit;
     const page = hasMore ? rows.slice(0, limit) : rows;
 
+    const availability = await this.loadAvailability(
+      outletId,
+      page.flatMap((row) => row.variants),
+    );
+
     return {
-      items: page.map((row) => this.toMenu(row)),
+      items: page.map((row) => this.toMenu(row, availability)),
       nextCursor: hasMore ? (page[page.length - 1]?.id ?? null) : null,
     };
   }
@@ -328,7 +332,8 @@ export class CatalogService {
       throw apiError(404, 'NOT_FOUND', 'Variant not found');
     }
 
-    return this.toVariant(variant);
+    const availability = await this.loadAvailability(outletId, [variant]);
+    return this.toVariant(variant, availability.get(variant.id) ?? null);
   }
 
   private async requireOutlet(outletId: string, businessId: string): Promise<void> {
@@ -405,10 +410,11 @@ export class CatalogService {
       throw apiError(404, 'NOT_FOUND', 'Menu not found');
     }
 
-    return this.toMenu(menu);
+    const availability = await this.loadAvailability(outletId, menu.variants);
+    return this.toMenu(menu, availability);
   }
 
-  private toMenu(menu: MenuRecord): MenuResponse {
+  private toMenu(menu: MenuRecord, availability: Map<string, number | null>): MenuResponse {
     return {
       id: menu.id,
       name: menu.name,
@@ -416,11 +422,13 @@ export class CatalogService {
       categoryId: menu.categoryId,
       revision: menu.revision,
       archived: menu.archivedAt !== null,
-      variants: menu.variants.map((variant) => this.toVariant(variant)),
+      variants: menu.variants.map((variant) =>
+        this.toVariant(variant, availability.get(variant.id) ?? null),
+      ),
     };
   }
 
-  private toVariant(variant: VariantRecord): VariantResponse {
+  private toVariant(variant: VariantRecord, availableUnits: number | null): VariantResponse {
     return {
       id: variant.id,
       name: variant.name,
@@ -428,7 +436,96 @@ export class CatalogService {
       stockPolicy: variant.stockPolicy,
       revision: variant.revision,
       enabled: variant.active,
-      availableUnits: null,
+      availableUnits,
     };
+  }
+
+  private async loadAvailability(
+    outletId: string,
+    variants: { id: string; stockPolicy: StockPolicy }[],
+  ): Promise<Map<string, number | null>> {
+    const availability = new Map<string, number | null>();
+    const trackedIds = [
+      ...new Set(
+        variants
+          .filter((variant) => variant.stockPolicy === StockPolicy.TRACKED)
+          .map((variant) => variant.id),
+      ),
+    ];
+
+    for (const variant of variants) {
+      if (variant.stockPolicy !== StockPolicy.TRACKED) {
+        availability.set(variant.id, null);
+      }
+    }
+
+    if (trackedIds.length === 0) {
+      return availability;
+    }
+
+    const recipes = await this.prisma.recipeVersion.findMany({
+      where: { outletId, variantId: { in: trackedIds } },
+      orderBy: [{ variantId: 'asc' }, { version: 'asc' }],
+      select: {
+        variantId: true,
+        version: true,
+        lines: {
+          select: { stockItemId: true, quantityPerSaleUnit: true },
+        },
+      },
+    });
+    const latest = new Map<string, (typeof recipes)[number]>();
+
+    for (const recipe of recipes) {
+      latest.set(recipe.variantId, recipe);
+    }
+
+    const stockItemIds = [
+      ...new Set(
+        [...latest.values()].flatMap((recipe) => recipe.lines.map((line) => line.stockItemId)),
+      ),
+    ];
+    const balances =
+      stockItemIds.length === 0
+        ? []
+        : await this.prisma.stockBalance.findMany({
+            where: { outletId, stockItemId: { in: stockItemIds } },
+            select: { stockItemId: true, quantity: true },
+          });
+    const quantities = new Map(
+      balances.map((balance) => [balance.stockItemId, new Prisma.Decimal(balance.quantity)]),
+    );
+
+    for (const variant of variants) {
+      if (variant.stockPolicy !== StockPolicy.TRACKED) {
+        continue;
+      }
+
+      const recipe = latest.get(variant.id);
+
+      if (!recipe || recipe.lines.length === 0) {
+        availability.set(variant.id, 0);
+        continue;
+      }
+
+      let minimum: number | null = null;
+
+      for (const line of recipe.lines) {
+        const perSaleUnit = new Prisma.Decimal(line.quantityPerSaleUnit);
+        const available = quantities.get(line.stockItemId) ?? new Prisma.Decimal(0);
+
+        if (perSaleUnit.lessThanOrEqualTo(0)) {
+          minimum = 0;
+          break;
+        }
+
+        const units = Math.max(0, available.div(perSaleUnit).floor().toNumber());
+        minimum = minimum === null ? units : Math.min(minimum, units);
+      }
+
+      availability.set(variant.id, minimum ?? 0);
+    }
+
+    return availability;
   }
 }

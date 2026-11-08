@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { HttpException } from '@nestjs/common';
-import { Role, StockPolicy } from '@prisma/client';
+import { Prisma, Role, StockPolicy } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { ROLES_KEY } from '../common/decorators/roles.decorator';
 import type { PrismaService } from '../prisma/prisma.service';
@@ -32,7 +32,11 @@ function user(role: Role = Role.OWNER): AuthenticatedUser {
   };
 }
 
-function menuRecord(revision = 1, archivedAt: Date | null = null) {
+function menuRecord(
+  revision = 1,
+  archivedAt: Date | null = null,
+  stockPolicy: StockPolicy = StockPolicy.UNTRACKED,
+) {
   return {
     id: MENU_ID,
     businessId: BUSINESS_ID,
@@ -50,7 +54,7 @@ function menuRecord(revision = 1, archivedAt: Date | null = null) {
         name: 'Regular',
         priceMinor: 18000n,
         active: true,
-        stockPolicy: StockPolicy.UNTRACKED,
+        stockPolicy,
         revision: 1,
         createdAt: new Date('2026-01-01T00:00:00Z'),
         updatedAt: new Date('2026-01-01T00:00:00Z'),
@@ -135,6 +139,12 @@ function fakePrisma(overrides: Record<string, unknown> = {}): {
         calls.outletMenuCreate.push(args);
         return { outletId: OUTLET_ID, variantId: VARIANT_ID, enabled: true };
       },
+    },
+    recipeVersion: {
+      findMany: async () => [],
+    },
+    stockBalance: {
+      findMany: async () => [],
     },
   };
 
@@ -431,7 +441,7 @@ test('variant update keeps a stable id and maps enabled, policy and price', asyn
   assert.equal(variant.priceMinor, 21000);
   assert.equal(variant.stockPolicy, StockPolicy.TRACKED);
   assert.equal(variant.enabled, false);
-  assert.equal(variant.availableUnits, null);
+  assert.equal(variant.availableUnits, 0);
   assert.equal(calls.variantUpdateMany.length, 1);
 });
 
@@ -454,4 +464,106 @@ test('variant update requires the variant to be linked to the requested outlet',
 test('category names are trimmed by the DTO layer and validated by the controller', () => {
   const dto: CategoryCreateDto = { name: 'Beverages' };
   assert.equal(dto.name, 'Beverages');
+});
+
+function trackedMenuRecord() {
+  return menuRecord(1, null, StockPolicy.TRACKED);
+}
+
+test('tracked menu availability is the floor of each ingredient balance per sale unit', async () => {
+  const stockA = '00000000-0000-4000-8000-000000000050';
+  const stockB = '00000000-0000-4000-8000-000000000051';
+  const { prisma } = fakePrisma({
+    menuItem: {
+      findMany: async () => [trackedMenuRecord()],
+      findFirst: async () => trackedMenuRecord(),
+      create: async () => trackedMenuRecord(),
+      updateMany: async () => ({ count: 1 }),
+    },
+    recipeVersion: {
+      findMany: async () => [
+        {
+          variantId: VARIANT_ID,
+          version: 1,
+          lines: [
+            { stockItemId: stockA, quantityPerSaleUnit: new Prisma.Decimal('2') },
+            { stockItemId: stockB, quantityPerSaleUnit: new Prisma.Decimal('1') },
+          ],
+        },
+      ],
+    },
+    stockBalance: {
+      findMany: async () => [
+        { stockItemId: stockA, quantity: new Prisma.Decimal('7') },
+        { stockItemId: stockB, quantity: new Prisma.Decimal('2') },
+      ],
+    },
+  });
+  const service = new CatalogService(prisma);
+
+  const page = await service.listMenu(
+    OUTLET_ID,
+    { limit: 25 } as MenuListQueryDto,
+    user(Role.CASHIER),
+  );
+
+  assert.equal(page.items[0]?.variants[0]?.availableUnits, 2);
+});
+
+test('tracked menu availability uses the latest recipe version and never floats', async () => {
+  const stockA = '00000000-0000-4000-8000-000000000050';
+  const { prisma } = fakePrisma({
+    menuItem: {
+      findMany: async () => [trackedMenuRecord()],
+      findFirst: async () => trackedMenuRecord(),
+      create: async () => trackedMenuRecord(),
+      updateMany: async () => ({ count: 1 }),
+    },
+    recipeVersion: {
+      findMany: async () => [
+        {
+          variantId: VARIANT_ID,
+          version: 1,
+          lines: [{ stockItemId: stockA, quantityPerSaleUnit: new Prisma.Decimal('2') }],
+        },
+        {
+          variantId: VARIANT_ID,
+          version: 2,
+          lines: [{ stockItemId: stockA, quantityPerSaleUnit: new Prisma.Decimal('3') }],
+        },
+      ],
+    },
+    stockBalance: {
+      findMany: async () => [{ stockItemId: stockA, quantity: new Prisma.Decimal('10') }],
+    },
+  });
+  const service = new CatalogService(prisma);
+
+  const page = await service.listMenu(
+    OUTLET_ID,
+    { limit: 25 } as MenuListQueryDto,
+    user(Role.CASHIER),
+  );
+
+  assert.equal(page.items[0]?.variants[0]?.availableUnits, 3);
+});
+
+test('a tracked variant with no published recipe reports zero availability', async () => {
+  const { prisma } = fakePrisma({
+    menuItem: {
+      findMany: async () => [trackedMenuRecord()],
+      findFirst: async () => trackedMenuRecord(),
+      create: async () => trackedMenuRecord(),
+      updateMany: async () => ({ count: 1 }),
+    },
+  });
+  const service = new CatalogService(prisma);
+
+  const page = await service.listMenu(
+    OUTLET_ID,
+    { limit: 25 } as MenuListQueryDto,
+    user(Role.CASHIER),
+  );
+
+  assert.equal(page.items[0]?.variants[0]?.availableUnits, 0);
 });

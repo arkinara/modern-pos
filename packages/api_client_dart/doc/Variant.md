@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 **stockPolicy** | **String** |  | 
 **revision** | **int** |  | 
 **enabled** | **bool** |  | 
-**availableUnits** | **int** | Null for untracked stock; advisory snapshot. | 
+**availableUnits** | **int** | Null for UNTRACKED variants. For TRACKED variants, advisory minimum floor(balance / quantityPerSaleUnit) across the latest recipe, computed per request; finalization is authoritative. | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

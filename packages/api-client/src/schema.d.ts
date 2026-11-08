@@ -732,7 +732,7 @@ export interface components {
             stockPolicy: "TRACKED" | "UNTRACKED";
             revision: number;
             enabled: boolean;
-            /** @description Null for untracked stock; advisory snapshot. */
+            /** @description Null for UNTRACKED variants. For TRACKED variants, advisory minimum floor(balance / quantityPerSaleUnit) across the latest recipe, computed per request; finalization is authoritative. */
             availableUnits: number | null;
         };
         Menu: {
