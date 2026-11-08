@@ -39,7 +39,7 @@ class Variant {
 
   bool enabled;
 
-  /// Null for untracked stock; advisory snapshot.
+  /// Null for UNTRACKED variants. For TRACKED variants, advisory minimum floor(balance / quantityPerSaleUnit) across the latest recipe, computed per request; finalization is authoritative.
   ///
   /// Minimum value: 0
   int? availableUnits;

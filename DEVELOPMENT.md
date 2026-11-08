@@ -265,9 +265,9 @@ Dart contract client.
 - `revision` is the optimistic concurrency token for menu items and variants. A stale value
   returns `409 VERSION_CONFLICT` before any write. IDs are immutable; there is no delete
   operation.
-- `availableUnits` is `null` everywhere in this ticket. `UNTRACKED` variants are null by
-  definition. `TRACKED` availability must come from the stock ledger in #7; the API deliberately
-  returns `null` instead of a fabricated number. The web UI labels this limitation.
+- When #6 shipped, `availableUnits` was `null` for every variant. Since #10, cashier and owner
+  menu reads compute it per request for `TRACKED` variants from the stock ledger; `UNTRACKED`
+  variants stay `null` by definition. The value is advisory and finalization is authoritative.
 - Archive is soft: `menu_items.archived_at` is set and the row is preserved. Owner `GET /menu`
   includes archived records with `archived: true`; cashier `GET /menu` excludes archived items,
   archived categories and disabled variants. Sale snapshots in #9/#10 must copy item and variant
@@ -396,16 +396,16 @@ shapes directly.
 - `sales_list` supports cursor pagination and optional `from`/`to` outlet-local dates. The range
   is half-open `[start of from, start of day after to)` converted from the outlet IANA timezone
   to UTC. `sales_get` returns the immutable receipt.
-- Finalization deliberately leaves stock untouched. A single marked seam,
-  `SalesService.applyStockConsumption`, is invoked inside the same serializable transaction so
-  #10 can add `SALE` movements and nonnegative balance guards without scattering writes.
+- #9 left stock untouched at a single marked seam, `SalesService.applyStockConsumption`, inside
+  the same serializable transaction. #10 now implements that seam: `SALE` movements and
+  nonnegative balance guards commit with the sale.
 - The seed adds one deterministic completed cash sale per demo outlet with its order, quote,
   sale lines, payment, and checkout mapping. Running the seed again updates those fixed rows
   without duplicating them.
 
-Deferred to later tickets: recipe consumption and `SALE` stock movements (#10), cashier sale UI
-(#11), sales history/report/CSV pages (#14) and reversal/restock (#17). Recipe pinning arrived in
-#8. No web sale route is added by this ticket.
+Recipe consumption and `SALE` stock movements are implemented by #10. Deferred to later tickets:
+cashier sale UI (#11), sales history/report/CSV pages (#14) and reversal/restock (#17). Recipe
+pinning arrived in #8. No web sale route is added by this ticket.
 
 ## Recipe links, unit conversion and sale snapshots (#8)
 
@@ -456,6 +456,41 @@ the contract and the TypeScript wrapper gained matching methods.
   409 conflict states. It shows the current version, supports direct one-line links and multiple
   ingredient lines, and displays stock items with their base unit and precision. The editor uses
   design tokens and adds no new route.
+
+## Atomic sale stock consumption and availability (#10)
+
+Implementation lives in `SalesService.applyStockConsumption` and the menu availability helper in
+`CatalogService`.
+
+- Sale finalization is one PostgreSQL `SERIALIZABLE` transaction. The existing `Sale`, `SaleLine`,
+  `PaymentRecord`, `Order` state change and `CheckoutRequest` mapping commit together with the
+  `SALE` stock movements and decremented balances. A failure anywhere rolls every one of those
+  writes back.
+- Lock order is fixed to avoid deadlocks: the transaction locks the order row first, then all
+  affected `stock_balances` rows sorted by `stockItemId`. The finalization path rechecks order
+  state and catalog saleability in the same transaction, and stock sufficiency is checked again
+  after the balance rows are locked. Disabled or archived variants, archived menu items and
+  archived categories are never saleable.
+- Ingredient consumption is aggregated across every line before checking stock. Each line uses the
+  immutable recipe version pinned on its `sale_lines.recipeVersion` row; the live recipe is never
+  re-read. Shared ingredients are summed, so two lines that consume the same item check and deduct
+  the total, not the maximum or a single line.
+- Insufficient stock returns `422 INSUFFICIENT_STOCK` with
+  `details.shortages[] = [{stockItemId, name, required, available, shortage}]`. The values are
+  fixed-point decimal strings in the stock item's base unit. A rejected sale writes no movement,
+  leaves balances unchanged and creates no sale.
+- `SALE` movements use the completed sale id as `sourceId`. Unique
+  `(outlet_id, device_id, idempotency_key)` on `checkout_requests` and unique `Sale.order_id` make
+  replays return the original result without duplicated sales or movements.
+- Serialization failures and deadlocks are retried at most three times with bounded jitter. If all
+  attempts fail, the API returns retryable `503 TRANSACTION_RETRY_EXHAUSTED`; clients must retry
+  with the same idempotency key. No printer, payment provider or other external call runs inside
+  the database transaction.
+- Menu availability for a `TRACKED` variant is computed per request and never cached:
+  `availableUnits = min over recipe ingredients of floor(balance / quantityPerSaleUnit)` using the
+  latest published recipe. `UNTRACKED` variants return `null`. A tracked variant without a recipe
+  reports `0`. The screen value is advisory; concurrent sales and ingredient sharing are resolved
+  authoritatively only when finalization aggregates the whole cart inside the locked transaction.
 
 ## Scope boundaries
 
