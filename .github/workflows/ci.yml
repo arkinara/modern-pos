@@ -119,6 +119,8 @@ jobs:
       - name: Flutter tests
         working-directory: apps/mobile
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           # sqlite3's build hook downloads a pre-compiled native asset from GitHub
@@ -126,10 +128,69 @@ jobs:
           # truncated/aborted download makes that verification fail with:
           #   Hash of downloaded file libsqlite3.*.so is ..., expected ...
           #   Building assets for package:sqlite3 failed.
-          # Retry once after invalidating only the sqlite3 download so that a
-          # corrupted transfer cannot fail CI on its own. Real test failures are
-          # not retried.
+          # We therefore prefetch the asset through the GitHub API (a different
+          # endpoint than the release download the hook uses) and verify its
+          # SHA-256 before the hook sees it. If the hook still fails on a corrupt
+          # download, we invalidate only the sqlite3 caches and retry once. Real
+          # test failures are not retried.
+          sqlite3_version=3.5.2
           pub_cache="${PUB_CACHE:-$HOME/.pub-cache}"
+
+          prefetch_sqlite3_asset() {
+            local machine asset hash prefix dir tmpdir attempt got
+
+            machine="$(uname -m)"
+            case "$machine" in
+              x86_64|amd64)
+                asset=libsqlite3.x64.linux.so
+                hash=b17729184e5a2818055ecbddd5ed6642521bfe6e56aafa472330e483c0e2e0d2
+                ;;
+              aarch64|arm64)
+                asset=libsqlite3.arm64.linux.so
+                hash=7f0db19fdb987298ab8def51431aba5cec28a81685e8b62cebbc7402df090a16
+                ;;
+              *)
+                echo "No verified sqlite3 prefetch rule for architecture $machine; falling back to the hook download"
+                return 0
+                ;;
+            esac
+
+            prefix="${hash:0:8}"
+            dir=".dart_tool/hooks_runner/shared/sqlite3/build/download-${prefix}"
+            if [ -f "$dir/libsqlite3.so" ] && [ "$(sha256sum "$dir/libsqlite3.so" | cut -d' ' -f1)" = "$hash" ]; then
+              echo "Verified sqlite3 native asset already cached"
+              return 0
+            fi
+
+            tmpdir="$(mktemp -d)"
+            for attempt in 1 2 3; do
+              rm -f "$tmpdir/$asset"
+              if gh release download "sqlite3-${sqlite3_version}" \
+                  --repo simolus3/sqlite3.dart \
+                  --pattern "$asset" \
+                  --dir "$tmpdir" \
+                  --clobber; then
+                got="$(sha256sum "$tmpdir/$asset" | cut -d' ' -f1)"
+                if [ "$got" = "$hash" ]; then
+                  mkdir -p "$dir"
+                  cp "$tmpdir/$asset" "$dir/libsqlite3.so"
+                  rm -rf "$tmpdir"
+                  echo "Prefetched and verified ${asset} (${hash})"
+                  return 0
+                fi
+                echo "Prefetch attempt ${attempt} for ${asset} had hash ${got}; expected ${hash}" >&2
+              else
+                echo "Prefetch attempt ${attempt} for ${asset} failed to download" >&2
+              fi
+              sleep 5
+            done
+            rm -rf "$tmpdir"
+            echo "Could not prefetch a verified ${asset}; falling back to the hook download" >&2
+            return 0
+          }
+
+          prefetch_sqlite3_asset
+
           max_attempts=2
           attempt=1
           while true; do
@@ -156,6 +217,7 @@ jobs:
             rm -rf "${pub_cache}"/hosted/pub.dev/sqlite3-*
             rm -rf .dart_tool/hooks_runner/shared/sqlite3 .dart_tool/hooks_runner/sqlite3 build/native_assets
             flutter pub get
+            prefetch_sqlite3_asset
             attempt=$((attempt + 1))
           done
 
