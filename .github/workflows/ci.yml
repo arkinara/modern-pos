@@ -118,7 +118,46 @@ jobs:
 
       - name: Flutter tests
         working-directory: apps/mobile
-        run: flutter test
+        shell: bash
+        run: |
+          set -euo pipefail
+          # sqlite3's build hook downloads a pre-compiled native asset from GitHub
+          # and verifies it against a hash pinned in the package. A transient
+          # truncated/aborted download makes that verification fail with:
+          #   Hash of downloaded file libsqlite3.*.so is ..., expected ...
+          #   Building assets for package:sqlite3 failed.
+          # Retry once after invalidating only the sqlite3 download so that a
+          # corrupted transfer cannot fail CI on its own. Real test failures are
+          # not retried.
+          pub_cache="${PUB_CACHE:-$HOME/.pub-cache}"
+          max_attempts=2
+          attempt=1
+          while true; do
+            echo "::group::flutter test (attempt ${attempt}/${max_attempts})"
+            if flutter test 2>&1 | tee /tmp/flutter-test.log; then
+              echo "::endgroup::"
+              exit 0
+            else
+              status=${PIPESTATUS[0]}
+              echo "::endgroup::"
+            fi
+
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "flutter test failed after ${max_attempts} attempts" >&2
+              exit "$status"
+            fi
+
+            if ! grep -qE 'Hash of downloaded file .* expected|Building assets for package:sqlite3 failed' /tmp/flutter-test.log; then
+              echo "flutter test failed for a reason other than a corrupted sqlite3 download; not retrying" >&2
+              exit "$status"
+            fi
+
+            echo "Detected corrupted sqlite3 native asset download; invalidating cached artifact and retrying"
+            rm -rf "${pub_cache}"/hosted/pub.dev/sqlite3-*
+            rm -rf .dart_tool/hooks_runner/shared/sqlite3 .dart_tool/hooks_runner/sqlite3 build/native_assets
+            flutter pub get
+            attempt=$((attempt + 1))
+          done
 
       - name: Ensure Android SDK 36 and NDK
         run: |
