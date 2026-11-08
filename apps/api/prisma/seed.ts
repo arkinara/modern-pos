@@ -61,6 +61,14 @@ const STOCK_COFFEE_ID = '00000000-0000-4000-8000-000000000050';
 const STOCK_MILK_ID = '00000000-0000-4000-8000-000000000051';
 const STOCK_CUPS_ID = '00000000-0000-4000-8000-000000000052';
 
+const RECIPE_CHICKEN_MAIN_ID = '00000000-0000-4000-8000-0000000000c0';
+const RECIPE_CHICKEN_SECOND_ID = '00000000-0000-4000-8000-0000000000c1';
+const CHICKEN_RICE_RECIPE_LINES = [
+  { stockItemId: STOCK_COFFEE_ID, quantityPerSaleUnit: '150' },
+  { stockItemId: STOCK_MILK_ID, quantityPerSaleUnit: '200' },
+  { stockItemId: STOCK_CUPS_ID, quantityPerSaleUnit: '1' },
+];
+
 const STOCK_ITEMS = [
   {
     id: STOCK_COFFEE_ID,
@@ -412,6 +420,48 @@ async function main(): Promise<void> {
           quantity,
         },
       });
+    }
+  }
+
+  // The seeded TRACKED variant has an immutable one-version recipe per outlet, so
+  // tracked sales always have a valid recipe snapshot to consume in #10.
+  for (const [outletId, recipeId] of [
+    [OUTLET_MAIN_ID, RECIPE_CHICKEN_MAIN_ID],
+    [OUTLET_SECOND_ID, RECIPE_CHICKEN_SECOND_ID],
+  ] as const) {
+    let recipe = await prisma.recipeVersion.findFirst({
+      where: { variantId: VARIANT_CHICKEN_RICE_ID, outletId, version: 1 },
+      select: { id: true },
+    });
+
+    if (!recipe) {
+      recipe = await prisma.recipeVersion.create({
+        data: {
+          id: recipeId,
+          businessId: BUSINESS_ID,
+          outletId,
+          variantId: VARIANT_CHICKEN_RICE_ID,
+          version: 1,
+        },
+        select: { id: true },
+      });
+    }
+
+    for (const line of CHICKEN_RICE_RECIPE_LINES) {
+      const existing = await prisma.recipeLine.findFirst({
+        where: { recipeVersionId: recipe.id, stockItemId: line.stockItemId },
+        select: { id: true },
+      });
+
+      if (!existing) {
+        await prisma.recipeLine.create({
+          data: {
+            recipeVersionId: recipe.id,
+            stockItemId: line.stockItemId,
+            quantityPerSaleUnit: line.quantityPerSaleUnit,
+          },
+        });
+      }
     }
   }
 

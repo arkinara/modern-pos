@@ -2,10 +2,20 @@
 
 import type { ApiSchemas } from '@modern-pos/api-client';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Archive, CircleAlert, CircleCheck, Pencil, Plus, RefreshCw, Search } from 'lucide-react';
+import {
+  Archive,
+  CircleAlert,
+  CircleCheck,
+  Link2,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+} from 'lucide-react';
 import { useDeferredValue, useState } from 'react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { MenuForm, type CatalogFormValues } from '@/components/menu-form';
+import { RecipeDialog } from '@/components/recipe-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,6 +92,7 @@ export function MenuScreen() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<ApiSchemas['Menu'] | null>(null);
   const [archiving, setArchiving] = useState(false);
+  const [recipeTarget, setRecipeTarget] = useState<ApiSchemas['Variant'] | null>(null);
 
   const settingsQuery = useQuery({
     queryKey: ['settings', outletId],
@@ -584,6 +595,20 @@ export function MenuScreen() {
                           <Badge tone={variant.enabled ? 'success' : 'danger'}>
                             {variant.enabled ? 'Enabled' : 'Disabled'}
                           </Badge>
+                          {canEdit && !item.archived ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setFeedback(null);
+                                setRecipeTarget(variant);
+                              }}
+                            >
+                              <Link2 aria-hidden="true" className="size-4" />
+                              Recipe
+                            </Button>
+                          ) : null}
                         </div>
                         {variant.stockPolicy === 'TRACKED' && variant.availableUnits === null ? (
                           <p className="w-full text-xs text-muted">
@@ -636,6 +661,16 @@ export function MenuScreen() {
             {menuQuery.isFetchingNextPage ? 'Loading more products' : 'Load more products'}
           </Button>
         </div>
+      ) : null}
+
+      {recipeTarget ? (
+        <RecipeDialog
+          open
+          outletId={outletId}
+          variant={recipeTarget}
+          onClose={() => setRecipeTarget(null)}
+          onSaved={(message) => setFeedback({ tone: 'success', message })}
+        />
       ) : null}
 
       <ConfirmDialog

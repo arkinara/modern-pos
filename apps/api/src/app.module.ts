@@ -9,6 +9,7 @@ import { RequestIdMiddleware } from './common/request-id.middleware';
 import { HealthController } from './health/health.controller';
 import { OutletsModule } from './outlets/outlets.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RecipeModule } from './recipe/recipe.module';
 import { SalesModule } from './sales/sales.module';
 import { SettingsModule } from './settings/settings.module';
 import { StockModule } from './stock/stock.module';
@@ -21,6 +22,7 @@ import { StockModule } from './stock/stock.module';
     SettingsModule,
     CatalogModule,
     StockModule,
+    RecipeModule,
     SalesModule,
   ],
   controllers: [HealthController],

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { HttpException } from '@nestjs/common';
-import { OrderState, PaymentKind, Role, SaleState } from '@prisma/client';
+import { OrderState, PaymentKind, Role, SaleState, StockPolicy } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import type { PrismaService } from '../prisma/prisma.service';
 import { SalesService } from './sales.service';
@@ -37,6 +37,7 @@ interface VariantRow {
   name: string;
   priceMinor: bigint;
   active: boolean;
+  stockPolicy: StockPolicy;
   menuItem: {
     name: string;
     archivedAt: Date | null;
@@ -152,6 +153,14 @@ interface CheckoutRow {
   createdAt: Date;
 }
 
+interface RecipeRow {
+  id: string;
+  variantId: string;
+  outletId: string;
+  businessId: string;
+  version: number;
+}
+
 interface OutletRow {
   id: string;
   businessId: string;
@@ -167,6 +176,7 @@ interface OutletRow {
 interface FakeState {
   outlet: OutletRow;
   variants: VariantRow[];
+  recipes: RecipeRow[];
   orders: OrderRow[];
   quotes: QuoteRow[];
   sales: SaleRow[];
@@ -200,6 +210,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         name: 'Regular',
         priceMinor: 18000n,
         active: true,
+        stockPolicy: StockPolicy.UNTRACKED,
         menuItem: {
           name: 'Iced Coffee',
           archivedAt: null,
@@ -213,6 +224,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         name: 'Default',
         priceMinor: 35000n,
         active: true,
+        stockPolicy: StockPolicy.UNTRACKED,
         menuItem: {
           name: 'Chicken Rice',
           archivedAt: null,
@@ -221,6 +233,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         outletMenus: [{ outletId: OUTLET_ID, enabled: true }],
       },
     ],
+    recipes: [],
     orders: [],
     quotes: [],
     sales: [],
@@ -286,6 +299,25 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
               (menu) => menu.outletId === args.where.outletMenus.some.outletId,
             ),
           }));
+      },
+    },
+    recipeVersion: {
+      findMany: async (args: {
+        where: {
+          outletId: string;
+          businessId: string;
+          variantId: { in: string[] };
+        };
+      }) => {
+        return state.recipes
+          .filter(
+            (recipe) =>
+              recipe.outletId === args.where.outletId &&
+              recipe.businessId === args.where.businessId &&
+              args.where.variantId.in.includes(recipe.variantId),
+          )
+          .sort((a, b) => a.version - b.version)
+          .map((recipe) => ({ variantId: recipe.variantId, version: recipe.version }));
       },
     },
     order: {
@@ -786,6 +818,217 @@ test('sale lines preserve the historical price after a catalog price change', as
   assert.equal(reread.lines[0]?.unitPriceMinor, 18000);
   assert.equal(reread.lines[0]?.lineSubtotalMinor, 36000);
   assert.equal(reread.totals.totalMinor, 36000);
+});
+
+test('finalize pins the recipe version at sale time; later versions never rewrite it', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const actor = user();
+
+  state.recipes.push({
+    id: '00000000-0000-4000-8000-0000000000d0',
+    variantId: VARIANT_A,
+    outletId: OUTLET_ID,
+    businessId: BUSINESS_ID,
+    version: 1,
+  });
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    { deviceId: DEVICE_ID, lines: [{ variantId: VARIANT_A, quantity: 2 }] },
+    actor,
+  );
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+
+  assert.equal(quote.lines[0]?.recipeVersion, 1);
+
+  state.recipes.push({
+    id: '00000000-0000-4000-8000-0000000000d1',
+    variantId: VARIANT_A,
+    outletId: OUTLET_ID,
+    businessId: BUSINESS_ID,
+    version: 2,
+  });
+
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: { kind: PaymentKind.CASH, amountMinor: 36000, tenderedMinor: 40000 },
+    },
+    actor,
+  );
+
+  assert.equal(state.sales[0]?.lines[0]?.recipeVersion, 2);
+
+  state.recipes.push({
+    id: '00000000-0000-4000-8000-0000000000d2',
+    variantId: VARIANT_A,
+    outletId: OUTLET_ID,
+    businessId: BUSINESS_ID,
+    version: 3,
+  });
+
+  const reread = await service.getSale(OUTLET_ID, finalized.sale.id, actor);
+  assert.equal(reread.id, finalized.sale.id);
+  assert.equal(state.sales[0]?.lines[0]?.recipeVersion, 2);
+  assert.deepEqual(
+    state.recipes.map((recipe) => recipe.version),
+    [1, 2, 3],
+  );
+});
+
+test('finalize pins each variant recipe version independently by variantId', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const actor = user();
+
+  state.recipes.push(
+    {
+      id: '00000000-0000-4000-8000-0000000000e0',
+      variantId: VARIANT_A,
+      outletId: OUTLET_ID,
+      businessId: BUSINESS_ID,
+      version: 1,
+    },
+    {
+      id: '00000000-0000-4000-8000-0000000000e1',
+      variantId: VARIANT_B,
+      outletId: OUTLET_ID,
+      businessId: BUSINESS_ID,
+      version: 1,
+    },
+  );
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [
+        { variantId: VARIANT_A, quantity: 1 },
+        { variantId: VARIANT_B, quantity: 1 },
+      ],
+    },
+    actor,
+  );
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+
+  state.recipes.push({
+    id: '00000000-0000-4000-8000-0000000000e2',
+    variantId: VARIANT_A,
+    outletId: OUTLET_ID,
+    businessId: BUSINESS_ID,
+    version: 2,
+  });
+
+  await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: {
+        kind: PaymentKind.CASH,
+        amountMinor: quote.totals.totalMinor,
+        tenderedMinor: quote.totals.totalMinor,
+      },
+    },
+    actor,
+  );
+
+  const pinned = new Map(state.sales[0]?.lines.map((line) => [line.variantId, line.recipeVersion]));
+  assert.equal(pinned.get(VARIANT_A), 2);
+  assert.equal(pinned.get(VARIANT_B), 1);
+});
+
+test('quote line matching is order-independent by variantId', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const actor = user();
+
+  state.recipes.push(
+    {
+      id: '00000000-0000-4000-8000-0000000000f0',
+      variantId: VARIANT_A,
+      outletId: OUTLET_ID,
+      businessId: BUSINESS_ID,
+      version: 1,
+    },
+    {
+      id: '00000000-0000-4000-8000-0000000000f1',
+      variantId: VARIANT_B,
+      outletId: OUTLET_ID,
+      businessId: BUSINESS_ID,
+      version: 1,
+    },
+  );
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [
+        { variantId: VARIANT_A, quantity: 1 },
+        { variantId: VARIANT_B, quantity: 2 },
+      ],
+    },
+    actor,
+  );
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+
+  const stored = state.quotes[0];
+  assert.ok(stored);
+  stored.lines = [...(stored.lines as unknown[])].reverse();
+
+  await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: {
+        kind: PaymentKind.CASH,
+        amountMinor: quote.totals.totalMinor,
+        tenderedMinor: quote.totals.totalMinor,
+      },
+    },
+    actor,
+  );
+
+  assert.equal(state.sales.length, 1);
+  const pinned = new Map(state.sales[0]?.lines.map((line) => [line.variantId, line.recipeVersion]));
+  assert.equal(pinned.get(VARIANT_A), 1);
+  assert.equal(pinned.get(VARIANT_B), 1);
+});
+
+test('tracked variants without a published recipe are rejected at sale time', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const actor = user();
+
+  const tracked = state.variants.find((row) => row.id === VARIANT_A);
+  assert.ok(tracked);
+  tracked.stockPolicy = StockPolicy.TRACKED;
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    { deviceId: DEVICE_ID, lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+    actor,
+  );
+
+  await assert.rejects(
+    () => service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor),
+    (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'RECIPE_REQUIRED',
+  );
 });
 
 test('completed sale snapshots calculation rules after a settings change', async () => {

@@ -1,6 +1,14 @@
 import { createHash } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import { OrderState, PaymentKind, PaymentStatus, Prisma, Role, SaleState } from '@prisma/client';
+import {
+  OrderState,
+  PaymentKind,
+  PaymentStatus,
+  Prisma,
+  Role,
+  SaleState,
+  StockPolicy,
+} from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { apiError } from '../common/api-error';
 import { PrismaService } from '../prisma/prisma.service';
@@ -167,6 +175,7 @@ interface VariantPricingRecord {
   name: string;
   priceMinor: bigint;
   active: boolean;
+  stockPolicy: StockPolicy;
   menuItem: {
     name: string;
     archivedAt: Date | null;
@@ -418,7 +427,13 @@ export class SalesService {
         order.lines,
         'ITEM_UNAVAILABLE',
       );
-      const snapshots = this.buildQuoteLines(order.lines, variants);
+      const recipes = await this.loadRecipeVersions(
+        tx,
+        outletId,
+        user.businessId,
+        order.lines.map((line) => line.variantId),
+      );
+      const snapshots = this.buildQuoteLines(order.lines, variants, false, recipes);
       const totals = calculateTotals(
         snapshots.map((line) => ({
           unitPriceMinor: BigInt(line.unitPriceMinor),
@@ -596,7 +611,13 @@ export class SalesService {
               user.businessId,
               order.lines.map((line) => line.variantId),
             );
-            const currentLines = this.buildQuoteLines(order.lines, variants, true);
+            const recipes = await this.loadRecipeVersions(
+              tx,
+              outletId,
+              user.businessId,
+              order.lines.map((line) => line.variantId),
+            );
+            const currentLines = this.buildQuoteLines(order.lines, variants, true, recipes);
             const currentTotals = calculateTotals(
               currentLines.map((line) => ({
                 unitPriceMinor: BigInt(line.unitPriceMinor),
@@ -609,7 +630,13 @@ export class SalesService {
 
             this.assertQuoteStillValid(quotedLines, currentLines, quote, currentTotals);
 
-            const snapshots = quotedLines;
+            const currentRecipeVersions = new Map(
+              currentLines.map((line) => [line.variantId, line.recipeVersion]),
+            );
+            const snapshots = quotedLines.map((line) => ({
+              ...line,
+              recipeVersion: currentRecipeVersions.get(line.variantId) ?? line.recipeVersion,
+            }));
             const totals: MoneyTotals = {
               subtotalMinor: quote.subtotalMinor,
               serviceMinor: quote.serviceMinor,
@@ -690,6 +717,11 @@ export class SalesService {
               orderId: order.id,
               saleId: sale.id,
               actorId: user.id,
+              lines: snapshots.map((line) => ({
+                variantId: line.variantId,
+                quantity: line.quantity,
+                recipeVersion: line.recipeVersion,
+              })),
             });
 
             await tx.checkoutRequest.update({
@@ -1017,6 +1049,7 @@ export class SalesService {
     orderLines: { variantId: string; quantity: number }[],
     variants: Map<string, VariantPricingRecord>,
     strict = false,
+    recipes: Map<string, number> = new Map(),
   ): QuoteLineSnapshot[] {
     return orderLines.map((line) => {
       const variant = variants.get(line.variantId);
@@ -1034,6 +1067,17 @@ export class SalesService {
         throw apiError(422, 'ITEM_UNAVAILABLE', 'Variant is not saleable at this outlet');
       }
 
+      const recipeVersion = recipes.get(line.variantId) ?? null;
+
+      if (variant.stockPolicy === StockPolicy.TRACKED && recipeVersion === null) {
+        throw apiError(
+          422,
+          'RECIPE_REQUIRED',
+          'Tracked variants require a published recipe before they can be sold',
+          { details: { variantId: line.variantId } },
+        );
+      }
+
       const unitPriceMinor = toWireMinor(variant.priceMinor, 'unitPriceMinor');
       const lineSubtotal = calculateTotals(
         [{ unitPriceMinor: variant.priceMinor, quantity: line.quantity }],
@@ -1048,9 +1092,38 @@ export class SalesService {
         quantity: line.quantity,
         unitPriceMinor,
         lineSubtotalMinor: toWireMinor(lineSubtotal, 'lineSubtotalMinor'),
-        recipeVersion: null,
+        recipeVersion,
       };
     });
+  }
+
+  private async loadRecipeVersions(
+    client: DbClient,
+    outletId: string,
+    businessId: string,
+    variantIds: string[],
+  ): Promise<Map<string, number>> {
+    if (variantIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await client.recipeVersion.findMany({
+      where: {
+        outletId,
+        businessId,
+        variantId: { in: [...new Set(variantIds)] },
+      },
+      orderBy: { version: 'asc' },
+      select: { variantId: true, version: true },
+    });
+
+    const versions = new Map<string, number>();
+
+    for (const row of rows) {
+      versions.set(row.variantId, row.version);
+    }
+
+    return versions;
   }
 
   private readQuoteLines(value: Prisma.JsonValue): QuoteLineSnapshot[] {
@@ -1074,16 +1147,7 @@ export class SalesService {
   ): void {
     const sameLines =
       quotedLines.length === currentLines.length &&
-      quotedLines.every((line, index) => {
-        const current = currentLines[index];
-        return (
-          current !== undefined &&
-          line.variantId === current.variantId &&
-          line.quantity === current.quantity &&
-          line.unitPriceMinor === current.unitPriceMinor &&
-          line.lineSubtotalMinor === current.lineSubtotalMinor
-        );
-      });
+      this.lineSignatures(quotedLines) === this.lineSignatures(currentLines);
 
     if (
       !sameLines ||
@@ -1098,6 +1162,15 @@ export class SalesService {
         'Prices or charges changed after the quote; request a new quote',
       );
     }
+  }
+
+  private lineSignatures(lines: QuoteLineSnapshot[]): string {
+    return lines
+      .map((line) =>
+        [line.variantId, line.quantity, line.unitPriceMinor, line.lineSubtotalMinor].join(':'),
+      )
+      .sort()
+      .join('|');
   }
 
   private async loadSale(
@@ -1254,9 +1327,13 @@ export class SalesService {
       orderId: string;
       saleId: string;
       actorId: string;
+      lines: { variantId: string; quantity: number; recipeVersion: number | null }[];
     },
   ): Promise<void> {
     // Ticket #10 adds SALE stock movements and nonnegative balance guards here,
-    // inside the same serializable transaction. Ticket #9 leaves stock untouched.
+    // inside the same serializable transaction. Each `lines` entry carries the
+    // recipe version pinned on the matching immutable sale_line row, so #10 reads
+    // recipe_lines for that exact historical version and never re-reads the live
+    // recipe. Ticket #9 leaves stock untouched.
   }
 }

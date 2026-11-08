@@ -1,5 +1,5 @@
-// Identity, authorization, business settings, catalog, stock and sales schema.
-// Recipes, reports and printing domain models land in later tickets.
+// Identity, authorization, business settings, catalog, stock, recipes and sales schema.
+// Reports and printing domain models land in later tickets.
 
 generator client {
   provider = "prisma-client-js"
@@ -70,6 +70,7 @@ model Business {
   categories       Category[]
   menuItems        MenuItem[]
   stockItems       StockItem[]
+  recipeVersions   RecipeVersion[]
   orders           Order[]
   quotes           Quote[]
   sales            Sale[]
@@ -100,6 +101,7 @@ model Outlet {
   outletMenus      OutletMenu[]
   balances         StockBalance[]
   movements        StockMovement[]
+  recipeVersions   RecipeVersion[]
   orders           Order[]
   quotes           Quote[]
   sales            Sale[]
@@ -204,9 +206,10 @@ model MenuVariant {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  menuItem    MenuItem     @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
-  outletMenus OutletMenu[]
-  orderLines  OrderLine[]
+  menuItem       MenuItem        @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  outletMenus    OutletMenu[]
+  orderLines     OrderLine[]
+  recipeVersions RecipeVersion[]
 
   @@index([menuItemId])
   @@map("menu_variants")
@@ -240,9 +243,10 @@ model StockItem {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  business  Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  balances  StockBalance[]
-  movements StockMovement[]
+  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  balances    StockBalance[]
+  movements   StockMovement[]
+  recipeLines RecipeLine[]
 
   @@unique([id, businessId])
   @@index([businessId, archivedAt])
@@ -304,6 +308,44 @@ model StockIdempotency {
   @@unique([outletId, key])
   @@index([createdAt])
   @@map("stock_idempotency")
+}
+
+// Recipes are append-only version snapshots. Publishing writes a new version row
+// and its lines; historical versions and lines are never updated or deleted.
+// A direct finished-goods link is represented as a one-line recipe.
+model RecipeVersion {
+  id          String   @id @default(uuid()) @db.Uuid
+  businessId  String   @db.Uuid
+  outletId    String   @db.Uuid
+  variantId   String   @db.Uuid
+  version     Int
+  effectiveAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  business Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet       @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  variant  MenuVariant  @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  lines    RecipeLine[]
+
+  @@unique([variantId, outletId, version])
+  @@index([businessId])
+  @@index([outletId, variantId, version])
+  @@map("recipe_versions")
+}
+
+model RecipeLine {
+  id                  String   @id @default(uuid()) @db.Uuid
+  recipeVersionId     String   @db.Uuid
+  stockItemId         String   @db.Uuid
+  quantityPerSaleUnit Decimal  @db.Decimal(20, 6)
+  createdAt           DateTime @default(now())
+
+  recipeVersion RecipeVersion @relation(fields: [recipeVersionId], references: [id], onDelete: Cascade)
+  stockItem     StockItem     @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+
+  @@unique([recipeVersionId, stockItemId])
+  @@index([stockItemId])
+  @@map("recipe_lines")
 }
 
 // An order is an online draft owned by one cashier/device. The optional sale is
