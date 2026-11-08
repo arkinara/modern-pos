@@ -291,6 +291,53 @@ archives it. A normal `flutter test` skips it because no base URL is defined.
 Deferred: stock ledger and receiving (#7), recipe availability (#8), orders and sales snapshots
 (#9/#10), cashier catalog UI (#11), reports (#14) and printing (#15/#16).
 
+## Stock items, units, opening balances and ledger (#7)
+
+Implementation lives in `apps/api/src/stock`, `apps/web/components/stock-screen.tsx` and the
+typed clients. The OpenAPI document is unchanged; the six stock operations already existed in
+the contract and the TypeScript wrapper gained matching methods.
+
+- Operations: `GET /v1/outlets/:outletId/stock` (search by name, cursor pagination),
+  `POST /v1/outlets/:outletId/stock` (create), `GET /v1/outlets/:outletId/stock/:stockItemId/movements`,
+  and the idempotent writes `POST .../stock/opening-balances`, `POST .../stock/receipts` and
+  `POST .../stock/adjustments`.
+- Every stock operation is owner-only per the contract. A missing session returns `401`, a
+  cashier request returns `403`, and cross-outlet or cross-tenant IDs return `404` through the
+  business-filtered queries.
+- `StockItem` is business-scoped; `StockBalance` is unique per outlet plus item. The base unit is
+  `g`, `ml` or `each` and is immutable because there is no update operation. `quantityScale`
+  accepts `0..6` decimal places and is fixed at creation.
+- Stock quantities are fixed-point decimal strings, stored as PostgreSQL `decimal(20,6)`. The
+  API never uses binary floating point for stock math. A quantity with more decimals than the
+  item's `quantityScale` is rejected. Seed values use integer base-unit quantities.
+- Balances are derived: every write inserts one `StockMovement` and updates the balance in the
+  same transaction, then re-reads `SUM(delta)` and fails with `500 BALANCE_MISMATCH` if the
+  stored balance disagrees. The migration adds a trigger that rejects `UPDATE` and `DELETE` on
+  `stock_movements`, so the ledger is append-only at the database level too.
+- Opening balance is a movement, not an editable column, and is accepted once per stock
+  item/outlet. A second opening returns `409 OPENING_ALREADY_RECORDED`. Receipts require a
+  positive quantity; adjustments accept a signed delta but reject any result below zero with
+  `422 INSUFFICIENT_STOCK`. Every movement records reason, actor, timestamp, outlet and a
+  `sourceId` reference (the Idempotency-Key for these operations).
+- `Idempotency-Key` is a required UUID header on opening, receipt and adjustment. The key is
+  reserved in the same transaction as the movement. Replaying the same key with the same payload
+  returns the original movement and writes nothing; the same key with a different payload
+  returns `409 IDEMPOTENCY_CONFLICT`.
+- `expectedBalanceVersion` is the optimistic concurrency token for adjustments. A stale version
+  returns `409 VERSION_CONFLICT` before any write. Every accepted movement increments the
+  balance version.
+- The seed adds three synthetic stock items (Coffee Beans in `g`, Fresh Milk in `ml`, Paper Cups
+  in `each`) with one opening movement and balance per demo outlet. It re-reads the movement sum
+  on every run, so it stays repeatable without duplicating ledger rows.
+- The web Stock page lists balances with search, creates items, records opening balances,
+  receipts and signed adjustments, and shows per-item movement history. A `409` or `422` is
+  shown as a recoverable conflict with a reload action. Loading, empty, read-only and failure
+  states use design tokens and the layout stays full width from 320 to 1440 px.
+
+Deferred to later tickets: recipe and variant links (#8), sale calculation (#9), `SALE` ledger
+movements and atomic checkout deduction (#10), low-stock overview polish (#13), purchase orders
+(#14) and reversals (#17). These endpoints never emit `SALE` or `REVERSAL` movements.
+
 ## Scope boundaries
 
 - Web is the owner back office. It has no sale, tender or cart routes; the Android app owns
