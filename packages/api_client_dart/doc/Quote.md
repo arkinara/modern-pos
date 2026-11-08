@@ -14,6 +14,7 @@ Name | Type | Description | Notes
 **settingsVersion** | **int** |  | 
 **currency** | **String** |  | 
 **currencyExponent** | **int** |  | 
+**calculation** | [**CalculationRules**](CalculationRules.md) |  | 
 **expiresAt** | [**DateTime**](DateTime.md) |  | 
 **totals** | [**Totals**](Totals.md) |  | 
 **lines** | [**List<QuoteLinesInner>**](QuoteLinesInner.md) |  | [default to const []]

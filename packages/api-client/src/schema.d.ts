@@ -872,6 +872,16 @@ export interface components {
             /** @description Currency minor units; IDR exponent 0 in demo. */
             totalMinor: number;
         };
+        /** @description Historical calculation-rule snapshot captured when a quote is created and copied to the completed sale. It never follows later outlet settings changes. */
+        CalculationRules: {
+            taxBps: number;
+            serviceBps: number;
+            /** @enum {string} */
+            pricingMode: "EXCLUSIVE";
+            currencyExponent: number;
+            /** @enum {string} */
+            rounding: "HALF_UP";
+        };
         Quote: {
             /** Format: uuid */
             id: string;
@@ -881,6 +891,7 @@ export interface components {
             settingsVersion: number;
             currency: string;
             currencyExponent: number;
+            calculation: components["schemas"]["CalculationRules"];
             /** Format: date-time */
             expiresAt: string;
             totals: components["schemas"]["Totals"];
@@ -954,6 +965,7 @@ export interface components {
             timezone: string;
             /** Format: date-time */
             completedAt: string;
+            calculation: components["schemas"]["CalculationRules"];
             totals: components["schemas"]["Totals"];
             lines: components["schemas"]["SaleLine"][];
             payment: components["schemas"]["Payment"];

@@ -154,7 +154,7 @@ flutter build apk --debug
 
 ## OpenAPI contract workflow
 
-The root `API.openapi.json` (v0.2.0) remains the contract. Generated clients are committed so a
+The root `API.openapi.json` (v0.3.0) remains the contract. Generated clients are committed so a
 clean clone builds without regenerating first.
 
 ```bash
@@ -360,10 +360,14 @@ shapes directly.
   `subtotal = sum(unit_price_minor * quantity)`,
   `service = half_up(subtotal * service_bps / 10000)`,
   `tax = half_up((subtotal + service) * tax_bps / 10000)`, and
-  `total = subtotal + service + tax`. `tax_bps` and `service_bps`, currency, exponent and
-  timezone are read from the same outlet settings rows written by `PATCH /settings`; there is
-  no copied settings snapshot. Calculations use integer `BigInt` math, never binary floating
-  point, and reject overflow with `422 MONEY_OUT_OF_RANGE`.
+  `total = subtotal + service + tax`. Quotes capture an immutable calculation-rule snapshot
+  (`tax_bps`, `service_bps`, `pricing_mode`, currency exponent, half-up rounding rule) from
+  the same outlet settings row written by `PATCH /settings`; finalization stores the same rule
+  values on the sale next to the computed amounts. Only draft-order/catalog lookups and the
+  settings-version staleness check read live outlet data: a completed sale or an issued quote
+  never follows later settings changes, and both read operations expose the stored rules.
+  Calculations use integer `BigInt` math, never binary floating point, and reject overflow
+  with `422 MONEY_OUT_OF_RANGE`.
 - Cash requires `amountMinor == total` and `tenderedMinor >= total`; the response records
   `changeMinor = tenderedMinor - total`. Manual external payment requires
   `amountMinor == total` and omits tender/change. Invalid payments return `422 PAYMENT_INVALID`
@@ -374,8 +378,8 @@ shapes directly.
   A stale quote never silently re-prices the tender. Replaying an already-completed checkout
   key is checked before quote expiry, so a retry still returns the original sale.
 - Sale and sale-line rows copy product name, variant name, quantity, unit price, line subtotal
-  and the currency/exponent/outlet-timezone snapshot at completion. Later catalog or price
-  edits do not change a completed receipt.
+  and the calculation-rule/currency/exponent/outlet-timezone snapshot at completion. Later
+  catalog, price or settings edits do not change a completed receipt.
 - Draft orders use optimistic `version`; stale updates/cancel requests return
   `409 VERSION_CONFLICT`, and any non-draft update/cancel returns `409 ORDER_NOT_DRAFT`.
   Completing an order marks it `COMPLETED` in the same transaction as the sale, lines, payment

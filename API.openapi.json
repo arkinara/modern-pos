@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Modern POS API baseline",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Implementation contract for M04 authentication and M05 business settings. Auth/session, outlet-scope and settings operations are implemented in apps/api; remaining domain operations are implementation targets for later tickets. Read ARCHITECTURE.md for rules and authorization."
   },
   "servers": [
@@ -6597,6 +6597,47 @@
           "totalMinor"
         ]
       },
+      "CalculationRules": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Historical calculation-rule snapshot captured when a quote is created and copied to the completed sale. It never follows later outlet settings changes.",
+        "properties": {
+          "taxBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "serviceBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "pricingMode": {
+            "type": "string",
+            "enum": [
+              "EXCLUSIVE"
+            ]
+          },
+          "currencyExponent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "rounding": {
+            "type": "string",
+            "enum": [
+              "HALF_UP"
+            ]
+          }
+        },
+        "required": [
+          "taxBps",
+          "serviceBps",
+          "pricingMode",
+          "currencyExponent",
+          "rounding"
+        ]
+      },
       "Quote": {
         "type": "object",
         "additionalProperties": false,
@@ -6625,6 +6666,9 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 3
+          },
+          "calculation": {
+            "$ref": "#/components/schemas/CalculationRules"
           },
           "expiresAt": {
             "type": "string",
@@ -6691,6 +6735,7 @@
           "settingsVersion",
           "currency",
           "currencyExponent",
+          "calculation",
           "expiresAt",
           "totals",
           "lines"
@@ -6887,6 +6932,9 @@
             "type": "string",
             "format": "date-time"
           },
+          "calculation": {
+            "$ref": "#/components/schemas/CalculationRules"
+          },
           "totals": {
             "$ref": "#/components/schemas/Totals"
           },
@@ -6909,6 +6957,7 @@
           "currencyExponent",
           "timezone",
           "completedAt",
+          "calculation",
           "totals",
           "lines",
           "payment"

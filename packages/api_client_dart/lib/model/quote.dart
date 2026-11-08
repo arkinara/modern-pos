@@ -19,6 +19,7 @@ class Quote {
     required this.settingsVersion,
     required this.currency,
     required this.currencyExponent,
+    required this.calculation,
     required this.expiresAt,
     required this.totals,
     this.lines = const [],
@@ -40,6 +41,8 @@ class Quote {
   /// Maximum value: 3
   int currencyExponent;
 
+  CalculationRules calculation;
+
   DateTime expiresAt;
 
   Totals totals;
@@ -54,6 +57,7 @@ class Quote {
     other.settingsVersion == settingsVersion &&
     other.currency == currency &&
     other.currencyExponent == currencyExponent &&
+    other.calculation == calculation &&
     other.expiresAt == expiresAt &&
     other.totals == totals &&
     _deepEquality.equals(other.lines, lines);
@@ -67,12 +71,13 @@ class Quote {
     (settingsVersion.hashCode) +
     (currency.hashCode) +
     (currencyExponent.hashCode) +
+    (calculation.hashCode) +
     (expiresAt.hashCode) +
     (totals.hashCode) +
     (lines.hashCode);
 
   @override
-  String toString() => 'Quote[id=$id, orderId=$orderId, orderVersion=$orderVersion, settingsVersion=$settingsVersion, currency=$currency, currencyExponent=$currencyExponent, expiresAt=$expiresAt, totals=$totals, lines=$lines]';
+  String toString() => 'Quote[id=$id, orderId=$orderId, orderVersion=$orderVersion, settingsVersion=$settingsVersion, currency=$currency, currencyExponent=$currencyExponent, calculation=$calculation, expiresAt=$expiresAt, totals=$totals, lines=$lines]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -82,6 +87,7 @@ class Quote {
       json[r'settingsVersion'] = this.settingsVersion;
       json[r'currency'] = this.currency;
       json[r'currencyExponent'] = this.currencyExponent;
+      json[r'calculation'] = this.calculation;
       json[r'expiresAt'] = this.expiresAt.toUtc().toIso8601String();
       json[r'totals'] = this.totals;
       json[r'lines'] = this.lines;
@@ -111,6 +117,8 @@ class Quote {
         assert(json[r'currency'] != null, 'Required key "Quote[currency]" has a null value in JSON.');
         assert(json.containsKey(r'currencyExponent'), 'Required key "Quote[currencyExponent]" is missing from JSON.');
         assert(json[r'currencyExponent'] != null, 'Required key "Quote[currencyExponent]" has a null value in JSON.');
+        assert(json.containsKey(r'calculation'), 'Required key "Quote[calculation]" is missing from JSON.');
+        assert(json[r'calculation'] != null, 'Required key "Quote[calculation]" has a null value in JSON.');
         assert(json.containsKey(r'expiresAt'), 'Required key "Quote[expiresAt]" is missing from JSON.');
         assert(json[r'expiresAt'] != null, 'Required key "Quote[expiresAt]" has a null value in JSON.');
         assert(json.containsKey(r'totals'), 'Required key "Quote[totals]" is missing from JSON.');
@@ -127,6 +135,7 @@ class Quote {
         settingsVersion: mapValueOfType<int>(json, r'settingsVersion')!,
         currency: mapValueOfType<String>(json, r'currency')!,
         currencyExponent: mapValueOfType<int>(json, r'currencyExponent')!,
+        calculation: CalculationRules.fromJson(json[r'calculation'])!,
         expiresAt: mapDateTime(json, r'expiresAt', r'')!,
         totals: Totals.fromJson(json[r'totals'])!,
         lines: QuoteLinesInner.listFromJson(json[r'lines']),
@@ -183,6 +192,7 @@ class Quote {
     'settingsVersion',
     'currency',
     'currencyExponent',
+    'calculation',
     'expiresAt',
     'totals',
     'lines',

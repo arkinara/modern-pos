@@ -359,6 +359,10 @@ model Quote {
   settingsVersion  Int
   currency         String   @db.VarChar(3)
   currencyExponent Int
+  taxBps           Int      @default(0)
+  serviceBps       Int      @default(0)
+  pricingMode      String   @default("EXCLUSIVE")
+  rounding         String   @default("HALF_UP")
   expiresAt        DateTime
   subtotalMinor    BigInt
   serviceMinor     BigInt
@@ -389,6 +393,10 @@ model Sale {
   state            SaleState @default(COMPLETED)
   currency         String    @db.VarChar(3)
   currencyExponent Int
+  taxBps           Int       @default(0)
+  serviceBps       Int       @default(0)
+  pricingMode      String    @default("EXCLUSIVE")
+  rounding         String    @default("HALF_UP")
   timezone         String
   subtotalMinor    BigInt
   serviceMinor     BigInt

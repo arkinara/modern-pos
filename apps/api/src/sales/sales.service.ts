@@ -17,6 +17,7 @@ import { localDateRangeUtc } from './outlet-time';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const QUOTE_TTL_MS = 60_000;
 const MAX_TRANSACTION_ATTEMPTS = 3;
+const ROUNDING_RULE = 'HALF_UP';
 
 export interface OrderLineResponse {
   variantId: string;
@@ -38,6 +39,14 @@ export interface TotalsResponse {
   totalMinor: number;
 }
 
+export interface CalculationRulesResponse {
+  taxBps: number;
+  serviceBps: number;
+  pricingMode: string;
+  currencyExponent: number;
+  rounding: string;
+}
+
 export interface QuoteLineResponse {
   variantId: string;
   name: string;
@@ -55,6 +64,7 @@ export interface QuoteResponse {
   settingsVersion: number;
   currency: string;
   currencyExponent: number;
+  calculation: CalculationRulesResponse;
   expiresAt: string;
   totals: TotalsResponse;
   lines: QuoteLineResponse[];
@@ -88,6 +98,7 @@ export interface SaleResponse {
   currencyExponent: number;
   timezone: string;
   completedAt: string;
+  calculation: CalculationRulesResponse;
   totals: TotalsResponse;
   lines: SaleLineResponse[];
   payment: PaymentResponse;
@@ -120,6 +131,10 @@ interface SaleWithReceipt {
   state: SaleState;
   currency: string;
   currencyExponent: number;
+  taxBps: number;
+  serviceBps: number;
+  pricingMode: string;
+  rounding: string;
   timezone: string;
   completedAt: Date;
   subtotalMinor: bigint;
@@ -168,6 +183,7 @@ interface OutletSettingsRecord {
   currencyExponent: number;
   taxBps: number;
   serviceBps: number;
+  pricingMode: string;
   version: number;
 }
 
@@ -422,6 +438,10 @@ export class SalesService {
           settingsVersion: outlet.version,
           currency: outlet.currency,
           currencyExponent: outlet.currencyExponent,
+          taxBps: outlet.taxBps,
+          serviceBps: outlet.serviceBps,
+          pricingMode: outlet.pricingMode,
+          rounding: ROUNDING_RULE,
           expiresAt,
           subtotalMinor: totals.subtotalMinor,
           serviceMinor: totals.serviceMinor,
@@ -438,6 +458,7 @@ export class SalesService {
         settingsVersion: quote.settingsVersion,
         currency: quote.currency,
         currencyExponent: quote.currencyExponent,
+        calculation: this.toCalculation(quote),
         expiresAt: quote.expiresAt.toISOString(),
         totals: this.toTotals(totals),
         lines: snapshots,
@@ -608,6 +629,10 @@ export class SalesService {
                 state: SaleState.COMPLETED,
                 currency: quote.currency,
                 currencyExponent: quote.currencyExponent,
+                taxBps: outlet.taxBps,
+                serviceBps: outlet.serviceBps,
+                pricingMode: outlet.pricingMode,
+                rounding: ROUNDING_RULE,
                 timezone: outlet.timezone,
                 subtotalMinor: totals.subtotalMinor,
                 serviceMinor: totals.serviceMinor,
@@ -899,6 +924,7 @@ export class SalesService {
         currencyExponent: true,
         taxBps: true,
         serviceBps: true,
+        pricingMode: true,
         version: true,
       },
     });
@@ -1120,6 +1146,22 @@ export class SalesService {
     };
   }
 
+  private toCalculation(record: {
+    taxBps: number;
+    serviceBps: number;
+    pricingMode: string;
+    currencyExponent: number;
+    rounding: string;
+  }): CalculationRulesResponse {
+    return {
+      taxBps: record.taxBps,
+      serviceBps: record.serviceBps,
+      pricingMode: record.pricingMode,
+      currencyExponent: record.currencyExponent,
+      rounding: record.rounding,
+    };
+  }
+
   private toTotals(totals: MoneyTotals): TotalsResponse {
     return {
       subtotalMinor: toWireMinor(totals.subtotalMinor, 'subtotalMinor'),
@@ -1158,6 +1200,7 @@ export class SalesService {
       currencyExponent: sale.currencyExponent,
       timezone: sale.timezone,
       completedAt: sale.completedAt.toISOString(),
+      calculation: this.toCalculation(sale),
       totals: {
         subtotalMinor: toWireMinor(sale.subtotalMinor, 'subtotalMinor'),
         serviceMinor: toWireMinor(sale.serviceMinor, 'serviceMinor'),

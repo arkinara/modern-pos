@@ -16,6 +16,7 @@ Name | Type | Description | Notes
 **currencyExponent** | **int** |  | 
 **timezone** | **String** |  | 
 **completedAt** | [**DateTime**](DateTime.md) |  | 
+**calculation** | [**CalculationRules**](CalculationRules.md) |  | 
 **totals** | [**Totals**](Totals.md) |  | 
 **lines** | [**List<SaleLine>**](SaleLine.md) |  | [default to const []]
 **payment** | [**Payment**](Payment.md) |  | 

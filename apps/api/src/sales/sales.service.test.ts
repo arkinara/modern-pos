@@ -5,6 +5,7 @@ import { OrderState, PaymentKind, Role, SaleState } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import type { PrismaService } from '../prisma/prisma.service';
 import { SalesService } from './sales.service';
+import { calculateTotals } from './money';
 
 const BUSINESS_ID = '00000000-0000-4000-8000-000000000001';
 const OUTLET_ID = '00000000-0000-4000-8000-000000000002';
@@ -76,6 +77,10 @@ interface QuoteRow {
   settingsVersion: number;
   currency: string;
   currencyExponent: number;
+  taxBps: number;
+  serviceBps: number;
+  pricingMode: string;
+  rounding: string;
   expiresAt: Date;
   subtotalMinor: bigint;
   serviceMinor: bigint;
@@ -120,6 +125,10 @@ interface SaleRow {
   state: SaleState;
   currency: string;
   currencyExponent: number;
+  taxBps: number;
+  serviceBps: number;
+  pricingMode: string;
+  rounding: string;
   timezone: string;
   subtotalMinor: bigint;
   serviceMinor: bigint;
@@ -151,6 +160,7 @@ interface OutletRow {
   currencyExponent: number;
   taxBps: number;
   serviceBps: number;
+  pricingMode: string;
   version: number;
 }
 
@@ -180,6 +190,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
       currencyExponent: 0,
       taxBps: options.taxBps ?? 0,
       serviceBps: options.serviceBps ?? 0,
+      pricingMode: 'EXCLUSIVE',
       version: 1,
     },
     variants: [
@@ -446,6 +457,10 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
             state: args.data.state,
             currency: args.data.currency,
             currencyExponent: args.data.currencyExponent,
+            taxBps: args.data.taxBps,
+            serviceBps: args.data.serviceBps,
+            pricingMode: args.data.pricingMode,
+            rounding: args.data.rounding,
             timezone: args.data.timezone,
             subtotalMinor: args.data.subtotalMinor,
             serviceMinor: args.data.serviceMinor,
@@ -652,6 +667,13 @@ test('quote uses shared settings, snapshots names and expires in 60 seconds', as
   assert.equal(quote.lines[0]?.unitPriceMinor, 18000);
   assert.equal(quote.lines[0]?.lineSubtotalMinor, 36000);
   assert.equal(quote.lines[0]?.recipeVersion, null);
+  assert.deepEqual(quote.calculation, {
+    taxBps: 1100,
+    serviceBps: 500,
+    pricingMode: 'EXCLUSIVE',
+    currencyExponent: 0,
+    rounding: 'HALF_UP',
+  });
   assert.ok(new Date(quote.expiresAt).getTime() >= before + 59_000);
   assert.ok(new Date(quote.expiresAt).getTime() <= before + 61_000);
 });
@@ -764,6 +786,119 @@ test('sale lines preserve the historical price after a catalog price change', as
   assert.equal(reread.lines[0]?.unitPriceMinor, 18000);
   assert.equal(reread.lines[0]?.lineSubtotalMinor, 36000);
   assert.equal(reread.totals.totalMinor, 36000);
+});
+
+test('completed sale snapshots calculation rules after a settings change', async () => {
+  const { prisma, state } = createFakePrisma({ serviceBps: 500, taxBps: 1100 });
+  const service = new SalesService(prisma);
+  const actor = user();
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [
+        { variantId: VARIANT_A, quantity: 2 },
+        { variantId: VARIANT_B, quantity: 1 },
+      ],
+    },
+    actor,
+  );
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: {
+        kind: PaymentKind.CASH,
+        amountMinor: quote.totals.totalMinor,
+        tenderedMinor: 100000,
+      },
+    },
+    actor,
+  );
+
+  assert.deepEqual(finalized.sale.calculation, {
+    taxBps: 1100,
+    serviceBps: 500,
+    pricingMode: 'EXCLUSIVE',
+    currencyExponent: 0,
+    rounding: 'HALF_UP',
+  });
+
+  state.outlet.serviceBps = 1000;
+  state.outlet.taxBps = 2000;
+  state.outlet.version = 2;
+
+  const reread = await service.getSale(OUTLET_ID, finalized.sale.id, actor);
+
+  assert.deepEqual(reread.calculation, {
+    taxBps: 1100,
+    serviceBps: 500,
+    pricingMode: 'EXCLUSIVE',
+    currencyExponent: 0,
+    rounding: 'HALF_UP',
+  });
+  assert.equal(reread.totals.subtotalMinor, 71000);
+  assert.equal(reread.totals.serviceMinor, 3550);
+  assert.equal(reread.totals.taxMinor, 8201);
+  assert.equal(reread.totals.totalMinor, 82751);
+
+  const recomputed = calculateTotals(
+    reread.lines.map((line) => ({
+      unitPriceMinor: BigInt(line.unitPriceMinor),
+      quantity: line.quantity,
+    })),
+    reread.calculation.serviceBps,
+    reread.calculation.taxBps,
+  );
+
+  assert.equal(Number(recomputed.subtotalMinor), reread.totals.subtotalMinor);
+  assert.equal(Number(recomputed.serviceMinor), reread.totals.serviceMinor);
+  assert.equal(Number(recomputed.taxMinor), reread.totals.taxMinor);
+  assert.equal(Number(recomputed.totalMinor), reread.totals.totalMinor);
+
+  const page = await service.listSales(OUTLET_ID, {}, actor);
+  assert.deepEqual(page.items[0]?.calculation, reread.calculation);
+});
+
+test('a cashier cannot access another cashier draft order', async () => {
+  const { prisma } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const ownerCashier = user();
+  const otherCashier = user(Role.CASHIER, OTHER_CASHIER_ID);
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    { deviceId: DEVICE_ID, lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+    ownerCashier,
+  );
+
+  await assert.rejects(
+    () =>
+      service.updateOrder(
+        OUTLET_ID,
+        order.id,
+        { version: 1, lines: [{ variantId: VARIANT_B, quantity: 1 }] },
+        otherCashier,
+      ),
+    (error: unknown) => statusOf(error) === 404 && codeOf(error) === 'NOT_FOUND',
+  );
+
+  await assert.rejects(
+    () => service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, otherCashier),
+    (error: unknown) => statusOf(error) === 404 && codeOf(error) === 'NOT_FOUND',
+  );
+
+  await assert.rejects(
+    () => service.cancelOrder(OUTLET_ID, order.id, { version: 1 }, otherCashier),
+    (error: unknown) => statusOf(error) === 404 && codeOf(error) === 'NOT_FOUND',
+  );
 });
 
 test('a changed order or settings version makes the quote stale without creating a sale', async () => {

@@ -21,6 +21,7 @@ class Sale {
     required this.currencyExponent,
     required this.timezone,
     required this.completedAt,
+    required this.calculation,
     required this.totals,
     this.lines = const [],
     required this.payment,
@@ -44,6 +45,8 @@ class Sale {
 
   DateTime completedAt;
 
+  CalculationRules calculation;
+
   Totals totals;
 
   List<SaleLine> lines;
@@ -60,6 +63,7 @@ class Sale {
     other.currencyExponent == currencyExponent &&
     other.timezone == timezone &&
     other.completedAt == completedAt &&
+    other.calculation == calculation &&
     other.totals == totals &&
     _deepEquality.equals(other.lines, lines) &&
     other.payment == payment;
@@ -75,12 +79,13 @@ class Sale {
     (currencyExponent.hashCode) +
     (timezone.hashCode) +
     (completedAt.hashCode) +
+    (calculation.hashCode) +
     (totals.hashCode) +
     (lines.hashCode) +
     (payment.hashCode);
 
   @override
-  String toString() => 'Sale[id=$id, orderId=$orderId, reference=$reference, state=$state, currency=$currency, currencyExponent=$currencyExponent, timezone=$timezone, completedAt=$completedAt, totals=$totals, lines=$lines, payment=$payment]';
+  String toString() => 'Sale[id=$id, orderId=$orderId, reference=$reference, state=$state, currency=$currency, currencyExponent=$currencyExponent, timezone=$timezone, completedAt=$completedAt, calculation=$calculation, totals=$totals, lines=$lines, payment=$payment]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -92,6 +97,7 @@ class Sale {
       json[r'currencyExponent'] = this.currencyExponent;
       json[r'timezone'] = this.timezone;
       json[r'completedAt'] = this.completedAt.toUtc().toIso8601String();
+      json[r'calculation'] = this.calculation;
       json[r'totals'] = this.totals;
       json[r'lines'] = this.lines;
       json[r'payment'] = this.payment;
@@ -125,6 +131,8 @@ class Sale {
         assert(json[r'timezone'] != null, 'Required key "Sale[timezone]" has a null value in JSON.');
         assert(json.containsKey(r'completedAt'), 'Required key "Sale[completedAt]" is missing from JSON.');
         assert(json[r'completedAt'] != null, 'Required key "Sale[completedAt]" has a null value in JSON.');
+        assert(json.containsKey(r'calculation'), 'Required key "Sale[calculation]" is missing from JSON.');
+        assert(json[r'calculation'] != null, 'Required key "Sale[calculation]" has a null value in JSON.');
         assert(json.containsKey(r'totals'), 'Required key "Sale[totals]" is missing from JSON.');
         assert(json[r'totals'] != null, 'Required key "Sale[totals]" has a null value in JSON.');
         assert(json.containsKey(r'lines'), 'Required key "Sale[lines]" is missing from JSON.');
@@ -143,6 +151,7 @@ class Sale {
         currencyExponent: mapValueOfType<int>(json, r'currencyExponent')!,
         timezone: mapValueOfType<String>(json, r'timezone')!,
         completedAt: mapDateTime(json, r'completedAt', r'')!,
+        calculation: CalculationRules.fromJson(json[r'calculation'])!,
         totals: Totals.fromJson(json[r'totals'])!,
         lines: SaleLine.listFromJson(json[r'lines']),
         payment: Payment.fromJson(json[r'payment'])!,
@@ -201,6 +210,7 @@ class Sale {
     'currencyExponent',
     'timezone',
     'completedAt',
+    'calculation',
     'totals',
     'lines',
     'payment',

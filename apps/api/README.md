@@ -34,7 +34,7 @@ repository root.
 | `GET` | `/v1/outlets/{outletId}/checkout-requests/{key}` | Recovery mapping; requires `deviceId` query. |
 | `GET` | `/v1/outlets/{outletId}/sales` | Cursor/date-filtered sales; cashiers see own sales. |
 | `GET` | `/v1/outlets/{outletId}/sales/{saleId}` | Immutable receipt snapshot. |
-| `*` | `/v1/*` | Other OpenAPI v0.2.0 operations are implemented by later tickets. |
+| `*` | `/v1/*` | Other OpenAPI v0.3.0 operations are implemented by later tickets. |
 
 The global prefix `v1` is excluded for `/health` so container/orchestrator probes stay stable.
 
@@ -89,7 +89,9 @@ seeded identities and rate-limit configuration.
   tax-exclusive with half-up rounding:
   `subtotal = sum(price * qty)`, `service = half_up(subtotal * service_bps / 10000)`,
   `tax = half_up((subtotal + service) * tax_bps / 10000)`, `total = subtotal + service + tax`.
-  Settings come from the same `Outlets` row that `PATCH /settings` writes.
+  Quotes and completed sales persist an immutable calculation-rule snapshot (`taxBps`,
+  `serviceBps`, `pricingMode`, currency exponent, `rounding`) taken from the same `Outlets` row
+  that `PATCH /settings` writes. Later settings changes never rewrite a quote or a sale.
 - Cash finalization requires `amountMinor == total` and `tenderedMinor >= total`; change is
   derived. Manual external payments require `amountMinor == total` and no tender. One payment
   per sale. Rejections are `422 PAYMENT_INVALID` and write nothing.
@@ -97,8 +99,9 @@ seeded identities and rate-limit configuration.
   or `409 QUOTE_STALE` for expired quotes, order/settings version changes, or catalog price
   changes. A quote is never silently repriced.
 - Sale lines snapshot product name, variant name, unit price, quantity and line subtotal; the
-  sale snapshots currency, currency exponent and outlet timezone. Catalog edits never rewrite
-  a completed sale.
+  sale snapshots the calculation rules, currency, currency exponent and outlet timezone.
+  Catalog and settings edits never rewrite a completed sale. Both sale read operations return
+  the stored calculation rules alongside the amounts they produced.
 - Finalize uses a serializable transaction and a unique `(outlet, device, idempotencyKey)`
   checkout mapping. Replays return the original sale even after quote expiry; a changed payload
   is `409 IDEMPOTENCY_CONFLICT`; a different key for a completed order is
