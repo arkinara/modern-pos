@@ -1992,42 +1992,52 @@ test('simultaneous finalizations cannot oversell; only one sale and movement com
   assert.equal(state.movements[0]?.sourceId, state.sales[0]?.id);
 });
 
-test('serialization retries are bounded at three attempts before a retryable 503', async () => {
-  const { prisma } = createFakePrisma();
-  const service = new SalesService(prisma);
-  let attempts = 0;
-  const serializationFailure = new Prisma.PrismaClientKnownRequestError(
-    'could not serialize access',
-    { code: 'P2034', clientVersion: '6.19.3' },
-  );
+test('serialization and deadlock retries are bounded at three attempts before a retryable 503', async () => {
+  const failures: { code: string; meta?: { code: string } }[] = [
+    { code: 'P2034' },
+    { code: '40001' },
+    { code: '40P01' },
+    { code: 'P2010', meta: { code: '40001' } },
+    { code: 'P2010', meta: { code: '40P01' } },
+  ];
 
-  (prisma as unknown as { $transaction: () => Promise<never> }).$transaction = async () => {
-    attempts += 1;
-    throw serializationFailure;
-  };
+  for (const failure of failures) {
+    const { prisma } = createFakePrisma();
+    const service = new SalesService(prisma);
+    let attempts = 0;
+    const serializationFailure = new Prisma.PrismaClientKnownRequestError(
+      'concurrent transaction failure',
+      { code: failure.code, clientVersion: '6.19.3', meta: failure.meta },
+    );
 
-  await assert.rejects(
-    () =>
-      service.finalize(
-        OUTLET_ID,
-        KEY_TWO,
-        {
-          deviceId: DEVICE_ID,
-          orderId: '00000000-0000-4000-8000-0000000000ff',
-          quoteId: '00000000-0000-4000-8000-0000000000fe',
-          payment: finalizePayment(18000),
-        },
-        user(),
-      ),
-    (error: unknown) => {
-      assert.ok(error instanceof HttpException);
-      assert.equal(error.getStatus(), 503);
-      const response = error.getResponse() as { code: string; retryable: boolean };
-      assert.equal(response.code, 'TRANSACTION_RETRY_EXHAUSTED');
-      assert.equal(response.retryable, true);
-      return true;
-    },
-  );
+    (prisma as unknown as { $transaction: () => Promise<never> }).$transaction = async () => {
+      attempts += 1;
+      throw serializationFailure;
+    };
 
-  assert.equal(attempts, 3);
+    await assert.rejects(
+      () =>
+        service.finalize(
+          OUTLET_ID,
+          KEY_TWO,
+          {
+            deviceId: DEVICE_ID,
+            orderId: '00000000-0000-4000-8000-0000000000ff',
+            quoteId: '00000000-0000-4000-8000-0000000000fe',
+            payment: finalizePayment(18000),
+          },
+          user(),
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof HttpException);
+        assert.equal(error.getStatus(), 503);
+        const response = error.getResponse() as { code: string; retryable: boolean };
+        assert.equal(response.code, 'TRANSACTION_RETRY_EXHAUSTED');
+        assert.equal(response.retryable, true);
+        return true;
+      },
+    );
+
+    assert.equal(attempts, 3);
+  }
 });

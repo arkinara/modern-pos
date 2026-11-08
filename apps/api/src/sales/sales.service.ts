@@ -218,7 +218,17 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 function isSerializationFailure(error: unknown): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034';
+  const details = error as { code?: unknown; meta?: { code?: unknown } } | null;
+  const code = details?.code;
+  const databaseCode = details?.meta?.code;
+
+  return (
+    code === 'P2034' ||
+    code === '40001' ||
+    code === '40P01' ||
+    databaseCode === '40001' ||
+    databaseCode === '40P01'
+  );
 }
 
 function sleep(milliseconds: number): Promise<void> {
@@ -1475,7 +1485,7 @@ export class SalesService {
       SELECT "stockItemId", "quantity", "version"
       FROM "stock_balances"
       WHERE "outletId" = ${outletId}::uuid
-        AND "stockItemId" IN (${Prisma.join(stockItemIds)})
+        AND "stockItemId"::text IN (${Prisma.join(stockItemIds)})
       ORDER BY "stockItemId"
       FOR UPDATE
     `;
