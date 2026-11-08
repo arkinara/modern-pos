@@ -7,6 +7,7 @@ import {
   Prisma,
   Role,
   SaleState,
+  StockMovementType,
   StockPolicy,
 } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -1321,8 +1322,8 @@ export class SalesService {
   }
 
   private async applyStockConsumption(
-    _tx: Prisma.TransactionClient,
-    _context: {
+    tx: Prisma.TransactionClient,
+    context: {
       outletId: string;
       orderId: string;
       saleId: string;
@@ -1330,10 +1331,230 @@ export class SalesService {
       lines: { variantId: string; quantity: number; recipeVersion: number | null }[];
     },
   ): Promise<void> {
-    // Ticket #10 adds SALE stock movements and nonnegative balance guards here,
-    // inside the same serializable transaction. Each `lines` entry carries the
-    // recipe version pinned on the matching immutable sale_line row, so #10 reads
-    // recipe_lines for that exact historical version and never re-reads the live
-    // recipe. Ticket #9 leaves stock untouched.
+    const { outletId, orderId, saleId, actorId, lines } = context;
+    const zero = new Prisma.Decimal(0);
+
+    await tx.$queryRaw`
+      SELECT "id"
+      FROM "orders"
+      WHERE "id" = ${orderId}::uuid
+      FOR UPDATE
+    `;
+
+    const lockedOrder = await tx.order.findUnique({
+      where: { id: orderId },
+      select: { id: true, outletId: true, state: true },
+    });
+
+    if (!lockedOrder || lockedOrder.outletId !== outletId) {
+      throw apiError(404, 'NOT_FOUND', 'Order not found');
+    }
+
+    if (lockedOrder.state !== OrderState.COMPLETED) {
+      throw apiError(409, 'ORDER_NOT_DRAFT', 'Only draft orders can be finalized');
+    }
+
+    const variantIds = [...new Set(lines.map((line) => line.variantId))];
+    const variantRows = await tx.menuVariant.findMany({
+      where: { id: { in: variantIds } },
+      select: { id: true, stockPolicy: true },
+    });
+    const variantPolicies = new Map(
+      variantRows.map((variant) => [variant.id, variant.stockPolicy]),
+    );
+
+    const trackedLines = lines.flatMap((line) => {
+      const policy = variantPolicies.get(line.variantId);
+
+      if (!policy) {
+        throw apiError(
+          422,
+          'ITEM_UNAVAILABLE',
+          'One or more variants are not saleable at this outlet',
+          { details: { variantIds: [line.variantId] } },
+        );
+      }
+
+      if (policy === StockPolicy.UNTRACKED) {
+        return [];
+      }
+
+      if (line.recipeVersion === null) {
+        throw apiError(
+          422,
+          'RECIPE_REQUIRED',
+          'Tracked variants require a published recipe before they can be sold',
+          { details: { variantId: line.variantId } },
+        );
+      }
+
+      return [line as { variantId: string; quantity: number; recipeVersion: number }];
+    });
+
+    const pins = new Map<string, { variantId: string; version: number }>();
+
+    for (const line of trackedLines) {
+      pins.set(`${line.variantId}:${line.recipeVersion}`, {
+        variantId: line.variantId,
+        version: line.recipeVersion,
+      });
+    }
+
+    const recipeByPin = new Map<
+      string,
+      { variantId: string; version: number; lines: { stockItemId: string; quantityPerSaleUnit: Prisma.Decimal }[] }
+    >();
+
+    if (pins.size > 0) {
+      const recipeRows = await tx.recipeVersion.findMany({
+        where: {
+          outletId,
+          OR: [...pins.values()].map((pin) => ({
+            variantId: pin.variantId,
+            version: pin.version,
+          })),
+        },
+        select: {
+          variantId: true,
+          version: true,
+          lines: {
+            select: { stockItemId: true, quantityPerSaleUnit: true },
+          },
+        },
+      });
+
+      for (const recipe of recipeRows) {
+        recipeByPin.set(`${recipe.variantId}:${recipe.version}`, recipe);
+      }
+    }
+
+    const consumption = new Map<string, Prisma.Decimal>();
+
+    for (const line of trackedLines) {
+      const recipe = recipeByPin.get(`${line.variantId}:${line.recipeVersion}`);
+
+      if (!recipe) {
+        throw apiError(
+          409,
+          'RECIPE_SNAPSHOT_MISSING',
+          'The pinned recipe version for this sale is unavailable',
+          { details: { variantId: line.variantId, recipeVersion: line.recipeVersion } },
+        );
+      }
+
+      for (const recipeLine of recipe.lines) {
+        const amount = new Prisma.Decimal(recipeLine.quantityPerSaleUnit).mul(line.quantity);
+        const previous = consumption.get(recipeLine.stockItemId) ?? zero;
+        consumption.set(recipeLine.stockItemId, previous.plus(amount));
+      }
+    }
+
+    const stockItemIds = [...consumption.keys()].sort();
+
+    if (stockItemIds.length === 0) {
+      return;
+    }
+
+    const stockItems = await tx.stockItem.findMany({
+      where: { id: { in: stockItemIds } },
+      select: { id: true, name: true, quantityScale: true },
+    });
+    const stockItemsById = new Map(stockItems.map((item) => [item.id, item]));
+
+    const missingItems = stockItemIds.filter((id) => !stockItemsById.has(id));
+
+    if (missingItems.length > 0) {
+      throw apiError(500, 'STOCK_ITEM_MISSING', 'A recipe references a missing stock item', {
+        details: { stockItemIds: missingItems },
+      });
+    }
+
+    const lockedBalances = await tx.$queryRaw<
+      { stockItemId: string; quantity: Prisma.Decimal; version: number }[]
+    >`
+      SELECT "stockItemId", "quantity", "version"
+      FROM "stock_balances"
+      WHERE "outletId" = ${outletId}::uuid
+        AND "stockItemId" IN (${Prisma.join(stockItemIds)})
+      ORDER BY "stockItemId"
+      FOR UPDATE
+    `;
+
+    const balances = new Map(
+      lockedBalances.map((row) => [
+        row.stockItemId,
+        { quantity: new Prisma.Decimal(row.quantity), version: row.version },
+      ]),
+    );
+
+    const shortages = stockItemIds.flatMap((stockItemId) => {
+      const item = stockItemsById.get(stockItemId)!;
+      const required = consumption.get(stockItemId) ?? zero;
+      const available = balances.get(stockItemId)?.quantity ?? zero;
+
+      if (available.greaterThanOrEqualTo(required)) {
+        return [];
+      }
+
+      return [
+        {
+          stockItemId,
+          name: item.name,
+          required: required.toFixed(item.quantityScale),
+          available: available.toFixed(item.quantityScale),
+          shortage: required.minus(available).toFixed(item.quantityScale),
+        },
+      ];
+    });
+
+    if (shortages.length > 0) {
+      throw apiError(422, 'INSUFFICIENT_STOCK', 'Insufficient stock for this sale', {
+        details: { shortages },
+      });
+    }
+
+    await tx.stockMovement.createMany({
+      data: stockItemIds.map((stockItemId) => ({
+        outletId,
+        stockItemId,
+        delta: (consumption.get(stockItemId) ?? zero).negated(),
+        type: StockMovementType.SALE,
+        actorId,
+        reason: `Sale ${saleId}`,
+        sourceId: saleId,
+      })),
+    });
+
+    for (const stockItemId of stockItemIds) {
+      const balance = balances.get(stockItemId);
+      const amount = consumption.get(stockItemId) ?? zero;
+
+      if (!balance) {
+        continue;
+      }
+
+      const updated = await tx.stockBalance.updateMany({
+        where: {
+          outletId,
+          stockItemId,
+          version: balance.version,
+          quantity: { gte: amount },
+        },
+        data: {
+          quantity: balance.quantity.minus(amount),
+          version: { increment: 1 },
+        },
+      });
+
+      if (updated.count !== 1) {
+        throw apiError(
+          409,
+          'STOCK_CHANGED',
+          'Stock changed while the sale was committing; retry with the same key',
+          { retryable: true },
+        );
+      }
+    }
   }
+
 }

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { HttpException } from '@nestjs/common';
-import { OrderState, PaymentKind, Role, SaleState, StockPolicy } from '@prisma/client';
+import { OrderState, PaymentKind, Prisma, Role, SaleState, StockPolicy } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import type { PrismaService } from '../prisma/prisma.service';
 import { SalesService } from './sales.service';
@@ -161,6 +161,40 @@ interface RecipeRow {
   version: number;
 }
 
+interface RecipeLineRow {
+  id: string;
+  recipeVersionId: string;
+  stockItemId: string;
+  quantityPerSaleUnit: string;
+}
+
+interface StockItemRow {
+  id: string;
+  businessId: string;
+  name: string;
+  quantityScale: number;
+}
+
+interface BalanceRow {
+  id: string;
+  outletId: string;
+  stockItemId: string;
+  quantity: string;
+  version: number;
+}
+
+interface MovementRow {
+  id: string;
+  outletId: string;
+  stockItemId: string;
+  delta: string;
+  type: string;
+  actorId: string;
+  reason: string;
+  sourceId: string;
+  createdAt: Date;
+}
+
 interface OutletRow {
   id: string;
   businessId: string;
@@ -177,6 +211,10 @@ interface FakeState {
   outlet: OutletRow;
   variants: VariantRow[];
   recipes: RecipeRow[];
+  recipeLines: RecipeLineRow[];
+  stockItems: StockItemRow[];
+  balances: BalanceRow[];
+  movements: MovementRow[];
   orders: OrderRow[];
   quotes: QuoteRow[];
   sales: SaleRow[];
@@ -234,6 +272,10 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
       },
     ],
     recipes: [],
+    recipeLines: [],
+    stockItems: [],
+    balances: [],
+    movements: [],
     orders: [],
     quotes: [],
     sales: [],
@@ -281,10 +323,11 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
       findMany: async (args: {
         where: {
           id: { in: string[] };
-          menuItem: { businessId: string };
-          outletMenus: { some: { outletId: string } };
+          menuItem?: { businessId: string };
+          outletMenus?: { some: { outletId: string } };
         };
       }) => {
+        const outletId = args.where.outletMenus?.some.outletId;
         return state.variants
           .filter(
             (variant) =>
@@ -296,7 +339,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
             ...clone(variant),
             menuItem: clone(variant.menuItem),
             outletMenus: clone(variant.outletMenus).filter(
-              (menu) => menu.outletId === args.where.outletMenus.some.outletId,
+              (menu) => outletId === undefined || menu.outletId === outletId,
             ),
           }));
       },
@@ -305,19 +348,116 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
       findMany: async (args: {
         where: {
           outletId: string;
-          businessId: string;
-          variantId: { in: string[] };
+          businessId?: string;
+          variantId?: { in: string[] };
+          OR?: { variantId: string; version: number }[];
         };
+        include?: { lines: unknown };
       }) => {
         return state.recipes
           .filter(
             (recipe) =>
               recipe.outletId === args.where.outletId &&
-              recipe.businessId === args.where.businessId &&
-              args.where.variantId.in.includes(recipe.variantId),
+              (args.where.businessId === undefined ||
+                recipe.businessId === args.where.businessId) &&
+              (args.where.variantId === undefined ||
+                args.where.variantId.in.includes(recipe.variantId)) &&
+              (args.where.OR === undefined ||
+                args.where.OR.some(
+                  (pin) => pin.variantId === recipe.variantId && pin.version === recipe.version,
+                )),
           )
           .sort((a, b) => a.version - b.version)
-          .map((recipe) => ({ variantId: recipe.variantId, version: recipe.version }));
+          .map((recipe) => ({
+            id: recipe.id,
+            variantId: recipe.variantId,
+            version: recipe.version,
+            lines: state.recipeLines
+              .filter((line) => line.recipeVersionId === recipe.id)
+              .map((line) => ({
+                stockItemId: line.stockItemId,
+                quantityPerSaleUnit: new Prisma.Decimal(line.quantityPerSaleUnit),
+              })),
+          }));
+      },
+    },
+    stockItem: {
+      findMany: async (args: { where: { id: { in: string[] } } }) => {
+        return state.stockItems
+          .filter((item) => args.where.id.in.includes(item.id))
+          .map((item) => ({ id: item.id, name: item.name, quantityScale: item.quantityScale }));
+      },
+    },
+    stockBalance: {
+      findMany: async (args: { where: { outletId: string; stockItemId: { in: string[] } } }) => {
+        return state.balances
+          .filter(
+            (balance) =>
+              balance.outletId === args.where.outletId &&
+              args.where.stockItemId.in.includes(balance.stockItemId),
+          )
+          .map((balance) => ({
+            stockItemId: balance.stockItemId,
+            quantity: new Prisma.Decimal(balance.quantity),
+          }));
+      },
+      updateMany: async (args: {
+        where: {
+          outletId: string;
+          stockItemId: string;
+          version?: number;
+          quantity?: { gte: Prisma.Decimal };
+        };
+        data: { quantity: Prisma.Decimal; version: { increment: number } };
+      }) => {
+        const row = state.balances.find(
+          (balance) =>
+            balance.outletId === args.where.outletId &&
+            balance.stockItemId === args.where.stockItemId,
+        );
+
+        if (!row) return { count: 0 };
+        if (args.where.version !== undefined && row.version !== args.where.version) {
+          return { count: 0 };
+        }
+        if (
+          args.where.quantity &&
+          new Prisma.Decimal(row.quantity).lessThan(args.where.quantity.gte)
+        ) {
+          return { count: 0 };
+        }
+
+        row.quantity = args.data.quantity.toString();
+        row.version += args.data.version.increment;
+        return { count: 1 };
+      },
+    },
+    stockMovement: {
+      createMany: async (args: {
+        data: {
+          outletId: string;
+          stockItemId: string;
+          delta: Prisma.Decimal;
+          type: string;
+          actorId: string;
+          reason: string;
+          sourceId: string;
+        }[];
+      }) => {
+        for (const movement of args.data) {
+          state.movements.push({
+            id: nextId(),
+            outletId: movement.outletId,
+            stockItemId: movement.stockItemId,
+            delta: movement.delta.toString(),
+            type: movement.type,
+            actorId: movement.actorId,
+            reason: movement.reason,
+            sourceId: movement.sourceId,
+            createdAt: now,
+          });
+        }
+        return { count: args.data.length };
       },
     },
     order: {
@@ -593,15 +733,39 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
     },
   };
 
+  const queryRaw = async (strings: TemplateStringsArray, ...values: unknown[]) => {
+    const sql = strings.join('?');
+
+    if (sql.includes('"orders"')) {
+      const id = String(values[0]);
+      return state.orders.filter((order) => order.id === id).map((order) => ({ id: order.id }));
+    }
+
+    if (sql.includes('"stock_balances"')) {
+      const outletId = String(values[0]);
+      return state.balances
+        .filter((balance) => balance.outletId === outletId)
+        .sort((a, b) => a.stockItemId.localeCompare(b.stockItemId))
+        .map((balance) => ({
+          stockItemId: balance.stockItemId,
+          quantity: new Prisma.Decimal(balance.quantity),
+          version: balance.version,
+        }));
+    }
+
+    return [];
+  };
+
   const prisma = {
     ...client,
+    $queryRaw: queryRaw,
     $transaction: async <T>(
       operation: (tx: typeof client) => Promise<T>,
       _options?: unknown,
     ): Promise<T> => {
       const snapshot = clone(state);
       try {
-        return await operation(client);
+        return await operation({ ...client, $queryRaw: queryRaw } as typeof client);
       } catch (error) {
         for (const key of Object.keys(snapshot) as (keyof FakeState)[]) {
           Object.assign(state, { [key]: snapshot[key] });
@@ -1459,4 +1623,411 @@ test('an outlet settings change after the quote makes it stale', async () => {
   );
 
   assert.equal(state.sales.length, 0);
+});
+
+const STOCK_SHARED_ID = '00000000-0000-4000-8000-000000000050';
+const STOCK_SECOND_ID = '00000000-0000-4000-8000-000000000051';
+const RECIPE_A_ID = '00000000-0000-4000-8000-0000000000c0';
+const RECIPE_B_ID = '00000000-0000-4000-8000-0000000000c1';
+
+function addStockItem(
+  state: FakeState,
+  id: string,
+  name: string,
+  quantityScale = 0,
+): void {
+  if (!state.stockItems.some((item) => item.id === id)) {
+    state.stockItems.push({ id, businessId: BUSINESS_ID, name, quantityScale });
+  }
+}
+
+function setBalance(state: FakeState, stockItemId: string, quantity: string): void {
+  const existing = state.balances.find(
+    (balance) => balance.outletId === OUTLET_ID && balance.stockItemId === stockItemId,
+  );
+
+  if (existing) {
+    existing.quantity = quantity;
+    return;
+  }
+
+  state.balances.push({
+    id: `balance-${state.balances.length + 1}`,
+    outletId: OUTLET_ID,
+    stockItemId,
+    quantity,
+    version: 1,
+  });
+}
+
+function trackVariant(
+  state: FakeState,
+  variantId: string,
+  recipeId: string,
+  lines: { stockItemId: string; quantityPerSaleUnit: string }[],
+  version = 1,
+): void {
+  const variant = state.variants.find((row) => row.id === variantId);
+  assert.ok(variant);
+  variant.stockPolicy = StockPolicy.TRACKED;
+
+  state.recipes.push({
+    id: recipeId,
+    variantId,
+    outletId: OUTLET_ID,
+    businessId: BUSINESS_ID,
+    version,
+  });
+
+  for (const [index, line] of lines.entries()) {
+    state.recipeLines.push({
+      id: `${recipeId}-line-${index}`,
+      recipeVersionId: recipeId,
+      stockItemId: line.stockItemId,
+      quantityPerSaleUnit: line.quantityPerSaleUnit,
+    });
+  }
+}
+
+async function prepareOrder(
+  service: SalesService,
+  key: string,
+  lines: { variantId: string; quantity: number }[],
+) {
+  const actor = user();
+  const order = await service.createOrder(OUTLET_ID, key, { deviceId: DEVICE_ID, lines }, actor);
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+  return { actor, order, quote };
+}
+
+function finalizePayment(amountMinor: number) {
+  return { kind: PaymentKind.CASH, amountMinor, tenderedMinor: amountMinor };
+}
+
+test('selling two tracked products consuming three units each deducts exactly six once', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+  trackVariant(state, VARIANT_B, RECIPE_B_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const { actor, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 1 },
+    { variantId: VARIANT_B, quantity: 1 },
+  ]);
+
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(53000),
+    },
+    actor,
+  );
+
+  const balance = state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID);
+  assert.equal(balance?.quantity, '4');
+  assert.equal(state.movements.length, 1);
+  assert.equal(state.movements[0]?.delta, '-6');
+  assert.equal(state.movements[0]?.type, 'SALE');
+  assert.equal(state.movements[0]?.sourceId, finalized.sale.id);
+  assert.equal(
+    state.movements.reduce((sum, movement) => sum + Number(movement.delta), 0),
+    -6,
+  );
+
+  const replay = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(53000),
+    },
+    actor,
+  );
+
+  assert.equal(replay.replayed, true);
+  assert.equal(replay.sale.id, finalized.sale.id);
+  assert.equal(state.movements.length, 1);
+  assert.equal(balance?.quantity, '4');
+});
+
+test('a shared ingredient across two sale lines consumes the sum, not one line', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Fresh Milk');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '2' },
+  ]);
+  trackVariant(state, VARIANT_B, RECIPE_B_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '1' },
+  ]);
+
+  const { actor, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 2 },
+    { variantId: VARIANT_B, quantity: 1 },
+  ]);
+
+  await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(71000),
+    },
+    actor,
+  );
+
+  const balance = state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID);
+  assert.equal(balance?.quantity, '5');
+  assert.equal(state.movements.length, 1);
+  assert.equal(state.movements[0]?.delta, '-5');
+});
+
+test('insufficient stock rejects the sale with item-specific shortages and no writes', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  addStockItem(state, STOCK_SECOND_ID, 'Fresh Milk');
+  setBalance(state, STOCK_SHARED_ID, '5');
+  setBalance(state, STOCK_SECOND_ID, '100');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+  trackVariant(state, VARIANT_B, RECIPE_B_ID, [
+    { stockItemId: STOCK_SECOND_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const { actor, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 2 },
+    { variantId: VARIANT_B, quantity: 1 },
+  ]);
+
+  await assert.rejects(
+    () =>
+      service.finalize(
+        OUTLET_ID,
+        KEY_TWO,
+        {
+          deviceId: DEVICE_ID,
+          orderId: order.id,
+          quoteId: quote.id,
+          payment: finalizePayment(71000),
+        },
+        actor,
+      ),
+    (error: unknown) => {
+      assert.ok(error instanceof HttpException);
+      assert.equal(error.getStatus(), 422);
+      const response = error.getResponse() as {
+        code: string;
+        details: {
+          shortages: {
+            stockItemId: string;
+            name: string;
+            required: string;
+            available: string;
+            shortage: string;
+          }[];
+        };
+      };
+      assert.equal(response.code, 'INSUFFICIENT_STOCK');
+      assert.deepEqual(response.details.shortages, [
+        {
+          stockItemId: STOCK_SHARED_ID,
+          name: 'Coffee Beans',
+          required: '6',
+          available: '5',
+          shortage: '1',
+        },
+      ]);
+      return true;
+    },
+  );
+
+  assert.equal(state.sales.length, 0);
+  assert.equal(state.movements.length, 0);
+  assert.equal(state.checkouts.length, 0);
+  assert.equal(
+    state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity,
+    '5',
+  );
+  assert.equal(state.orders.find((row) => row.id === order.id)?.state, OrderState.DRAFT);
+});
+
+test('cancelled orders never deduct stock when finalization is attempted', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const { actor, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 1 },
+  ]);
+  await service.cancelOrder(OUTLET_ID, order.id, { version: 1 }, actor);
+
+  await assert.rejects(
+    () =>
+      service.finalize(
+        OUTLET_ID,
+        KEY_TWO,
+        {
+          deviceId: DEVICE_ID,
+          orderId: order.id,
+          quoteId: quote.id,
+          payment: finalizePayment(18000),
+        },
+        actor,
+      ),
+    (error: unknown) =>
+      error instanceof HttpException &&
+      error.getStatus() === 409 &&
+      (error.getResponse() as { code: string }).code === 'ORDER_NOT_DRAFT',
+  );
+
+  assert.equal(state.movements.length, 0);
+  assert.equal(state.sales.length, 0);
+  assert.equal(
+    state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity,
+    '10',
+  );
+});
+
+test('simultaneous finalizations cannot oversell; only one sale and movement commit', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '6');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const first = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 2 },
+  ]);
+  const second = await prepareOrder(service, KEY_TWO, [
+    { variantId: VARIANT_A, quantity: 2 },
+  ]);
+
+  let tail = Promise.resolve();
+  const original = prisma.$transaction.bind(prisma) as unknown as (
+    operation: (tx: unknown) => Promise<unknown>,
+    options?: unknown,
+  ) => Promise<unknown>;
+  (prisma as unknown as { $transaction: typeof original }).$transaction = async (
+    operation: (tx: unknown) => Promise<unknown>,
+    options?: unknown,
+  ) => {
+    const previous = tail;
+    let release: () => void = () => undefined;
+    tail = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+
+    try {
+      return await original(operation, options);
+    } finally {
+      release();
+    }
+  };
+
+  const results = await Promise.allSettled([
+    service.finalize(
+      OUTLET_ID,
+      KEY_THREE,
+      {
+        deviceId: DEVICE_ID,
+        orderId: first.order.id,
+        quoteId: first.quote.id,
+        payment: finalizePayment(36000),
+      },
+      first.actor,
+    ),
+    service.finalize(
+      OUTLET_ID,
+      KEY_THREE,
+      {
+        deviceId: DEVICE_ID,
+        orderId: second.order.id,
+        quoteId: second.quote.id,
+        payment: finalizePayment(36000),
+      },
+      second.actor,
+    ),
+  ]);
+
+  const fulfilled = results.filter((result) => result.status === 'fulfilled');
+  const rejected = results.filter((result) => result.status === 'rejected');
+  assert.equal(fulfilled.length, 1);
+  assert.equal(rejected.length, 1);
+
+  const failure = (rejected[0] as PromiseRejectedResult).reason;
+  assert.ok(failure instanceof HttpException);
+  assert.equal(failure.getStatus(), 422);
+  assert.equal((failure.getResponse() as { code: string }).code, 'INSUFFICIENT_STOCK');
+
+  const balance = state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID);
+  assert.equal(balance?.quantity, '0');
+  assert.ok(Number(balance?.quantity) >= 0);
+  assert.equal(state.sales.length, 1);
+  assert.equal(state.movements.length, 1);
+  assert.equal(state.movements[0]?.delta, '-6');
+  assert.equal(state.movements[0]?.sourceId, state.sales[0]?.id);
+});
+
+test('serialization retries are bounded at three attempts before a retryable 503', async () => {
+  const { prisma } = createFakePrisma();
+  const service = new SalesService(prisma);
+  let attempts = 0;
+  const serializationFailure = new Prisma.PrismaClientKnownRequestError(
+    'could not serialize access',
+    { code: 'P2034', clientVersion: '6.19.3' },
+  );
+
+  (prisma as unknown as { $transaction: () => Promise<never> }).$transaction = async () => {
+    attempts += 1;
+    throw serializationFailure;
+  };
+
+  await assert.rejects(
+    () =>
+      service.finalize(
+        OUTLET_ID,
+        KEY_TWO,
+        {
+          deviceId: DEVICE_ID,
+          orderId: '00000000-0000-4000-8000-0000000000ff',
+          quoteId: '00000000-0000-4000-8000-0000000000fe',
+          payment: finalizePayment(18000),
+        },
+        user(),
+      ),
+    (error: unknown) => {
+      assert.ok(error instanceof HttpException);
+      assert.equal(error.getStatus(), 503);
+      const response = error.getResponse() as { code: string; retryable: boolean };
+      assert.equal(response.code, 'TRANSACTION_RETRY_EXHAUSTED');
+      assert.equal(response.retryable, true);
+      return true;
+    },
+  );
+
+  assert.equal(attempts, 3);
 });
