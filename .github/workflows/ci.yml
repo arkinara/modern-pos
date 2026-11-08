@@ -118,7 +118,53 @@ jobs:
 
       - name: Flutter tests
         working-directory: apps/mobile
-        run: flutter test
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # sqlite3's build hook downloads pre-compiled native assets from GitHub
+          # and verifies them against hashes pinned in the package. A corrupted
+          # response makes the hook fail with:
+          #   Hash of downloaded file libsqlite3.*.so is ..., expected ...
+          #   Building assets for package:sqlite3 failed.
+          # Prefetch the host asset through the GitHub API and verify it before
+          # the hook runs. If the hook still fails, invalidate only the sqlite3
+          # caches and retry once. Real test failures are not retried.
+          pub_cache="${PUB_CACHE:-$HOME/.pub-cache}"
+          prefetch_script="$GITHUB_WORKSPACE/.github/scripts/prefetch-sqlite3-assets.sh"
+
+          bash "$prefetch_script" linux
+
+          max_attempts=2
+          attempt=1
+          while true; do
+            echo "::group::flutter test (attempt ${attempt}/${max_attempts})"
+            if flutter test 2>&1 | tee /tmp/flutter-test.log; then
+              echo "::endgroup::"
+              exit 0
+            else
+              status=${PIPESTATUS[0]}
+              echo "::endgroup::"
+            fi
+
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "flutter test failed after ${max_attempts} attempts" >&2
+              exit "$status"
+            fi
+
+            if ! grep -qE 'Hash of downloaded file .* expected|Building assets for package:sqlite3 failed' /tmp/flutter-test.log; then
+              echo "flutter test failed for a reason other than a corrupted sqlite3 download; not retrying" >&2
+              exit "$status"
+            fi
+
+            echo "Detected corrupted sqlite3 native asset download; invalidating cached artifact and retrying"
+            rm -rf "${pub_cache}"/hosted/pub.dev/sqlite3-*
+            rm -rf .dart_tool/hooks_runner/shared/sqlite3 .dart_tool/hooks_runner/sqlite3 build/native_assets
+            flutter pub get
+            bash "$prefetch_script" linux
+            attempt=$((attempt + 1))
+          done
 
       - name: Ensure Android SDK 36 and NDK
         run: |
@@ -128,4 +174,50 @@ jobs:
 
       - name: Android debug build
         working-directory: apps/mobile
-        run: flutter build apk --debug
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Two GitHub-hosted downloads can fail transiently before any project
+          # code runs: the Gradle wrapper distribution and the sqlite3 Android
+          # native assets. Prefetch and verify the assets, then retry once when
+          # either download is corrupt/5xx. Real build failures are not retried.
+          pub_cache="${PUB_CACHE:-$HOME/.pub-cache}"
+          gradle_dist="$HOME/.gradle/wrapper/dists/gradle-9.3.1-all"
+          prefetch_script="$GITHUB_WORKSPACE/.github/scripts/prefetch-sqlite3-assets.sh"
+
+          bash "$prefetch_script" android
+
+          max_attempts=2
+          attempt=1
+          while true; do
+            echo "::group::flutter build apk --debug (attempt ${attempt}/${max_attempts})"
+            if flutter build apk --debug 2>&1 | tee /tmp/android-build.log; then
+              echo "::endgroup::"
+              exit 0
+            else
+              status=${PIPESTATUS[0]}
+              echo "::endgroup::"
+            fi
+
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "Android debug build failed after ${max_attempts} attempts" >&2
+              exit "$status"
+            fi
+
+            if grep -qE 'Hash of downloaded file .* expected|Building assets for package:sqlite3 failed' /tmp/android-build.log; then
+              echo "Detected corrupted sqlite3 Android native asset download; invalidating cached artifacts and retrying"
+              rm -rf "${pub_cache}"/hosted/pub.dev/sqlite3-*
+              rm -rf .dart_tool/hooks_runner/shared/sqlite3 .dart_tool/hooks_runner/sqlite3 build/native_assets
+              flutter pub get
+              bash "$prefetch_script" android
+            elif grep -qE 'Server returned HTTP response code: 5[0-9][0-9] for URL: https://github.com/gradle/gradle-distributions/|Could not (GET|HEAD) .*services\.gradle\.org|Could not download gradle-9\.3\.1-all\.zip' /tmp/android-build.log; then
+              echo "Detected transient Gradle distribution download failure; clearing the wrapper cache and retrying"
+              rm -rf "$gradle_dist"
+            else
+              echo "Android debug build failed for a reason other than a transient download; not retrying" >&2
+              exit "$status"
+            fi
+            attempt=$((attempt + 1))
+          done

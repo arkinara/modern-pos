@@ -249,11 +249,52 @@ password/role changes are added, they must call `AuthService.revokeAllSessionsFo
 `SessionService.revokeAllForUser`) in the same operation. Error payloads follow
 `{code,message,requestId,retryable}`; request IDs are echoed in `X-Request-Id`.
 
+## Catalog: categories, products, variants and availability (#6)
+
+Implementation lives in `apps/api/src/catalog`, `apps/web/components/menu-screen.tsx` and the
+Dart contract client.
+
+- Seven operations are live: list/create categories, list/create/update/archive menu, and update
+  a variant. The OpenAPI document is unchanged; the typed wrapper in `packages/api-client` gained
+  matching methods without regenerating the schema.
+- Reads are owner and cashier readable. Every write is owner-only. Missing sessions return
+  `401`, cashier writes return `403`, and cross-outlet or cross-tenant IDs return `404` through
+  the global outlet-scope guard plus business-filtered queries.
+- Money is an integer in currency minor units (`priceMinor`), validated from `0` to
+  `2^53-1`. PostgreSQL stores it as `BIGINT`; responses never send a float.
+- `revision` is the optimistic concurrency token for menu items and variants. A stale value
+  returns `409 VERSION_CONFLICT` before any write. IDs are immutable; there is no delete
+  operation.
+- `availableUnits` is `null` everywhere in this ticket. `UNTRACKED` variants are null by
+  definition. `TRACKED` availability must come from the stock ledger in #7; the API deliberately
+  returns `null` instead of a fabricated number. The web UI labels this limitation.
+- Archive is soft: `menu_items.archived_at` is set and the row is preserved. Owner `GET /menu`
+  includes archived records with `archived: true`; cashier `GET /menu` excludes archived items,
+  archived categories and disabled variants. Sale snapshots in #9/#10 must copy item and variant
+  names, not depend on catalog edits.
+- Menu search covers name and description, case-insensitively. `limit` defaults to 25 and accepts
+  1–100; `cursor` is the last menu ID. No matches returns `{items: [], nextCursor: null}`.
+- The seed adds synthetic categories, two menu items and three variants for both demo outlets.
+  Re-running the seed restores those values and is safe.
+
+Android refresh proof (live API required):
+
+```bash
+cd apps/mobile
+CATALOG_API_BASE_URL=http://localhost:4000 flutter test test/catalog_refresh_proof_test.dart
+```
+
+The proof signs in as the seeded owner through the generated Dart client, creates a menu, reads
+it back by search, updates a variant price and stock policy, reads the refreshed record, then
+archives it. A normal `flutter test` skips it because no base URL is defined.
+
+Deferred: stock ledger and receiving (#7), recipe availability (#8), orders and sales snapshots
+(#9/#10), cashier catalog UI (#11), reports (#14) and printing (#15/#16).
+
 ## Scope boundaries
 
 - Web is the owner back office. It has no sale, tender or cart routes; the Android app owns
   cashier flows.
-- Catalog, recipe, stock-ledger and sale transaction rules are server-owned and arrive in
-  #6-#10.
+- Recipe, stock-ledger and sale transaction rules are server-owned and arrive in #7-#10.
 - Printer discovery and physical Android printing remain with #15/#16.
 - All data in this scaffold is synthetic.

@@ -16,6 +16,16 @@ const OUTLET_SECOND_ID = '00000000-0000-4000-8000-000000000005';
 const OWNER_SECOND_ID = '00000000-0000-4000-8000-000000000006';
 const CASHIER_SECOND_ID = '00000000-0000-4000-8000-000000000007';
 
+const CATEGORY_BEVERAGES_ID = '00000000-0000-4000-8000-000000000020';
+const CATEGORY_FOOD_ID = '00000000-0000-4000-8000-000000000021';
+
+const MENU_ICED_COFFEE_ID = '00000000-0000-4000-8000-000000000030';
+const MENU_CHICKEN_RICE_ID = '00000000-0000-4000-8000-000000000031';
+
+const VARIANT_ICED_COFFEE_REGULAR_ID = '00000000-0000-4000-8000-000000000040';
+const VARIANT_ICED_COFFEE_LARGE_ID = '00000000-0000-4000-8000-000000000041';
+const VARIANT_CHICKEN_RICE_ID = '00000000-0000-4000-8000-000000000042';
+
 const OTHER_BUSINESS_ID = '00000000-0000-4000-8000-000000000010';
 const OTHER_OUTLET_ID = '00000000-0000-4000-8000-000000000011';
 const OTHER_OWNER_ID = '00000000-0000-4000-8000-000000000012';
@@ -158,8 +168,122 @@ async function main(): Promise<void> {
     });
   }
 
+  const categories = [
+    { id: CATEGORY_BEVERAGES_ID, name: 'Beverages', sortOrder: 10 },
+    { id: CATEGORY_FOOD_ID, name: 'Food', sortOrder: 20 },
+  ];
+
+  for (const category of categories) {
+    await prisma.category.upsert({
+      where: { id: category.id },
+      update: {
+        businessId: BUSINESS_ID,
+        name: category.name,
+        sortOrder: category.sortOrder,
+        archivedAt: null,
+      },
+      create: {
+        id: category.id,
+        businessId: BUSINESS_ID,
+        name: category.name,
+        sortOrder: category.sortOrder,
+      },
+    });
+  }
+
+  const menuItems = [
+    {
+      id: MENU_ICED_COFFEE_ID,
+      categoryId: CATEGORY_BEVERAGES_ID,
+      name: 'Iced Coffee',
+      description: 'Brewed coffee served over ice.',
+    },
+    {
+      id: MENU_CHICKEN_RICE_ID,
+      categoryId: CATEGORY_FOOD_ID,
+      name: 'Chicken Rice',
+      description: 'Steamed rice with roasted chicken.',
+    },
+  ];
+
+  for (const item of menuItems) {
+    await prisma.menuItem.upsert({
+      where: { id: item.id },
+      update: {
+        businessId: BUSINESS_ID,
+        categoryId: item.categoryId,
+        name: item.name,
+        description: item.description,
+        revision: 1,
+        archivedAt: null,
+      },
+      create: {
+        id: item.id,
+        businessId: BUSINESS_ID,
+        categoryId: item.categoryId,
+        name: item.name,
+        description: item.description,
+      },
+    });
+  }
+
+  const variants = [
+    {
+      id: VARIANT_ICED_COFFEE_REGULAR_ID,
+      menuItemId: MENU_ICED_COFFEE_ID,
+      name: 'Regular',
+      priceMinor: 18000n,
+      stockPolicy: 'UNTRACKED' as const,
+    },
+    {
+      id: VARIANT_ICED_COFFEE_LARGE_ID,
+      menuItemId: MENU_ICED_COFFEE_ID,
+      name: 'Large',
+      priceMinor: 22000n,
+      stockPolicy: 'UNTRACKED' as const,
+    },
+    {
+      id: VARIANT_CHICKEN_RICE_ID,
+      menuItemId: MENU_CHICKEN_RICE_ID,
+      name: 'Default',
+      priceMinor: 35000n,
+      stockPolicy: 'TRACKED' as const,
+    },
+  ];
+
+  for (const variant of variants) {
+    await prisma.menuVariant.upsert({
+      where: { id: variant.id },
+      update: {
+        menuItemId: variant.menuItemId,
+        name: variant.name,
+        priceMinor: variant.priceMinor,
+        active: true,
+        stockPolicy: variant.stockPolicy,
+        revision: 1,
+      },
+      create: {
+        id: variant.id,
+        menuItemId: variant.menuItemId,
+        name: variant.name,
+        priceMinor: variant.priceMinor,
+        stockPolicy: variant.stockPolicy,
+      },
+    });
+  }
+
+  for (const outletId of [OUTLET_MAIN_ID, OUTLET_SECOND_ID]) {
+    for (const variant of variants) {
+      await prisma.outletMenu.upsert({
+        where: { outletId_variantId: { outletId, variantId: variant.id } },
+        update: { enabled: true },
+        create: { outletId, variantId: variant.id, enabled: true },
+      });
+    }
+  }
+
   console.log(
-    `Synthetic demo data seeded: ${users.length} users across ${outlets.length} outlets and 2 businesses.`,
+    `Synthetic demo data seeded: ${users.length} users across ${outlets.length} outlets and 2 businesses, ${categories.length} categories, ${menuItems.length} menu items and ${variants.length} variants.`,
   );
 }
 

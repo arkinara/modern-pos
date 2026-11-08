@@ -1,5 +1,5 @@
-// Identity and authorization schema for ticket #4.
-// Catalog, stock, sales, reports and printing domain models land in #6-#10.
+// Identity, authorization, business settings and catalog schema.
+// Stock, recipes, sales, reports and printing domain models land in #7-#10.
 
 generator client {
   provider = "prisma-client-js"
@@ -20,37 +20,45 @@ enum SessionPlatform {
   MOBILE
 }
 
+enum StockPolicy {
+  TRACKED
+  UNTRACKED
+}
+
 model Business {
   id        String   @id @default(uuid()) @db.Uuid
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  outlets Outlet[]
-  users   User[]
+  outlets    Outlet[]
+  users      User[]
+  categories Category[]
+  menuItems  MenuItem[]
 
   @@map("businesses")
 }
 
 model Outlet {
-  id             String   @id @default(uuid()) @db.Uuid
-  businessId     String   @db.Uuid
-  name           String
-  timezone       String   @default("Asia/Jakarta")
-  currency       String   @default("IDR")
-  currencyExponent Int    @default(0)
-  receiptAddress String   @default("")
-  receiptHeader  String   @default("")
-  receiptFooter  String   @default("")
-  taxBps         Int      @default(0)
-  serviceBps     Int      @default(0)
-  pricingMode    String   @default("EXCLUSIVE")
-  version        Int      @default(1)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String   @id @default(uuid()) @db.Uuid
+  businessId       String   @db.Uuid
+  name             String
+  timezone         String   @default("Asia/Jakarta")
+  currency         String   @default("IDR")
+  currencyExponent Int      @default(0)
+  receiptAddress   String   @default("")
+  receiptHeader    String   @default("")
+  receiptFooter    String   @default("")
+  taxBps           Int      @default(0)
+  serviceBps       Int      @default(0)
+  pricingMode      String   @default("EXCLUSIVE")
+  version          Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  users    User[]
+  business    Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  users       User[]
+  outletMenus OutletMenu[]
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -98,4 +106,74 @@ model Session {
   @@index([familyId])
   @@index([expiresAt])
   @@map("sessions")
+}
+
+model Category {
+  id         String    @id @default(uuid()) @db.Uuid
+  businessId String    @db.Uuid
+  name       String
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  business  Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  menuItems MenuItem[]
+
+  @@unique([id, businessId])
+  @@index([businessId, archivedAt])
+  @@map("categories")
+}
+
+model MenuItem {
+  id          String    @id @default(uuid()) @db.Uuid
+  businessId  String    @db.Uuid
+  categoryId  String    @db.Uuid
+  name        String
+  description String    @default("")
+  revision    Int       @default(1)
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category Category      @relation(fields: [categoryId, businessId], references: [id, businessId])
+  variants MenuVariant[]
+
+  @@index([businessId, archivedAt])
+  @@index([categoryId])
+  @@map("menu_items")
+}
+
+model MenuVariant {
+  id          String      @id @default(uuid()) @db.Uuid
+  menuItemId  String      @db.Uuid
+  name        String
+  priceMinor  BigInt
+  active      Boolean     @default(true)
+  stockPolicy StockPolicy @default(UNTRACKED)
+  revision    Int         @default(1)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  menuItem    MenuItem     @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  outletMenus OutletMenu[]
+
+  @@index([menuItemId])
+  @@map("menu_variants")
+}
+
+model OutletMenu {
+  outletId  String   @db.Uuid
+  variantId String   @db.Uuid
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  outlet  Outlet      @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  variant MenuVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@id([outletId, variantId])
+  @@index([variantId])
+  @@map("outlet_menu")
 }
