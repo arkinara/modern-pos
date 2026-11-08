@@ -288,8 +288,8 @@ The proof signs in as the seeded owner through the generated Dart client, create
 it back by search, updates a variant price and stock policy, reads the refreshed record, then
 archives it. A normal `flutter test` skips it because no base URL is defined.
 
-Deferred: stock ledger and receiving (#7), recipe availability (#8), orders and sales snapshots
-(#9/#10), cashier catalog UI (#11), reports (#14) and printing (#15/#16).
+Deferred: stock ledger and receiving (#7), orders and sales snapshots (#9/#10), cashier catalog UI
+(#11), reports (#14) and printing (#15/#16). Recipes arrived in #8.
 
 ## Stock items, units, opening balances and ledger (#7)
 
@@ -334,9 +334,10 @@ the contract and the TypeScript wrapper gained matching methods.
   shown as a recoverable conflict with a reload action. Loading, empty, read-only and failure
   states use design tokens and the layout stays full width from 320 to 1440 px.
 
-Deferred to later tickets: recipe and variant links (#8), sale calculation (#9), `SALE` ledger
-movements and atomic checkout deduction (#10), low-stock overview polish (#13), purchase orders
-(#14) and reversals (#17). These endpoints never emit `SALE` or `REVERSAL` movements.
+Deferred to later tickets: sale calculation (#9), `SALE` ledger movements and atomic checkout
+deduction (#10), low-stock overview polish (#13), purchase orders (#14) and reversals (#17).
+Recipe and variant links arrived in #8. These endpoints never emit `SALE` or `REVERSAL`
+movements.
 
 ## Orders, quotes, sale calculation and payment recording (#9)
 
@@ -403,8 +404,58 @@ shapes directly.
   without duplicating them.
 
 Deferred to later tickets: recipe consumption and `SALE` stock movements (#10), cashier sale UI
-(#11), sales history/report/CSV pages (#14) and reversal/restock (#17). No web sale route is
-added by this ticket.
+(#11), sales history/report/CSV pages (#14) and reversal/restock (#17). Recipe pinning arrived in
+#8. No web sale route is added by this ticket.
+
+## Recipe links, unit conversion and sale snapshots (#8)
+
+Implementation lives in `apps/api/src/recipe`, `apps/web/components/recipe-dialog.tsx` and the
+typed clients. The OpenAPI document is unchanged; the two recipe operations already existed in
+the contract and the TypeScript wrapper gained matching methods.
+
+- Operations: `GET /v1/outlets/:outletId/variants/:variantId/recipe` reads the latest published
+  version and `PUT /v1/outlets/:outletId/variants/:variantId/recipe` publishes a new immutable
+  version. Both are owner-only per the contract. Missing sessions return `401`, owner-only
+  reads/writes return `403` for a cashier, and cross-outlet, cross-business or unknown variant
+  and stock IDs return `404`.
+- A variant is linked directly to stock by publishing a one-line recipe. Prepared items use the
+  same mechanism with one line per ingredient; there is no second linking table. Each line has
+  `stockItemId` and `quantityPerSaleUnit` in the stock item's base unit (`g`, `ml` or `each`).
+- Publishing is append-only. `expectedVersion=0` publishes version 1 and a stale value returns
+  `409 VERSION_CONFLICT` before anything is written. Two publishers racing on the same version
+  are stopped by the unique `(variantId, outletId, version)` constraint. Database triggers reject
+  `UPDATE` and `DELETE` on `recipe_versions` and `recipe_lines`, so an old version stays readable
+  and unchanged forever.
+- Unit conversion happens explicitly before persistence in the web editor: `kg` to `g` and `l` to
+  `ml` multiply by 1000, while `each` is unchanged. The API contract carries base-unit decimal
+  strings only. The server re-validates every line: positive quantity, no more decimals than the
+  stock item's `quantityScale`, no duplicate stock item and no foreign stock ID. Stock math uses
+  `Prisma.Decimal`, never binary floating point, so fractional consumption such as `1.25 ml` is
+  preserved.
+- `GET` returns `404 NOT_FOUND` when no recipe has been published; the web editor treats that as
+  an empty state and offers a first version. A stale publish is recoverable: the editor can reload
+  the latest version and reapply the lines.
+- Finalization pins the recipe version applicable at sale time on each immutable
+  `sale_lines.recipeVersion` row. A later publish never rewrites that row. The marked
+  `SalesService.applyStockConsumption` seam receives the pinned line versions inside the same
+  serializable transaction, so #10 can read `recipe_lines` for that historical version and must
+  not re-read the live recipe.
+- A recipe change between quote and finalization does not invalidate the quote. Recipes do not
+  change prices or charge totals, so `assertQuoteStillValid` keeps comparing prices, quantities,
+  settings and totals; finalization then pins the recipe version current at that moment. Quote
+  lines are matched to current lines by `variantId`, not by array position, before the pinned
+  versions are attached.
+- `TRACKED` variants without a published recipe are rejected when a quote is requested with
+  `422 RECIPE_REQUIRED`. `UNTRACKED` is an explicit owner choice and needs no recipe. Enforcement
+  is deliberately at quote/finalization rather than catalog writes, so a tracked variant can be
+  created before its recipe is ready without breaking the catalog contract.
+- The seed adds a deterministic version 1 recipe for the seeded tracked variant at both demo
+  outlets. It is created only when missing, so the seed stays repeatable despite the append-only
+  triggers.
+- The Menu page opens a responsive recipe editor per variant with loading, empty, failure and
+  409 conflict states. It shows the current version, supports direct one-line links and multiple
+  ingredient lines, and displays stock items with their base unit and precision. The editor uses
+  design tokens and adds no new route.
 
 ## Scope boundaries
 

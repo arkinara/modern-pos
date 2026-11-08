@@ -63,6 +63,12 @@ export interface ApiClient {
     variantId: string,
     variant: ApiSchemas['VariantUpdate'],
   ): Promise<ApiSchemas['Variant']>;
+  getRecipe(outletId: string, variantId: string): Promise<ApiSchemas['Recipe']>;
+  publishRecipe(
+    outletId: string,
+    variantId: string,
+    recipe: ApiSchemas['RecipeWrite'],
+  ): Promise<ApiSchemas['Recipe']>;
   listStock(
     outletId: string,
     query?: { cursor?: string; limit?: number; search?: string },
@@ -212,6 +218,22 @@ export function createApiClient({
         {
           method: 'PATCH',
           body: JSON.stringify(variant),
+        },
+      ),
+    getRecipe: (outletId, variantId) =>
+      request<ApiSchemas['Recipe']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/variants/${encodeURIComponent(
+          variantId,
+        )}/recipe`,
+      ),
+    publishRecipe: (outletId, variantId, recipe) =>
+      request<ApiSchemas['Recipe']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/variants/${encodeURIComponent(
+          variantId,
+        )}/recipe`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(recipe),
         },
       ),
     listStock: (outletId, query = {}) =>
