@@ -1,5 +1,5 @@
-// Identity, authorization, business settings, catalog and stock schema.
-// Recipes, sales, reports and printing domain models land in #8-#10.
+// Identity, authorization, business settings, catalog, stock and sales schema.
+// Recipes, reports and printing domain models land in later tickets.
 
 generator client {
   provider = "prisma-client-js"
@@ -39,17 +39,41 @@ enum StockMovementType {
   REVERSAL
 }
 
+enum OrderState {
+  DRAFT
+  COMPLETED
+  CANCELLED
+}
+
+enum SaleState {
+  COMPLETED
+  REVERSED
+}
+
+enum PaymentKind {
+  CASH
+  MANUAL_EXTERNAL
+}
+
+enum PaymentStatus {
+  RECORDED
+}
+
 model Business {
   id        String   @id @default(uuid()) @db.Uuid
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  outlets    Outlet[]
-  users      User[]
-  categories Category[]
-  menuItems  MenuItem[]
-  stockItems StockItem[]
+  outlets          Outlet[]
+  users            User[]
+  categories       Category[]
+  menuItems        MenuItem[]
+  stockItems       StockItem[]
+  orders           Order[]
+  quotes           Quote[]
+  sales            Sale[]
+  checkoutRequests CheckoutRequest[]
 
   @@map("businesses")
 }
@@ -71,11 +95,15 @@ model Outlet {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  users       User[]
-  outletMenus OutletMenu[]
-  balances    StockBalance[]
-  movements   StockMovement[]
+  business         Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  users            User[]
+  outletMenus      OutletMenu[]
+  balances         StockBalance[]
+  movements        StockMovement[]
+  orders           Order[]
+  quotes           Quote[]
+  sales            Sale[]
+  checkoutRequests CheckoutRequest[]
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -97,6 +125,8 @@ model User {
   outlet    Outlet?         @relation(fields: [outletId], references: [id], onDelete: SetNull)
   sessions  Session[]
   movements StockMovement[]
+  orders    Order[]         @relation("OrderCashier")
+  sales     Sale[]          @relation("SaleCashier")
 
   @@map("users")
 }
@@ -176,6 +206,7 @@ model MenuVariant {
 
   menuItem    MenuItem     @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
   outletMenus OutletMenu[]
+  orderLines  OrderLine[]
 
   @@index([menuItemId])
   @@map("menu_variants")
@@ -273,4 +304,164 @@ model StockIdempotency {
   @@unique([outletId, key])
   @@index([createdAt])
   @@map("stock_idempotency")
+}
+
+// An order is an online draft owned by one cashier/device. The optional sale is
+// unique per order so a different idempotency key cannot complete it twice.
+model Order {
+  id             String     @id @default(uuid()) @db.Uuid
+  businessId     String     @db.Uuid
+  outletId       String     @db.Uuid
+  cashierId      String     @db.Uuid
+  deviceId       String     @db.Uuid
+  state          OrderState @default(DRAFT)
+  version        Int        @default(1)
+  idempotencyKey String     @db.Uuid
+  requestHash    String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  business Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet      @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  cashier  User        @relation("OrderCashier", fields: [cashierId], references: [id], onDelete: Restrict)
+  lines    OrderLine[]
+  quotes   Quote[]
+  sale     Sale?
+
+  @@unique([outletId, deviceId, idempotencyKey])
+  @@index([businessId, outletId, state])
+  @@index([cashierId])
+  @@map("orders")
+}
+
+model OrderLine {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @db.Uuid
+  variantId String   @db.Uuid
+  quantity  Int
+  createdAt DateTime @default(now())
+
+  order   Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant MenuVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@map("order_lines")
+}
+
+// Quotes are immutable pricing snapshots with a 60-second validity. Lines are
+// stored as a JSON snapshot so later catalog edits never rewrite them.
+model Quote {
+  id               String   @id @default(uuid()) @db.Uuid
+  businessId       String   @db.Uuid
+  outletId         String   @db.Uuid
+  orderId          String   @db.Uuid
+  orderVersion     Int
+  settingsVersion  Int
+  currency         String   @db.VarChar(3)
+  currencyExponent Int
+  expiresAt        DateTime
+  subtotalMinor    BigInt
+  serviceMinor     BigInt
+  taxMinor         BigInt
+  totalMinor       BigInt
+  lines            Json
+  createdAt        DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([expiresAt])
+  @@map("quotes")
+}
+
+// Sale and sale-line rows are the immutable financial snapshot. Catalog edits
+// after completion must never change them.
+model Sale {
+  id               String    @id @default(uuid()) @db.Uuid
+  businessId       String    @db.Uuid
+  outletId         String    @db.Uuid
+  orderId          String    @unique @db.Uuid
+  cashierId        String    @db.Uuid
+  deviceId         String    @db.Uuid
+  reference        String
+  state            SaleState @default(COMPLETED)
+  currency         String    @db.VarChar(3)
+  currencyExponent Int
+  timezone         String
+  subtotalMinor    BigInt
+  serviceMinor     BigInt
+  taxMinor         BigInt
+  totalMinor       BigInt
+  completedAt      DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+
+  business         Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet           Outlet            @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  cashier          User              @relation("SaleCashier", fields: [cashierId], references: [id], onDelete: Restrict)
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  lines            SaleLine[]
+  payment          PaymentRecord?
+  checkoutRequests CheckoutRequest[]
+
+  @@unique([outletId, reference])
+  @@index([businessId, outletId, completedAt])
+  @@index([cashierId])
+  @@map("sales")
+}
+
+model SaleLine {
+  id                String @id @default(uuid()) @db.Uuid
+  saleId            String @db.Uuid
+  variantId         String @db.Uuid
+  name              String
+  variantName       String
+  quantity          Int
+  unitPriceMinor    BigInt
+  lineSubtotalMinor BigInt
+  recipeVersion     Int?
+
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+  @@map("sale_lines")
+}
+
+model PaymentRecord {
+  id            String        @id @default(uuid()) @db.Uuid
+  saleId        String        @unique @db.Uuid
+  kind          PaymentKind
+  status        PaymentStatus @default(RECORDED)
+  amountMinor   BigInt
+  tenderedMinor BigInt?
+  changeMinor   BigInt?
+  reference     String?
+  createdAt     DateTime      @default(now())
+
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@map("payment_records")
+}
+
+// Durable checkout recovery mapping. The request hash is reserved inside the
+// same transaction as the sale and returned for replay/recovery.
+model CheckoutRequest {
+  id             String   @id @default(uuid()) @db.Uuid
+  businessId     String   @db.Uuid
+  outletId       String   @db.Uuid
+  deviceId       String   @db.Uuid
+  idempotencyKey String   @db.Uuid
+  requestHash    String
+  saleId         String?  @db.Uuid
+  retainedAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  sale     Sale?    @relation(fields: [saleId], references: [id], onDelete: Restrict)
+
+  @@unique([outletId, deviceId, idempotencyKey])
+  @@index([saleId])
+  @@map("checkout_requests")
 }

@@ -9,11 +9,20 @@ import { RequestIdMiddleware } from './common/request-id.middleware';
 import { HealthController } from './health/health.controller';
 import { OutletsModule } from './outlets/outlets.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { SalesModule } from './sales/sales.module';
 import { SettingsModule } from './settings/settings.module';
 import { StockModule } from './stock/stock.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, OutletsModule, SettingsModule, CatalogModule, StockModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    OutletsModule,
+    SettingsModule,
+    CatalogModule,
+    StockModule,
+    SalesModule,
+  ],
   controllers: [HealthController],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
