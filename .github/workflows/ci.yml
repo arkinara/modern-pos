@@ -123,73 +123,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # sqlite3's build hook downloads a pre-compiled native asset from GitHub
-          # and verifies it against a hash pinned in the package. A transient
-          # truncated/aborted download makes that verification fail with:
+          # sqlite3's build hook downloads pre-compiled native assets from GitHub
+          # and verifies them against hashes pinned in the package. A corrupted
+          # response makes the hook fail with:
           #   Hash of downloaded file libsqlite3.*.so is ..., expected ...
           #   Building assets for package:sqlite3 failed.
-          # We therefore prefetch the asset through the GitHub API (a different
-          # endpoint than the release download the hook uses) and verify its
-          # SHA-256 before the hook sees it. If the hook still fails on a corrupt
-          # download, we invalidate only the sqlite3 caches and retry once. Real
-          # test failures are not retried.
-          sqlite3_version=3.5.2
+          # Prefetch the host asset through the GitHub API and verify it before
+          # the hook runs. If the hook still fails, invalidate only the sqlite3
+          # caches and retry once. Real test failures are not retried.
           pub_cache="${PUB_CACHE:-$HOME/.pub-cache}"
+          prefetch_script="$GITHUB_WORKSPACE/.github/scripts/prefetch-sqlite3-assets.sh"
 
-          prefetch_sqlite3_asset() {
-            local machine asset hash prefix dir tmpdir attempt got
-
-            machine="$(uname -m)"
-            case "$machine" in
-              x86_64|amd64)
-                asset=libsqlite3.x64.linux.so
-                hash=b17729184e5a2818055ecbddd5ed6642521bfe6e56aafa472330e483c0e2e0d2
-                ;;
-              aarch64|arm64)
-                asset=libsqlite3.arm64.linux.so
-                hash=7f0db19fdb987298ab8def51431aba5cec28a81685e8b62cebbc7402df090a16
-                ;;
-              *)
-                echo "No verified sqlite3 prefetch rule for architecture $machine; falling back to the hook download"
-                return 0
-                ;;
-            esac
-
-            prefix="${hash:0:8}"
-            dir=".dart_tool/hooks_runner/shared/sqlite3/build/download-${prefix}"
-            if [ -f "$dir/libsqlite3.so" ] && [ "$(sha256sum "$dir/libsqlite3.so" | cut -d' ' -f1)" = "$hash" ]; then
-              echo "Verified sqlite3 native asset already cached"
-              return 0
-            fi
-
-            tmpdir="$(mktemp -d)"
-            for attempt in 1 2 3; do
-              rm -f "$tmpdir/$asset"
-              if gh release download "sqlite3-${sqlite3_version}" \
-                  --repo simolus3/sqlite3.dart \
-                  --pattern "$asset" \
-                  --dir "$tmpdir" \
-                  --clobber; then
-                got="$(sha256sum "$tmpdir/$asset" | cut -d' ' -f1)"
-                if [ "$got" = "$hash" ]; then
-                  mkdir -p "$dir"
-                  cp "$tmpdir/$asset" "$dir/libsqlite3.so"
-                  rm -rf "$tmpdir"
-                  echo "Prefetched and verified ${asset} (${hash})"
-                  return 0
-                fi
-                echo "Prefetch attempt ${attempt} for ${asset} had hash ${got}; expected ${hash}" >&2
-              else
-                echo "Prefetch attempt ${attempt} for ${asset} failed to download" >&2
-              fi
-              sleep 5
-            done
-            rm -rf "$tmpdir"
-            echo "Could not prefetch a verified ${asset}; falling back to the hook download" >&2
-            return 0
-          }
-
-          prefetch_sqlite3_asset
+          bash "$prefetch_script" linux
 
           max_attempts=2
           attempt=1
@@ -217,7 +162,7 @@ jobs:
             rm -rf "${pub_cache}"/hosted/pub.dev/sqlite3-*
             rm -rf .dart_tool/hooks_runner/shared/sqlite3 .dart_tool/hooks_runner/sqlite3 build/native_assets
             flutter pub get
-            prefetch_sqlite3_asset
+            bash "$prefetch_script" linux
             attempt=$((attempt + 1))
           done
 
@@ -230,13 +175,20 @@ jobs:
       - name: Android debug build
         working-directory: apps/mobile
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # The Gradle wrapper downloads gradle-9.3.1-all.zip from GitHub (via
-          # services.gradle.org). A transient 5xx response there fails the build
-          # before any project code runs. Retry once after clearing only that
-          # wrapper distribution; real build failures are not retried.
+          # Two GitHub-hosted downloads can fail transiently before any project
+          # code runs: the Gradle wrapper distribution and the sqlite3 Android
+          # native assets. Prefetch and verify the assets, then retry once when
+          # either download is corrupt/5xx. Real build failures are not retried.
+          pub_cache="${PUB_CACHE:-$HOME/.pub-cache}"
           gradle_dist="$HOME/.gradle/wrapper/dists/gradle-9.3.1-all"
+          prefetch_script="$GITHUB_WORKSPACE/.github/scripts/prefetch-sqlite3-assets.sh"
+
+          bash "$prefetch_script" android
+
           max_attempts=2
           attempt=1
           while true; do
@@ -254,12 +206,18 @@ jobs:
               exit "$status"
             fi
 
-            if ! grep -qE 'Server returned HTTP response code: 5[0-9][0-9] for URL: https://github.com/gradle/gradle-distributions/|Could not (GET|HEAD) .*services\.gradle\.org|Could not download gradle-9\.3\.1-all\.zip' /tmp/android-build.log; then
-              echo "Android debug build failed for a reason other than a transient Gradle distribution download; not retrying" >&2
+            if grep -qE 'Hash of downloaded file .* expected|Building assets for package:sqlite3 failed' /tmp/android-build.log; then
+              echo "Detected corrupted sqlite3 Android native asset download; invalidating cached artifacts and retrying"
+              rm -rf "${pub_cache}"/hosted/pub.dev/sqlite3-*
+              rm -rf .dart_tool/hooks_runner/shared/sqlite3 .dart_tool/hooks_runner/sqlite3 build/native_assets
+              flutter pub get
+              bash "$prefetch_script" android
+            elif grep -qE 'Server returned HTTP response code: 5[0-9][0-9] for URL: https://github.com/gradle/gradle-distributions/|Could not (GET|HEAD) .*services\.gradle\.org|Could not download gradle-9\.3\.1-all\.zip' /tmp/android-build.log; then
+              echo "Detected transient Gradle distribution download failure; clearing the wrapper cache and retrying"
+              rm -rf "$gradle_dist"
+            else
+              echo "Android debug build failed for a reason other than a transient download; not retrying" >&2
               exit "$status"
             fi
-
-            echo "Detected transient Gradle distribution download failure; clearing the wrapper cache and retrying"
-            rm -rf "$gradle_dist"
             attempt=$((attempt + 1))
           done
