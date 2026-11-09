@@ -528,10 +528,29 @@ additive `Movement` contract fields and `apps/web/components/stock-screen.tsx`.
   `REVERSAL` movements remain in #17. This ticket only renders the existing `REVERSAL` movement
   type defensively.
 
+## Receipt printer candidate and hardware validation (#15)
+
+The Android cashier can configure one candidate receipt-printer connection, connect, send a test
+byte stream and see actionable failure states. Hardware acceptance is **PENDING**: no printer model
+or Android test device was supplied, so no transport, paper width, encoding, command or physical
+print result is claimed as verified.
+
+- Implemented: cashier surface under Settings -> Receipt printer, a pure ESC/POS byte-stream
+  builder (text, bold, alignment, feed, cut, cash-drawer pulse), CP437 and UTF-8 encoders,
+  column wrapping, integer-minor-unit money formatting, a `PrinterAdapter` with
+  `connect`/`testPrint`/`printReceipt`/`disconnect`, an Android Bluetooth Classic (SPP)
+  transport, and runtime permission check/request/re-request.
+- Not implemented or not verified on this project: LAN, USB, BLE, barcode, QR, printer status
+  read-back, print queue/retry/reprint (#16). The UI names these limitations instead of showing a
+  silent success.
+- No `printing_*` OpenAPI operation changed in this ticket.
+- Full hardware table, unverified-transport statement and the operator acceptance checklist:
+  [docs/printer-validation.md](docs/printer-validation.md).
+
 ## Scope boundaries
 
 - Web is the owner back office. It has no sale, tender or cart routes; the Android app owns
   cashier flows.
 - Recipe, stock-ledger and sale transaction rules are server-owned and arrive in #7-#10.
-- Printer discovery and physical Android printing remain with #15/#16.
+- Printer transport is the unverified candidate in #15; print queue, retry and reprint remain #16.
 - All data in this scaffold is synthetic.
