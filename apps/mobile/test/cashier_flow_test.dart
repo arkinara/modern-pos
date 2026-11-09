@@ -140,6 +140,67 @@ void main() {
     },
   );
 
+  testWidgets('debounced search matches item names', (tester) async {
+    await pumpApp(tester);
+
+    await tester.enterText(find.byType(TextField), 'tea');
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tea'), findsOneWidget);
+    expect(find.text('Latte'), findsNothing);
+    expect(find.text('Espresso'), findsNothing);
+  });
+
+  testWidgets('disabled catalog items render disabled and reject taps', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+
+    catalog.snapshot = testSnapshot(
+      categories: [testCategory(id: 'drinks', name: 'Drinks')],
+      menus: [
+        testMenu(
+          id: 'decaf',
+          name: 'Decaf',
+          categoryId: 'drinks',
+          variants: [
+            testVariant(
+              id: 'decaf-default',
+              name: 'Cup',
+              priceMinor: 22000,
+              enabled: false,
+            ),
+          ],
+        ),
+      ],
+    );
+    await container.read(catalogControllerProvider.notifier).refresh();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Decaf'), findsOneWidget);
+    expect(find.text('Unavailable'), findsOneWidget);
+
+    final card = find.ancestor(
+      of: find.text('Decaf'),
+      matching: find.byType(Card),
+    );
+    expect(card, findsOneWidget);
+    final opacity = tester.widget<Opacity>(
+      find.descendant(of: card, matching: find.byType(Opacity)),
+    );
+    expect(opacity.opacity, lessThan(1));
+    expect(
+      find.descendant(of: card, matching: find.byIcon(Icons.block)),
+      findsOneWidget,
+    );
+
+    await tester.ensureVisible(find.text('Decaf'));
+    await tester.tap(find.text('Decaf'));
+    await tester.pumpAndSettle();
+    expect(cartRepository.length, 0);
+  });
+
   testWidgets('multi-variant item requires an explicit variant choice', (
     tester,
   ) async {
