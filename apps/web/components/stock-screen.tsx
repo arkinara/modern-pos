@@ -1,7 +1,7 @@
 'use client';
 
 import type { ApiSchemas } from '@modern-pos/api-client';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowDownUp,
   Boxes,
@@ -26,10 +26,59 @@ import { useActiveOutletId } from '@/lib/use-active-outlet';
 
 type StockItem = ApiSchemas['Stock'];
 type Movement = ApiSchemas['Movement'];
+type MenuVariant = ApiSchemas['Variant'];
 
 type ChangeMode = 'OPENING' | 'RECEIPT' | 'ADJUSTMENT';
 type ChangeTarget = { item: StockItem; mode: ChangeMode };
 type Feedback = { tone: 'success' | 'error'; message: string; reload?: boolean };
+type StockStatus = 'OK' | 'BELOW_REORDER' | 'OUT_OF_STOCK';
+type StatusFilter = 'ALL' | StockStatus;
+type AvailabilityFilter = 'ALL' | 'TRACKED' | 'UNTRACKED';
+
+const STATUS_LABELS: Record<StockStatus, string> = {
+  OK: 'OK',
+  BELOW_REORDER: 'Below reorder',
+  OUT_OF_STOCK: 'Out of stock',
+};
+
+function stockStatus(item: StockItem): StockStatus {
+  const quantity = Number(item.quantity);
+  const threshold = Number(item.reorderThreshold);
+
+  if (quantity <= 0) {
+    return 'OUT_OF_STOCK';
+  }
+
+  if (quantity <= threshold) {
+    return 'BELOW_REORDER';
+  }
+
+  return 'OK';
+}
+
+function statusTone(status: StockStatus): 'success' | 'warning' | 'danger' {
+  if (status === 'OUT_OF_STOCK') {
+    return 'danger';
+  }
+
+  if (status === 'BELOW_REORDER') {
+    return 'warning';
+  }
+
+  return 'success';
+}
+
+function statusBorderClass(status: StockStatus): string {
+  if (status === 'OUT_OF_STOCK') {
+    return 'border-danger';
+  }
+
+  if (status === 'BELOW_REORDER') {
+    return 'border-warning';
+  }
+
+  return 'border-border';
+}
 
 const QUANTITY_PATTERN = /^(0|[1-9][0-9]{0,12})(\.[0-9]{1,6})?$/;
 const SIGNED_PATTERN = /^-?(0|[1-9][0-9]{0,12})(\.[0-9]{1,6})?$/;
@@ -71,6 +120,10 @@ function movementTone(type: Movement['type']): 'accent' | 'success' | 'warning' 
     return 'warning';
   }
   return 'neutral';
+}
+
+function isSaleMovement(type: Movement['type']): boolean {
+  return type === 'SALE' || type === 'REVERSAL';
 }
 
 function shortId(value: string): string {
@@ -231,6 +284,8 @@ export function StockScreen() {
   const [changeBusy, setChangeBusy] = useState(false);
   const [changeError, setChangeError] = useState<string | null>(null);
   const [historyItem, setHistoryItem] = useState<StockItem | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [availabilityFilter, setAvailabilityFilter] = useState<AvailabilityFilter>('ALL');
 
   const pendingKeyRef = useRef<{ signature: string; key: string } | null>(null);
 
@@ -261,6 +316,13 @@ export function StockScreen() {
     retry: 1,
   });
 
+  const menuQuery = useQuery({
+    queryKey: ['menu-availability', outletId],
+    queryFn: () => api.listMenu(outletId as string, { limit: 100 }),
+    enabled: outletId !== null,
+    retry: 1,
+  });
+
   if (!outletId) {
     return (
       <div className="w-full">
@@ -278,11 +340,30 @@ export function StockScreen() {
 
   const items = stockQuery.data?.pages.flatMap((page) => page.items) ?? [];
   const movements = movementsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const menuVariants: { menuName: string; variant: MenuVariant }[] = (
+    menuQuery.data?.items ?? []
+  ).flatMap((menu) => menu.variants.map((variant) => ({ menuName: menu.name, variant })));
+  const visibleItems =
+    statusFilter === 'ALL' ? items : items.filter((item) => stockStatus(item) === statusFilter);
+  const visibleMenuVariants =
+    availabilityFilter === 'ALL'
+      ? menuVariants
+      : menuVariants.filter(({ variant }) => variant.stockPolicy === availabilityFilter);
+  const statusCounts: Record<StockStatus, number> = {
+    OK: 0,
+    BELOW_REORDER: 0,
+    OUT_OF_STOCK: 0,
+  };
+
+  for (const item of items) {
+    statusCounts[stockStatus(item)] += 1;
+  }
 
   function reloadStock(): void {
     setFeedback(null);
     void queryClient.invalidateQueries({ queryKey: ['stock', outletId] });
     void queryClient.invalidateQueries({ queryKey: ['stock-movements', outletId] });
+    void queryClient.invalidateQueries({ queryKey: ['menu-availability', outletId] });
   }
 
   function idempotencyKey(signature: string): string {
@@ -383,6 +464,7 @@ export function StockScreen() {
       clearPendingKey();
       await queryClient.invalidateQueries({ queryKey: ['stock', outletId] });
       await queryClient.invalidateQueries({ queryKey: ['stock-movements', outletId, item.id] });
+      await queryClient.invalidateQueries({ queryKey: ['menu-availability', outletId] });
       setFeedback({
         tone: 'success',
         message: `${MODE_LABELS[changeTarget.mode]} saved for ${item.name}.`,
@@ -500,7 +582,8 @@ export function StockScreen() {
         <CardHeader>
           <CardTitle>Stock tools</CardTitle>
           <CardDescription>
-            Search balances by item name. Opening balances are recorded once per item and outlet.
+            Search raw balances, filter by low-stock status and compare the advisory menu estimate.
+            Opening balances are recorded once per item and outlet.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -525,8 +608,9 @@ export function StockScreen() {
               </div>
             </div>
             <div className="flex items-end justify-between gap-3">
-              <p className="text-sm text-muted">
-                {items.length} stock item{items.length === 1 ? '' : 's'}
+              <p className="text-sm text-muted" data-testid="stock-count">
+                {visibleItems.length} of {items.length} stock item
+                {items.length === 1 ? '' : 's'}
                 {deferredSearch.trim() ? ' matching search' : ''}
               </p>
               {canEdit ? (
@@ -541,6 +625,49 @@ export function StockScreen() {
                   {showCreateForm ? 'Close item form' : 'New stock item'}
                 </Button>
               ) : null}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-text" htmlFor="stock-status-filter">
+                Filter raw stock by status
+              </label>
+              <select
+                id="stock-status-filter"
+                className={inputClass}
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+              >
+                <option value="ALL">All statuses ({items.length})</option>
+                <option value="OK">OK ({statusCounts.OK})</option>
+                <option value="BELOW_REORDER">Below reorder ({statusCounts.BELOW_REORDER})</option>
+                <option value="OUT_OF_STOCK">Out of stock ({statusCounts.OUT_OF_STOCK})</option>
+              </select>
+              <p className="text-xs text-muted">
+                Status uses the item reorder threshold against the raw ledger balance. An empty
+                filter result is not an error.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-text" htmlFor="availability-filter">
+                Filter menu availability
+              </label>
+              <select
+                id="availability-filter"
+                className={inputClass}
+                value={availabilityFilter}
+                onChange={(event) =>
+                  setAvailabilityFilter(event.target.value as AvailabilityFilter)
+                }
+              >
+                <option value="ALL">All menu variants</option>
+                <option value="TRACKED">Tracked variants</option>
+                <option value="UNTRACKED">Untracked variants</option>
+              </select>
+              <p className="text-xs text-muted">
+                Tracked variants use a recipe estimate. Untracked variants have no stock estimate.
+              </p>
             </div>
           </div>
 
@@ -682,93 +809,121 @@ export function StockScreen() {
             </CardContent>
           ) : null}
         </Card>
+      ) : visibleItems.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>No stock items match this filter</CardTitle>
+            <CardDescription>
+              No items are in the selected status. An empty filter result is not an error.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button type="button" variant="outline" onClick={() => setStatusFilter('ALL')}>
+              Clear status filter
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <ul className="grid gap-4 xl:grid-cols-2">
-          {items.map((item) => (
-            <li key={item.id}>
-              <Card className="flex h-full flex-col">
-                <CardHeader className="gap-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <CardTitle className="break-words">{item.name}</CardTitle>
-                      <CardDescription className="mt-1">
-                        Reorder at {item.reorderThreshold} {item.baseUnit} · ID {shortId(item.id)}
-                      </CardDescription>
+          {visibleItems.map((item) => {
+            const status = stockStatus(item);
+            return (
+              <li key={item.id}>
+                <Card className={`flex h-full flex-col ${statusBorderClass(status)}`}>
+                  <CardHeader className="gap-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <CardTitle className="break-words">{item.name}</CardTitle>
+                        <CardDescription className="mt-1">
+                          Reorder at {item.reorderThreshold} {item.baseUnit} · ID {shortId(item.id)}
+                        </CardDescription>
+                      </div>
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <Badge tone={statusTone(status)} data-testid="stock-status-badge">
+                          {STATUS_LABELS[status]}
+                        </Badge>
+                        <Badge tone="accent">{item.baseUnit}</Badge>
+                        <Badge tone="neutral">Precision {item.quantityScale}</Badge>
+                        <Badge tone="neutral">Version {item.version}</Badge>
+                      </div>
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center gap-2">
-                      <Badge tone="accent">{item.baseUnit}</Badge>
-                      <Badge tone="neutral">Precision {item.quantityScale}</Badge>
-                      <Badge tone="neutral">Version {item.version}</Badge>
+                  </CardHeader>
+                  <CardContent className="flex flex-1 flex-col gap-4">
+                    <div className="flex flex-wrap items-end justify-between gap-3 rounded-surface border border-border px-4 py-3">
+                      <div className="flex items-center gap-2 text-muted">
+                        <Boxes aria-hidden="true" className="size-5" />
+                        <span className="text-sm">Raw balance (ledger)</span>
+                      </div>
+                      <p
+                        className={
+                          status === 'OUT_OF_STOCK'
+                            ? 'text-2xl font-semibold text-danger'
+                            : status === 'BELOW_REORDER'
+                              ? 'text-2xl font-semibold text-warning'
+                              : 'text-2xl font-semibold text-text'
+                        }
+                      >
+                        {item.quantity}{' '}
+                        <span className="text-base font-medium text-muted">{item.baseUnit}</span>
+                      </p>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col gap-4">
-                  <div className="flex flex-wrap items-end justify-between gap-3 rounded-surface border border-border px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted">
-                      <Boxes aria-hidden="true" className="size-5" />
-                      <span className="text-sm">Current balance</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-text">
-                      {item.quantity}{' '}
-                      <span className="text-base font-medium text-muted">{item.baseUnit}</span>
-                    </p>
-                  </div>
 
-                  <div className="mt-auto flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setHistoryItem(item)}
-                    >
-                      <History aria-hidden="true" className="size-4" />
-                      History
-                    </Button>
-                    {canEdit ? (
-                      <>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setChangeError(null);
-                            setChangeTarget({ item, mode: 'OPENING' });
-                          }}
-                        >
-                          <ClipboardList aria-hidden="true" className="size-4" />
-                          Opening
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setChangeError(null);
-                            setChangeTarget({ item, mode: 'RECEIPT' });
-                          }}
-                        >
-                          <PackagePlus aria-hidden="true" className="size-4" />
-                          Receipt
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setChangeError(null);
-                            setChangeTarget({ item, mode: 'ADJUSTMENT' });
-                          }}
-                        >
-                          <ArrowDownUp aria-hidden="true" className="size-4" />
-                          Adjust
-                        </Button>
-                      </>
-                    ) : null}
-                  </div>
-                </CardContent>
-              </Card>
-            </li>
-          ))}
+                    <div className="mt-auto flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setHistoryItem(item)}
+                      >
+                        <History aria-hidden="true" className="size-4" />
+                        History
+                      </Button>
+                      {canEdit ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setChangeError(null);
+                              setChangeTarget({ item, mode: 'OPENING' });
+                            }}
+                          >
+                            <ClipboardList aria-hidden="true" className="size-4" />
+                            Opening
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setChangeError(null);
+                              setChangeTarget({ item, mode: 'RECEIPT' });
+                            }}
+                          >
+                            <PackagePlus aria-hidden="true" className="size-4" />
+                            Receipt
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setChangeError(null);
+                              setChangeTarget({ item, mode: 'ADJUSTMENT' });
+                            }}
+                          >
+                            <ArrowDownUp aria-hidden="true" className="size-4" />
+                            Adjust
+                          </Button>
+                        </>
+                      ) : null}
+                    </div>
+                  </CardContent>
+                </Card>
+              </li>
+            );
+          })}
         </ul>
       )}
 
@@ -785,6 +940,107 @@ export function StockScreen() {
         </div>
       ) : null}
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Estimated sellable units (menu availability)</CardTitle>
+          <CardDescription>
+            Advisory estimate derived from the latest recipe and raw balances on each request. The
+            raw ledger balances above are authoritative for stock; finalization is authoritative for
+            sales. Untracked variants have no stock estimate.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {menuQuery.isPending ? (
+            <p className="flex items-center gap-2 text-sm text-muted" role="status">
+              <span className="size-5 animate-spin rounded-full border-2 border-border border-t-accent" />
+              Loading menu availability
+            </p>
+          ) : menuQuery.isError ? (
+            <div>
+              <p role="alert" className="text-sm text-danger">
+                {describeApiError(
+                  menuQuery.error,
+                  'Could not load the menu availability estimate.',
+                )}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => void menuQuery.refetch()}
+              >
+                <RefreshCw aria-hidden="true" className="size-4" />
+                Try again
+              </Button>
+            </div>
+          ) : visibleMenuVariants.length === 0 ? (
+            <p className="text-sm text-muted">
+              {menuVariants.length === 0
+                ? 'No menu variants are configured for this outlet yet.'
+                : 'No menu variants match this availability filter.'}
+            </p>
+          ) : (
+            <>
+              <div className="overflow-x-auto rounded-surface border border-border">
+                <table className="w-full min-w-[560px] text-left text-sm">
+                  <thead className="bg-surface-muted text-xs uppercase tracking-wide text-muted">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Menu
+                      </th>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Variant
+                      </th>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Stock policy
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-right font-medium">
+                        Estimate
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {visibleMenuVariants.map(({ menuName, variant }) => (
+                      <tr key={variant.id}>
+                        <td className="max-w-[220px] break-words px-4 py-3 text-text">
+                          {menuName}
+                        </td>
+                        <td className="max-w-[220px] break-words px-4 py-3 text-muted">
+                          {variant.name}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge tone={variant.stockPolicy === 'TRACKED' ? 'accent' : 'neutral'}>
+                            {variant.stockPolicy}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {variant.stockPolicy === 'UNTRACKED' ? (
+                            <span className="text-muted">Not tracked</span>
+                          ) : (
+                            <span
+                              className="font-semibold text-text"
+                              data-testid="availability-estimate"
+                            >
+                              ~{variant.availableUnits ?? 0} unit
+                              {variant.availableUnits === 1 ? '' : 's'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-xs text-muted">
+                Estimate only. Refresh after a sale, receipt or adjustment to recompute
+                availability.
+              </p>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {historyItem ? (
         <Card>
           <CardHeader>
@@ -792,7 +1048,9 @@ export function StockScreen() {
               <div>
                 <CardTitle>Movement history · {historyItem.name}</CardTitle>
                 <CardDescription>
-                  Append-only ledger in {historyItem.baseUnit}. Newest entries appear first.
+                  Append-only ledger in {historyItem.baseUnit}. Sale and reversal rows resolve the
+                  referenced sale; a missing reference degrades gracefully. Newest entries appear
+                  first.
                 </CardDescription>
               </div>
               <Button
@@ -868,7 +1126,19 @@ export function StockScreen() {
                             {movement.reason}
                           </td>
                           <td className="px-4 py-3 text-muted">
-                            <span className="block">Ref {shortId(movement.sourceId)}</span>
+                            {movement.sourceReference ? (
+                              <span
+                                className="block font-medium text-text"
+                                data-testid="sale-reference"
+                              >
+                                {movement.sourceReference}
+                              </span>
+                            ) : isSaleMovement(movement.type) ? (
+                              <span className="block text-warning">Reference unavailable</span>
+                            ) : (
+                              <span className="block">Ref {shortId(movement.sourceId)}</span>
+                            )}
+                            <span className="block">Outlet {shortId(movement.outletId)}</span>
                             <span className="block">Actor {shortId(movement.actorId)}</span>
                           </td>
                           <td className="px-4 py-3 text-muted">

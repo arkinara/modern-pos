@@ -58,7 +58,7 @@ interface MovementRow {
   outletId: string;
   stockItemId: string;
   delta: Prisma.Decimal;
-  type: 'OPENING' | 'RECEIPT' | 'ADJUSTMENT';
+  type: 'OPENING' | 'RECEIPT' | 'ADJUSTMENT' | 'SALE' | 'REVERSAL';
   actorId: string;
   reason: string;
   sourceId: string;
@@ -76,11 +76,17 @@ interface IdemRow {
   createdAt: Date;
 }
 
+interface SaleRow {
+  id: string;
+  reference: string;
+}
+
 interface FakeState {
   items: ItemRow[];
   balances: BalanceRow[];
   movements: MovementRow[];
   idempotency: IdemRow[];
+  sales: SaleRow[];
 }
 
 function uniqueError(): Prisma.PrismaClientKnownRequestError {
@@ -122,6 +128,7 @@ function fakePrisma(options: { missingOutlet?: boolean } = {}): {
     balances: [],
     movements: [],
     idempotency: [],
+    sales: [],
   };
 
   let sequence = 0;
@@ -129,6 +136,21 @@ function fakePrisma(options: { missingOutlet?: boolean } = {}): {
     `00000000-0000-4000-8000-${String(100 + sequence++).padStart(12, '0')}`;
 
   const client = {
+    sale: {
+      findMany: async (args: {
+        where: {
+          id: { in: string[] };
+          outletId: string;
+          businessId: string;
+        };
+      }) =>
+        state.sales.filter(
+          (sale) =>
+            args.where.id.in.includes(sale.id) &&
+            args.where.outletId === OUTLET_ID &&
+            args.where.businessId === BUSINESS_ID,
+        ),
+    },
     outlet: {
       findFirst: async (args: { where: { id: string; businessId: string } }) => {
         if (options.missingOutlet) {
@@ -381,6 +403,7 @@ function fakePrisma(options: { missingOutlet?: boolean } = {}): {
         balances: state.balances.map((row) => ({ ...row })),
         movements: [...state.movements],
         idempotency: state.idempotency.map((row) => ({ ...row })),
+        sales: [...state.sales],
       };
       try {
         return await callback(client);
@@ -697,4 +720,70 @@ test('listing returns quantity and version from the outlet balance', async () =>
   assert.equal(coffee?.quantity, '10.25');
   assert.equal(coffee?.version, 1);
   assert.equal(coffee?.reorderThreshold, '5000.00');
+});
+
+test('movement history resolves sale references and degrades when a sale is missing', async () => {
+  const { prisma, state } = fakePrisma();
+  const service = new StockService(prisma);
+  const SALE_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const MISSING_SALE_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+
+  state.sales.push({ id: SALE_ID, reference: 'SALE-42' });
+  state.movements.push(
+    {
+      id: '00000000-0000-4000-8000-000000000301',
+      outletId: OUTLET_ID,
+      stockItemId: ITEM_ID,
+      delta: new Prisma.Decimal('-3'),
+      type: 'SALE',
+      actorId: '00000000-0000-4000-8000-000000000003',
+      reason: `Sale ${SALE_ID}`,
+      sourceId: SALE_ID,
+      createdAt: new Date('2026-01-07T00:00:00Z'),
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000302',
+      outletId: OUTLET_ID,
+      stockItemId: ITEM_ID,
+      delta: new Prisma.Decimal('3'),
+      type: 'REVERSAL',
+      actorId: '00000000-0000-4000-8000-000000000003',
+      reason: 'Reversal for a sale that is no longer visible',
+      sourceId: MISSING_SALE_ID,
+      createdAt: new Date('2026-01-08T00:00:00Z'),
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000303',
+      outletId: OUTLET_ID,
+      stockItemId: ITEM_ID,
+      delta: new Prisma.Decimal('5'),
+      type: 'RECEIPT',
+      actorId: '00000000-0000-4000-8000-000000000003',
+      reason: 'Supplier delivery',
+      sourceId: KEY_TWO,
+      createdAt: new Date('2026-01-09T00:00:00Z'),
+    },
+  );
+
+  const page = await service.listMovements(OUTLET_ID, ITEM_ID, {} as MovementListQueryDto, user());
+  const byType = new Map(page.items.map((movement) => [movement.type, movement]));
+
+  assert.equal(byType.get('SALE')?.sourceReference, 'SALE-42');
+  assert.equal(byType.get('REVERSAL')?.sourceReference, null);
+  assert.equal(byType.get('RECEIPT')?.sourceReference, null);
+  assert.equal(byType.get('SALE')?.sourceId, SALE_ID);
+});
+
+test('stock write responses expose a null sourceReference', async () => {
+  const { prisma } = fakePrisma();
+  const service = new StockService(prisma);
+
+  const movement = await service.recordOpening(
+    OUTLET_ID,
+    KEY_ONE,
+    changeDto({ quantity: '10' }),
+    user(),
+  );
+
+  assert.equal(movement.sourceReference, null);
 });

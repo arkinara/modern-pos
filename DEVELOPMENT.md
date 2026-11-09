@@ -492,6 +492,42 @@ Implementation lives in `SalesService.applyStockConsumption` and the menu availa
   reports `0`. The screen value is advisory; concurrent sales and ingredient sharing are resolved
   authoritatively only when finalization aggregates the whole cart inside the locked transaction.
 
+## Stock overview, receiving, adjustments and low-stock states (#13)
+
+Implementation lives in `StockService.listMovements`, `StockService.resolveSaleReferences`, the
+additive `Movement` contract fields and `apps/web/components/stock-screen.tsx`.
+
+- The Stock page distinguishes two different quantities:
+  - **Raw balance (ledger)** is the authoritative `quantity` from `StockBalance`, in the item's
+    base unit, derived from `SUM(delta)` across the append-only movement ledger. It drives status.
+  - **Estimated sellable units** come from `GET /outlets/{id}/menu` `availableUnits`. They are an
+    advisory per-variant estimate computed per request from the latest recipe and current raw
+    balances: `min over ingredients of floor(balance / quantityPerSaleUnit)`. The UI labels them
+    as estimates and states that finalization is authoritative. `UNTRACKED` variants return
+    `null` and render as `Not tracked`, never as a number.
+- Status filtering is computed in the web client from `quantity` and `reorderThreshold`:
+  `OUT_OF_STOCK` when `quantity <= 0`, `BELOW_REORDER` when `quantity <= reorderThreshold`, and
+  `OK` otherwise. No API query parameter was added, so the stock list contract is unchanged.
+  Filtering applies to the pages already loaded (the page requests 100 items at a time); an empty
+  filter result is a dedicated empty state, not an error. The same page has a separate
+  All/Tracked/Untracked filter for the advisory menu estimate.
+- Movement history resolves sale references in the API. `SALE` and `REVERSAL` movements store the
+  sale id in `sourceId`; `listMovements` batches one `Sale` lookup for those ids and returns the
+  additive `sourceReference` field (`Sale.reference`). The field is `null` for
+  `OPENING`/`RECEIPT`/`ADJUSTMENT`, and also `null` when the referenced sale is missing or no
+  longer visible, so the ledger still renders and the UI shows `Reference unavailable`. The
+  contract also adds `outletId` to movements so every history row can show its outlet alongside
+  reason, actor and timestamp. Both changes are additive; `API.openapi.json` moves from `0.4.0`
+  to `0.5.0` and both generated clients were refreshed.
+- Receipts and adjustments already update the balance inside one transaction with reason capture,
+  precision validation and `expectedBalanceVersion` conflict checks. After a successful write the
+  page invalidates both the stock and menu-availability queries, so the advisory estimate is
+  recomputed on refresh together with the raw balance. A completed mobile sale appears the same
+  way: refresh reloads balances and recomputes `availableUnits` from the new ledger state.
+- Deferred: deeper sales history, reporting and CSV remain in #14; sale reversal and its
+  `REVERSAL` movements remain in #17. This ticket only renders the existing `REVERSAL` movement
+  type defensively.
+
 ## Scope boundaries
 
 - Web is the owner back office. It has no sale, tender or cart routes; the Android app owns

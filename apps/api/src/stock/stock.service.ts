@@ -27,11 +27,13 @@ export interface StockPageResponse {
 
 export interface MovementResponse {
   id: string;
+  outletId: string;
   stockItemId: string;
   delta: string;
   type: string;
   reason: string;
   sourceId: string;
+  sourceReference: string | null;
   actorId: string;
   createdAt: string;
 }
@@ -190,11 +192,56 @@ export class StockService {
 
     const hasMore = rows.length > limit;
     const page = hasMore ? rows.slice(0, limit) : rows;
+    const saleReferences = await this.resolveSaleReferences(outletId, user.businessId, page);
 
     return {
-      items: page.map((row) => this.toMovement(row, item.quantityScale)),
+      items: page.map((row) =>
+        this.toMovement(row, item.quantityScale, saleReferences.get(row.sourceId) ?? null),
+      ),
       nextCursor: hasMore ? (page[page.length - 1]?.id ?? null) : null,
     };
+  }
+
+  /**
+   * Sale and reversal movements store the sale id in sourceId. Resolve it to
+   * the human-readable sale reference in one batched read. Missing or reversed
+   * sales degrade to null so the ledger still renders.
+   */
+  private async resolveSaleReferences(
+    outletId: string,
+    businessId: string,
+    movements: {
+      type: StockMovementType;
+      sourceId: string;
+    }[],
+  ): Promise<Map<string, string>> {
+    const references = new Map<string, string>();
+    const saleIds = [
+      ...new Set(
+        movements
+          .filter(
+            (movement) =>
+              movement.type === StockMovementType.SALE ||
+              movement.type === StockMovementType.REVERSAL,
+          )
+          .map((movement) => movement.sourceId),
+      ),
+    ];
+
+    if (saleIds.length === 0) {
+      return references;
+    }
+
+    const sales = await this.prisma.sale.findMany({
+      where: { id: { in: saleIds }, outletId, businessId },
+      select: { id: true, reference: true },
+    });
+
+    for (const sale of sales) {
+      references.set(sale.id, sale.reference);
+    }
+
+    return references;
   }
 
   async recordOpening(
@@ -518,6 +565,7 @@ export class StockService {
   private toMovement(
     movement: {
       id: string;
+      outletId: string;
       stockItemId: string;
       delta: Prisma.Decimal;
       type: StockMovementType;
@@ -527,14 +575,17 @@ export class StockService {
       createdAt: Date;
     },
     quantityScale: number,
+    sourceReference: string | null = null,
   ): MovementResponse {
     return {
       id: movement.id,
+      outletId: movement.outletId,
       stockItemId: movement.stockItemId,
       delta: movement.delta.toFixed(quantityScale),
       type: movement.type,
       reason: movement.reason,
       sourceId: movement.sourceId,
+      sourceReference,
       actorId: movement.actorId,
       createdAt: movement.createdAt.toISOString(),
     };

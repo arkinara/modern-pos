@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Modern POS API baseline",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Implementation contract for M04 authentication and M05 business settings. Auth/session, outlet-scope and settings operations are implemented in apps/api; remaining domain operations are implementation targets for later tickets. Read ARCHITECTURE.md for rules and authorization."
   },
   "servers": [
@@ -6260,6 +6260,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "outletId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "stockItemId": {
             "type": "string",
             "format": "uuid"
@@ -6285,6 +6289,11 @@
             "type": "string",
             "format": "uuid"
           },
+          "sourceReference": {
+            "type": "string",
+            "nullable": true,
+            "description": "Human-readable sale reference resolved from sourceId for SALE and REVERSAL movements. Null for non-sale movements or when the referenced sale is missing. The ledger remains readable when a reference cannot be resolved."
+          },
           "actorId": {
             "type": "string",
             "format": "uuid"
@@ -6296,11 +6305,13 @@
         },
         "required": [
           "id",
+          "outletId",
           "stockItemId",
           "delta",
           "type",
           "reason",
           "sourceId",
+          "sourceReference",
           "actorId",
           "createdAt"
         ]
