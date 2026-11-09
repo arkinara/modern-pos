@@ -7,7 +7,9 @@ import 'package:modern_pos_mobile/features/auth/auth_controller.dart';
 import 'package:modern_pos_mobile/features/cart/cart_controller.dart';
 import 'package:modern_pos_mobile/features/catalog/catalog_controller.dart';
 import 'package:modern_pos_mobile/features/catalog/catalog_models.dart';
+import 'package:modern_pos_mobile/features/checkout/checkout_repository.dart';
 
+import 'support/checkout_fakes.dart';
 import 'support/fakes.dart';
 
 void main() {
@@ -70,6 +72,9 @@ void main() {
         authControllerProvider.overrideWith(() => auth),
         catalogRepositoryProvider.overrideWithValue(catalog),
         cartRepositoryProvider.overrideWithValue(cartRepository),
+        checkoutRepositoryProvider.overrideWithValue(
+          InMemoryCheckoutRepository(),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -136,7 +141,10 @@ void main() {
       await goTo(tester, 'Cart');
       expect(find.text('Tea'), findsOneWidget);
       expect(find.text('Rp18.000'), findsWidgets);
-      expect(find.textContaining('Display total only'), findsOneWidget);
+      expect(
+        find.textContaining('server quote at checkout is authoritative'),
+        findsOneWidget,
+      );
     },
   );
 

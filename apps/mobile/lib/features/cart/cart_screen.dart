@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../theme/app_theme.dart';
 import '../catalog/catalog_controller.dart';
 import '../catalog/catalog_models.dart';
+import '../checkout/checkout_controller.dart';
+import '../checkout/checkout_models.dart';
 import 'cart_controller.dart';
 import 'cart_line.dart';
 
@@ -14,7 +17,9 @@ class CartScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartControllerProvider);
     final catalog = ref.watch(catalogControllerProvider);
+    final checkout = ref.watch(checkoutControllerProvider);
     final snapshot = catalog.value;
+    final pending = checkout.value?.pending;
 
     return cart.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -22,19 +27,24 @@ class CartScreen extends ConsumerWidget {
           _CartError(onRetry: () => ref.invalidate(cartControllerProvider)),
       data: (state) {
         if (state.isEmpty) {
-          return const _EmptyCart();
+          return _EmptyCart(pending: pending);
         }
-        return _CartBody(state: state, snapshot: snapshot);
+        return _CartBody(state: state, snapshot: snapshot, pending: pending);
       },
     );
   }
 }
 
 class _CartBody extends ConsumerWidget {
-  const _CartBody({required this.state, required this.snapshot});
+  const _CartBody({
+    required this.state,
+    required this.snapshot,
+    required this.pending,
+  });
 
   final CartState state;
   final CatalogSnapshot? snapshot;
+  final PendingCheckout? pending;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -98,6 +108,30 @@ class _CartBody extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (pending != null) ...[
+                  Semantics(
+                    liveRegion: true,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: PosColors.warningSoft,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'An earlier checkout has an unknown outcome. Resolve '
+                        'it before starting a new sale.',
+                        style: TextStyle(
+                          color: PosColors.warning,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 Text('Total', style: Theme.of(context).textTheme.titleMedium),
                 Align(
                   alignment: Alignment.centerRight,
@@ -112,9 +146,20 @@ class _CartBody extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Display total only. The server quote at checkout is '
-                  'authoritative (#12).',
+                  'The server quote at checkout is authoritative.',
                   style: TextStyle(color: PosColors.muted, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () => context.push('/checkout'),
+                  icon: Icon(
+                    pending != null
+                        ? Icons.sync_problem
+                        : Icons.point_of_sale_outlined,
+                  ),
+                  label: Text(
+                    pending != null ? 'Resolve unfinished sale' : 'Checkout',
+                  ),
                 ),
               ],
             ),
@@ -329,10 +374,41 @@ class _QuantityStepper extends StatelessWidget {
 }
 
 class _EmptyCart extends StatelessWidget {
-  const _EmptyCart();
+  const _EmptyCart({this.pending});
+
+  final PendingCheckout? pending;
 
   @override
   Widget build(BuildContext context) {
+    if (pending != null) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const Icon(Icons.sync_problem, size: 56, color: PosColors.warning),
+            const SizedBox(height: 12),
+            Text(
+              'Unfinished sale',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'An earlier checkout has an unknown outcome. Check the server '
+              'before starting a new sale.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: PosColors.muted),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: () => context.push('/checkout'),
+              icon: const Icon(Icons.sync),
+              label: const Text('Resolve unfinished sale'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
