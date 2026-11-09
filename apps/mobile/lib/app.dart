@@ -6,11 +6,18 @@ import 'features/auth/sign_in_screen.dart';
 import 'routes/router.dart';
 import 'theme/app_theme.dart';
 
-class ModernPosApp extends ConsumerWidget {
+class ModernPosApp extends ConsumerStatefulWidget {
   const ModernPosApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ModernPosApp> createState() => _ModernPosAppState();
+}
+
+class _ModernPosAppState extends ConsumerState<ModernPosApp> {
+  late final _router = createAppRouter();
+
+  @override
+  Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final theme = buildAppTheme();
 
@@ -33,7 +40,7 @@ class ModernPosApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Modern POS',
       theme: theme,
-      routerConfig: appRouter,
+      routerConfig: _router,
     );
   }
 }
