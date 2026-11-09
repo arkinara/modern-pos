@@ -94,6 +94,19 @@ export interface ApiClient {
     idempotencyKey: string,
     adjustment: ApiSchemas['Adjustment'],
   ): Promise<ApiSchemas['Movement']>;
+  listSales(
+    outletId: string,
+    query?: { cursor?: string; limit?: number; from?: string; to?: string },
+  ): Promise<ApiSchemas['SalePage']>;
+  getSale(outletId: string, saleId: string): Promise<ApiSchemas['Sale']>;
+  getDailyReport(
+    outletId: string,
+    query: { from: string; to: string },
+  ): Promise<ApiSchemas['DailyReport']>;
+  exportSalesCsv(
+    outletId: string,
+    query: { from: string; to: string },
+  ): Promise<{ filename: string; csv: string }>;
 }
 
 function toQueryString(query: Record<string, string | number | undefined>): string {
@@ -155,6 +168,39 @@ export function createApiClient({
     }
 
     return (await response.json()) as T;
+  }
+
+  async function requestText(
+    path: string,
+    init?: RequestInit,
+  ): Promise<{ filename: string; body: string }> {
+    const accessToken = getAccessToken?.() ?? null;
+    const response = await fetchImpl(`${root}${path}`, {
+      ...init,
+      credentials,
+      headers: {
+        Accept: 'text/csv',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...init?.headers,
+      },
+    });
+
+    if (response.status === 401) {
+      onUnauthorized?.();
+    }
+
+    if (!response.ok) {
+      const body = parseErrorBody(await response.text());
+      throw new ApiError(response.status, body);
+    }
+
+    const disposition = response.headers.get('Content-Disposition') ?? '';
+    const match = /filename="?([^";]+)"?/.exec(disposition);
+
+    return {
+      filename: match?.[1] ?? 'sales.csv',
+      body: await response.text(),
+    };
   }
 
   return {
@@ -278,5 +324,23 @@ export function createApiClient({
           body: JSON.stringify(adjustment),
         },
       ),
+    listSales: (outletId, query = {}) =>
+      request<ApiSchemas['SalePage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/sales${toQueryString(query)}`,
+      ),
+    getSale: (outletId, saleId) =>
+      request<ApiSchemas['Sale']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/sales/${encodeURIComponent(saleId)}`,
+      ),
+    getDailyReport: (outletId, query) =>
+      request<ApiSchemas['DailyReport']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/reports/daily${toQueryString(query)}`,
+      ),
+    exportSalesCsv: async (outletId, query) => {
+      const exported = await requestText(
+        `/v1/outlets/${encodeURIComponent(outletId)}/reports/sales.csv${toQueryString(query)}`,
+      );
+      return { filename: exported.filename, csv: exported.body };
+    },
   };
 }

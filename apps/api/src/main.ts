@@ -30,6 +30,7 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,
+    exposedHeaders: ['Content-Disposition'],
   });
 
   app.enableShutdownHooks();

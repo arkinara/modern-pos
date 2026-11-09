@@ -123,3 +123,27 @@ export function describeStockError(error: unknown, fallback: string): string {
 export function isStockConflict(error: unknown): boolean {
   return error instanceof ApiError && (error.status === 409 || error.status === 422);
 }
+
+export function describeReportError(error: unknown, fallback: string): string {
+  if (!(error instanceof ApiError)) {
+    return fallback;
+  }
+
+  if (error.status === 401) {
+    return 'Your session expired. Sign in again.';
+  }
+
+  if (error.status === 403) {
+    return 'Only an owner can read sales reports for this outlet.';
+  }
+
+  if (error.status === 404) {
+    return 'That outlet could not be found for your account.';
+  }
+
+  if (error.status === 400 || error.status === 422) {
+    return 'The server rejected that date range. Use valid dates within 366 days.';
+  }
+
+  return `${fallback} (HTTP ${error.status})`;
+}
