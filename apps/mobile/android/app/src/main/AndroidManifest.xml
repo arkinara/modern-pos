@@ -1,5 +1,41 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Receipt printer transport: Bluetooth Classic (RFCOMM/SPP) candidate.
+         Ticket #15 does NOT claim this transport is verified; see
+         docs/printer-validation.md. The permission split below follows Android
+         platform documentation. On-device behaviour is PENDING — requires an
+         Android test device. -->
+
+    <!-- Android 11 and below: install-time Bluetooth permissions used to find
+         and connect a paired receipt printer. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30"/>
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30"/>
+
+    <!-- Android 6-11: fine location is required by the platform to discover
+         Bluetooth devices. This app does not derive location from it. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="30"/>
+
+    <!-- Android 12+ (API 31+): runtime permissions for connecting to and
+         scanning for a paired receipt printer. neverForLocation keeps discovery
+         out of location use. Both are requestable again after denial. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"/>
+
+    <!-- Printing must remain optional so the cashier app installs on devices
+         without Bluetooth hardware; the UI reports the missing capability. -->
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="false"/>
+
     <application
         android:label="Modern POS"
         android:name="${applicationName}"

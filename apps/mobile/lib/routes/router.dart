@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../features/cart/cart_screen.dart';
 import '../features/catalog/catalog_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
+import '../features/printing/printer_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/cashier_shell.dart';
 
@@ -34,6 +35,12 @@ GoRouter createAppRouter() => GoRouter(
             GoRoute(
               path: '/settings',
               builder: (context, state) => const SettingsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'printer',
+                  builder: (context, state) => const PrinterScreen(),
+                ),
+              ],
             ),
           ],
         ),

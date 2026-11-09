@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -7,11 +8,22 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(20),
-      children: const [
+      children: [
         Card(
           child: ListTile(
+            leading: const Icon(Icons.print_outlined),
+            title: const Text('Receipt printer'),
+            subtitle: const Text(
+              'Configure a Bluetooth Classic printer and run a test print.',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/printer'),
+          ),
+        ),
+        const Card(
+          child: ListTile(
             leading: Icon(Icons.dns_outlined),
-            title: Text('Connection'),
+            title: Text('API connection'),
             subtitle: Text('Configured at build time with API_BASE_URL.'),
           ),
         ),

@@ -68,6 +68,23 @@ removal and clear writes to SQLite before publishing state. A catalog refresh do
 cart. A 401 still clears the mobile session and returns to sign-in, but the persisted unsent cart
 survives and reloads after re-authentication.
 
+## Receipt printer (#15)
+
+Settings -> Receipt printer provides the cashier-facing configuration, connection and test-print
+surface.
+
+- Bluetooth Classic (RFCOMM/SPP) is the only implemented transport candidate. Network (LAN) and
+  USB are shown as **not verified on this project** and keep Connect/Test print disabled.
+- The app requests Bluetooth runtime permissions on Android 12+ (`BLUETOOTH_CONNECT`,
+  `BLUETOOTH_SCAN`) and uses location/discovery permissions on older versions. A denial is visible
+  and the request can be retried. Manifest comments map each permission to the printer feature.
+- `EscPosPrinterAdapter` renders ESC/POS bytes from receipt data (CP437 or UTF-8, 58/80 mm column
+  widths, optional cut and drawer pulse) and writes them to the transport.
+- A test-print success means bytes were accepted by the transport socket. **Physical output is not
+  verified on this project**; no printer model or Android device was supplied. The full record and
+  acceptance recipe live in [docs/printer-validation.md](../../docs/printer-validation.md).
+- No print queue, retry or reprint action (#16). No `printing_*` contract change.
+
 ## Scope
 
 Implemented: authentication (#4), catalog browsing, variants, availability advisory, and the
@@ -75,7 +92,7 @@ durable cart shell (#11). Deferred:
 
 - #12 checkout, quote/finalization, receipt and recovery UX. The app does **not** call
   `order_quote` or `sales_finalize` in this ticket.
-- #13 stock UI, #14 sales history, #15/#16 printer transport.
+- #13 stock UI, #14 sales history, #16 print queue/retry/reprint. Printer transport candidate and hardware record are in #15 (unverified until a real device is tested).
 - Offline sale reconciliation/sync (#19). Catalog reads require the API; the cart stays local.
 - Final mobile visual sign-off: `PENDING — requires owner review (#2)`.
 - Physical device/emulator verification: `PENDING — requires device/emulator`.
