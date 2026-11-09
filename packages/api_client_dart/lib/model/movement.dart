@@ -14,16 +14,20 @@ class Movement {
   /// Returns a new [Movement] instance.
   Movement({
     required this.id,
+    required this.outletId,
     required this.stockItemId,
     required this.delta,
     required this.type,
     required this.reason,
     required this.sourceId,
+    required this.sourceReference,
     required this.actorId,
     required this.createdAt,
   });
 
   String id;
+
+  String outletId;
 
   String stockItemId;
 
@@ -35,6 +39,9 @@ class Movement {
 
   String sourceId;
 
+  /// Human-readable sale reference resolved from sourceId for SALE and REVERSAL movements. Null for non-sale movements or when the referenced sale is missing. The ledger remains readable when a reference cannot be resolved.
+  String? sourceReference;
+
   String actorId;
 
   DateTime createdAt;
@@ -42,11 +49,13 @@ class Movement {
   @override
   bool operator ==(Object other) => identical(this, other) || other is Movement &&
     other.id == id &&
+    other.outletId == outletId &&
     other.stockItemId == stockItemId &&
     other.delta == delta &&
     other.type == type &&
     other.reason == reason &&
     other.sourceId == sourceId &&
+    other.sourceReference == sourceReference &&
     other.actorId == actorId &&
     other.createdAt == createdAt;
 
@@ -54,25 +63,33 @@ class Movement {
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (id.hashCode) +
+    (outletId.hashCode) +
     (stockItemId.hashCode) +
     (delta.hashCode) +
     (type.hashCode) +
     (reason.hashCode) +
     (sourceId.hashCode) +
+    (sourceReference == null ? 0 : sourceReference!.hashCode) +
     (actorId.hashCode) +
     (createdAt.hashCode);
 
   @override
-  String toString() => 'Movement[id=$id, stockItemId=$stockItemId, delta=$delta, type=$type, reason=$reason, sourceId=$sourceId, actorId=$actorId, createdAt=$createdAt]';
+  String toString() => 'Movement[id=$id, outletId=$outletId, stockItemId=$stockItemId, delta=$delta, type=$type, reason=$reason, sourceId=$sourceId, sourceReference=$sourceReference, actorId=$actorId, createdAt=$createdAt]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'id'] = this.id;
+      json[r'outletId'] = this.outletId;
       json[r'stockItemId'] = this.stockItemId;
       json[r'delta'] = this.delta;
       json[r'type'] = this.type;
       json[r'reason'] = this.reason;
       json[r'sourceId'] = this.sourceId;
+    if (this.sourceReference != null) {
+      json[r'sourceReference'] = this.sourceReference;
+    } else {
+      json[r'sourceReference'] = null;
+    }
       json[r'actorId'] = this.actorId;
       json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
     return json;
@@ -91,6 +108,8 @@ class Movement {
       assert(() {
         assert(json.containsKey(r'id'), 'Required key "Movement[id]" is missing from JSON.');
         assert(json[r'id'] != null, 'Required key "Movement[id]" has a null value in JSON.');
+        assert(json.containsKey(r'outletId'), 'Required key "Movement[outletId]" is missing from JSON.');
+        assert(json[r'outletId'] != null, 'Required key "Movement[outletId]" has a null value in JSON.');
         assert(json.containsKey(r'stockItemId'), 'Required key "Movement[stockItemId]" is missing from JSON.');
         assert(json[r'stockItemId'] != null, 'Required key "Movement[stockItemId]" has a null value in JSON.');
         assert(json.containsKey(r'delta'), 'Required key "Movement[delta]" is missing from JSON.');
@@ -101,6 +120,7 @@ class Movement {
         assert(json[r'reason'] != null, 'Required key "Movement[reason]" has a null value in JSON.');
         assert(json.containsKey(r'sourceId'), 'Required key "Movement[sourceId]" is missing from JSON.');
         assert(json[r'sourceId'] != null, 'Required key "Movement[sourceId]" has a null value in JSON.');
+        assert(json.containsKey(r'sourceReference'), 'Required key "Movement[sourceReference]" is missing from JSON.');
         assert(json.containsKey(r'actorId'), 'Required key "Movement[actorId]" is missing from JSON.');
         assert(json[r'actorId'] != null, 'Required key "Movement[actorId]" has a null value in JSON.');
         assert(json.containsKey(r'createdAt'), 'Required key "Movement[createdAt]" is missing from JSON.');
@@ -110,11 +130,13 @@ class Movement {
 
       return Movement(
         id: mapValueOfType<String>(json, r'id')!,
+        outletId: mapValueOfType<String>(json, r'outletId')!,
         stockItemId: mapValueOfType<String>(json, r'stockItemId')!,
         delta: mapValueOfType<String>(json, r'delta')!,
         type: MovementTypeEnum.fromJson(json[r'type'])!,
         reason: mapValueOfType<String>(json, r'reason')!,
         sourceId: mapValueOfType<String>(json, r'sourceId')!,
+        sourceReference: mapValueOfType<String>(json, r'sourceReference'),
         actorId: mapValueOfType<String>(json, r'actorId')!,
         createdAt: mapDateTime(json, r'createdAt', r'')!,
       );
@@ -165,11 +187,13 @@ class Movement {
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
     'id',
+    'outletId',
     'stockItemId',
     'delta',
     'type',
     'reason',
     'sourceId',
+    'sourceReference',
     'actorId',
     'createdAt',
   };

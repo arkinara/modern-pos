@@ -787,6 +787,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
+            outletId: string;
+            /** Format: uuid */
             stockItemId: string;
             delta: string;
             /** @enum {string} */
@@ -794,6 +796,8 @@ export interface components {
             reason: string;
             /** Format: uuid */
             sourceId: string;
+            /** @description Human-readable sale reference resolved from sourceId for SALE and REVERSAL movements. Null for non-sale movements or when the referenced sale is missing. The ledger remains readable when a reference cannot be resolved. */
+            sourceReference: string | null;
             /** Format: uuid */
             actorId: string;
             /** Format: date-time */
