@@ -6,7 +6,9 @@ import 'package:modern_pos_mobile/features/auth/auth_controller.dart';
 import 'package:modern_pos_mobile/features/cart/cart_controller.dart';
 import 'package:modern_pos_mobile/features/catalog/catalog_controller.dart';
 import 'package:modern_pos_mobile/core/providers.dart';
+import 'package:modern_pos_mobile/features/checkout/checkout_repository.dart';
 
+import 'support/checkout_fakes.dart';
 import 'support/fakes.dart';
 
 void main() {
@@ -46,6 +48,9 @@ void main() {
           ),
           catalogRepositoryProvider.overrideWithValue(catalog),
           cartRepositoryProvider.overrideWithValue(InMemoryCartRepository()),
+          checkoutRepositoryProvider.overrideWithValue(
+            InMemoryCheckoutRepository(),
+          ),
           apiHealthProvider.overrideWith((ref) async => 'ok'),
         ],
         child: const ModernPosApp(),

@@ -288,8 +288,22 @@ The proof signs in as the seeded owner through the generated Dart client, create
 it back by search, updates a variant price and stock policy, reads the refreshed record, then
 archives it. A normal `flutter test` skips it because no base URL is defined.
 
+Android checkout and recovery proof (live API required):
+
+```bash
+cd apps/mobile
+CHECKOUT_API_BASE_URL=http://localhost:4000 flutter test test/checkout_live_api_test.dart
+```
+
+The proof signs in as the seeded cashier, creates a draft with a TRACKED variant, gets a quote,
+finalizes once, replays the same key, recovers the key through
+`GET /checkout-requests/:key`, and asserts one sale plus one `SALE` stock movement per consumed
+ingredient. The client protocol, state machine, deferred work and limitations are documented in
+[docs/checkout-recovery.md](docs/checkout-recovery.md).
+
 Deferred: stock ledger and receiving (#7), orders and sales snapshots (#9/#10), cashier catalog UI
-(#11), reports (#14) and printing (#15/#16). Recipes arrived in #8.
+(#11), reports (#14) and printing (#15/#16). Recipes arrived in #8. Checkout is implemented in
+#12; the print queue/reprints (#16), reversal (#17) and offline sale sync (#19) remain deferred.
 
 ## Stock items, units, opening balances and ledger (#7)
 

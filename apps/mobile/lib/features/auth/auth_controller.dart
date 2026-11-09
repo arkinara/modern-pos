@@ -6,11 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:modern_pos_api_client/api.dart';
 
+import '../../core/device_identity.dart';
 import '../../core/providers.dart';
 import 'auth_repository.dart';
 
 const _refreshTokenKey = 'pos_refresh_token';
-const _deviceIdKey = 'pos_device_id';
 
 class AuthSession {
   const AuthSession({required this.accessToken, required this.user});
@@ -30,11 +30,13 @@ class AuthController extends AsyncNotifier<AuthSession?> {
   Timer? _timer;
   late AuthRepository _repository;
   late FlutterSecureStorage _storage;
+  late DeviceIdentity _deviceIdentity;
 
   @override
   Future<AuthSession?> build() async {
     _repository = ref.read(authRepositoryProvider);
     _storage = ref.read(secureStorageProvider);
+    _deviceIdentity = ref.read(deviceIdentityProvider);
     ref.onDispose(() => _timer?.cancel());
 
     ref
@@ -53,7 +55,7 @@ class AuthController extends AsyncNotifier<AuthSession?> {
           ),
         );
 
-    final deviceId = await _deviceId();
+    final deviceId = await _deviceIdentity.deviceId();
     final refreshToken = await _storage.read(key: _refreshTokenKey);
     if (refreshToken == null) {
       return null;
@@ -81,7 +83,7 @@ class AuthController extends AsyncNotifier<AuthSession?> {
   Future<void> signIn({required String email, required String password}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final deviceId = await _deviceId();
+      final deviceId = await _deviceIdentity.deviceId();
       final session = await _repository.signIn(
         email: email,
         password: password,
@@ -120,7 +122,7 @@ class AuthController extends AsyncNotifier<AuthSession?> {
       return;
     }
 
-    final deviceId = await _deviceId();
+    final deviceId = await _deviceIdentity.deviceId();
 
     try {
       final session = await _repository.refresh(
@@ -159,28 +161,5 @@ class AuthController extends AsyncNotifier<AuthSession?> {
 
   AuthSession _toAuthSession(MobileSession session) {
     return AuthSession(accessToken: session.accessToken, user: session.user);
-  }
-
-  Future<String> _deviceId() async {
-    final existing = await _storage.read(key: _deviceIdKey);
-    if (existing != null && existing.isNotEmpty) {
-      return existing;
-    }
-
-    final generated = _generateUuidV4();
-    await _storage.write(key: _deviceIdKey, value: generated);
-    return generated;
-  }
-
-  String _generateUuidV4() {
-    final random = Random.secure();
-    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
-    bytes[6] = (bytes[6] & 0x0f) | 0x40;
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    final hex = bytes
-        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
-        .join();
-    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
-        '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
   }
 }

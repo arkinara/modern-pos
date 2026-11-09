@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../features/cart/cart_screen.dart';
+import '../features/checkout/checkout_screen.dart';
 import '../features/catalog/catalog_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/printing/printer_screen.dart';
@@ -53,6 +54,10 @@ GoRouter createAppRouter() => GoRouter(
           ],
         ),
       ],
+    ),
+    GoRoute(
+      path: '/checkout',
+      builder: (context, state) => const CheckoutScreen(),
     ),
   ],
 );

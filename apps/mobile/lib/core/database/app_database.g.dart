@@ -870,11 +870,792 @@ class CartEntriesCompanion extends UpdateCompanion<CartEntry> {
   }
 }
 
+class $CheckoutIntentsTable extends CheckoutIntents
+    with TableInfo<$CheckoutIntentsTable, CheckoutIntent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CheckoutIntentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idempotencyKeyMeta = const VerificationMeta(
+    'idempotencyKey',
+  );
+  @override
+  late final GeneratedColumn<String> idempotencyKey = GeneratedColumn<String>(
+    'idempotency_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _outletIdMeta = const VerificationMeta(
+    'outletId',
+  );
+  @override
+  late final GeneratedColumn<String> outletId = GeneratedColumn<String>(
+    'outlet_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _orderIdMeta = const VerificationMeta(
+    'orderId',
+  );
+  @override
+  late final GeneratedColumn<String> orderId = GeneratedColumn<String>(
+    'order_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quoteIdMeta = const VerificationMeta(
+    'quoteId',
+  );
+  @override
+  late final GeneratedColumn<String> quoteId = GeneratedColumn<String>(
+    'quote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentJsonMeta = const VerificationMeta(
+    'paymentJson',
+  );
+  @override
+  late final GeneratedColumn<String> paymentJson = GeneratedColumn<String>(
+    'payment_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalMinorMeta = const VerificationMeta(
+    'totalMinor',
+  );
+  @override
+  late final GeneratedColumn<int> totalMinor = GeneratedColumn<int>(
+    'total_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyExponentMeta = const VerificationMeta(
+    'currencyExponent',
+  );
+  @override
+  late final GeneratedColumn<int> currencyExponent = GeneratedColumn<int>(
+    'currency_exponent',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _saleReferenceMeta = const VerificationMeta(
+    'saleReference',
+  );
+  @override
+  late final GeneratedColumn<String> saleReference = GeneratedColumn<String>(
+    'sale_reference',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    idempotencyKey,
+    deviceId,
+    outletId,
+    orderId,
+    quoteId,
+    paymentJson,
+    totalMinor,
+    currency,
+    currencyExponent,
+    status,
+    saleReference,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'checkout_intents';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CheckoutIntent> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('idempotency_key')) {
+      context.handle(
+        _idempotencyKeyMeta,
+        idempotencyKey.isAcceptableOrUnknown(
+          data['idempotency_key']!,
+          _idempotencyKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_idempotencyKeyMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('outlet_id')) {
+      context.handle(
+        _outletIdMeta,
+        outletId.isAcceptableOrUnknown(data['outlet_id']!, _outletIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_outletIdMeta);
+    }
+    if (data.containsKey('order_id')) {
+      context.handle(
+        _orderIdMeta,
+        orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_orderIdMeta);
+    }
+    if (data.containsKey('quote_id')) {
+      context.handle(
+        _quoteIdMeta,
+        quoteId.isAcceptableOrUnknown(data['quote_id']!, _quoteIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quoteIdMeta);
+    }
+    if (data.containsKey('payment_json')) {
+      context.handle(
+        _paymentJsonMeta,
+        paymentJson.isAcceptableOrUnknown(
+          data['payment_json']!,
+          _paymentJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_paymentJsonMeta);
+    }
+    if (data.containsKey('total_minor')) {
+      context.handle(
+        _totalMinorMeta,
+        totalMinor.isAcceptableOrUnknown(data['total_minor']!, _totalMinorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_totalMinorMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyMeta);
+    }
+    if (data.containsKey('currency_exponent')) {
+      context.handle(
+        _currencyExponentMeta,
+        currencyExponent.isAcceptableOrUnknown(
+          data['currency_exponent']!,
+          _currencyExponentMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyExponentMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('sale_reference')) {
+      context.handle(
+        _saleReferenceMeta,
+        saleReference.isAcceptableOrUnknown(
+          data['sale_reference']!,
+          _saleReferenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {idempotencyKey};
+  @override
+  CheckoutIntent map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CheckoutIntent(
+      idempotencyKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}idempotency_key'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      outletId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}outlet_id'],
+      )!,
+      orderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}order_id'],
+      )!,
+      quoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quote_id'],
+      )!,
+      paymentJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_json'],
+      )!,
+      totalMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_minor'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      currencyExponent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}currency_exponent'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      saleReference: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sale_reference'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CheckoutIntentsTable createAlias(String alias) {
+    return $CheckoutIntentsTable(attachedDatabase, alias);
+  }
+}
+
+class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
+  final String idempotencyKey;
+  final String deviceId;
+  final String outletId;
+  final String orderId;
+  final String quoteId;
+  final String paymentJson;
+  final int totalMinor;
+  final String currency;
+  final int currencyExponent;
+  final String status;
+  final String? saleReference;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const CheckoutIntent({
+    required this.idempotencyKey,
+    required this.deviceId,
+    required this.outletId,
+    required this.orderId,
+    required this.quoteId,
+    required this.paymentJson,
+    required this.totalMinor,
+    required this.currency,
+    required this.currencyExponent,
+    required this.status,
+    this.saleReference,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['idempotency_key'] = Variable<String>(idempotencyKey);
+    map['device_id'] = Variable<String>(deviceId);
+    map['outlet_id'] = Variable<String>(outletId);
+    map['order_id'] = Variable<String>(orderId);
+    map['quote_id'] = Variable<String>(quoteId);
+    map['payment_json'] = Variable<String>(paymentJson);
+    map['total_minor'] = Variable<int>(totalMinor);
+    map['currency'] = Variable<String>(currency);
+    map['currency_exponent'] = Variable<int>(currencyExponent);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || saleReference != null) {
+      map['sale_reference'] = Variable<String>(saleReference);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  CheckoutIntentsCompanion toCompanion(bool nullToAbsent) {
+    return CheckoutIntentsCompanion(
+      idempotencyKey: Value(idempotencyKey),
+      deviceId: Value(deviceId),
+      outletId: Value(outletId),
+      orderId: Value(orderId),
+      quoteId: Value(quoteId),
+      paymentJson: Value(paymentJson),
+      totalMinor: Value(totalMinor),
+      currency: Value(currency),
+      currencyExponent: Value(currencyExponent),
+      status: Value(status),
+      saleReference: saleReference == null && nullToAbsent
+          ? const Value.absent()
+          : Value(saleReference),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory CheckoutIntent.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CheckoutIntent(
+      idempotencyKey: serializer.fromJson<String>(json['idempotencyKey']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      outletId: serializer.fromJson<String>(json['outletId']),
+      orderId: serializer.fromJson<String>(json['orderId']),
+      quoteId: serializer.fromJson<String>(json['quoteId']),
+      paymentJson: serializer.fromJson<String>(json['paymentJson']),
+      totalMinor: serializer.fromJson<int>(json['totalMinor']),
+      currency: serializer.fromJson<String>(json['currency']),
+      currencyExponent: serializer.fromJson<int>(json['currencyExponent']),
+      status: serializer.fromJson<String>(json['status']),
+      saleReference: serializer.fromJson<String?>(json['saleReference']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'idempotencyKey': serializer.toJson<String>(idempotencyKey),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'outletId': serializer.toJson<String>(outletId),
+      'orderId': serializer.toJson<String>(orderId),
+      'quoteId': serializer.toJson<String>(quoteId),
+      'paymentJson': serializer.toJson<String>(paymentJson),
+      'totalMinor': serializer.toJson<int>(totalMinor),
+      'currency': serializer.toJson<String>(currency),
+      'currencyExponent': serializer.toJson<int>(currencyExponent),
+      'status': serializer.toJson<String>(status),
+      'saleReference': serializer.toJson<String?>(saleReference),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  CheckoutIntent copyWith({
+    String? idempotencyKey,
+    String? deviceId,
+    String? outletId,
+    String? orderId,
+    String? quoteId,
+    String? paymentJson,
+    int? totalMinor,
+    String? currency,
+    int? currencyExponent,
+    String? status,
+    Value<String?> saleReference = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => CheckoutIntent(
+    idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+    deviceId: deviceId ?? this.deviceId,
+    outletId: outletId ?? this.outletId,
+    orderId: orderId ?? this.orderId,
+    quoteId: quoteId ?? this.quoteId,
+    paymentJson: paymentJson ?? this.paymentJson,
+    totalMinor: totalMinor ?? this.totalMinor,
+    currency: currency ?? this.currency,
+    currencyExponent: currencyExponent ?? this.currencyExponent,
+    status: status ?? this.status,
+    saleReference: saleReference.present
+        ? saleReference.value
+        : this.saleReference,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  CheckoutIntent copyWithCompanion(CheckoutIntentsCompanion data) {
+    return CheckoutIntent(
+      idempotencyKey: data.idempotencyKey.present
+          ? data.idempotencyKey.value
+          : this.idempotencyKey,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      outletId: data.outletId.present ? data.outletId.value : this.outletId,
+      orderId: data.orderId.present ? data.orderId.value : this.orderId,
+      quoteId: data.quoteId.present ? data.quoteId.value : this.quoteId,
+      paymentJson: data.paymentJson.present
+          ? data.paymentJson.value
+          : this.paymentJson,
+      totalMinor: data.totalMinor.present
+          ? data.totalMinor.value
+          : this.totalMinor,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      currencyExponent: data.currencyExponent.present
+          ? data.currencyExponent.value
+          : this.currencyExponent,
+      status: data.status.present ? data.status.value : this.status,
+      saleReference: data.saleReference.present
+          ? data.saleReference.value
+          : this.saleReference,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CheckoutIntent(')
+          ..write('idempotencyKey: $idempotencyKey, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('outletId: $outletId, ')
+          ..write('orderId: $orderId, ')
+          ..write('quoteId: $quoteId, ')
+          ..write('paymentJson: $paymentJson, ')
+          ..write('totalMinor: $totalMinor, ')
+          ..write('currency: $currency, ')
+          ..write('currencyExponent: $currencyExponent, ')
+          ..write('status: $status, ')
+          ..write('saleReference: $saleReference, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    idempotencyKey,
+    deviceId,
+    outletId,
+    orderId,
+    quoteId,
+    paymentJson,
+    totalMinor,
+    currency,
+    currencyExponent,
+    status,
+    saleReference,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CheckoutIntent &&
+          other.idempotencyKey == this.idempotencyKey &&
+          other.deviceId == this.deviceId &&
+          other.outletId == this.outletId &&
+          other.orderId == this.orderId &&
+          other.quoteId == this.quoteId &&
+          other.paymentJson == this.paymentJson &&
+          other.totalMinor == this.totalMinor &&
+          other.currency == this.currency &&
+          other.currencyExponent == this.currencyExponent &&
+          other.status == this.status &&
+          other.saleReference == this.saleReference &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
+  final Value<String> idempotencyKey;
+  final Value<String> deviceId;
+  final Value<String> outletId;
+  final Value<String> orderId;
+  final Value<String> quoteId;
+  final Value<String> paymentJson;
+  final Value<int> totalMinor;
+  final Value<String> currency;
+  final Value<int> currencyExponent;
+  final Value<String> status;
+  final Value<String?> saleReference;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const CheckoutIntentsCompanion({
+    this.idempotencyKey = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.outletId = const Value.absent(),
+    this.orderId = const Value.absent(),
+    this.quoteId = const Value.absent(),
+    this.paymentJson = const Value.absent(),
+    this.totalMinor = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.currencyExponent = const Value.absent(),
+    this.status = const Value.absent(),
+    this.saleReference = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CheckoutIntentsCompanion.insert({
+    required String idempotencyKey,
+    required String deviceId,
+    required String outletId,
+    required String orderId,
+    required String quoteId,
+    required String paymentJson,
+    required int totalMinor,
+    required String currency,
+    required int currencyExponent,
+    this.status = const Value.absent(),
+    this.saleReference = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : idempotencyKey = Value(idempotencyKey),
+       deviceId = Value(deviceId),
+       outletId = Value(outletId),
+       orderId = Value(orderId),
+       quoteId = Value(quoteId),
+       paymentJson = Value(paymentJson),
+       totalMinor = Value(totalMinor),
+       currency = Value(currency),
+       currencyExponent = Value(currencyExponent),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<CheckoutIntent> custom({
+    Expression<String>? idempotencyKey,
+    Expression<String>? deviceId,
+    Expression<String>? outletId,
+    Expression<String>? orderId,
+    Expression<String>? quoteId,
+    Expression<String>? paymentJson,
+    Expression<int>? totalMinor,
+    Expression<String>? currency,
+    Expression<int>? currencyExponent,
+    Expression<String>? status,
+    Expression<String>? saleReference,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (idempotencyKey != null) 'idempotency_key': idempotencyKey,
+      if (deviceId != null) 'device_id': deviceId,
+      if (outletId != null) 'outlet_id': outletId,
+      if (orderId != null) 'order_id': orderId,
+      if (quoteId != null) 'quote_id': quoteId,
+      if (paymentJson != null) 'payment_json': paymentJson,
+      if (totalMinor != null) 'total_minor': totalMinor,
+      if (currency != null) 'currency': currency,
+      if (currencyExponent != null) 'currency_exponent': currencyExponent,
+      if (status != null) 'status': status,
+      if (saleReference != null) 'sale_reference': saleReference,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CheckoutIntentsCompanion copyWith({
+    Value<String>? idempotencyKey,
+    Value<String>? deviceId,
+    Value<String>? outletId,
+    Value<String>? orderId,
+    Value<String>? quoteId,
+    Value<String>? paymentJson,
+    Value<int>? totalMinor,
+    Value<String>? currency,
+    Value<int>? currencyExponent,
+    Value<String>? status,
+    Value<String?>? saleReference,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return CheckoutIntentsCompanion(
+      idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+      deviceId: deviceId ?? this.deviceId,
+      outletId: outletId ?? this.outletId,
+      orderId: orderId ?? this.orderId,
+      quoteId: quoteId ?? this.quoteId,
+      paymentJson: paymentJson ?? this.paymentJson,
+      totalMinor: totalMinor ?? this.totalMinor,
+      currency: currency ?? this.currency,
+      currencyExponent: currencyExponent ?? this.currencyExponent,
+      status: status ?? this.status,
+      saleReference: saleReference ?? this.saleReference,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (idempotencyKey.present) {
+      map['idempotency_key'] = Variable<String>(idempotencyKey.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (outletId.present) {
+      map['outlet_id'] = Variable<String>(outletId.value);
+    }
+    if (orderId.present) {
+      map['order_id'] = Variable<String>(orderId.value);
+    }
+    if (quoteId.present) {
+      map['quote_id'] = Variable<String>(quoteId.value);
+    }
+    if (paymentJson.present) {
+      map['payment_json'] = Variable<String>(paymentJson.value);
+    }
+    if (totalMinor.present) {
+      map['total_minor'] = Variable<int>(totalMinor.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (currencyExponent.present) {
+      map['currency_exponent'] = Variable<int>(currencyExponent.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (saleReference.present) {
+      map['sale_reference'] = Variable<String>(saleReference.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CheckoutIntentsCompanion(')
+          ..write('idempotencyKey: $idempotencyKey, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('outletId: $outletId, ')
+          ..write('orderId: $orderId, ')
+          ..write('quoteId: $quoteId, ')
+          ..write('paymentJson: $paymentJson, ')
+          ..write('totalMinor: $totalMinor, ')
+          ..write('currency: $currency, ')
+          ..write('currencyExponent: $currencyExponent, ')
+          ..write('status: $status, ')
+          ..write('saleReference: $saleReference, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $RecoveryJobsTable recoveryJobs = $RecoveryJobsTable(this);
   late final $CartEntriesTable cartEntries = $CartEntriesTable(this);
+  late final $CheckoutIntentsTable checkoutIntents = $CheckoutIntentsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -882,6 +1663,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     recoveryJobs,
     cartEntries,
+    checkoutIntents,
   ];
 }
 
@@ -1357,6 +2139,383 @@ typedef $$CartEntriesTableProcessedTableManager =
       CartEntry,
       PrefetchHooks Function()
     >;
+typedef $$CheckoutIntentsTableCreateCompanionBuilder =
+    CheckoutIntentsCompanion Function({
+      required String idempotencyKey,
+      required String deviceId,
+      required String outletId,
+      required String orderId,
+      required String quoteId,
+      required String paymentJson,
+      required int totalMinor,
+      required String currency,
+      required int currencyExponent,
+      Value<String> status,
+      Value<String?> saleReference,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$CheckoutIntentsTableUpdateCompanionBuilder =
+    CheckoutIntentsCompanion Function({
+      Value<String> idempotencyKey,
+      Value<String> deviceId,
+      Value<String> outletId,
+      Value<String> orderId,
+      Value<String> quoteId,
+      Value<String> paymentJson,
+      Value<int> totalMinor,
+      Value<String> currency,
+      Value<int> currencyExponent,
+      Value<String> status,
+      Value<String?> saleReference,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$CheckoutIntentsTableFilterComposer
+    extends Composer<_$AppDatabase, $CheckoutIntentsTable> {
+  $$CheckoutIntentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get idempotencyKey => $composableBuilder(
+    column: $table.idempotencyKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get outletId => $composableBuilder(
+    column: $table.outletId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get orderId => $composableBuilder(
+    column: $table.orderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get quoteId => $composableBuilder(
+    column: $table.quoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentJson => $composableBuilder(
+    column: $table.paymentJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalMinor => $composableBuilder(
+    column: $table.totalMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get currencyExponent => $composableBuilder(
+    column: $table.currencyExponent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get saleReference => $composableBuilder(
+    column: $table.saleReference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CheckoutIntentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CheckoutIntentsTable> {
+  $$CheckoutIntentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get idempotencyKey => $composableBuilder(
+    column: $table.idempotencyKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get outletId => $composableBuilder(
+    column: $table.outletId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get orderId => $composableBuilder(
+    column: $table.orderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get quoteId => $composableBuilder(
+    column: $table.quoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentJson => $composableBuilder(
+    column: $table.paymentJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalMinor => $composableBuilder(
+    column: $table.totalMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get currencyExponent => $composableBuilder(
+    column: $table.currencyExponent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get saleReference => $composableBuilder(
+    column: $table.saleReference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CheckoutIntentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CheckoutIntentsTable> {
+  $$CheckoutIntentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get idempotencyKey => $composableBuilder(
+    column: $table.idempotencyKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get outletId =>
+      $composableBuilder(column: $table.outletId, builder: (column) => column);
+
+  GeneratedColumn<String> get orderId =>
+      $composableBuilder(column: $table.orderId, builder: (column) => column);
+
+  GeneratedColumn<String> get quoteId =>
+      $composableBuilder(column: $table.quoteId, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentJson => $composableBuilder(
+    column: $table.paymentJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalMinor => $composableBuilder(
+    column: $table.totalMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<int> get currencyExponent => $composableBuilder(
+    column: $table.currencyExponent,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get saleReference => $composableBuilder(
+    column: $table.saleReference,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$CheckoutIntentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CheckoutIntentsTable,
+          CheckoutIntent,
+          $$CheckoutIntentsTableFilterComposer,
+          $$CheckoutIntentsTableOrderingComposer,
+          $$CheckoutIntentsTableAnnotationComposer,
+          $$CheckoutIntentsTableCreateCompanionBuilder,
+          $$CheckoutIntentsTableUpdateCompanionBuilder,
+          (
+            CheckoutIntent,
+            BaseReferences<
+              _$AppDatabase,
+              $CheckoutIntentsTable,
+              CheckoutIntent
+            >,
+          ),
+          CheckoutIntent,
+          PrefetchHooks Function()
+        > {
+  $$CheckoutIntentsTableTableManager(
+    _$AppDatabase db,
+    $CheckoutIntentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CheckoutIntentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CheckoutIntentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CheckoutIntentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> idempotencyKey = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<String> outletId = const Value.absent(),
+                Value<String> orderId = const Value.absent(),
+                Value<String> quoteId = const Value.absent(),
+                Value<String> paymentJson = const Value.absent(),
+                Value<int> totalMinor = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<int> currencyExponent = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> saleReference = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CheckoutIntentsCompanion(
+                idempotencyKey: idempotencyKey,
+                deviceId: deviceId,
+                outletId: outletId,
+                orderId: orderId,
+                quoteId: quoteId,
+                paymentJson: paymentJson,
+                totalMinor: totalMinor,
+                currency: currency,
+                currencyExponent: currencyExponent,
+                status: status,
+                saleReference: saleReference,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String idempotencyKey,
+                required String deviceId,
+                required String outletId,
+                required String orderId,
+                required String quoteId,
+                required String paymentJson,
+                required int totalMinor,
+                required String currency,
+                required int currencyExponent,
+                Value<String> status = const Value.absent(),
+                Value<String?> saleReference = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CheckoutIntentsCompanion.insert(
+                idempotencyKey: idempotencyKey,
+                deviceId: deviceId,
+                outletId: outletId,
+                orderId: orderId,
+                quoteId: quoteId,
+                paymentJson: paymentJson,
+                totalMinor: totalMinor,
+                currency: currency,
+                currencyExponent: currencyExponent,
+                status: status,
+                saleReference: saleReference,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CheckoutIntentsTable, CheckoutIntent>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CheckoutIntentsTable,
+                    CheckoutIntent
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CheckoutIntentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CheckoutIntentsTable,
+      CheckoutIntent,
+      $$CheckoutIntentsTableFilterComposer,
+      $$CheckoutIntentsTableOrderingComposer,
+      $$CheckoutIntentsTableAnnotationComposer,
+      $$CheckoutIntentsTableCreateCompanionBuilder,
+      $$CheckoutIntentsTableUpdateCompanionBuilder,
+      (
+        CheckoutIntent,
+        BaseReferences<_$AppDatabase, $CheckoutIntentsTable, CheckoutIntent>,
+      ),
+      CheckoutIntent,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1365,4 +2524,6 @@ class $AppDatabaseManager {
       $$RecoveryJobsTableTableManager(_db, _db.recoveryJobs);
   $$CartEntriesTableTableManager get cartEntries =>
       $$CartEntriesTableTableManager(_db, _db.cartEntries);
+  $$CheckoutIntentsTableTableManager get checkoutIntents =>
+      $$CheckoutIntentsTableTableManager(_db, _db.checkoutIntents);
 }

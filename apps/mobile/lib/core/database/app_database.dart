@@ -34,14 +34,37 @@ class CartEntries extends Table {
   Set<Column> get primaryKey => {menuId, variantId};
 }
 
-@DriftDatabase(tables: [RecoveryJobs, CartEntries])
+/// Durable checkout intent written before the finalize request leaves the
+/// device. The server key is `(outletId, deviceId, idempotencyKey)`; retaining
+/// the exact payload lets a restart resolve the unknown outcome with the same
+/// key instead of starting a second sale.
+class CheckoutIntents extends Table {
+  TextColumn get idempotencyKey => text()();
+  TextColumn get deviceId => text()();
+  TextColumn get outletId => text()();
+  TextColumn get orderId => text()();
+  TextColumn get quoteId => text()();
+  TextColumn get paymentJson => text()();
+  IntColumn get totalMinor => integer()();
+  TextColumn get currency => text()();
+  IntColumn get currencyExponent => integer()();
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+  TextColumn get saleReference => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {idempotencyKey};
+}
+
+@DriftDatabase(tables: [RecoveryJobs, CartEntries, CheckoutIntents])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -50,6 +73,9 @@ class AppDatabase extends _$AppDatabase {
       onUpgrade: (m, from, to) async {
         if (from < 2) {
           await m.createTable(cartEntries);
+        }
+        if (from < 3) {
+          await m.createTable(checkoutIntents);
         }
       },
     );
