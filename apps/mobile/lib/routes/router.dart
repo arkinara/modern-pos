@@ -1,14 +1,51 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/cart/cart_screen.dart';
+import '../features/catalog/catalog_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/shell/cashier_shell.dart';
 
-final appRouter = GoRouter(
+GoRouter createAppRouter() => GoRouter(
+  initialLocation: '/catalog',
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
-    GoRoute(
-      path: '/settings',
-      builder: (context, state) => const SettingsScreen(),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) =>
+          CashierShell(navigationShell: navigationShell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/catalog',
+              builder: (context, state) => const CatalogScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/cart',
+              builder: (context, state) => const CartScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/settings',
+              builder: (context, state) => const SettingsScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/dashboard',
+              builder: (context, state) => const DashboardScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
   ],
 );

@@ -300,15 +300,589 @@ class RecoveryJobsCompanion extends UpdateCompanion<RecoveryJob> {
   }
 }
 
+class $CartEntriesTable extends CartEntries
+    with TableInfo<$CartEntriesTable, CartEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CartEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _menuIdMeta = const VerificationMeta('menuId');
+  @override
+  late final GeneratedColumn<String> menuId = GeneratedColumn<String>(
+    'menu_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _variantIdMeta = const VerificationMeta(
+    'variantId',
+  );
+  @override
+  late final GeneratedColumn<String> variantId = GeneratedColumn<String>(
+    'variant_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemNameMeta = const VerificationMeta(
+    'itemName',
+  );
+  @override
+  late final GeneratedColumn<String> itemName = GeneratedColumn<String>(
+    'item_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _variantNameMeta = const VerificationMeta(
+    'variantName',
+  );
+  @override
+  late final GeneratedColumn<String> variantName = GeneratedColumn<String>(
+    'variant_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitPriceMinorMeta = const VerificationMeta(
+    'unitPriceMinor',
+  );
+  @override
+  late final GeneratedColumn<int> unitPriceMinor = GeneratedColumn<int>(
+    'unit_price_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('IDR'),
+  );
+  static const VerificationMeta _currencyExponentMeta = const VerificationMeta(
+    'currencyExponent',
+  );
+  @override
+  late final GeneratedColumn<int> currencyExponent = GeneratedColumn<int>(
+    'currency_exponent',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    menuId,
+    variantId,
+    itemName,
+    variantName,
+    unitPriceMinor,
+    quantity,
+    currency,
+    currencyExponent,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cart_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CartEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('menu_id')) {
+      context.handle(
+        _menuIdMeta,
+        menuId.isAcceptableOrUnknown(data['menu_id']!, _menuIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_menuIdMeta);
+    }
+    if (data.containsKey('variant_id')) {
+      context.handle(
+        _variantIdMeta,
+        variantId.isAcceptableOrUnknown(data['variant_id']!, _variantIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_variantIdMeta);
+    }
+    if (data.containsKey('item_name')) {
+      context.handle(
+        _itemNameMeta,
+        itemName.isAcceptableOrUnknown(data['item_name']!, _itemNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemNameMeta);
+    }
+    if (data.containsKey('variant_name')) {
+      context.handle(
+        _variantNameMeta,
+        variantName.isAcceptableOrUnknown(
+          data['variant_name']!,
+          _variantNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_variantNameMeta);
+    }
+    if (data.containsKey('unit_price_minor')) {
+      context.handle(
+        _unitPriceMinorMeta,
+        unitPriceMinor.isAcceptableOrUnknown(
+          data['unit_price_minor']!,
+          _unitPriceMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_unitPriceMinorMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    }
+    if (data.containsKey('currency_exponent')) {
+      context.handle(
+        _currencyExponentMeta,
+        currencyExponent.isAcceptableOrUnknown(
+          data['currency_exponent']!,
+          _currencyExponentMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {menuId, variantId};
+  @override
+  CartEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CartEntry(
+      menuId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}menu_id'],
+      )!,
+      variantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}variant_id'],
+      )!,
+      itemName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_name'],
+      )!,
+      variantName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}variant_name'],
+      )!,
+      unitPriceMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}unit_price_minor'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      currencyExponent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}currency_exponent'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CartEntriesTable createAlias(String alias) {
+    return $CartEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class CartEntry extends DataClass implements Insertable<CartEntry> {
+  final String menuId;
+  final String variantId;
+  final String itemName;
+  final String variantName;
+  final int unitPriceMinor;
+  final int quantity;
+  final String currency;
+  final int currencyExponent;
+  final DateTime updatedAt;
+  const CartEntry({
+    required this.menuId,
+    required this.variantId,
+    required this.itemName,
+    required this.variantName,
+    required this.unitPriceMinor,
+    required this.quantity,
+    required this.currency,
+    required this.currencyExponent,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['menu_id'] = Variable<String>(menuId);
+    map['variant_id'] = Variable<String>(variantId);
+    map['item_name'] = Variable<String>(itemName);
+    map['variant_name'] = Variable<String>(variantName);
+    map['unit_price_minor'] = Variable<int>(unitPriceMinor);
+    map['quantity'] = Variable<int>(quantity);
+    map['currency'] = Variable<String>(currency);
+    map['currency_exponent'] = Variable<int>(currencyExponent);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  CartEntriesCompanion toCompanion(bool nullToAbsent) {
+    return CartEntriesCompanion(
+      menuId: Value(menuId),
+      variantId: Value(variantId),
+      itemName: Value(itemName),
+      variantName: Value(variantName),
+      unitPriceMinor: Value(unitPriceMinor),
+      quantity: Value(quantity),
+      currency: Value(currency),
+      currencyExponent: Value(currencyExponent),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory CartEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CartEntry(
+      menuId: serializer.fromJson<String>(json['menuId']),
+      variantId: serializer.fromJson<String>(json['variantId']),
+      itemName: serializer.fromJson<String>(json['itemName']),
+      variantName: serializer.fromJson<String>(json['variantName']),
+      unitPriceMinor: serializer.fromJson<int>(json['unitPriceMinor']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      currency: serializer.fromJson<String>(json['currency']),
+      currencyExponent: serializer.fromJson<int>(json['currencyExponent']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'menuId': serializer.toJson<String>(menuId),
+      'variantId': serializer.toJson<String>(variantId),
+      'itemName': serializer.toJson<String>(itemName),
+      'variantName': serializer.toJson<String>(variantName),
+      'unitPriceMinor': serializer.toJson<int>(unitPriceMinor),
+      'quantity': serializer.toJson<int>(quantity),
+      'currency': serializer.toJson<String>(currency),
+      'currencyExponent': serializer.toJson<int>(currencyExponent),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  CartEntry copyWith({
+    String? menuId,
+    String? variantId,
+    String? itemName,
+    String? variantName,
+    int? unitPriceMinor,
+    int? quantity,
+    String? currency,
+    int? currencyExponent,
+    DateTime? updatedAt,
+  }) => CartEntry(
+    menuId: menuId ?? this.menuId,
+    variantId: variantId ?? this.variantId,
+    itemName: itemName ?? this.itemName,
+    variantName: variantName ?? this.variantName,
+    unitPriceMinor: unitPriceMinor ?? this.unitPriceMinor,
+    quantity: quantity ?? this.quantity,
+    currency: currency ?? this.currency,
+    currencyExponent: currencyExponent ?? this.currencyExponent,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  CartEntry copyWithCompanion(CartEntriesCompanion data) {
+    return CartEntry(
+      menuId: data.menuId.present ? data.menuId.value : this.menuId,
+      variantId: data.variantId.present ? data.variantId.value : this.variantId,
+      itemName: data.itemName.present ? data.itemName.value : this.itemName,
+      variantName: data.variantName.present
+          ? data.variantName.value
+          : this.variantName,
+      unitPriceMinor: data.unitPriceMinor.present
+          ? data.unitPriceMinor.value
+          : this.unitPriceMinor,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      currencyExponent: data.currencyExponent.present
+          ? data.currencyExponent.value
+          : this.currencyExponent,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CartEntry(')
+          ..write('menuId: $menuId, ')
+          ..write('variantId: $variantId, ')
+          ..write('itemName: $itemName, ')
+          ..write('variantName: $variantName, ')
+          ..write('unitPriceMinor: $unitPriceMinor, ')
+          ..write('quantity: $quantity, ')
+          ..write('currency: $currency, ')
+          ..write('currencyExponent: $currencyExponent, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    menuId,
+    variantId,
+    itemName,
+    variantName,
+    unitPriceMinor,
+    quantity,
+    currency,
+    currencyExponent,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CartEntry &&
+          other.menuId == this.menuId &&
+          other.variantId == this.variantId &&
+          other.itemName == this.itemName &&
+          other.variantName == this.variantName &&
+          other.unitPriceMinor == this.unitPriceMinor &&
+          other.quantity == this.quantity &&
+          other.currency == this.currency &&
+          other.currencyExponent == this.currencyExponent &&
+          other.updatedAt == this.updatedAt);
+}
+
+class CartEntriesCompanion extends UpdateCompanion<CartEntry> {
+  final Value<String> menuId;
+  final Value<String> variantId;
+  final Value<String> itemName;
+  final Value<String> variantName;
+  final Value<int> unitPriceMinor;
+  final Value<int> quantity;
+  final Value<String> currency;
+  final Value<int> currencyExponent;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const CartEntriesCompanion({
+    this.menuId = const Value.absent(),
+    this.variantId = const Value.absent(),
+    this.itemName = const Value.absent(),
+    this.variantName = const Value.absent(),
+    this.unitPriceMinor = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.currencyExponent = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CartEntriesCompanion.insert({
+    required String menuId,
+    required String variantId,
+    required String itemName,
+    required String variantName,
+    required int unitPriceMinor,
+    this.quantity = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.currencyExponent = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : menuId = Value(menuId),
+       variantId = Value(variantId),
+       itemName = Value(itemName),
+       variantName = Value(variantName),
+       unitPriceMinor = Value(unitPriceMinor);
+  static Insertable<CartEntry> custom({
+    Expression<String>? menuId,
+    Expression<String>? variantId,
+    Expression<String>? itemName,
+    Expression<String>? variantName,
+    Expression<int>? unitPriceMinor,
+    Expression<int>? quantity,
+    Expression<String>? currency,
+    Expression<int>? currencyExponent,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (menuId != null) 'menu_id': menuId,
+      if (variantId != null) 'variant_id': variantId,
+      if (itemName != null) 'item_name': itemName,
+      if (variantName != null) 'variant_name': variantName,
+      if (unitPriceMinor != null) 'unit_price_minor': unitPriceMinor,
+      if (quantity != null) 'quantity': quantity,
+      if (currency != null) 'currency': currency,
+      if (currencyExponent != null) 'currency_exponent': currencyExponent,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CartEntriesCompanion copyWith({
+    Value<String>? menuId,
+    Value<String>? variantId,
+    Value<String>? itemName,
+    Value<String>? variantName,
+    Value<int>? unitPriceMinor,
+    Value<int>? quantity,
+    Value<String>? currency,
+    Value<int>? currencyExponent,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return CartEntriesCompanion(
+      menuId: menuId ?? this.menuId,
+      variantId: variantId ?? this.variantId,
+      itemName: itemName ?? this.itemName,
+      variantName: variantName ?? this.variantName,
+      unitPriceMinor: unitPriceMinor ?? this.unitPriceMinor,
+      quantity: quantity ?? this.quantity,
+      currency: currency ?? this.currency,
+      currencyExponent: currencyExponent ?? this.currencyExponent,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (menuId.present) {
+      map['menu_id'] = Variable<String>(menuId.value);
+    }
+    if (variantId.present) {
+      map['variant_id'] = Variable<String>(variantId.value);
+    }
+    if (itemName.present) {
+      map['item_name'] = Variable<String>(itemName.value);
+    }
+    if (variantName.present) {
+      map['variant_name'] = Variable<String>(variantName.value);
+    }
+    if (unitPriceMinor.present) {
+      map['unit_price_minor'] = Variable<int>(unitPriceMinor.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (currencyExponent.present) {
+      map['currency_exponent'] = Variable<int>(currencyExponent.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CartEntriesCompanion(')
+          ..write('menuId: $menuId, ')
+          ..write('variantId: $variantId, ')
+          ..write('itemName: $itemName, ')
+          ..write('variantName: $variantName, ')
+          ..write('unitPriceMinor: $unitPriceMinor, ')
+          ..write('quantity: $quantity, ')
+          ..write('currency: $currency, ')
+          ..write('currencyExponent: $currencyExponent, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $RecoveryJobsTable recoveryJobs = $RecoveryJobsTable(this);
+  late final $CartEntriesTable cartEntries = $CartEntriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [recoveryJobs];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    recoveryJobs,
+    cartEntries,
+  ];
 }
 
 typedef $$RecoveryJobsTableCreateCompanionBuilder =
@@ -495,10 +1069,300 @@ typedef $$RecoveryJobsTableProcessedTableManager =
       RecoveryJob,
       PrefetchHooks Function()
     >;
+typedef $$CartEntriesTableCreateCompanionBuilder =
+    CartEntriesCompanion Function({
+      required String menuId,
+      required String variantId,
+      required String itemName,
+      required String variantName,
+      required int unitPriceMinor,
+      Value<int> quantity,
+      Value<String> currency,
+      Value<int> currencyExponent,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$CartEntriesTableUpdateCompanionBuilder =
+    CartEntriesCompanion Function({
+      Value<String> menuId,
+      Value<String> variantId,
+      Value<String> itemName,
+      Value<String> variantName,
+      Value<int> unitPriceMinor,
+      Value<int> quantity,
+      Value<String> currency,
+      Value<int> currencyExponent,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$CartEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $CartEntriesTable> {
+  $$CartEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get menuId => $composableBuilder(
+    column: $table.menuId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get variantId => $composableBuilder(
+    column: $table.variantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemName => $composableBuilder(
+    column: $table.itemName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get variantName => $composableBuilder(
+    column: $table.variantName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get unitPriceMinor => $composableBuilder(
+    column: $table.unitPriceMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get currencyExponent => $composableBuilder(
+    column: $table.currencyExponent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CartEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CartEntriesTable> {
+  $$CartEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get menuId => $composableBuilder(
+    column: $table.menuId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get variantId => $composableBuilder(
+    column: $table.variantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemName => $composableBuilder(
+    column: $table.itemName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get variantName => $composableBuilder(
+    column: $table.variantName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get unitPriceMinor => $composableBuilder(
+    column: $table.unitPriceMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get currencyExponent => $composableBuilder(
+    column: $table.currencyExponent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CartEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CartEntriesTable> {
+  $$CartEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get menuId =>
+      $composableBuilder(column: $table.menuId, builder: (column) => column);
+
+  GeneratedColumn<String> get variantId =>
+      $composableBuilder(column: $table.variantId, builder: (column) => column);
+
+  GeneratedColumn<String> get itemName =>
+      $composableBuilder(column: $table.itemName, builder: (column) => column);
+
+  GeneratedColumn<String> get variantName => $composableBuilder(
+    column: $table.variantName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get unitPriceMinor => $composableBuilder(
+    column: $table.unitPriceMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<int> get currencyExponent => $composableBuilder(
+    column: $table.currencyExponent,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$CartEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CartEntriesTable,
+          CartEntry,
+          $$CartEntriesTableFilterComposer,
+          $$CartEntriesTableOrderingComposer,
+          $$CartEntriesTableAnnotationComposer,
+          $$CartEntriesTableCreateCompanionBuilder,
+          $$CartEntriesTableUpdateCompanionBuilder,
+          (
+            CartEntry,
+            BaseReferences<_$AppDatabase, $CartEntriesTable, CartEntry>,
+          ),
+          CartEntry,
+          PrefetchHooks Function()
+        > {
+  $$CartEntriesTableTableManager(_$AppDatabase db, $CartEntriesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CartEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CartEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CartEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> menuId = const Value.absent(),
+                Value<String> variantId = const Value.absent(),
+                Value<String> itemName = const Value.absent(),
+                Value<String> variantName = const Value.absent(),
+                Value<int> unitPriceMinor = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<int> currencyExponent = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CartEntriesCompanion(
+                menuId: menuId,
+                variantId: variantId,
+                itemName: itemName,
+                variantName: variantName,
+                unitPriceMinor: unitPriceMinor,
+                quantity: quantity,
+                currency: currency,
+                currencyExponent: currencyExponent,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String menuId,
+                required String variantId,
+                required String itemName,
+                required String variantName,
+                required int unitPriceMinor,
+                Value<int> quantity = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<int> currencyExponent = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CartEntriesCompanion.insert(
+                menuId: menuId,
+                variantId: variantId,
+                itemName: itemName,
+                variantName: variantName,
+                unitPriceMinor: unitPriceMinor,
+                quantity: quantity,
+                currency: currency,
+                currencyExponent: currencyExponent,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CartEntriesTable, CartEntry>(table),
+                  BaseReferences<_$AppDatabase, $CartEntriesTable, CartEntry>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CartEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CartEntriesTable,
+      CartEntry,
+      $$CartEntriesTableFilterComposer,
+      $$CartEntriesTableOrderingComposer,
+      $$CartEntriesTableAnnotationComposer,
+      $$CartEntriesTableCreateCompanionBuilder,
+      $$CartEntriesTableUpdateCompanionBuilder,
+      (CartEntry, BaseReferences<_$AppDatabase, $CartEntriesTable, CartEntry>),
+      CartEntry,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$RecoveryJobsTableTableManager get recoveryJobs =>
       $$RecoveryJobsTableTableManager(_db, _db.recoveryJobs);
+  $$CartEntriesTableTableManager get cartEntries =>
+      $$CartEntriesTableTableManager(_db, _db.cartEntries);
 }

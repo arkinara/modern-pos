@@ -40,10 +40,45 @@ The app starts with a cashier sign-in screen. The refresh token and a generated 
 the 10-minute access token expires. A 401 on any protected request clears local credentials and
 returns to sign-in. The sign-out action revokes the server session and clears secure storage.
 
+## Cashier shell (#11)
+
+Bottom navigation exposes Catalog, Cart, Settings and Status (the existing dashboard health
+screen). Catalog is the initial destination. The cart badge shows the number of unsent lines.
+
+- Categories render as a horizontally scrolling chip row with an All option.
+- Search is debounced by 300 ms and matches item name, description and variant name locally over
+  the refreshed catalog.
+- A single-variant item is added directly. Multi-variant items open a required variant sheet.
+- Prices are integer minor units. The outlet currency and exponent come from
+  `GET /outlets/{id}/settings`; IDR exponent 0 renders as `Rp28.000` without float math.
+- Cart totals are display-only derived values. The server quote in #12 remains authoritative.
+- `availableUnits` from `GET /outlets/{id}/menu` is advisory. `null` means UNTRACKED and is
+  available. Zero units, disabled variants and archived items stay visible but cannot be added.
+
+### Unavailable cart lines (explicit policy)
+
+If a catalog refresh removes an item/variant or marks it unavailable, the unsent line is **kept and
+marked** with the reason. It is not silently deleted. The cashier can remove it from the cart. This
+policy is covered by `cashier_flow_test.dart` and `cart_controller_test.dart`.
+
+### Durability (AC3)
+
+The cart is persisted in Drift (`cart_entries`, schema version 2). Every add, quantity change,
+removal and clear writes to SQLite before publishing state. A catalog refresh does not touch the
+cart. A 401 still clears the mobile session and returns to sign-in, but the persisted unsent cart
+survives and reloads after re-authentication.
+
 ## Scope
 
-Authentication is implemented. Menu, stock and sale screens, offline reconciliation, printer
-transport and the full cashier shell arrive in #6/#7/#11/#12/#15.
+Implemented: authentication (#4), catalog browsing, variants, availability advisory, and the
+durable cart shell (#11). Deferred:
+
+- #12 checkout, quote/finalization, receipt and recovery UX. The app does **not** call
+  `order_quote` or `sales_finalize` in this ticket.
+- #13 stock UI, #14 sales history, #15/#16 printer transport.
+- Offline sale reconciliation/sync (#19). Catalog reads require the API; the cart stays local.
+- Final mobile visual sign-off: `PENDING — requires owner review (#2)`.
+- Physical device/emulator verification: `PENDING — requires device/emulator`.
 
 ## arm64 Linux hosts
 

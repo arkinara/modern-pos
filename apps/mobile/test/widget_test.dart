@@ -1,18 +1,13 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:modern_pos_api_client/api.dart' show User, UserRoleEnum;
 import 'package:modern_pos_mobile/app.dart';
-import 'package:modern_pos_mobile/core/providers.dart';
 import 'package:modern_pos_mobile/features/auth/auth_controller.dart';
+import 'package:modern_pos_mobile/features/cart/cart_controller.dart';
+import 'package:modern_pos_mobile/features/catalog/catalog_controller.dart';
+import 'package:modern_pos_mobile/core/providers.dart';
 
-class _FakeAuthController extends AuthController {
-  _FakeAuthController(this.session);
-
-  final AuthSession? session;
-
-  @override
-  Future<AuthSession?> build() async => session;
-}
+import 'support/fakes.dart';
 
 void main() {
   testWidgets('shows the sign-in screen when there is no session', (
@@ -21,7 +16,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          authControllerProvider.overrideWith(() => _FakeAuthController(null)),
+          authControllerProvider.overrideWith(() => FakeAuthController(null)),
         ],
         child: const ModernPosApp(),
       ),
@@ -37,13 +32,9 @@ void main() {
   testWidgets('renders the cashier shell for an authenticated session', (
     tester,
   ) async {
-    final session = AuthSession(
-      accessToken: 'access-token',
-      user: User(
-        id: '00000000-0000-4000-8000-000000000004',
-        email: 'cashier@example.test',
-        role: UserRoleEnum.CASHIER,
-        outletIds: const ['00000000-0000-4000-8000-000000000002'],
+    final catalog = FakeCatalogRepository(
+      testSnapshot(
+        menus: [testMenu(id: 'tea', name: 'Tea', categoryId: 'drinks')],
       ),
     );
 
@@ -51,8 +42,10 @@ void main() {
       ProviderScope(
         overrides: [
           authControllerProvider.overrideWith(
-            () => _FakeAuthController(session),
+            () => FakeAuthController(testSession()),
           ),
+          catalogRepositoryProvider.overrideWithValue(catalog),
+          cartRepositoryProvider.overrideWithValue(InMemoryCartRepository()),
           apiHealthProvider.overrideWith((ref) async => 'ok'),
         ],
         child: const ModernPosApp(),
@@ -61,7 +54,23 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Modern POS'), findsOneWidget);
+    expect(find.text('Catalog'), findsWidgets);
+    expect(find.text('Tea'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Cart'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Status'),
+      ),
+    );
+    await tester.pumpAndSettle();
     expect(find.text('Cashier shell'), findsOneWidget);
   });
 }

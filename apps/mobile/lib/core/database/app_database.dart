@@ -16,12 +16,44 @@ class RecoveryJobs extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
-@DriftDatabase(tables: [RecoveryJobs])
+/// Unsent cashier cart lines. Persisting these keeps work safe across catalog
+/// refreshes, app restarts and an expired mobile session. Checkout and server
+/// reconciliation belong to #12.
+class CartEntries extends Table {
+  TextColumn get menuId => text()();
+  TextColumn get variantId => text()();
+  TextColumn get itemName => text()();
+  TextColumn get variantName => text()();
+  IntColumn get unitPriceMinor => integer()();
+  IntColumn get quantity => integer().withDefault(const Constant(1))();
+  TextColumn get currency => text().withDefault(const Constant('IDR'))();
+  IntColumn get currencyExponent => integer().withDefault(const Constant(0))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {menuId, variantId};
+}
+
+@DriftDatabase(tables: [RecoveryJobs, CartEntries])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
+  AppDatabase.forTesting(super.executor);
+
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onCreate: (m) async => m.createAll(),
+      onUpgrade: (m, from, to) async {
+        if (from < 2) {
+          await m.createTable(cartEntries);
+        }
+      },
+    );
+  }
 }
 
 LazyDatabase _openConnection() {
