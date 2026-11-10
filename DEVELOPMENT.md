@@ -542,6 +542,60 @@ additive `Movement` contract fields and `apps/web/components/stock-screen.tsx`.
   `REVERSAL` movements remain in #17. This ticket only renders the existing `REVERSAL` movement
   type defensively.
 
+## Sales history, receipt detail and daily reporting (#14)
+
+Implementation lives in `apps/api/src/reports`, the typed clients and the web Sales/Reports
+screens. The two operations already existed in `API.openapi.json` (`reports_daily` and
+`reports_export`) with the `DailyReport` schema, so this ticket adds no contract change and no
+client regeneration.
+
+- Operations: `GET /v1/outlets/:outletId/reports/daily?from=YYYY-MM-DD&to=YYYY-MM-DD` returns a
+  `DailyReport`; `GET /v1/outlets/:outletId/reports/sales.csv?from=...&to=...` returns the same
+  period as RFC 4180 CSV with an attachment filename that includes the outlet slug and both
+  dates. Both are owner-only per the contract. A missing session returns `401`, a cashier
+  returns `403`, and a cross-outlet or cross-tenant outlet returns `404` through the global
+  outlet-scope guard and the business-filtered outlet lookup.
+- Reporting intervals are half-open in outlet-local time:
+  `[local start-of-day(from), local start-of-day(day after to))` converted to UTC with the
+  outlet's IANA timezone. Both `from` and `to` are inclusive local dates, and the response and
+  UI label the dates and timezone. A sale at 23:30 local belongs to that local day, not the next
+  UTC day; a sale at 00:30 local belongs to the new local day. Ranges longer than 366 inclusive
+  local days return `400 VALIDATION_ERROR`.
+- All money fields are integer currency minor units. Gross item sales is the sum of completed
+  `Sale.subtotalMinor` values in the period; service and tax stay separate. Reversal item value
+  and reversal count are `0` until reversal support (#17) exists, so net item sales equals gross
+  item sales today. Average bill is `gross item sales / sale count` using half-up integer
+  division on minor units and is `0` when the sale count is `0`.
+- Reports select `Sale.state = COMPLETED` explicitly. A `REVERSED` sale is never silently counted
+  as completed. Payment-method totals group the recorded payment amount by `CASH` and
+  `MANUAL_EXTERNAL`, and both methods are always present, with `0` when unused. Menu quantities
+  sum sold line quantities by the immutable sale-line menu item name, sorted by quantity
+  descending and then name.
+- Reconciliation method: the completed sale id is the join key. Each sale finalization writes one
+  `SALE` stock movement per consumed ingredient with `sourceId = sale.id`. For a period, the set
+  of distinct `SALE` movement `sourceId` values must equal the set of completed sale ids, and the
+  report's `saleCount`, gross, and payment totals must equal the sums over the same
+  `sales_list` rows. CSV rows are one per sale line with the sale-level totals repeated on each
+  row; summing `lineSubtotalMinor` and `paymentAmountMinor` reproduces the report figures.
+- The CSV writer always emits UTF-8 without a byte-order mark, quotes fields containing commas,
+  double quotes, CR or LF, and doubles embedded quotes. Text that begins with `=`, `+`, `-`, `@`,
+  TAB or CR is prefixed with a single quote so a spreadsheet cannot execute it as a formula.
+  Comma, quote and newline item names therefore survive a round-trip; the formula guard is the
+  only intentional text change and is documented here.
+- Sales history reuses `sales_list`: an owner sees the whole outlet and a cashier sees only their
+  own sales, matching the existing list and receipt scoping. Daily reports and the CSV export stay
+  owner-only, so a cashier receives `403` rather than a partial report.
+- The web Sales page filters by outlet-local dates, pages with the existing cursor, shows
+  date/time, reference, line items, payment method and recorded amount, service and tax, and
+  total. Selecting a row reads the immutable receipt from `sales_get`. The Reports page shows
+  gross, net, sale count, average bill, menu quantities and payment-method totals with visible
+  definitions, states the filter/timezone/sale count, and downloads the CSV. Loading, empty,
+  error and retry states use design tokens and the document never overflows horizontally from
+  320 to 1440 px.
+- Deferred: reversal records, reversal item value and reversal-count reporting (#17), printer
+  queue/reprints (#16), offline sync (#19), and production deployment (#18). This ticket adds no
+  sale, stock, web checkout or mobile write path.
+
 ## Receipt printer candidate and hardware validation (#15)
 
 The Android cashier can configure one candidate receipt-printer connection, connect, send a test

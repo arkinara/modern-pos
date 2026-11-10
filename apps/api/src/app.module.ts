@@ -10,6 +10,7 @@ import { HealthController } from './health/health.controller';
 import { OutletsModule } from './outlets/outlets.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RecipeModule } from './recipe/recipe.module';
+import { ReportsModule } from './reports/reports.module';
 import { SalesModule } from './sales/sales.module';
 import { SettingsModule } from './settings/settings.module';
 import { StockModule } from './stock/stock.module';
@@ -24,6 +25,7 @@ import { StockModule } from './stock/stock.module';
     StockModule,
     RecipeModule,
     SalesModule,
+    ReportsModule,
   ],
   controllers: [HealthController],
   providers: [
