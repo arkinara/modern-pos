@@ -99,6 +99,12 @@ export interface ApiClient {
     query?: { cursor?: string; limit?: number; from?: string; to?: string },
   ): Promise<ApiSchemas['SalePage']>;
   getSale(outletId: string, saleId: string): Promise<ApiSchemas['Sale']>;
+  reverseSale(
+    outletId: string,
+    saleId: string,
+    idempotencyKey: string,
+    reversal: ApiSchemas['ReversalWrite'],
+  ): Promise<ApiSchemas['Reversal']>;
   getDailyReport(
     outletId: string,
     query: { from: string; to: string },
@@ -331,6 +337,17 @@ export function createApiClient({
     getSale: (outletId, saleId) =>
       request<ApiSchemas['Sale']>(
         `/v1/outlets/${encodeURIComponent(outletId)}/sales/${encodeURIComponent(saleId)}`,
+      ),
+    reverseSale: (outletId, saleId, idempotencyKey, reversal) =>
+      request<ApiSchemas['Reversal']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/sales/${encodeURIComponent(
+          saleId,
+        )}/reversals`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(reversal),
+        },
       ),
     getDailyReport: (outletId, query) =>
       request<ApiSchemas['DailyReport']>(

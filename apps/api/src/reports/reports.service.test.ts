@@ -98,7 +98,17 @@ function sale(overrides: Partial<SaleFixture> = {}): SaleFixture {
   };
 }
 
-function createFakePrisma(sales: SaleFixture[]): PrismaService {
+interface ReversalFixture {
+  id: string;
+  businessId: string;
+  outletId: string;
+  saleId: string;
+  reason: string;
+  createdAt: Date;
+  sale: SaleFixture;
+}
+
+function createFakePrisma(sales: SaleFixture[], reversals: ReversalFixture[] = []): PrismaService {
   return {
     outlet: {
       findFirst: async (args: { where: { id: string; businessId: string } }) =>
@@ -112,6 +122,39 @@ function createFakePrisma(sales: SaleFixture[]): PrismaService {
               currencyExponent: 0,
             }
           : null,
+    },
+    saleReversal: {
+      findMany: async (args: {
+        where: {
+          businessId: string;
+          outletId: string;
+          createdAt: { gte: Date; lt: Date };
+        };
+      }) => {
+        return reversals
+          .filter(
+            (row) =>
+              row.businessId === args.where.businessId &&
+              row.outletId === args.where.outletId &&
+              row.createdAt.getTime() >= args.where.createdAt.gte.getTime() &&
+              row.createdAt.getTime() < args.where.createdAt.lt.getTime(),
+          )
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+          .map((row) => ({
+            id: row.id,
+            saleId: row.saleId,
+            reason: row.reason,
+            createdAt: row.createdAt,
+            sale: structuredClone({
+              reference: row.sale.reference,
+              currency: row.sale.currency,
+              currencyExponent: row.sale.currencyExponent,
+              timezone: row.sale.timezone,
+              subtotalMinor: row.sale.subtotalMinor,
+              lines: row.sale.lines,
+            }),
+          }));
+      },
     },
     sale: {
       findMany: async (args: {
@@ -306,6 +349,65 @@ test('reversed sales are excluded by the explicit completed-state filter', async
 
   assert.equal(report.saleCount, 1);
   assert.equal(report.grossItemSalesMinor, 10000);
+});
+
+test('reversals reduce net item sales without changing sale count or gross', async () => {
+  const completed = sale({
+    id: '00000000-0000-4000-8000-000000000232',
+    reference: 'SALE-REVERSED-ONE',
+    subtotalMinor: 18000n,
+    lines: [
+      {
+        id: '00000000-0000-4000-8000-000000000233',
+        name: 'Iced Coffee',
+        variantName: 'Regular',
+        quantity: 1,
+        unitPriceMinor: 18000n,
+        lineSubtotalMinor: 18000n,
+      },
+    ],
+  });
+  const reversal: ReversalFixture = {
+    id: '00000000-0000-4000-8000-000000000234',
+    businessId: BUSINESS_ID,
+    outletId: OUTLET_ID,
+    saleId: completed.id,
+    reason: 'Returned after pickup',
+    createdAt: new Date('2026-01-02T05:00:00.000Z'),
+    sale: completed,
+  };
+  const service = new ReportsService(createFakePrisma([completed], [reversal]));
+
+  const report = await service.dailyReport(
+    OUTLET_ID,
+    { from: '2026-01-02', to: '2026-01-02' },
+    owner(),
+  );
+
+  assert.equal(report.grossItemSalesMinor, 18000);
+  assert.equal(report.reversalItemValueMinor, 18000);
+  assert.equal(report.netItemSalesMinor, 0);
+  assert.equal(report.saleCount, 1);
+  assert.equal(report.reversalCount, 1);
+  assert.equal(report.averageBillMinor, 18000);
+
+  const exported = await service.exportCsv(
+    OUTLET_ID,
+    { from: '2026-01-02', to: '2026-01-02' },
+    owner(),
+  );
+  const table = parseCsv(exported.csv);
+  assert.equal(exported.saleCount, 1);
+  assert.equal(exported.reversalCount, 1);
+  assert.equal(table.length, 3);
+  const reversalRow = table.find((row) => row[22] === 'REVERSAL');
+  assert.ok(reversalRow);
+  assert.equal(reversalRow[0], 'SALE-REVERSED-ONE');
+  assert.equal(reversalRow[4], 'REVERSED');
+  assert.equal(reversalRow[9], '-1');
+  assert.equal(reversalRow[11], '-18000');
+  assert.equal(reversalRow[15], '-18000');
+  assert.equal(reversalRow[23], 'Returned after pickup');
 });
 
 test('a 23:30 local sale belongs to its local day, not the following UTC day', async () => {

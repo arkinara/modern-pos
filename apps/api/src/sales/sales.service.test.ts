@@ -141,6 +141,20 @@ interface SaleRow {
   payment: PaymentRow | null;
 }
 
+interface ReversalRow {
+  id: string;
+  businessId: string;
+  outletId: string;
+  saleId: string;
+  actorId: string;
+  reason: string;
+  restock: unknown;
+  externalRefundPerformed: boolean;
+  idempotencyKey: string;
+  requestHash: string;
+  createdAt: Date;
+}
+
 interface CheckoutRow {
   id: string;
   businessId: string;
@@ -219,6 +233,7 @@ interface FakeState {
   quotes: QuoteRow[];
   sales: SaleRow[];
   checkouts: CheckoutRow[];
+  reversals: ReversalRow[];
 }
 
 function clone<T>(value: T): T {
@@ -280,6 +295,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
     quotes: [],
     sales: [],
     checkouts: [],
+    reversals: [],
   };
 
   let sequence = 0;
@@ -292,11 +308,15 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
     lines: clone(order.lines).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
   });
 
-  const withReceipt = (sale: SaleRow) => ({
-    ...clone(sale),
-    lines: clone(sale.lines),
-    payment: sale.payment ? clone(sale.payment) : null,
-  });
+  const withReceipt = (sale: SaleRow) => {
+    const reversal = state.reversals.find((row) => row.saleId === sale.id);
+    return {
+      ...clone(sale),
+      lines: clone(sale.lines),
+      payment: sale.payment ? clone(sale.payment) : null,
+      reversal: reversal ? clone(reversal) : null,
+    };
+  };
 
   const matchesOrder = (
     order: OrderRow,
@@ -408,7 +428,10 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
           version?: number;
           quantity?: { gte: Prisma.Decimal };
         };
-        data: { quantity: Prisma.Decimal; version: { increment: number } };
+        data: {
+          quantity: Prisma.Decimal | { increment: Prisma.Decimal };
+          version: { increment: number };
+        };
       }) => {
         const row = state.balances.find(
           (balance) =>
@@ -427,9 +450,31 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
           return { count: 0 };
         }
 
-        row.quantity = args.data.quantity.toString();
+        const next =
+          args.data.quantity instanceof Prisma.Decimal
+            ? args.data.quantity
+            : new Prisma.Decimal(row.quantity).plus(args.data.quantity.increment);
+        row.quantity = next.toString();
         row.version += args.data.version.increment;
         return { count: 1 };
+      },
+      create: async (args: {
+        data: {
+          outletId: string;
+          stockItemId: string;
+          quantity: Prisma.Decimal;
+          version: number;
+        };
+      }) => {
+        const row = {
+          id: `balance-${state.balances.length + 1}`,
+          outletId: args.data.outletId,
+          stockItemId: args.data.stockItemId,
+          quantity: args.data.quantity.toString(),
+          version: args.data.version,
+        };
+        state.balances.push(row);
+        return clone(row);
       },
     },
     stockMovement: {
@@ -692,6 +737,65 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         return rows.slice(0, args.take).map(withReceipt);
       },
     },
+    saleReversal: {
+      findUnique: async (args: {
+        where:
+          | { saleId: string }
+          | {
+              outletId_idempotencyKey: {
+                outletId: string;
+                idempotencyKey: string;
+              };
+            };
+      }) => {
+        const where = args.where as {
+          saleId?: string;
+          outletId_idempotencyKey?: { outletId: string; idempotencyKey: string };
+        };
+        const row = where.saleId
+          ? state.reversals.find((reversal) => reversal.saleId === where.saleId)
+          : state.reversals.find(
+              (reversal) =>
+                reversal.outletId === where.outletId_idempotencyKey?.outletId &&
+                reversal.idempotencyKey === where.outletId_idempotencyKey?.idempotencyKey,
+            );
+        return row ? clone(row) : null;
+      },
+      create: async (args: {
+        data: Omit<ReversalRow, 'id' | 'createdAt' | 'externalRefundPerformed'> & {
+          externalRefundPerformed?: boolean;
+        };
+      }) => {
+        if (state.reversals.some((reversal) => reversal.saleId === args.data.saleId)) {
+          throw new Prisma.PrismaClientKnownRequestError('duplicate sale reversal', {
+            code: 'P2002',
+            clientVersion: '6.19.3',
+          });
+        }
+
+        if (
+          state.reversals.some(
+            (reversal) =>
+              reversal.outletId === args.data.outletId &&
+              reversal.idempotencyKey === args.data.idempotencyKey,
+          )
+        ) {
+          throw new Prisma.PrismaClientKnownRequestError('duplicate reversal key', {
+            code: 'P2002',
+            clientVersion: '6.19.3',
+          });
+        }
+
+        const row: ReversalRow = {
+          ...clone(args.data),
+          externalRefundPerformed: args.data.externalRefundPerformed ?? false,
+          id: nextId(),
+          createdAt: now,
+        };
+        state.reversals.push(row);
+        return clone(row);
+      },
+    },
     checkoutRequest: {
       findUnique: async (args: {
         where: {
@@ -739,6 +843,11 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
     if (sql.includes('"orders"')) {
       const id = String(values[0]);
       return state.orders.filter((order) => order.id === id).map((order) => ({ id: order.id }));
+    }
+
+    if (sql.includes('"sales"')) {
+      const id = String(values[0]);
+      return state.sales.filter((sale) => sale.id === id).map((sale) => ({ id: sale.id }));
     }
 
     if (sql.includes('"stock_balances"')) {
@@ -1975,6 +2084,371 @@ test('simultaneous finalizations cannot oversell; only one sale and movement com
   assert.equal(state.movements.length, 1);
   assert.equal(state.movements[0]?.delta, '-6');
   assert.equal(state.movements[0]?.sourceId, state.sales[0]?.id);
+});
+
+test('owner reversal validates reason, keeps the sale immutable, and links the reversal', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 2 },
+  ]);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(36000),
+    },
+    cashier,
+  );
+  const owner = user(Role.OWNER, OWNER_ID);
+  const saleBefore = structuredClone(state.sales[0]!);
+  const movementsBefore = state.movements.length;
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_THREE,
+        { reason: 'no', restock: [] },
+        owner,
+      ),
+    (error: unknown) => statusOf(error) === 400 && codeOf(error) === 'VALIDATION_ERROR',
+  );
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_THREE,
+        { reason: 'Customer changed mind', restock: [] },
+        cashier,
+      ),
+    (error: unknown) => statusOf(error) === 403 && codeOf(error) === 'FORBIDDEN',
+  );
+
+  const reversal = await service.reverse(
+    OUTLET_ID,
+    finalized.sale.id,
+    KEY_THREE,
+    { reason: '  Customer changed mind  ', restock: [] },
+    owner,
+  );
+
+  assert.equal(reversal.saleId, finalized.sale.id);
+  assert.equal(reversal.reason, 'Customer changed mind');
+  assert.equal(reversal.externalRefundPerformed, false);
+  assert.deepEqual(reversal.restock, []);
+  assert.equal(state.reversals.length, 1);
+  assert.equal(state.movements.length, movementsBefore);
+  assert.equal(state.sales[0]?.state, 'COMPLETED');
+  assert.deepEqual(
+    {
+      totals: state.sales[0]?.totalMinor,
+      subtotal: state.sales[0]?.subtotalMinor,
+      state: state.sales[0]?.state,
+      lines: state.sales[0]?.lines,
+    },
+    {
+      totals: saleBefore.totalMinor,
+      subtotal: saleBefore.subtotalMinor,
+      state: saleBefore.state,
+      lines: saleBefore.lines,
+    },
+  );
+
+  const reread = await service.getSale(OUTLET_ID, finalized.sale.id, owner);
+  assert.equal(reread.state, 'COMPLETED');
+  assert.equal(reread.totals.totalMinor, 36000);
+  assert.equal(reread.reversal?.id, reversal.id);
+  assert.equal(reread.reversal?.externalRefundPerformed, false);
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        '00000000-0000-4000-8000-0000000000ff',
+        KEY_ONE,
+        { reason: 'Unknown sale', restock: [] },
+        owner,
+      ),
+    (error: unknown) => statusOf(error) === 404 && codeOf(error) === 'NOT_FOUND',
+  );
+});
+
+test('a sale that is not completed cannot be reversed', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 1 },
+  ]);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(18000),
+    },
+    cashier,
+  );
+  state.sales[0]!.state = SaleState.REVERSED;
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_THREE,
+        { reason: 'Legacy reversed sale', restock: [] },
+        user(Role.OWNER, OWNER_ID),
+      ),
+    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'SALE_NOT_COMPLETED',
+  );
+});
+
+test('reversal restocks only explicitly selected sold items and rejects invalid selections', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const untouchedStockId = '00000000-0000-4000-8000-000000000052';
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  addStockItem(state, STOCK_SECOND_ID, 'Fresh Milk');
+  addStockItem(state, untouchedStockId, 'Paper Cups');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  setBalance(state, STOCK_SECOND_ID, '20');
+  setBalance(state, untouchedStockId, '50');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+    { stockItemId: STOCK_SECOND_ID, quantityPerSaleUnit: '2' },
+  ]);
+
+  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 2 },
+  ]);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(36000),
+    },
+    cashier,
+  );
+  const owner = user(Role.OWNER, OWNER_ID);
+  const movementsBefore = state.movements.length;
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_THREE,
+        {
+          reason: 'Returned beans only',
+          restock: [{ stockItemId: untouchedStockId, quantity: '1' }],
+        },
+        owner,
+      ),
+    (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'RESTOCK_ITEM_NOT_SOLD',
+  );
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_THREE,
+        { reason: 'Returned beans only', restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '0' }] },
+        owner,
+      ),
+    (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'INVALID_RESTOCK_QUANTITY',
+  );
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_THREE,
+        {
+          reason: 'Returned too many beans',
+          restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '7' }],
+        },
+        owner,
+      ),
+    (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'RESTOCK_EXCEEDS_SOLD',
+  );
+
+  const reversal = await service.reverse(
+    OUTLET_ID,
+    finalized.sale.id,
+    KEY_THREE,
+    {
+      reason: 'Returned beans only',
+      restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '4' }],
+    },
+    owner,
+  );
+
+  assert.deepEqual(reversal.restock, [{ stockItemId: STOCK_SHARED_ID, quantity: '4' }]);
+  assert.equal(state.movements.length, movementsBefore + 1);
+  const movement = state.movements.at(-1);
+  assert.equal(movement?.type, 'REVERSAL');
+  assert.equal(movement?.delta, '4');
+  assert.equal(movement?.sourceId, reversal.id);
+  assert.equal(
+    state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity,
+    '8',
+  );
+  assert.equal(
+    state.balances.find((row) => row.stockItemId === STOCK_SECOND_ID)?.quantity,
+    '16',
+  );
+  assert.equal(
+    state.balances.find((row) => row.stockItemId === untouchedStockId)?.quantity,
+    '50',
+  );
+});
+
+test('reversal idempotency replays the same response and rejects a second key', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 1 },
+  ]);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(18000),
+    },
+    cashier,
+  );
+  const owner = user(Role.OWNER, OWNER_ID);
+  const payload = {
+    reason: 'Returned item',
+    restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '3' }],
+  };
+
+  const first = await service.reverse(OUTLET_ID, finalized.sale.id, KEY_THREE, payload, owner);
+  const movementsAfterFirst = state.movements.length;
+  const replay = await service.reverse(OUTLET_ID, finalized.sale.id, KEY_THREE, payload, owner);
+
+  assert.deepEqual(replay, first);
+  assert.equal(state.reversals.length, 1);
+  assert.equal(state.movements.length, movementsAfterFirst);
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_ONE,
+        { reason: 'Different key', restock: [] },
+        owner,
+      ),
+    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'SALE_ALREADY_REVERSED',
+  );
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_THREE,
+        { reason: 'Changed payload', restock: [] },
+        owner,
+      ),
+    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'IDEMPOTENCY_CONFLICT',
+  );
+});
+
+test('concurrent reversal with the same key creates one reversal and one stock movement set', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 1 },
+  ]);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(18000),
+    },
+    cashier,
+  );
+  const owner = user(Role.OWNER, OWNER_ID);
+  const payload = {
+    reason: 'Concurrent retry',
+    restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '3' }],
+  };
+
+  let tail = Promise.resolve();
+  const original = prisma.$transaction.bind(prisma) as unknown as (
+    operation: (tx: unknown) => Promise<unknown>,
+    options?: unknown,
+  ) => Promise<unknown>;
+  (prisma as unknown as { $transaction: typeof original }).$transaction = async (
+    operation: (tx: unknown) => Promise<unknown>,
+    options?: unknown,
+  ) => {
+    const previous = tail;
+    let release: () => void = () => undefined;
+    tail = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+
+    try {
+      return await original(operation, options);
+    } finally {
+      release();
+    }
+  };
+
+  const responses = await Promise.all([
+    service.reverse(OUTLET_ID, finalized.sale.id, KEY_THREE, payload, owner),
+    service.reverse(OUTLET_ID, finalized.sale.id, KEY_THREE, payload, owner),
+  ]);
+
+  assert.equal(responses[0]?.id, responses[1]?.id);
+  assert.equal(state.reversals.length, 1);
+  assert.equal(state.movements.filter((movement) => movement.type === 'REVERSAL').length, 1);
+  assert.equal(
+    state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity,
+    '10',
+  );
 });
 
 test('serialization and deadlock retries are bounded at three attempts before a retryable 503', async () => {

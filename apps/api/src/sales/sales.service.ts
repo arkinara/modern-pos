@@ -1052,6 +1052,10 @@ export class SalesService {
     const existing = await tx.saleReversal.findUnique({ where: { saleId } });
 
     if (existing) {
+      if (existing.idempotencyKey === idempotencyKey) {
+        return this.replayReversal(existing, saleId, hash);
+      }
+
       throw apiError(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed');
     }
 

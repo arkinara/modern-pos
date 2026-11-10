@@ -147,3 +147,61 @@ export function describeReportError(error: unknown, fallback: string): string {
 
   return `${fallback} (HTTP ${error.status})`;
 }
+
+export function describeReversalError(error: unknown, fallback: string): string {
+  if (!(error instanceof ApiError)) {
+    return fallback;
+  }
+
+  const code = apiErrorCode(error);
+
+  if (error.status === 401) {
+    return 'Your session expired. Sign in again.';
+  }
+
+  if (error.status === 403) {
+    return 'Only an owner can reverse a sale.';
+  }
+
+  if (error.status === 404) {
+    return 'That sale could not be found for this outlet. Reload and try again.';
+  }
+
+  if (error.status === 409) {
+    if (code === 'SALE_ALREADY_REVERSED') {
+      return 'This sale was already reversed. Reload the receipt to see the recorded reversal.';
+    }
+
+    if (code === 'IDEMPOTENCY_CONFLICT') {
+      return 'This retry reused a key with different values. Change the form, then submit again.';
+    }
+
+    if (code === 'IDEMPOTENCY_IN_PROGRESS') {
+      return 'This reversal is still being processed. Retry the same request in a moment.';
+    }
+
+    return 'Another change saved first. Reload the receipt and try again.';
+  }
+
+  if (error.status === 422) {
+    if (code === 'RESTOCK_ITEM_NOT_SOLD') {
+      return 'Only stock items consumed by this sale can be restocked.';
+    }
+
+    if (code === 'RESTOCK_EXCEEDS_SOLD') {
+      return 'A restock quantity is higher than the amount this sale consumed.';
+    }
+
+    if (code === 'INVALID_RESTOCK_QUANTITY') {
+      return 'A restock quantity is invalid for that stock item.';
+    }
+
+    return 'The server rejected these reversal values. Review the reason and quantities.';
+  }
+
+  if (error.status === 400) {
+    return 'The server rejected this reversal. Use a reason of 3 to 500 characters and valid quantities.';
+  }
+
+  return `${fallback} (HTTP ${error.status})`;
+}

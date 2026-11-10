@@ -31,7 +31,7 @@ const DEFINITIONS = [
   {
     term: 'Reversal item value',
     detail:
-      'Item subtotal of reversals created in the period. Reversal support is not implemented yet, so this value is 0.',
+      'Item subtotal of reversals recorded in the period. Reversals reduce net item sales but never change gross item sales or the sale count.',
   },
   {
     term: 'Net item sales',
@@ -154,8 +154,8 @@ export function ReportsScreen() {
       <header>
         <h1 className="text-3xl font-semibold tracking-tight text-text">Reports</h1>
         <p className="mt-2 max-w-3xl text-sm text-muted">
-          Daily reconciliation from completed records created by the Android app. Figures use the
-          outlet IANA timezone and half-open local-day intervals.
+          Daily reconciliation from completed records and linked reversals created by the Android
+          app. Figures use the outlet IANA timezone and half-open local-day intervals.
         </p>
       </header>
 
@@ -276,6 +276,11 @@ export function ReportsScreen() {
                   definition="Completed item subtotals in this period; service and tax excluded."
                 />
                 <MetricCard
+                  label="Reversal item value"
+                  value={money(report.reversalItemValueMinor)}
+                  definition="Reversals recorded in the period, labelled separately from sales."
+                />
+                <MetricCard
                   label="Net item sales"
                   value={money(report.netItemSalesMinor)}
                   definition="Gross item sales minus reversal item value."
@@ -286,6 +291,11 @@ export function ReportsScreen() {
                   definition="Completed sales recorded inside the outlet-local period."
                 />
                 <MetricCard
+                  label="Reversal count"
+                  value={formatQuantity(report.reversalCount)}
+                  definition="Reversals recorded in the period. Reversals never increase sale count."
+                />
+                <MetricCard
                   label="Average bill"
                   value={money(report.averageBillMinor)}
                   definition="Gross item sales ÷ sale count, half-up; 0 when there are no sales."
@@ -293,8 +303,8 @@ export function ReportsScreen() {
               </div>
               <p className="text-xs text-muted">
                 Generated {formatDateTimeInZone(report.generatedAt, report.timezone)} in{' '}
-                {report.timezone}. Reversal item value is {money(report.reversalItemValueMinor)} and
-                reversal count is {report.reversalCount} until reversal support lands.
+                {report.timezone}. Reversal item value is {money(report.reversalItemValueMinor)}{' '}
+                across {report.reversalCount} {report.reversalCount === 1 ? 'reversal' : 'reversals'}.
               </p>
             </CardContent>
           </Card>
@@ -410,8 +420,8 @@ export function ReportsScreen() {
 
       <p className="flex items-start gap-2 text-xs text-muted">
         <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-        Report totals reconcile to completed sales only. Sale and stock movement references share
-        the completed sale id. Reversal and production deployment work remain deferred.
+        Report totals reconcile completed sales to linked reversals. A reversal never rewrites the
+        original sale row, and stock moves only for explicitly selected restock items.
       </p>
     </div>
   );
