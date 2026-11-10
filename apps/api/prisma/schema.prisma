@@ -1,5 +1,5 @@
-// Identity, authorization, business settings, catalog, stock, recipes and sales schema.
-// Reports and printing domain models land in later tickets.
+// Identity, authorization, business settings, catalog, stock, recipes, sales,
+// reports and printing metadata schema.
 
 generator client {
   provider = "prisma-client-js"
@@ -59,6 +59,20 @@ enum PaymentStatus {
   RECORDED
 }
 
+enum PrinterTransport {
+  BLUETOOTH
+  LAN
+  USB
+}
+
+enum PrintJobState {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  UNKNOWN
+}
+
 model Business {
   id        String   @id @default(uuid()) @db.Uuid
   name      String
@@ -75,6 +89,8 @@ model Business {
   quotes           Quote[]
   sales            Sale[]
   checkoutRequests CheckoutRequest[]
+  printers         Printer[]
+  printJobs        PrintJob[]
 
   @@map("businesses")
 }
@@ -106,6 +122,8 @@ model Outlet {
   quotes           Quote[]
   sales            Sale[]
   checkoutRequests CheckoutRequest[]
+  printers         Printer[]
+  printJobs        PrintJob[]
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -454,6 +472,7 @@ model Sale {
   lines            SaleLine[]
   payment          PaymentRecord?
   checkoutRequests CheckoutRequest[]
+  printJobs        PrintJob[]
 
   @@unique([outletId, reference])
   @@index([businessId, outletId, completedAt])
@@ -514,4 +533,58 @@ model CheckoutRequest {
   @@unique([outletId, deviceId, idempotencyKey])
   @@index([saleId])
   @@map("checkout_requests")
+}
+
+// Device-owned printer configuration. Hardware support is verified per
+// model/transport; persisted enum values do not imply every transport ships.
+model Printer {
+  id                 String           @id @default(uuid()) @db.Uuid
+  businessId         String           @db.Uuid
+  outletId           String           @db.Uuid
+  deviceId           String           @db.Uuid
+  name               String
+  model              String
+  transport          PrinterTransport
+  paperWidthMm       Int
+  encoding           String
+  connectionSettings Json             @default("{}")
+  revision           Int              @default(1)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  business  Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet    Outlet     @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  printJobs PrintJob[]
+
+  @@unique([outletId, deviceId, name])
+  @@index([outletId, deviceId])
+  @@map("printers")
+}
+
+// Diagnostic mirror of the local print queue. The device owns execution; the
+// API record must never determine sale completion or paper delivery.
+model PrintJob {
+  id              String        @id @db.Uuid
+  businessId      String        @db.Uuid
+  outletId        String        @db.Uuid
+  saleId          String        @db.Uuid
+  deviceId        String        @db.Uuid
+  printerConfigId String        @db.Uuid
+  idempotencyKey  String        @db.Uuid
+  state           PrintJobState @default(QUEUED)
+  copy            Boolean       @default(false)
+  attempts        Int           @default(0)
+  lastError       String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  sale     Sale     @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  printer  Printer  @relation(fields: [printerConfigId], references: [id], onDelete: Restrict)
+
+  @@unique([outletId, deviceId, idempotencyKey])
+  @@index([saleId])
+  @@index([outletId, deviceId])
+  @@map("print_jobs")
 }

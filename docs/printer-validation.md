@@ -17,7 +17,7 @@ command or print result was verified on hardware. Every hardware-dependent item 
 | Android runtime permission request/re-request | Implemented; on-device behaviour PENDING | `printer_permissions.dart`, `MainActivity.kt`, `AndroidManifest.xml` |
 | Cashier configuration, connect, test print and failure states | Implemented and widget tested | `apps/mobile/lib/features/printing/printer_screen.dart`, `apps/mobile/test/printer_screen_test.dart` |
 | LAN / USB transports | **Not implemented. Not verified on this project.** | UI states this explicitly and disables connect/test |
-| Print queue, retry, reprint and receipt layout policy | Out of scope (#16) | — |
+| Print queue, retry, reprint and receipt layout policy | Implemented and unit/widget tested on this host | `docs/receipt-printing.md`, `apps/mobile/test/print_queue_service_test.dart`, `receipt_document_test.dart` |
 
 The cashier app never reports a physical print success. A "Test print bytes sent" message only
 means the byte stream was accepted by the transport socket.
@@ -120,7 +120,7 @@ host. They do not prove printer behaviour.
 - The adapter sends bytes and assumes the printer accepts them. It does not read status back
   (paper out, cover open, buffer full); that requires a model-specific status query.
 - Cut and cash-drawer commands are built but their support is model dependent.
-- No print queue, retry scheduling or reprint action (ticket #16).
+- Physical queue delivery remains unverified until the hardware checklist is run. Software-only queue states, restart recovery, retry policy, COPY reprints and audit are covered by #16 tests.
 - LAN and USB transports are Phase 2.
 - The app does not create or manage `printing_*` server records for this adapter; the OpenAPI
   contract was not changed by this ticket.

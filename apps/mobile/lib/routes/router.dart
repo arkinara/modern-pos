@@ -4,6 +4,7 @@ import '../features/cart/cart_screen.dart';
 import '../features/checkout/checkout_screen.dart';
 import '../features/catalog/catalog_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
+import '../features/printing/print_queue_screen.dart';
 import '../features/printing/printer_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/cashier_shell.dart';
@@ -40,6 +41,10 @@ GoRouter createAppRouter() => GoRouter(
                 GoRoute(
                   path: 'printer',
                   builder: (context, state) => const PrinterScreen(),
+                ),
+                GoRoute(
+                  path: 'print-queue',
+                  builder: (context, state) => const PrintQueueScreen(),
                 ),
               ],
             ),

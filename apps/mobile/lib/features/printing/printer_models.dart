@@ -112,11 +112,17 @@ class PrinterConfig {
     required this.connection,
     required this.paperWidth,
     required this.encoding,
+    this.serverId,
   });
 
   final PrinterConnection connection;
   final PaperWidth paperWidth;
   final PrinterEncoding encoding;
+
+  /// Server printer-configuration id when the configuration was linked to the
+  /// `printing_*` contract. Null means the local queue works but job metadata
+  /// cannot be mirrored to the API.
+  final String? serverId;
 
   PrinterTransportType get transport => connection.transport;
 
@@ -124,11 +130,13 @@ class PrinterConfig {
     PrinterConnection? connection,
     PaperWidth? paperWidth,
     PrinterEncoding? encoding,
+    String? serverId,
   }) {
     return PrinterConfig(
       connection: connection ?? this.connection,
       paperWidth: paperWidth ?? this.paperWidth,
       encoding: encoding ?? this.encoding,
+      serverId: serverId ?? this.serverId,
     );
   }
 
@@ -137,6 +145,7 @@ class PrinterConfig {
     'connection': connection.toJson(),
     'paperWidthMm': paperWidth.millimetres,
     'encoding': encoding.wireName,
+    if (serverId != null) 'serverId': serverId,
   };
 
   static PrinterConfig? fromJson(Map<String, Object?>? json) {
@@ -153,6 +162,7 @@ class PrinterConfig {
       connection: connection,
       paperWidth: PaperWidth.fromMillimetres(json['paperWidthMm'] as int?),
       encoding: PrinterEncoding.fromWireName(json['encoding'] as String?),
+      serverId: json['serverId'] as String?,
     );
   }
 }

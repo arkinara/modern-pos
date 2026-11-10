@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:modern_pos_api_client/api.dart';
+import 'package:modern_pos_api_client/api.dart' hide PrintJob;
 
 import '../../core/device_identity.dart';
 import '../auth/auth_controller.dart';
 import '../cart/cart_controller.dart';
-import '../printing/esc_pos_receipt.dart';
-import '../printing/printer_controller.dart';
+import '../printing/print_job_models.dart';
+import '../printing/print_queue_service.dart';
 import 'checkout_gateway.dart';
 import 'checkout_models.dart';
 import 'checkout_repository.dart';
@@ -695,7 +695,7 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
       ),
     );
     await _clearCart();
-    await _printBestEffort(sale);
+    await _printBestEffort(sale, pending);
   }
 
   Future<void> _clearCart() async {
@@ -707,26 +707,55 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
     }
   }
 
-  Future<void> _printBestEffort(Sale sale) async {
+  Future<void> _printBestEffort(Sale sale, PendingCheckout pending) async {
     try {
-      final adapter = ref.read(printerAdapterProvider);
-      if (!adapter.isConnected) {
-        _mergePrintMessage(
-          sale,
-          'Sale completed. No printer is connected, so the receipt was not '
-          'sent. This sale will not be repeated.',
-        );
-        return;
-      }
-      await adapter.printReceipt(_receiptData(sale));
-      _mergePrintMessage(sale, 'Receipt sent to the printer.');
+      final service = ref.read(printQueueServiceProvider);
+      final job = await service.enqueueSale(
+        sale: sale,
+        outletId: pending.outletId,
+        deviceId: pending.deviceId,
+      );
+      final processed = await service.processJob(job.id);
+      _mergePrintResult(sale, processed);
     } catch (_) {
       _mergePrintMessage(
         sale,
-        'Sale completed, but the receipt could not print. Do not repeat '
-        'checkout.',
+        'Sale completed, but the receipt could not be queued. The sale is '
+        'final; do not repeat checkout.',
       );
     }
+  }
+
+  void _mergePrintResult(Sale sale, PrintJob job) {
+    final current = state.value;
+    if (current == null ||
+        current.sale == null ||
+        current.sale!.id != sale.id) {
+      return;
+    }
+    state = AsyncData(
+      current.copyWith(printJob: job, printMessage: _printMessage(job)),
+    );
+  }
+
+  String _printMessage(PrintJob job) {
+    return switch (job.state) {
+      PrintJobState.sent =>
+        'Sale completed. Receipt sent to the printer. Paper delivery is not '
+            'verified.',
+      PrintJobState.failed =>
+        'Sale completed, but the receipt could not print. Retry the print job '
+            'from Settings > Print queue; do not repeat checkout.',
+      PrintJobState.uncertain =>
+        'Sale completed, but the receipt could not print with confirmed '
+            'delivery. Delivery is unknown; use Reprint COPY if paper is '
+            'missing. Do not repeat checkout.',
+      PrintJobState.queued =>
+        'Sale completed. The receipt is queued. '
+            '${job.lastError ?? 'Configure a printer, then retry the job.'}',
+      PrintJobState.sending =>
+        'Sale completed. The receipt is being sent to the printer.',
+    };
   }
 
   void _mergePrintMessage(Sale sale, String message) {
@@ -739,41 +768,61 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
     state = AsyncData(current.copyWith(printMessage: message));
   }
 
-  ReceiptData _receiptData(Sale sale) {
-    return ReceiptData(
-      outletName: 'Modern POS',
-      items: sale.lines
-          .map(
-            (line) => ReceiptLineItem(
-              name: line.name,
-              variantName: line.variantName,
-              quantity: line.quantity,
-              unitPriceMinor: line.unitPriceMinor,
-              lineTotalMinor: line.lineSubtotalMinor,
-            ),
-          )
-          .toList(growable: false),
-      subtotalMinor: sale.totals.subtotalMinor,
-      serviceMinor: sale.totals.serviceMinor,
-      taxMinor: sale.totals.taxMinor,
-      totalMinor: sale.totals.totalMinor,
-      currency: sale.currency,
-      currencyExponent: sale.currencyExponent,
-      reference: sale.reference,
-      issuedAtLabel: _issuedAtLabel(sale),
-      footerLines: const [
-        'Receipt printing is best effort and never repeats the sale.',
-      ],
-    );
+  /// Retries a known-not-sent failure. An uncertain job is deliberately
+  /// converted into a COPY reprint rather than silently resent.
+  Future<void> retryPrint() async {
+    final current = state.value;
+    final job = current?.printJob;
+    if (current == null || job == null) {
+      return;
+    }
+    final service = ref.read(printQueueServiceProvider);
+    try {
+      final result = job.state == PrintJobState.uncertain
+          ? await service.reprintJob(job.id)
+          : await service.retryJob(job.id);
+      state = AsyncData(
+        current.copyWith(printJob: result, printMessage: _printMessage(result)),
+      );
+    } catch (_) {
+      state = AsyncData(
+        current.copyWith(
+          printMessage:
+              'The print job could not be retried. Check the printer and try '
+              'again from Settings > Print queue.',
+        ),
+      );
+    }
   }
 
-  String _issuedAtLabel(Sale sale) {
-    final local = sale.completedAt.toLocal();
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '${local.year}-$month-$day $hour:$minute';
+  /// Manual reprint from the completed-sale view. The output is marked COPY
+  /// and the action is appended to the local audit trail.
+  Future<void> reprintCopy() async {
+    final current = state.value;
+    final sale = current?.sale;
+    final pending = current?.pending;
+    if (current == null || sale == null || pending == null) {
+      return;
+    }
+    final service = ref.read(printQueueServiceProvider);
+    try {
+      final result = await service.reprintSale(
+        sale: sale,
+        outletId: pending.outletId,
+        deviceId: pending.deviceId,
+      );
+      state = AsyncData(
+        current.copyWith(printJob: result, printMessage: _printMessage(result)),
+      );
+    } catch (_) {
+      state = AsyncData(
+        current.copyWith(
+          printMessage:
+              'The COPY reprint could not be queued. Check the printer and '
+              'try again from Settings > Print queue.',
+        ),
+      );
+    }
   }
 
   String _actionableMessage(CheckoutApiException error) {

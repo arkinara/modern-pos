@@ -8,6 +8,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestIdMiddleware } from './common/request-id.middleware';
 import { HealthController } from './health/health.controller';
 import { OutletsModule } from './outlets/outlets.module';
+import { PrintingModule } from './printing/printing.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RecipeModule } from './recipe/recipe.module';
 import { ReportsModule } from './reports/reports.module';
@@ -26,6 +27,7 @@ import { StockModule } from './stock/stock.module';
     RecipeModule,
     SalesModule,
     ReportsModule,
+    PrintingModule,
   ],
   controllers: [HealthController],
   providers: [

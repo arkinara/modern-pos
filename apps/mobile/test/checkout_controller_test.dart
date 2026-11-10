@@ -9,10 +9,15 @@ import 'package:modern_pos_mobile/features/checkout/checkout_controller.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_gateway.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_models.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_repository.dart';
+import 'package:modern_pos_mobile/features/printing/print_job_mirror.dart';
+import 'package:modern_pos_mobile/features/printing/print_job_models.dart';
+import 'package:modern_pos_mobile/features/printing/print_queue_repository.dart';
 import 'package:modern_pos_mobile/features/printing/printer_controller.dart';
+import 'package:modern_pos_mobile/features/printing/receipt_identity.dart';
 
 import 'support/checkout_fakes.dart';
 import 'support/fakes.dart';
+import 'support/printer_fakes.dart';
 
 CartLine cartLine({int quantity = 1}) {
   return CartLine(
@@ -35,6 +40,10 @@ class Harness {
   }) : gateway = gateway ?? FakeCheckoutGateway(),
        repository = repository ?? InMemoryCheckoutRepository(),
        printer = printer ?? FakeReceiptPrinter(connected: false) {
+    printRepository = InMemoryPrintQueueRepository();
+    configStore = InMemoryPrinterConfigStore(
+      this.printer.connected ? testPrinterConfig() : null,
+    );
     container = ProviderContainer(
       overrides: [
         authControllerProvider.overrideWith(
@@ -45,6 +54,12 @@ class Harness {
         checkoutGatewayProvider.overrideWithValue(this.gateway),
         deviceIdentityProvider.overrideWithValue(FixedDeviceIdentity()),
         printerAdapterProvider.overrideWithValue(this.printer),
+        printQueueRepositoryProvider.overrideWithValue(printRepository),
+        printerConfigStoreProvider.overrideWithValue(configStore),
+        receiptIdentityRepositoryProvider.overrideWithValue(
+          FakeReceiptIdentityRepository(),
+        ),
+        printJobMirrorProvider.overrideWithValue(const NoopPrintJobMirror()),
       ],
     );
     addTearDown(container.dispose);
@@ -53,6 +68,8 @@ class Harness {
   final FakeCheckoutGateway gateway;
   final InMemoryCheckoutRepository repository;
   final FakeReceiptPrinter printer;
+  late final InMemoryPrintQueueRepository printRepository;
+  late final InMemoryPrinterConfigStore configStore;
   final InMemoryCartRepository cartRepository = InMemoryCartRepository();
   late final ProviderContainer container;
 
@@ -420,8 +437,59 @@ void main() {
     expect(printer.printCount, 1);
     expect(state.phase, CheckoutPhase.completed);
     expect(state.printMessage, contains('could not print'));
+    expect(h.printRepository.jobs, hasLength(1));
+    final job = h.printRepository.jobs.values.single;
+    expect(job.state, PrintJobState.uncertain);
+    expect(job.copy, isFalse);
 
     h.controller.acknowledge();
+    expect(h.gateway.finalizeCalls, 1);
+  });
+
+  test(
+    'no configured printer leaves a durable queued job and one sale',
+    () async {
+      final h = Harness();
+      await h.load();
+      await h.controller.start();
+      h.controller.useExactAmount();
+
+      await h.controller.submit();
+
+      final state = h.container.read(checkoutControllerProvider).requireValue;
+      expect(state.phase, CheckoutPhase.completed);
+      expect(state.printJob?.state, PrintJobState.queued);
+      expect(state.printMessage, contains('queued'));
+      expect(h.printRepository.jobs, hasLength(1));
+      expect(h.gateway.finalizeCalls, 1);
+    },
+  );
+
+  test('manual reprint creates a COPY job with an audit entry', () async {
+    final printer = FakeReceiptPrinter(connected: true);
+    final h = Harness(printer: printer);
+    await h.load();
+    await h.controller.start();
+    h.controller.useExactAmount();
+    await h.controller.submit();
+
+    final first = h.container.read(checkoutControllerProvider).requireValue;
+    expect(first.printJob?.state, PrintJobState.sent);
+    expect(printer.printCount, 1);
+
+    await h.controller.reprintCopy();
+
+    final after = h.container.read(checkoutControllerProvider).requireValue;
+    expect(after.printJob?.copy, isTrue);
+    expect(after.printJob?.receipt.copy, isTrue);
+    expect(printer.printCount, 2);
+    expect(h.printRepository.jobs, hasLength(2));
+    expect(
+      h.printRepository.audits.any(
+        (entry) => entry.action.name == 'reprint' && entry.copy,
+      ),
+      isTrue,
+    );
     expect(h.gateway.finalizeCalls, 1);
   });
 }

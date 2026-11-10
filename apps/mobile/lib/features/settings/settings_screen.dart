@@ -20,6 +20,17 @@ class SettingsScreen extends StatelessWidget {
             onTap: () => context.push('/settings/printer'),
           ),
         ),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.print_outlined),
+            title: const Text('Print queue'),
+            subtitle: const Text(
+              'Review queued, sent, failed and uncertain receipt jobs.',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/print-queue'),
+          ),
+        ),
         const Card(
           child: ListTile(
             leading: Icon(Icons.dns_outlined),
