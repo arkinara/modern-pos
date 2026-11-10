@@ -2,7 +2,7 @@
 
 Status: implemented and covered by host tests. Physical paper delivery is
 `PENDING — requires printer model + Android device`; no test in this repository
-claims that paper came out.
+claims that paper came out. Run, format and test commands: `DEVELOPMENT.md`.
 
 ## Receipt content
 
@@ -25,8 +25,8 @@ All receipt lines are bounded by the paper width.
 
 The Drift `print_queue_jobs` table stores: job id, sale id/reference, outlet,
 device, printer snapshot, full receipt JSON, state, copy flag, attempts, last
-error, timestamps and mirror flag. The row is written before the first transport
-call.
+error, timestamps and mirror flag. The row is written before any bytes are sent:
+the queue entry exists before the first transport call.
 
 ```
 QUEUED ──attempt──> SENDING ──transport accepted──> SENT
