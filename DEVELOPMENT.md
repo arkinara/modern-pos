@@ -582,6 +582,9 @@ client regeneration.
   TAB or CR is prefixed with a single quote so a spreadsheet cannot execute it as a formula.
   Comma, quote and newline item names therefore survive a round-trip; the formula guard is the
   only intentional text change and is documented here.
+- Sales history reuses `sales_list`: an owner sees the whole outlet and a cashier sees only their
+  own sales, matching the existing list and receipt scoping. Daily reports and the CSV export stay
+  owner-only, so a cashier receives `403` rather than a partial report.
 - The web Sales page filters by outlet-local dates, pages with the existing cursor, shows
   date/time, reference, line items, payment method and recorded amount, service and tax, and
   total. Selecting a row reads the immutable receipt from `sales_get`. The Reports page shows
