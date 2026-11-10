@@ -15,12 +15,14 @@ export interface CsvSaleRow {
   saleServiceMinor: number;
   saleTaxMinor: number;
   saleTotalMinor: number;
-  paymentKind: string;
-  paymentStatus: string;
-  paymentAmountMinor: number;
+  paymentKind: string | null;
+  paymentStatus: string | null;
+  paymentAmountMinor: number | null;
   tenderedMinor: number | null;
   changeMinor: number | null;
   paymentReference: string | null;
+  rowType: 'SALE' | 'REVERSAL';
+  reversalReason: string | null;
 }
 
 export const CSV_COLUMNS = [
@@ -46,6 +48,8 @@ export const CSV_COLUMNS = [
   'tenderedMinor',
   'changeMinor',
   'paymentReference',
+  'rowType',
+  'reversalReason',
 ] as const;
 
 const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
@@ -98,6 +102,8 @@ export function toCsv(rows: CsvSaleRow[]): string {
       row.tenderedMinor,
       row.changeMinor,
       row.paymentReference,
+      row.rowType,
+      row.reversalReason,
     ]
       .map(cell)
       .join(','),

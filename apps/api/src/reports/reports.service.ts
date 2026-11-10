@@ -42,6 +42,7 @@ export interface SalesCsvExport {
   filename: string;
   csv: string;
   saleCount: number;
+  reversalCount: number;
 }
 
 interface OutletRecord {
@@ -85,6 +86,21 @@ interface ReportSale {
   totalMinor: bigint;
   lines: ReportSaleLine[];
   payment: ReportPayment | null;
+}
+
+interface ReportReversal {
+  id: string;
+  saleId: string;
+  reason: string;
+  createdAt: Date;
+  sale: {
+    reference: string;
+    currency: string;
+    currencyExponent: number;
+    timezone: string;
+    subtotalMinor: bigint;
+    lines: ReportSaleLine[];
+  };
 }
 
 function wireMinor(value: bigint, field: string): number {
@@ -181,12 +197,16 @@ export class ReportsService {
     query: ReportRangeQueryDto,
     user: AuthenticatedUser,
   ): Promise<DailyReportResponse> {
-    const { outlet, sales } = await this.loadPeriod(outletId, query, user);
+    const { outlet, sales, reversals } = await this.loadPeriod(outletId, query, user);
 
     const grossItemSalesMinor = sales.reduce((sum, sale) => sum + sale.subtotalMinor, 0n);
-    const reversalItemValueMinor = 0n;
+    const reversalItemValueMinor = reversals.reduce(
+      (sum, reversal) => sum + reversal.sale.subtotalMinor,
+      0n,
+    );
     const netItemSalesMinor = grossItemSalesMinor - reversalItemValueMinor;
     const saleCount = sales.length;
+    const reversalCount = reversals.length;
     const averageBillMinor = halfUpAverage(grossItemSalesMinor, BigInt(saleCount));
 
     const received = new Map<PaymentKind, bigint>([
@@ -224,7 +244,7 @@ export class ReportsService {
       reversalItemValueMinor: wireMinor(reversalItemValueMinor, 'reversalItemValueMinor'),
       netItemSalesMinor: signedWireMinor(netItemSalesMinor, 'netItemSalesMinor'),
       saleCount,
-      reversalCount: 0,
+      reversalCount,
       averageBillMinor: wireMinor(averageBillMinor, 'averageBillMinor'),
       paymentBreakdown: [
         {
@@ -249,7 +269,7 @@ export class ReportsService {
     query: ReportRangeQueryDto,
     user: AuthenticatedUser,
   ): Promise<SalesCsvExport> {
-    const { outlet, sales } = await this.loadPeriod(outletId, query, user);
+    const { outlet, sales, reversals } = await this.loadPeriod(outletId, query, user);
 
     const rows: CsvSaleRow[] = [];
 
@@ -288,6 +308,45 @@ export class ReportsService {
               ? null
               : wireMinor(sale.payment.changeMinor, 'changeMinor'),
           paymentReference: sale.payment.reference,
+          rowType: 'SALE',
+          reversalReason: null,
+        });
+      }
+    }
+
+    for (const reversal of reversals) {
+      for (const line of reversal.sale.lines) {
+        rows.push({
+          reference: reversal.sale.reference,
+          completedAtUtc: reversal.createdAt.toISOString(),
+          completedAtLocal: formatLocalTimestamp(reversal.createdAt, outlet.timezone),
+          timezone: reversal.sale.timezone,
+          state: SaleState.REVERSED,
+          currency: reversal.sale.currency,
+          currencyExponent: reversal.sale.currencyExponent,
+          itemName: line.name,
+          variantName: line.variantName,
+          quantity: -line.quantity,
+          unitPriceMinor: signedWireMinor(-line.unitPriceMinor, 'reversalUnitPriceMinor'),
+          lineSubtotalMinor: signedWireMinor(
+            -line.lineSubtotalMinor,
+            'reversalLineSubtotalMinor',
+          ),
+          saleSubtotalMinor: signedWireMinor(
+            -reversal.sale.subtotalMinor,
+            'reversalSubtotalMinor',
+          ),
+          saleServiceMinor: 0,
+          saleTaxMinor: 0,
+          saleTotalMinor: signedWireMinor(-reversal.sale.subtotalMinor, 'reversalTotalMinor'),
+          paymentKind: null,
+          paymentStatus: null,
+          paymentAmountMinor: null,
+          tenderedMinor: null,
+          changeMinor: null,
+          paymentReference: null,
+          rowType: 'REVERSAL',
+          reversalReason: reversal.reason,
         });
       }
     }
@@ -296,6 +355,7 @@ export class ReportsService {
       filename: `sales-${slug(outlet.name)}-${query.from}-to-${query.to}.csv`,
       csv: toCsv(rows),
       saleCount: sales.length,
+      reversalCount: reversals.length,
     };
   }
 
@@ -303,7 +363,7 @@ export class ReportsService {
     outletId: string,
     query: ReportRangeQueryDto,
     user: AuthenticatedUser,
-  ): Promise<{ outlet: OutletRecord; sales: ReportSale[] }> {
+  ): Promise<{ outlet: OutletRecord; sales: ReportSale[]; reversals: ReportReversal[] }> {
     assertReportRange(query.from, query.to);
 
     const outlet = await this.prisma.outlet.findFirst({
@@ -338,7 +398,28 @@ export class ReportsService {
       },
     })) as ReportSale[];
 
-    return { outlet, sales };
+    const reversals = (await this.prisma.saleReversal.findMany({
+      where: {
+        businessId: user.businessId,
+        outletId,
+        createdAt: completedAt,
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      include: {
+        sale: {
+          select: {
+            reference: true,
+            currency: true,
+            currencyExponent: true,
+            timezone: true,
+            subtotalMinor: true,
+            lines: { orderBy: [{ id: 'asc' }] },
+          },
+        },
+      },
+    })) as ReportReversal[];
+
+    return { outlet, sales, reversals };
   }
 }
 

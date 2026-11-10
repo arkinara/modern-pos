@@ -19,6 +19,7 @@ import { OrderCancelDto } from './dto/order-cancel.dto';
 import { OrderCreateDto } from './dto/order-create.dto';
 import { OrderUpdateDto } from './dto/order-update.dto';
 import { QuoteCreateDto } from './dto/quote-create.dto';
+import { FIXED_POINT_PATTERN, ReversalDto, RestockItemDto } from './dto/reversal.dto';
 import { SalesListQueryDto } from './dto/sales-list-query.dto';
 import { calculateTotals, normalizePayment, toWireMinor, type MoneyTotals } from './money';
 import { localDateRangeUtc } from './outlet-time';
@@ -98,6 +99,20 @@ export interface PaymentResponse {
   reference?: string;
 }
 
+export interface RestockResponse {
+  stockItemId: string;
+  quantity: string;
+}
+
+export interface ReversalResponse {
+  id: string;
+  saleId: string;
+  reason: string;
+  createdAt: string;
+  restock: RestockResponse[];
+  externalRefundPerformed: false;
+}
+
 export interface SaleResponse {
   id: string;
   orderId: string;
@@ -111,6 +126,7 @@ export interface SaleResponse {
   totals: TotalsResponse;
   lines: SaleLineResponse[];
   payment: PaymentResponse;
+  reversal?: ReversalResponse;
 }
 
 export interface FinalizedResponse {
@@ -166,6 +182,14 @@ interface SaleWithReceipt {
     tenderedMinor: bigint | null;
     changeMinor: bigint | null;
     reference: string | null;
+  } | null;
+  reversal: {
+    id: string;
+    saleId: string;
+    reason: string;
+    createdAt: Date;
+    restock: Prisma.JsonValue;
+    externalRefundPerformed: boolean;
   } | null;
 }
 
@@ -702,6 +726,7 @@ export class SalesService {
               include: {
                 lines: { orderBy: [{ id: 'asc' }] },
                 payment: true,
+                reversal: true,
               },
             });
 
@@ -829,6 +854,7 @@ export class SalesService {
       include: {
         lines: { orderBy: [{ id: 'asc' }] },
         payment: true,
+        reversal: true,
       },
     });
 
@@ -844,6 +870,475 @@ export class SalesService {
   async getSale(outletId: string, saleId: string, user: AuthenticatedUser): Promise<SaleResponse> {
     const sale = await this.loadSale(this.prisma, saleId, outletId, user.businessId, user);
     return this.toSale(sale);
+  }
+
+  /**
+   * Records one immutable reversal for a completed sale. The original sale row is
+   * never updated. Stock moves only for the explicit restock selection, and the
+   * response never claims an external payment provider performed a refund.
+   */
+  async reverse(
+    outletId: string,
+    saleId: string,
+    key: string | undefined,
+    dto: ReversalDto,
+    user: AuthenticatedUser,
+  ): Promise<ReversalResponse> {
+    if (user.role !== Role.OWNER) {
+      throw apiError(403, 'FORBIDDEN', 'Only an owner can reverse a sale');
+    }
+
+    const idempotencyKey = requireIdempotencyKey(key);
+    const reason = this.normalizeReason(dto.reason);
+    const restock = this.normalizeRestock(dto.restock);
+    const hash = requestHash({
+      operation: 'SALE_REVERSE',
+      outletId,
+      saleId,
+      reason,
+      restock: restock.map((item) => ({
+        stockItemId: item.stockItemId.toLowerCase(),
+        quantity: item.quantity,
+      })),
+    });
+
+    const prior = await this.prisma.saleReversal.findUnique({
+      where: { outletId_idempotencyKey: { outletId, idempotencyKey } },
+    });
+
+    if (prior) {
+      return this.replayReversal(prior, saleId, hash);
+    }
+
+    const alreadyReversed = await this.prisma.saleReversal.findUnique({ where: { saleId } });
+
+    if (alreadyReversed) {
+      throw apiError(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed');
+    }
+
+    try {
+      return await this.runSerializable(
+        () =>
+          this.prisma.$transaction(
+            async (tx) => this.applyReversal(tx, outletId, saleId, idempotencyKey, reason, restock, hash, user),
+            { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+          ),
+        'Sale reversal',
+      );
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        const sameKey = await this.prisma.saleReversal.findUnique({
+          where: { outletId_idempotencyKey: { outletId, idempotencyKey } },
+        });
+
+        if (sameKey) {
+          return this.replayReversal(sameKey, saleId, hash);
+        }
+
+        const existing = await this.prisma.saleReversal.findUnique({ where: { saleId } });
+
+        if (existing) {
+          throw apiError(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed');
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  private normalizeReason(value: string): string {
+    const reason = typeof value === 'string' ? value.trim() : '';
+
+    if (reason.length < 3 || reason.length > 500) {
+      throw apiError(400, 'VALIDATION_ERROR', 'reason must contain between 3 and 500 characters');
+    }
+
+    return reason;
+  }
+
+  private normalizeRestock(
+    input: RestockItemDto[],
+  ): { stockItemId: string; quantity: string }[] {
+    if (!Array.isArray(input)) {
+      throw apiError(400, 'VALIDATION_ERROR', 'restock must be an array');
+    }
+
+    const seen = new Set<string>();
+    const normalized = input.map((item) => {
+      if (!UUID_PATTERN.test(item.stockItemId)) {
+        throw apiError(400, 'VALIDATION_ERROR', 'restock stockItemId must be a UUID');
+      }
+
+      if (!FIXED_POINT_PATTERN.test(item.quantity)) {
+        throw apiError(
+          400,
+          'VALIDATION_ERROR',
+          'restock quantity must be a nonnegative fixed-point base-unit string',
+        );
+      }
+
+      const quantity = new Prisma.Decimal(item.quantity);
+      const stockItemId = item.stockItemId.toLowerCase();
+
+      if (seen.has(stockItemId)) {
+        throw apiError(422, 'DUPLICATE_RESTOCK_ITEM', 'A stock item can appear only once in restock', {
+          details: { stockItemId },
+        });
+      }
+
+      if (quantity.lessThanOrEqualTo(0)) {
+        throw apiError(422, 'INVALID_RESTOCK_QUANTITY', 'restock quantity must be greater than zero', {
+          details: { stockItemId },
+        });
+      }
+
+      seen.add(stockItemId);
+      return { stockItemId, quantity: quantity.toString() };
+    });
+
+    return normalized.sort((a, b) => a.stockItemId.localeCompare(b.stockItemId));
+  }
+
+  private replayReversal(
+    record: {
+      saleId: string;
+      requestHash: string;
+      id: string;
+      reason: string;
+      createdAt: Date;
+      restock: Prisma.JsonValue;
+    },
+    saleId: string,
+    hash: string,
+  ): ReversalResponse {
+    if (record.saleId !== saleId || record.requestHash !== hash) {
+      throw apiError(
+        409,
+        'IDEMPOTENCY_CONFLICT',
+        'Idempotency-Key was already used with a different request payload',
+      );
+    }
+
+    return this.toReversal(record);
+  }
+
+  private async applyReversal(
+    tx: Prisma.TransactionClient,
+    outletId: string,
+    saleId: string,
+    idempotencyKey: string,
+    reason: string,
+    restock: { stockItemId: string; quantity: string }[],
+    hash: string,
+    user: AuthenticatedUser,
+  ): Promise<ReversalResponse> {
+    await tx.$queryRaw`
+      SELECT "id"
+      FROM "sales"
+      WHERE "id" = ${saleId}::uuid
+        AND "outletId" = ${outletId}::uuid
+      FOR UPDATE
+    `;
+
+    const sale = await tx.sale.findFirst({
+      where: { id: saleId, outletId, businessId: user.businessId },
+      include: { lines: { orderBy: [{ id: 'asc' }] } },
+    });
+
+    if (!sale) {
+      throw apiError(404, 'NOT_FOUND', 'Sale not found');
+    }
+
+    const existing = await tx.saleReversal.findUnique({ where: { saleId } });
+
+    if (existing) {
+      throw apiError(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed');
+    }
+
+    if (sale.state !== SaleState.COMPLETED) {
+      throw apiError(409, 'SALE_NOT_COMPLETED', 'Only completed sales can be reversed');
+    }
+
+    const consumed = await this.loadConsumedStock(tx, outletId, sale);
+
+    if (restock.length > 0) {
+      const ids = [...new Set(restock.map((item) => item.stockItemId))];
+      const stockItems = await tx.stockItem.findMany({
+        where: { id: { in: ids }, businessId: user.businessId },
+        select: { id: true, quantityScale: true },
+      });
+      const scaleById = new Map(stockItems.map((item) => [item.id, item.quantityScale]));
+
+      for (const item of restock) {
+        const scale = scaleById.get(item.stockItemId);
+        const consumedQuantity = consumed.get(item.stockItemId);
+
+        if (scale === undefined || consumedQuantity === undefined) {
+          throw apiError(
+            422,
+            'RESTOCK_ITEM_NOT_SOLD',
+            'Only stock items consumed by this sale can be restocked',
+            { details: { stockItemId: item.stockItemId } },
+          );
+        }
+
+        const quantity = new Prisma.Decimal(item.quantity);
+
+        if (quantity.decimalPlaces() > scale) {
+          throw apiError(
+            422,
+            'INVALID_RESTOCK_QUANTITY',
+            'restock quantity has more decimals than the stock item allows',
+            { details: { stockItemId: item.stockItemId } },
+          );
+        }
+
+        if (quantity.greaterThan(consumedQuantity)) {
+          throw apiError(
+            422,
+            'RESTOCK_EXCEEDS_SOLD',
+            'restock quantity exceeds the amount consumed by this sale',
+            {
+              details: {
+                stockItemId: item.stockItemId,
+                consumed: consumedQuantity.toString(),
+                requested: quantity.toString(),
+              },
+            },
+          );
+        }
+
+        item.quantity = quantity.toFixed(scale);
+      }
+    }
+
+    const reversal = await tx.saleReversal.create({
+      data: {
+        businessId: user.businessId,
+        outletId,
+        saleId,
+        actorId: user.id,
+        reason,
+        restock: restock as unknown as Prisma.InputJsonValue,
+        externalRefundPerformed: false,
+        idempotencyKey,
+        requestHash: hash,
+      },
+    });
+
+    await this.applyReversalRestock(tx, {
+      outletId,
+      saleId,
+      reversalId: reversal.id,
+      actorId: user.id,
+      reason,
+      items: restock,
+    });
+
+    return this.toReversal(reversal);
+  }
+
+  private async loadConsumedStock(
+    tx: Prisma.TransactionClient,
+    outletId: string,
+    sale: {
+      lines: { variantId: string; quantity: number; recipeVersion: number | null }[];
+    },
+  ): Promise<Map<string, Prisma.Decimal>> {
+    const consumed = new Map<string, Prisma.Decimal>();
+    const zero = new Prisma.Decimal(0);
+    const variantIds = [...new Set(sale.lines.map((line) => line.variantId))];
+
+    if (variantIds.length === 0) {
+      return consumed;
+    }
+
+    const variants = await tx.menuVariant.findMany({
+      where: { id: { in: variantIds } },
+      select: { id: true, stockPolicy: true },
+    });
+    const policies = new Map(variants.map((variant) => [variant.id, variant.stockPolicy]));
+    const pins = new Map<string, { variantId: string; version: number }>();
+
+    for (const line of sale.lines) {
+      if (
+        policies.get(line.variantId) !== StockPolicy.TRACKED ||
+        line.recipeVersion === null
+      ) {
+        continue;
+      }
+
+      pins.set(`${line.variantId}:${line.recipeVersion}`, {
+        variantId: line.variantId,
+        version: line.recipeVersion,
+      });
+    }
+
+    if (pins.size === 0) {
+      return consumed;
+    }
+
+    const recipes = await tx.recipeVersion.findMany({
+      where: {
+        outletId,
+        OR: [...pins.values()].map((pin) => ({
+          variantId: pin.variantId,
+          version: pin.version,
+        })),
+      },
+      select: {
+        variantId: true,
+        version: true,
+        lines: { select: { stockItemId: true, quantityPerSaleUnit: true } },
+      },
+    });
+    const recipeByPin = new Map(
+      recipes.map((recipe) => [`${recipe.variantId}:${recipe.version}`, recipe]),
+    );
+
+    for (const line of sale.lines) {
+      if (policies.get(line.variantId) !== StockPolicy.TRACKED) {
+        continue;
+      }
+
+      const recipe =
+        line.recipeVersion === null
+          ? null
+          : recipeByPin.get(`${line.variantId}:${line.recipeVersion}`);
+
+      if (!recipe) {
+        throw apiError(
+          409,
+          'RECIPE_SNAPSHOT_MISSING',
+          'The pinned recipe version for this sale is unavailable',
+          { details: { variantId: line.variantId, recipeVersion: line.recipeVersion } },
+        );
+      }
+
+      for (const recipeLine of recipe.lines) {
+        const amount = new Prisma.Decimal(recipeLine.quantityPerSaleUnit).mul(line.quantity);
+        consumed.set(recipeLine.stockItemId, (consumed.get(recipeLine.stockItemId) ?? zero).plus(amount));
+      }
+    }
+
+    return consumed;
+  }
+
+  private async applyReversalRestock(
+    tx: Prisma.TransactionClient,
+    context: {
+      outletId: string;
+      saleId: string;
+      reversalId: string;
+      actorId: string;
+      reason: string;
+      items: { stockItemId: string; quantity: string }[];
+    },
+  ): Promise<void> {
+    const { outletId, saleId, reversalId, actorId, reason, items } = context;
+
+    if (items.length === 0) {
+      return;
+    }
+
+    const stockItemIds = items.map((item) => item.stockItemId).sort();
+    const lockedBalances = await tx.$queryRaw<
+      { stockItemId: string; quantity: Prisma.Decimal; version: number }[]
+    >`
+      SELECT "stockItemId", "quantity", "version"
+      FROM "stock_balances"
+      WHERE "outletId" = ${outletId}::uuid
+        AND "stockItemId"::text IN (${Prisma.join(stockItemIds)})
+      ORDER BY "stockItemId"
+      FOR UPDATE
+    `;
+    const balances = new Map(
+      lockedBalances.map((row) => [
+        row.stockItemId,
+        { quantity: new Prisma.Decimal(row.quantity), version: row.version },
+      ]),
+    );
+
+    await tx.stockMovement.createMany({
+      data: items.map((item) => ({
+        outletId,
+        stockItemId: item.stockItemId,
+        delta: new Prisma.Decimal(item.quantity),
+        type: StockMovementType.REVERSAL,
+        actorId,
+        reason: `Reversal ${reversalId} for sale ${saleId}: ${reason}`,
+        sourceId: reversalId,
+      })),
+    });
+
+    for (const item of items) {
+      const amount = new Prisma.Decimal(item.quantity);
+      const balance = balances.get(item.stockItemId);
+
+      if (!balance) {
+        await tx.stockBalance.create({
+          data: {
+            outletId,
+            stockItemId: item.stockItemId,
+            quantity: amount,
+            version: 1,
+          },
+        });
+        continue;
+      }
+
+      const updated = await tx.stockBalance.updateMany({
+        where: {
+          outletId,
+          stockItemId: item.stockItemId,
+          version: balance.version,
+        },
+        data: {
+          quantity: { increment: amount },
+          version: { increment: 1 },
+        },
+      });
+
+      if (updated.count !== 1) {
+        throw apiError(
+          409,
+          'STOCK_CHANGED',
+          'Stock changed while the reversal was committing; retry with the same key',
+          { retryable: true },
+        );
+      }
+    }
+  }
+
+  private toReversal(record: {
+    id: string;
+    saleId: string;
+    reason: string;
+    createdAt: Date;
+    restock: Prisma.JsonValue;
+  }): ReversalResponse {
+    if (!Array.isArray(record.restock)) {
+      throw apiError(500, 'REVERSAL_CORRUPT', 'Stored reversal restock is invalid');
+    }
+
+    const restock = record.restock.map((entry) => {
+      const item = entry as { stockItemId?: unknown; quantity?: unknown };
+
+      if (typeof item.stockItemId !== 'string' || typeof item.quantity !== 'string') {
+        throw apiError(500, 'REVERSAL_CORRUPT', 'Stored reversal restock is invalid');
+      }
+
+      return { stockItemId: item.stockItemId, quantity: item.quantity };
+    });
+
+    return {
+      id: record.id,
+      saleId: record.saleId,
+      reason: record.reason,
+      createdAt: record.createdAt.toISOString(),
+      restock,
+      externalRefundPerformed: false,
+    };
   }
 
   private async replayOrder(
@@ -1201,6 +1696,7 @@ export class SalesService {
       include: {
         lines: { orderBy: [{ id: 'asc' }] },
         payment: true,
+        reversal: true,
       },
     });
 
@@ -1301,10 +1797,11 @@ export class SalesService {
         lineSubtotalMinor: toWireMinor(line.lineSubtotalMinor, 'lineSubtotalMinor'),
       })),
       payment: paymentResponse,
+      ...(sale.reversal ? { reversal: this.toReversal(sale.reversal) } : {}),
     };
   }
 
-  private async runSerializable<T>(operation: () => Promise<T>): Promise<T> {
+  private async runSerializable<T>(operation: () => Promise<T>, operationLabel = 'Checkout'): Promise<T> {
     for (let attempt = 1; attempt <= MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
       try {
         return await operation();
@@ -1317,7 +1814,7 @@ export class SalesService {
           throw apiError(
             503,
             'TRANSACTION_RETRY_EXHAUSTED',
-            'Checkout could not commit due to concurrent activity; retry with the same key',
+            `${operationLabel} could not commit due to concurrent activity; retry with the same key`,
             { retryable: true },
           );
         }
@@ -1326,7 +1823,7 @@ export class SalesService {
       }
     }
 
-    throw apiError(503, 'TRANSACTION_RETRY_EXHAUSTED', 'Checkout could not commit', {
+    throw apiError(503, 'TRANSACTION_RETRY_EXHAUSTED', `${operationLabel} could not commit`, {
       retryable: true,
     });
   }

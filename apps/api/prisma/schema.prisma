@@ -88,6 +88,7 @@ model Business {
   orders           Order[]
   quotes           Quote[]
   sales            Sale[]
+  saleReversals    SaleReversal[]
   checkoutRequests CheckoutRequest[]
   printers         Printer[]
   printJobs        PrintJob[]
@@ -121,6 +122,7 @@ model Outlet {
   orders           Order[]
   quotes           Quote[]
   sales            Sale[]
+  saleReversals    SaleReversal[]
   checkoutRequests CheckoutRequest[]
   printers         Printer[]
   printJobs        PrintJob[]
@@ -147,6 +149,7 @@ model User {
   movements StockMovement[]
   orders    Order[]         @relation("OrderCashier")
   sales     Sale[]          @relation("SaleCashier")
+  reversals SaleReversal[]  @relation("SaleReversalActor")
 
   @@map("users")
 }
@@ -471,6 +474,7 @@ model Sale {
   order            Order             @relation(fields: [orderId], references: [id], onDelete: Restrict)
   lines            SaleLine[]
   payment          PaymentRecord?
+  reversal         SaleReversal?
   checkoutRequests CheckoutRequest[]
   printJobs        PrintJob[]
 
@@ -495,6 +499,31 @@ model SaleLine {
 
   @@index([saleId])
   @@map("sale_lines")
+}
+
+// One immutable reversal record per sale. The original sale row is never updated;
+// the reversal links to it and the stock ledger records explicit restock moves.
+model SaleReversal {
+  id                      String   @id @default(uuid()) @db.Uuid
+  businessId              String   @db.Uuid
+  outletId                String   @db.Uuid
+  saleId                  String   @unique @db.Uuid
+  actorId                 String   @db.Uuid
+  reason                  String
+  restock                 Json
+  externalRefundPerformed Boolean  @default(false)
+  idempotencyKey          String   @db.Uuid
+  requestHash             String
+  createdAt               DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  sale     Sale     @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  actor    User     @relation("SaleReversalActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@unique([outletId, idempotencyKey])
+  @@index([businessId, outletId, createdAt])
+  @@map("sale_reversals")
 }
 
 model PaymentRecord {

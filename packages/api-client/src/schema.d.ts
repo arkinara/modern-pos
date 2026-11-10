@@ -973,6 +973,8 @@ export interface components {
             totals: components["schemas"]["Totals"];
             lines: components["schemas"]["SaleLine"][];
             payment: components["schemas"]["Payment"];
+            /** @description Present only after an owner records a reversal for this sale. */
+            reversal?: components["schemas"]["Reversal"];
         };
         Finalized: {
             sale: components["schemas"]["Sale"];
