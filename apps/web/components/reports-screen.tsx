@@ -304,7 +304,8 @@ export function ReportsScreen() {
               <p className="text-xs text-muted">
                 Generated {formatDateTimeInZone(report.generatedAt, report.timezone)} in{' '}
                 {report.timezone}. Reversal item value is {money(report.reversalItemValueMinor)}{' '}
-                across {report.reversalCount} {report.reversalCount === 1 ? 'reversal' : 'reversals'}.
+                across {report.reversalCount}{' '}
+                {report.reversalCount === 1 ? 'reversal' : 'reversals'}.
               </p>
             </CardContent>
           </Card>

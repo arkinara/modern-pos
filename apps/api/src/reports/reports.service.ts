@@ -328,14 +328,8 @@ export class ReportsService {
           variantName: line.variantName,
           quantity: -line.quantity,
           unitPriceMinor: signedWireMinor(-line.unitPriceMinor, 'reversalUnitPriceMinor'),
-          lineSubtotalMinor: signedWireMinor(
-            -line.lineSubtotalMinor,
-            'reversalLineSubtotalMinor',
-          ),
-          saleSubtotalMinor: signedWireMinor(
-            -reversal.sale.subtotalMinor,
-            'reversalSubtotalMinor',
-          ),
+          lineSubtotalMinor: signedWireMinor(-line.lineSubtotalMinor, 'reversalLineSubtotalMinor'),
+          saleSubtotalMinor: signedWireMinor(-reversal.sale.subtotalMinor, 'reversalSubtotalMinor'),
           saleServiceMinor: 0,
           saleTaxMinor: 0,
           saleTotalMinor: signedWireMinor(-reversal.sale.subtotalMinor, 'reversalTotalMinor'),

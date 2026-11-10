@@ -184,12 +184,7 @@ function ReverseSaleForm({
     setSubmitting(true);
 
     try {
-      const reversal = await api.reverseSale(
-        outletId,
-        sale.id,
-        idempotency.current.key,
-        payload,
-      );
+      const reversal = await api.reverseSale(outletId, sale.id, idempotency.current.key, payload);
       setSuccess(
         'Reversal recorded. The original sale is unchanged and now linked to this reversal. No money was returned by any payment provider.',
       );
@@ -216,8 +211,8 @@ function ReverseSaleForm({
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-text">Reversal recorded</h3>
             <p className="mt-1 text-sm text-muted">
-              This sale is not deleted. Its receipt totals stay exactly as recorded, and this
-              manual correction is linked separately.
+              This sale is not deleted. Its receipt totals stay exactly as recorded, and this manual
+              correction is linked separately.
             </p>
           </div>
         </div>
@@ -313,8 +308,8 @@ function ReverseSaleForm({
               </p>
             ) : ingredients.length === 0 ? (
               <p className="mt-3 text-sm text-muted">
-                No tracked ingredients were consumed by this sale. Leave everything unselected for
-                a financial-only reversal.
+                No tracked ingredients were consumed by this sale. Leave everything unselected for a
+                financial-only reversal.
               </p>
             ) : (
               <ul className="mt-3 flex flex-col gap-3">
@@ -345,8 +340,8 @@ function ReverseSaleForm({
                         <span>
                           <span className="font-medium">{option.name}</span>
                           <span className="block text-xs text-muted">
-                            Consumed by this sale: {quantityText(option.consumed, option.quantityScale)}{' '}
-                            {option.baseUnit}
+                            Consumed by this sale:{' '}
+                            {quantityText(option.consumed, option.quantityScale)} {option.baseUnit}
                           </span>
                         </span>
                       </label>
@@ -594,11 +589,7 @@ function SaleDetail({
             </div>
 
             {sale.reversal || canReverse ? (
-              <ReverseSaleForm
-                outletId={outletId}
-                sale={sale}
-                onReversed={() => undefined}
-              />
+              <ReverseSaleForm outletId={outletId} sale={sale} onReversed={() => undefined} />
             ) : null}
           </div>
         ) : null}

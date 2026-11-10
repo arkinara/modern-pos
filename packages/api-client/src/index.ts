@@ -340,9 +340,7 @@ export function createApiClient({
       ),
     reverseSale: (outletId, saleId, idempotencyKey, reversal) =>
       request<ApiSchemas['Reversal']>(
-        `/v1/outlets/${encodeURIComponent(outletId)}/sales/${encodeURIComponent(
-          saleId,
-        )}/reversals`,
+        `/v1/outlets/${encodeURIComponent(outletId)}/sales/${encodeURIComponent(saleId)}/reversals`,
         {
           method: 'POST',
           headers: { 'Idempotency-Key': idempotencyKey },

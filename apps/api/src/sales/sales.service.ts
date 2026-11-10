@@ -920,7 +920,8 @@ export class SalesService {
       return await this.runSerializable(
         () =>
           this.prisma.$transaction(
-            async (tx) => this.applyReversal(tx, outletId, saleId, idempotencyKey, reason, restock, hash, user),
+            async (tx) =>
+              this.applyReversal(tx, outletId, saleId, idempotencyKey, reason, restock, hash, user),
             { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
           ),
         'Sale reversal',
@@ -956,9 +957,7 @@ export class SalesService {
     return reason;
   }
 
-  private normalizeRestock(
-    input: RestockItemDto[],
-  ): { stockItemId: string; quantity: string }[] {
+  private normalizeRestock(input: RestockItemDto[]): { stockItemId: string; quantity: string }[] {
     if (!Array.isArray(input)) {
       throw apiError(400, 'VALIDATION_ERROR', 'restock must be an array');
     }
@@ -981,15 +980,25 @@ export class SalesService {
       const stockItemId = item.stockItemId.toLowerCase();
 
       if (seen.has(stockItemId)) {
-        throw apiError(422, 'DUPLICATE_RESTOCK_ITEM', 'A stock item can appear only once in restock', {
-          details: { stockItemId },
-        });
+        throw apiError(
+          422,
+          'DUPLICATE_RESTOCK_ITEM',
+          'A stock item can appear only once in restock',
+          {
+            details: { stockItemId },
+          },
+        );
       }
 
       if (quantity.lessThanOrEqualTo(0)) {
-        throw apiError(422, 'INVALID_RESTOCK_QUANTITY', 'restock quantity must be greater than zero', {
-          details: { stockItemId },
-        });
+        throw apiError(
+          422,
+          'INVALID_RESTOCK_QUANTITY',
+          'restock quantity must be greater than zero',
+          {
+            details: { stockItemId },
+          },
+        );
       }
 
       seen.add(stockItemId);
@@ -1165,10 +1174,7 @@ export class SalesService {
     const pins = new Map<string, { variantId: string; version: number }>();
 
     for (const line of sale.lines) {
-      if (
-        policies.get(line.variantId) !== StockPolicy.TRACKED ||
-        line.recipeVersion === null
-      ) {
+      if (policies.get(line.variantId) !== StockPolicy.TRACKED || line.recipeVersion === null) {
         continue;
       }
 
@@ -1221,7 +1227,10 @@ export class SalesService {
 
       for (const recipeLine of recipe.lines) {
         const amount = new Prisma.Decimal(recipeLine.quantityPerSaleUnit).mul(line.quantity);
-        consumed.set(recipeLine.stockItemId, (consumed.get(recipeLine.stockItemId) ?? zero).plus(amount));
+        consumed.set(
+          recipeLine.stockItemId,
+          (consumed.get(recipeLine.stockItemId) ?? zero).plus(amount),
+        );
       }
     }
 
@@ -1805,7 +1814,10 @@ export class SalesService {
     };
   }
 
-  private async runSerializable<T>(operation: () => Promise<T>, operationLabel = 'Checkout'): Promise<T> {
+  private async runSerializable<T>(
+    operation: () => Promise<T>,
+    operationLabel = 'Checkout',
+  ): Promise<T> {
     for (let attempt = 1; attempt <= MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
       try {
         return await operation();

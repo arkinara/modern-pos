@@ -2095,9 +2095,11 @@ test('owner reversal validates reason, keeps the sale immutable, and links the r
     { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
   ]);
 
-  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
-    { variantId: VARIANT_A, quantity: 2 },
-  ]);
+  const {
+    actor: cashier,
+    order,
+    quote,
+  } = await prepareOrder(service, KEY_ONE, [{ variantId: VARIANT_A, quantity: 2 }]);
   const finalized = await service.finalize(
     OUTLET_ID,
     KEY_TWO,
@@ -2189,9 +2191,11 @@ test('owner reversal validates reason, keeps the sale immutable, and links the r
 test('a sale that is not completed cannot be reversed', async () => {
   const { prisma, state } = createFakePrisma();
   const service = new SalesService(prisma);
-  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
-    { variantId: VARIANT_A, quantity: 1 },
-  ]);
+  const {
+    actor: cashier,
+    order,
+    quote,
+  } = await prepareOrder(service, KEY_ONE, [{ variantId: VARIANT_A, quantity: 1 }]);
   const finalized = await service.finalize(
     OUTLET_ID,
     KEY_TWO,
@@ -2233,9 +2237,11 @@ test('reversal restocks only explicitly selected sold items and rejects invalid 
     { stockItemId: STOCK_SECOND_ID, quantityPerSaleUnit: '2' },
   ]);
 
-  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
-    { variantId: VARIANT_A, quantity: 2 },
-  ]);
+  const {
+    actor: cashier,
+    order,
+    quote,
+  } = await prepareOrder(service, KEY_ONE, [{ variantId: VARIANT_A, quantity: 2 }]);
   const finalized = await service.finalize(
     OUTLET_ID,
     KEY_TWO,
@@ -2271,7 +2277,10 @@ test('reversal restocks only explicitly selected sold items and rejects invalid 
         OUTLET_ID,
         finalized.sale.id,
         KEY_THREE,
-        { reason: 'Returned beans only', restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '0' }] },
+        {
+          reason: 'Returned beans only',
+          restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '0' }],
+        },
         owner,
       ),
     (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'INVALID_RESTOCK_QUANTITY',
@@ -2309,18 +2318,9 @@ test('reversal restocks only explicitly selected sold items and rejects invalid 
   assert.equal(movement?.type, 'REVERSAL');
   assert.equal(movement?.delta, '4');
   assert.equal(movement?.sourceId, reversal.id);
-  assert.equal(
-    state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity,
-    '8',
-  );
-  assert.equal(
-    state.balances.find((row) => row.stockItemId === STOCK_SECOND_ID)?.quantity,
-    '16',
-  );
-  assert.equal(
-    state.balances.find((row) => row.stockItemId === untouchedStockId)?.quantity,
-    '50',
-  );
+  assert.equal(state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity, '8');
+  assert.equal(state.balances.find((row) => row.stockItemId === STOCK_SECOND_ID)?.quantity, '16');
+  assert.equal(state.balances.find((row) => row.stockItemId === untouchedStockId)?.quantity, '50');
 });
 
 test('reversal idempotency replays the same response and rejects a second key', async () => {
@@ -2332,9 +2332,11 @@ test('reversal idempotency replays the same response and rejects a second key', 
     { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
   ]);
 
-  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
-    { variantId: VARIANT_A, quantity: 1 },
-  ]);
+  const {
+    actor: cashier,
+    order,
+    quote,
+  } = await prepareOrder(service, KEY_ONE, [{ variantId: VARIANT_A, quantity: 1 }]);
   const finalized = await service.finalize(
     OUTLET_ID,
     KEY_TWO,
@@ -2394,9 +2396,11 @@ test('concurrent reversal with the same key creates one reversal and one stock m
     { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
   ]);
 
-  const { actor: cashier, order, quote } = await prepareOrder(service, KEY_ONE, [
-    { variantId: VARIANT_A, quantity: 1 },
-  ]);
+  const {
+    actor: cashier,
+    order,
+    quote,
+  } = await prepareOrder(service, KEY_ONE, [{ variantId: VARIANT_A, quantity: 1 }]);
   const finalized = await service.finalize(
     OUTLET_ID,
     KEY_TWO,
@@ -2445,10 +2449,7 @@ test('concurrent reversal with the same key creates one reversal and one stock m
   assert.equal(responses[0]?.id, responses[1]?.id);
   assert.equal(state.reversals.length, 1);
   assert.equal(state.movements.filter((movement) => movement.type === 'REVERSAL').length, 1);
-  assert.equal(
-    state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity,
-    '10',
-  );
+  assert.equal(state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity, '10');
 });
 
 test('serialization and deadlock retries are bounded at three attempts before a retryable 503', async () => {
