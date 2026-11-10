@@ -20,6 +20,7 @@ Name | Type | Description | Notes
 **totals** | [**Totals**](Totals.md) |  | 
 **lines** | [**List<SaleLine>**](SaleLine.md) |  | [default to const []]
 **payment** | [**Payment**](Payment.md) |  | 
+**reversal** | [**Reversal**](Reversal.md) |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

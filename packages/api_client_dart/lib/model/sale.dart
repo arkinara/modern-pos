@@ -25,6 +25,7 @@ class Sale {
     required this.totals,
     this.lines = const [],
     required this.payment,
+    this.reversal,
   });
 
   String id;
@@ -53,6 +54,14 @@ class Sale {
 
   Payment payment;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  Reversal? reversal;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is Sale &&
     other.id == id &&
@@ -66,7 +75,8 @@ class Sale {
     other.calculation == calculation &&
     other.totals == totals &&
     _deepEquality.equals(other.lines, lines) &&
-    other.payment == payment;
+    other.payment == payment &&
+    other.reversal == reversal;
 
   @override
   int get hashCode =>
@@ -82,10 +92,11 @@ class Sale {
     (calculation.hashCode) +
     (totals.hashCode) +
     (lines.hashCode) +
-    (payment.hashCode);
+    (payment.hashCode) +
+    (reversal == null ? 0 : reversal!.hashCode);
 
   @override
-  String toString() => 'Sale[id=$id, orderId=$orderId, reference=$reference, state=$state, currency=$currency, currencyExponent=$currencyExponent, timezone=$timezone, completedAt=$completedAt, calculation=$calculation, totals=$totals, lines=$lines, payment=$payment]';
+  String toString() => 'Sale[id=$id, orderId=$orderId, reference=$reference, state=$state, currency=$currency, currencyExponent=$currencyExponent, timezone=$timezone, completedAt=$completedAt, calculation=$calculation, totals=$totals, lines=$lines, payment=$payment, reversal=$reversal]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -101,6 +112,11 @@ class Sale {
       json[r'totals'] = this.totals;
       json[r'lines'] = this.lines;
       json[r'payment'] = this.payment;
+    if (this.reversal != null) {
+      json[r'reversal'] = this.reversal;
+    } else {
+      json[r'reversal'] = null;
+    }
     return json;
   }
 
@@ -155,6 +171,7 @@ class Sale {
         totals: Totals.fromJson(json[r'totals'])!,
         lines: SaleLine.listFromJson(json[r'lines']),
         payment: Payment.fromJson(json[r'payment'])!,
+        reversal: Reversal.fromJson(json[r'reversal']),
       );
     }
     return null;

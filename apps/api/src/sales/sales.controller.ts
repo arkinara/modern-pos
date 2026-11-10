@@ -9,11 +9,13 @@ import { OrderCancelDto } from './dto/order-cancel.dto';
 import { OrderCreateDto } from './dto/order-create.dto';
 import { OrderUpdateDto } from './dto/order-update.dto';
 import { QuoteCreateDto } from './dto/quote-create.dto';
+import { ReversalDto } from './dto/reversal.dto';
 import { SalesListQueryDto } from './dto/sales-list-query.dto';
 import {
   FinalizedResponse,
   OrderResponse,
   QuoteResponse,
+  ReversalResponse,
   SalePageResponse,
   SaleResponse,
   SalesService,
@@ -111,5 +113,18 @@ export class SalesController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<SaleResponse> {
     return this.sales.getSale(outletId, saleId, user);
+  }
+
+  @Roles(Role.OWNER)
+  @Post('sales/:saleId/reversals')
+  @HttpCode(201)
+  reverse(
+    @Param('outletId') outletId: string,
+    @Param('saleId') saleId: string,
+    @Headers('Idempotency-Key') key: string | undefined,
+    @Body() dto: ReversalDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<ReversalResponse> {
+    return this.sales.reverse(outletId, saleId, key, dto, user);
   }
 }
