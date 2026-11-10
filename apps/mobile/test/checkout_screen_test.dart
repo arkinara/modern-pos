@@ -12,11 +12,15 @@ import 'package:modern_pos_mobile/features/checkout/checkout_gateway.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_models.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_repository.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_screen.dart';
+import 'package:modern_pos_mobile/features/printing/print_job_mirror.dart';
+import 'package:modern_pos_mobile/features/printing/print_queue_repository.dart';
 import 'package:modern_pos_mobile/features/printing/printer_controller.dart';
+import 'package:modern_pos_mobile/features/printing/receipt_identity.dart';
 import 'package:modern_pos_mobile/theme/app_theme.dart';
 
 import 'support/checkout_fakes.dart';
 import 'support/fakes.dart';
+import 'support/printer_fakes.dart';
 
 class WidgetHarness {
   WidgetHarness({
@@ -30,10 +34,19 @@ class WidgetHarness {
   final FakeCheckoutGateway gateway;
   final InMemoryCheckoutRepository repository;
   final FakeReceiptPrinter printer;
+  final InMemoryPrintQueueRepository printRepository =
+      InMemoryPrintQueueRepository();
   final InMemoryCartRepository cartRepository = InMemoryCartRepository();
+  late final InMemoryPrinterConfigStore configStore =
+      InMemoryPrinterConfigStore(
+        printer.connected ? testPrinterConfig() : null,
+      );
 
-  Future<void> pump(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(440, 1400);
+  Future<void> pump(
+    WidgetTester tester, {
+    Size size = const Size(440, 1400),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -60,6 +73,12 @@ class WidgetHarness {
           checkoutGatewayProvider.overrideWithValue(gateway),
           deviceIdentityProvider.overrideWithValue(FixedDeviceIdentity()),
           printerAdapterProvider.overrideWithValue(printer),
+          printQueueRepositoryProvider.overrideWithValue(printRepository),
+          printerConfigStoreProvider.overrideWithValue(configStore),
+          receiptIdentityRepositoryProvider.overrideWithValue(
+            FakeReceiptIdentityRepository(),
+          ),
+          printJobMirrorProvider.overrideWithValue(const NoopPrintJobMirror()),
         ],
         child: MaterialApp(
           theme: buildAppTheme(),
@@ -219,6 +238,23 @@ void main() {
       expect(h.gateway.finalizeCalls, 1);
     },
   );
+
+  testWidgets('receipt and print controls fit a 320px cashier screen', (
+    tester,
+  ) async {
+    final h = WidgetHarness();
+    await h.pump(tester, size: const Size(320, 2200));
+
+    await tester.tap(find.text('Exact amount'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Complete sale'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sale completed'), findsOneWidget);
+    expect(find.text('Reprint COPY'), findsOneWidget);
+    expect(find.textContaining('Queued'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'print failure after sale shows a warning and does not repeat checkout',

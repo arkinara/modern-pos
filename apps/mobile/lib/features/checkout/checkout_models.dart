@@ -1,6 +1,7 @@
-import 'package:modern_pos_api_client/api.dart';
+import 'package:modern_pos_api_client/api.dart' hide PrintJob;
 
 import '../../core/formatting/money.dart';
+import '../printing/print_job_models.dart';
 
 /// Tender kinds exposed by the contract. No card provider charge is made; the
 /// manual kind only records an external payment that the cashier has seen.
@@ -163,6 +164,7 @@ class CheckoutState {
     this.sale,
     this.message,
     this.printMessage,
+    this.printJob,
     this.tenderKind = TenderKind.cash,
     this.enteredMinor = 0,
     this.reference = '',
@@ -177,6 +179,7 @@ class CheckoutState {
   final Sale? sale;
   final String? message;
   final String? printMessage;
+  final PrintJob? printJob;
   final TenderKind tenderKind;
   final int enteredMinor;
   final String reference;
@@ -261,6 +264,7 @@ class CheckoutState {
     Sale? sale,
     String? message,
     String? printMessage,
+    PrintJob? printJob,
     TenderKind? tenderKind,
     int? enteredMinor,
     String? reference,
@@ -272,6 +276,7 @@ class CheckoutState {
     bool clearOrder = false,
     bool clearMessage = false,
     bool clearPrintMessage = false,
+    bool clearPrintJob = false,
   }) {
     return CheckoutState(
       phase: phase ?? this.phase,
@@ -283,6 +288,7 @@ class CheckoutState {
       printMessage: clearPrintMessage
           ? null
           : (printMessage ?? this.printMessage),
+      printJob: clearPrintJob ? null : (printJob ?? this.printJob),
       tenderKind: tenderKind ?? this.tenderKind,
       enteredMinor: enteredMinor ?? this.enteredMinor,
       reference: reference ?? this.reference,

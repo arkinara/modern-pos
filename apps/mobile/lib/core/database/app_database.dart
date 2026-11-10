@@ -57,14 +57,61 @@ class CheckoutIntents extends Table {
   Set<Column> get primaryKey => {idempotencyKey};
 }
 
-@DriftDatabase(tables: [RecoveryJobs, CartEntries, CheckoutIntents])
+/// Durable receipt print queue. The row is written before any bytes are sent so
+/// a crash or disconnect cannot lose the sale's print request. `state` uses
+/// `PrintJobState` wire names.
+class PrintQueueJobs extends Table {
+  TextColumn get id => text()();
+  TextColumn get saleId => text()();
+  TextColumn get saleReference => text()();
+  TextColumn get outletId => text()();
+  TextColumn get deviceId => text()();
+  TextColumn get printerConfigId => text().nullable()();
+  TextColumn get printerConfigJson => text().nullable()();
+  TextColumn get receiptJson => text()();
+  TextColumn get state => text().withDefault(const Constant('queued'))();
+  BoolColumn get copy => boolean().withDefault(const Constant(false))();
+  IntColumn get attempts => integer().withDefault(const Constant(0))();
+  TextColumn get lastError => text().nullable()();
+  BoolColumn get serverMirrored =>
+      boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Local audit trail for print attempts and deliberate COPY reprints. The
+/// mirrored API record is diagnostic; this table is the device-owned evidence.
+class PrintQueueAudits extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get jobId => text()();
+  TextColumn get saleId => text()();
+  TextColumn get action => text()();
+  TextColumn get actorId => text()();
+  TextColumn get actorEmail => text()();
+  BoolColumn get copy => boolean().withDefault(const Constant(false))();
+  TextColumn get detail => text().withDefault(const Constant(''))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+@DriftDatabase(
+  tables: [
+    RecoveryJobs,
+    CartEntries,
+    CheckoutIntents,
+    PrintQueueJobs,
+    PrintQueueAudits,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -76,6 +123,10 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 3) {
           await m.createTable(checkoutIntents);
+        }
+        if (from < 4) {
+          await m.createTable(printQueueJobs);
+          await m.createTable(printQueueAudits);
         }
       },
     );

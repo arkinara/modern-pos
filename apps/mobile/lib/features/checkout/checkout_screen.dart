@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:modern_pos_api_client/api.dart';
+import 'package:modern_pos_api_client/api.dart' hide PrintJob;
 
 import '../../theme/app_theme.dart';
+import '../printing/print_job_models.dart';
 import 'checkout_controller.dart';
 import 'checkout_models.dart';
 
@@ -531,10 +532,18 @@ class _AmountRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: PosColors.muted)),
-          Text(value),
+          Expanded(
+            child: Text(label, style: const TextStyle(color: PosColors.muted)),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(value),
+            ),
+          ),
         ],
       ),
     );
@@ -601,6 +610,143 @@ class _PadKey {
   final String value;
 }
 
+class _PrintStatusCard extends StatelessWidget {
+  const _PrintStatusCard({
+    required this.job,
+    required this.onRetry,
+    required this.onReprint,
+  });
+
+  final PrintJob job;
+  final VoidCallback onRetry;
+  final VoidCallback onReprint;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (job.state) {
+      PrintJobState.sent => PosColors.success,
+      PrintJobState.failed => PosColors.danger,
+      PrintJobState.uncertain => PosColors.warning,
+      PrintJobState.queued => PosColors.warning,
+      PrintJobState.sending => PosColors.warning,
+    };
+    final background = switch (job.state) {
+      PrintJobState.sent => PosColors.successSoft,
+      PrintJobState.failed => PosColors.dangerSoft,
+      PrintJobState.uncertain => PosColors.warningSoft,
+      PrintJobState.queued => PosColors.warningSoft,
+      PrintJobState.sending => PosColors.warningSoft,
+    };
+
+    return Semantics(
+      liveRegion: true,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      job.copy ? 'Receipt COPY' : 'Receipt print',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: background,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      job.state.label,
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _description(job),
+                style: TextStyle(color: color, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Attempts: ${job.attempts}. '
+                '${job.copy ? 'Marked COPY on paper.' : 'Original receipt job.'}',
+                style: const TextStyle(color: PosColors.muted, fontSize: 12),
+              ),
+              if (job.lastError != null && job.lastError!.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  job.lastError!,
+                  style: const TextStyle(color: PosColors.muted, fontSize: 12),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (job.state == PrintJobState.failed ||
+                      job.state == PrintJobState.queued)
+                    FilledButton.tonalIcon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry print'),
+                    ),
+                  if (job.state == PrintJobState.uncertain)
+                    FilledButton.tonalIcon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.copy_all_outlined),
+                      label: const Text('Retry as COPY'),
+                    ),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                    ),
+                    onPressed: onReprint,
+                    icon: const Icon(Icons.print_outlined),
+                    label: const Text('Reprint COPY'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Reprints are marked COPY and recorded in the local print '
+                'audit. Physical delivery is never claimed as exactly-once.',
+                style: TextStyle(color: PosColors.muted, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _description(PrintJob job) {
+    return switch (job.state) {
+      PrintJobState.sent => 'Sent to printer. Paper delivery is not verified.',
+      PrintJobState.sending => 'Sending to the printer.',
+      PrintJobState.failed =>
+        'Failed. Delivery is known not sent; retry is safe.',
+      PrintJobState.uncertain =>
+        'Delivery unknown. The paper may or may not have printed; this job is '
+            'not retried automatically.',
+      PrintJobState.queued =>
+        'Queued. It survives app restarts and will not repeat the sale.',
+    };
+  }
+}
+
 class _InlineNotice extends StatelessWidget {
   const _InlineNotice({required this.message, required this.tone});
 
@@ -660,10 +806,13 @@ class _ReceiptBody extends ConsumerWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 4),
-                SelectableText(
-                  sale.reference,
-                  style: Theme.of(context).textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: SelectableText(
+                    sale.reference,
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
                 ),
                 if (state.replayed) ...[
                   const SizedBox(height: 4),
@@ -761,6 +910,16 @@ class _ReceiptBody extends ConsumerWidget {
         if (state.printMessage != null) ...[
           const SizedBox(height: 12),
           _InlineNotice(message: state.printMessage!, tone: PosColors.warning),
+        ],
+        if (state.printJob != null) ...[
+          const SizedBox(height: 12),
+          _PrintStatusCard(
+            job: state.printJob!,
+            onRetry: () =>
+                ref.read(checkoutControllerProvider.notifier).retryPrint(),
+            onReprint: () =>
+                ref.read(checkoutControllerProvider.notifier).reprintCopy(),
+          ),
         ],
         const SizedBox(height: 16),
         FilledButton(

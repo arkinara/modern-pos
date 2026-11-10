@@ -21,9 +21,44 @@ class ReceiptLineItem {
   final int quantity;
   final int unitPriceMinor;
   final int lineTotalMinor;
+
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'variantName': variantName,
+    'quantity': quantity,
+    'unitPriceMinor': unitPriceMinor,
+    'lineTotalMinor': lineTotalMinor,
+  };
+
+  static ReceiptLineItem? fromJson(Map<String, Object?>? json) {
+    if (json == null) {
+      return null;
+    }
+    final name = json['name'];
+    final quantity = json['quantity'];
+    final unitPrice = json['unitPriceMinor'];
+    final lineTotal = json['lineTotalMinor'];
+    if (name is! String ||
+        quantity is! int ||
+        unitPrice is! int ||
+        lineTotal is! int) {
+      return null;
+    }
+    return ReceiptLineItem(
+      name: name,
+      variantName: json['variantName'] as String?,
+      quantity: quantity,
+      unitPriceMinor: unitPrice,
+      lineTotalMinor: lineTotal,
+    );
+  }
 }
 
 /// Everything the byte-stream builder needs to render a receipt.
+///
+/// The financial fields are copied from the server `Sale` snapshot and never
+/// recomputed on the device. [copy] marks a deliberate reprint so the paper is
+/// not mistaken for the original.
 class ReceiptData {
   const ReceiptData({
     required this.outletName,
@@ -32,16 +67,28 @@ class ReceiptData {
     required this.totalMinor,
     required this.currency,
     required this.currencyExponent,
+    this.businessName,
+    this.address,
+    this.receiptHeader,
     this.title = 'SALE RECEIPT',
+    this.copy = false,
     this.serviceMinor = 0,
     this.taxMinor = 0,
     this.reference,
     this.issuedAtLabel,
+    this.tenderLabel,
+    this.tenderedMinor,
+    this.changeMinor,
+    this.paymentReference,
     this.footerLines = const [],
   });
 
+  final String? businessName;
   final String outletName;
+  final String? address;
+  final String? receiptHeader;
   final String title;
+  final bool copy;
   final List<ReceiptLineItem> items;
   final int subtotalMinor;
   final int serviceMinor;
@@ -51,10 +98,281 @@ class ReceiptData {
   final int currencyExponent;
   final String? reference;
   final String? issuedAtLabel;
+  final String? tenderLabel;
+  final int? tenderedMinor;
+  final int? changeMinor;
+  final String? paymentReference;
   final List<String> footerLines;
 
   MoneyFormat get money =>
       MoneyFormat(currency: currency, currencyExponent: currencyExponent);
+
+  /// The same immutable sale snapshot marked as a deliberate COPY reprint.
+  ReceiptData asCopy() {
+    return ReceiptData(
+      businessName: businessName,
+      outletName: outletName,
+      address: address,
+      receiptHeader: receiptHeader,
+      title: title,
+      copy: true,
+      items: items,
+      subtotalMinor: subtotalMinor,
+      serviceMinor: serviceMinor,
+      taxMinor: taxMinor,
+      totalMinor: totalMinor,
+      currency: currency,
+      currencyExponent: currencyExponent,
+      reference: reference,
+      issuedAtLabel: issuedAtLabel,
+      tenderLabel: tenderLabel,
+      tenderedMinor: tenderedMinor,
+      changeMinor: changeMinor,
+      paymentReference: paymentReference,
+      footerLines: [
+        ...footerLines.where((line) => !line.startsWith('COPY - ')),
+        'COPY - reprinted from the completed sale.',
+      ],
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'businessName': businessName,
+    'outletName': outletName,
+    'address': address,
+    'receiptHeader': receiptHeader,
+    'title': title,
+    'copy': copy,
+    'items': items.map((item) => item.toJson()).toList(growable: false),
+    'subtotalMinor': subtotalMinor,
+    'serviceMinor': serviceMinor,
+    'taxMinor': taxMinor,
+    'totalMinor': totalMinor,
+    'currency': currency,
+    'currencyExponent': currencyExponent,
+    'reference': reference,
+    'issuedAtLabel': issuedAtLabel,
+    'tenderLabel': tenderLabel,
+    'tenderedMinor': tenderedMinor,
+    'changeMinor': changeMinor,
+    'paymentReference': paymentReference,
+    'footerLines': footerLines,
+  };
+
+  static ReceiptData? fromJson(Map<String, Object?>? json) {
+    if (json == null) {
+      return null;
+    }
+    final outletName = json['outletName'];
+    final items = json['items'];
+    final subtotal = json['subtotalMinor'];
+    final total = json['totalMinor'];
+    final currency = json['currency'];
+    final exponent = json['currencyExponent'];
+    if (outletName is! String ||
+        items is! List ||
+        subtotal is! int ||
+        total is! int ||
+        currency is! String ||
+        exponent is! int) {
+      return null;
+    }
+    final parsedItems = <ReceiptLineItem>[];
+    for (final item in items) {
+      final parsed = ReceiptLineItem.fromJson(
+        (item as Map?)?.cast<String, Object?>(),
+      );
+      if (parsed != null) {
+        parsedItems.add(parsed);
+      }
+    }
+    final footer = json['footerLines'];
+    return ReceiptData(
+      businessName: json['businessName'] as String?,
+      outletName: outletName,
+      address: json['address'] as String?,
+      receiptHeader: json['receiptHeader'] as String?,
+      title: json['title'] as String? ?? 'SALE RECEIPT',
+      copy: json['copy'] == true,
+      items: parsedItems,
+      subtotalMinor: subtotal,
+      serviceMinor: json['serviceMinor'] as int? ?? 0,
+      taxMinor: json['taxMinor'] as int? ?? 0,
+      totalMinor: total,
+      currency: currency,
+      currencyExponent: exponent,
+      reference: json['reference'] as String?,
+      issuedAtLabel: json['issuedAtLabel'] as String?,
+      tenderLabel: json['tenderLabel'] as String?,
+      tenderedMinor: json['tenderedMinor'] as int?,
+      changeMinor: json['changeMinor'] as int?,
+      paymentReference: json['paymentReference'] as String?,
+      footerLines: footer is List
+          ? footer.whereType<String>().toList(growable: false)
+          : const [],
+    );
+  }
+}
+
+enum ReceiptLineAlignment { left, center }
+
+/// One line of plain receipt text and its alignment. Keeping this pure makes
+/// wrapping and content testable without bytes or hardware.
+class ReceiptDocumentLine {
+  const ReceiptDocumentLine(
+    this.text, {
+    this.alignment = ReceiptLineAlignment.left,
+    this.bold = false,
+  });
+
+  final String text;
+  final ReceiptLineAlignment alignment;
+  final bool bold;
+}
+
+/// Pure receipt body builder. The ESC/POS writer only adds commands around the
+/// lines produced here, so unit tests cover the exact visible content.
+abstract final class ReceiptDocument {
+  static List<ReceiptDocumentLine> build(ReceiptData data, int columns) {
+    if (columns <= 0) {
+      return const [];
+    }
+    final lines = <ReceiptDocumentLine>[];
+    final money = data.money;
+
+    final business = data.businessName;
+    if (business != null && business.isNotEmpty) {
+      for (final line in ReceiptLayout.wrap(business, columns)) {
+        lines.add(_center(line, bold: true));
+      }
+      for (final line in ReceiptLayout.wrap(data.outletName, columns)) {
+        lines.add(_center(line));
+      }
+    } else {
+      for (final line in ReceiptLayout.wrap(data.outletName, columns)) {
+        lines.add(_center(line, bold: true));
+      }
+    }
+    if (data.address != null && data.address!.isNotEmpty) {
+      for (final line in ReceiptLayout.wrap(data.address!, columns)) {
+        lines.add(_center(line));
+      }
+    }
+    if (data.receiptHeader != null && data.receiptHeader!.isNotEmpty) {
+      for (final line in ReceiptLayout.wrap(data.receiptHeader!, columns)) {
+        lines.add(_center(line));
+      }
+    }
+    lines.add(ReceiptDocumentLine(ReceiptLayout.divider(columns)));
+
+    if (data.copy) {
+      lines.add(_center('COPY', bold: true));
+      lines.add(_center('REPRINT - NOT AN ORIGINAL'));
+      lines.add(ReceiptDocumentLine(ReceiptLayout.divider(columns)));
+    }
+
+    for (final line in ReceiptLayout.wrap(data.title, columns)) {
+      lines.add(_center(line, bold: true));
+    }
+    lines.add(ReceiptDocumentLine(ReceiptLayout.divider(columns)));
+
+    if (data.reference != null && data.reference!.isNotEmpty) {
+      for (final line in ReceiptLayout.wrap(
+        'Ref: ${data.reference}',
+        columns,
+      )) {
+        lines.add(ReceiptDocumentLine(line));
+      }
+    }
+    if (data.issuedAtLabel != null && data.issuedAtLabel!.isNotEmpty) {
+      for (final line in ReceiptLayout.wrap(data.issuedAtLabel!, columns)) {
+        lines.add(ReceiptDocumentLine(line));
+      }
+    }
+    if ((data.reference != null && data.reference!.isNotEmpty) ||
+        (data.issuedAtLabel != null && data.issuedAtLabel!.isNotEmpty)) {
+      lines.add(ReceiptDocumentLine(ReceiptLayout.divider(columns)));
+    }
+
+    for (final item in data.items) {
+      for (final line in ReceiptLayout.wrap(item.name, columns)) {
+        lines.add(ReceiptDocumentLine(line));
+      }
+      if (item.variantName != null && item.variantName!.isNotEmpty) {
+        for (final line in ReceiptLayout.wrap(item.variantName!, columns)) {
+          lines.add(ReceiptDocumentLine(line));
+        }
+      }
+      final unit = money.format(item.unitPriceMinor);
+      final total = money.format(item.lineTotalMinor);
+      for (final line in ReceiptLayout.columns(
+        '${item.quantity} x $unit',
+        total,
+        columns,
+      )) {
+        lines.add(ReceiptDocumentLine(line));
+      }
+    }
+
+    lines.add(ReceiptDocumentLine(ReceiptLayout.divider(columns)));
+    _addColumns(lines, 'Subtotal', money.format(data.subtotalMinor), columns);
+    if (data.serviceMinor != 0) {
+      _addColumns(lines, 'Service', money.format(data.serviceMinor), columns);
+    }
+    if (data.taxMinor != 0) {
+      _addColumns(lines, 'Tax', money.format(data.taxMinor), columns);
+    }
+    for (final line in ReceiptLayout.columns(
+      'TOTAL',
+      money.format(data.totalMinor),
+      columns,
+    )) {
+      lines.add(ReceiptDocumentLine(line, bold: true));
+    }
+    lines.add(ReceiptDocumentLine(ReceiptLayout.divider(columns)));
+
+    if (data.tenderLabel != null || data.tenderedMinor != null) {
+      _addColumns(
+        lines,
+        data.tenderLabel ?? 'Tendered',
+        data.tenderedMinor == null ? '' : money.format(data.tenderedMinor!),
+        columns,
+      );
+    }
+    if (data.changeMinor != null) {
+      _addColumns(lines, 'Change', money.format(data.changeMinor!), columns);
+    }
+    if (data.paymentReference != null && data.paymentReference!.isNotEmpty) {
+      _addColumns(lines, 'Reference', data.paymentReference!, columns);
+    }
+
+    for (final footer in data.footerLines) {
+      for (final line in ReceiptLayout.wrap(footer, columns)) {
+        lines.add(_center(line));
+      }
+    }
+
+    return lines;
+  }
+
+  static ReceiptDocumentLine _center(String text, {bool bold = false}) {
+    return ReceiptDocumentLine(
+      text,
+      alignment: ReceiptLineAlignment.center,
+      bold: bold,
+    );
+  }
+
+  static void _addColumns(
+    List<ReceiptDocumentLine> lines,
+    String left,
+    String right,
+    int columns,
+  ) {
+    for (final line in ReceiptLayout.columns(left, right, columns)) {
+      lines.add(ReceiptDocumentLine(line));
+    }
+  }
 }
 
 /// Pure ESC/POS byte-stream builder.
@@ -77,67 +395,13 @@ class EscPosReceiptBuilder {
     );
 
     writer.initialise();
-    writer.alignment(_Align.center);
-    writer.bold(true);
-    writer.line(data.outletName);
+    for (final line in ReceiptDocument.build(data, writer.columns)) {
+      writer.alignment(line.alignment);
+      writer.bold(line.bold);
+      writer.line(line.text);
+    }
+    writer.alignment(ReceiptLineAlignment.left);
     writer.bold(false);
-    writer.line(data.title);
-    writer.alignment(_Align.left);
-    writer.line(ReceiptLayout.divider(writer.columns));
-
-    if (data.reference != null && data.reference!.isNotEmpty) {
-      writer.line('Ref: ${data.reference}');
-    }
-    if (data.issuedAtLabel != null && data.issuedAtLabel!.isNotEmpty) {
-      writer.line(data.issuedAtLabel!);
-    }
-    if (data.reference != null || data.issuedAtLabel != null) {
-      writer.line(ReceiptLayout.divider(writer.columns));
-    }
-
-    for (final item in data.items) {
-      for (final line in ReceiptLayout.wrap(item.name, writer.columns)) {
-        writer.line(line);
-      }
-      if (item.variantName != null && item.variantName!.isNotEmpty) {
-        for (final line in ReceiptLayout.wrap(
-          item.variantName!,
-          writer.columns,
-        )) {
-          writer.line(line);
-        }
-      }
-      final unit = data.money.format(item.unitPriceMinor);
-      final total = data.money.format(item.lineTotalMinor);
-      for (final line in ReceiptLayout.columns(
-        '${item.quantity} x $unit',
-        total,
-        writer.columns,
-      )) {
-        writer.line(line);
-      }
-    }
-
-    writer.line(ReceiptLayout.divider(writer.columns));
-    writer.columnsLine('Subtotal', data.money.format(data.subtotalMinor));
-    if (data.serviceMinor != 0) {
-      writer.columnsLine('Service', data.money.format(data.serviceMinor));
-    }
-    if (data.taxMinor != 0) {
-      writer.columnsLine('Tax', data.money.format(data.taxMinor));
-    }
-    writer.bold(true);
-    writer.columnsLine('TOTAL', data.money.format(data.totalMinor));
-    writer.bold(false);
-    writer.line(ReceiptLayout.divider(writer.columns));
-
-    writer.alignment(_Align.center);
-    for (final footer in data.footerLines) {
-      for (final line in ReceiptLayout.wrap(footer, writer.columns)) {
-        writer.line(line);
-      }
-    }
-    writer.alignment(_Align.left);
     writer.feed(2);
     if (openCashDrawer) {
       writer.cashDrawer();
@@ -157,6 +421,7 @@ class EscPosReceiptBuilder {
   }) {
     return build(
       ReceiptData(
+        businessName: 'Modern POS',
         outletName: 'Modern POS',
         title: 'PRINTER TEST',
         reference: 'TEST-${config.paperWidth.millimetres}MM',
@@ -174,6 +439,9 @@ class EscPosReceiptBuilder {
         totalMinor: 1000,
         currency: 'IDR',
         currencyExponent: 0,
+        tenderLabel: 'Cash tendered',
+        tenderedMinor: 1000,
+        changeMinor: 0,
         footerLines: const [
           'Test print only.',
           'Physical output requires device verification.',
@@ -186,8 +454,6 @@ class EscPosReceiptBuilder {
   }
 }
 
-enum _Align { left, center, right }
-
 class _EscPosWriter {
   _EscPosWriter({required this.columns, required this.encoding});
 
@@ -197,12 +463,8 @@ class _EscPosWriter {
 
   void initialise() => _add(const [0x1B, 0x40]);
 
-  void alignment(_Align value) {
-    final code = switch (value) {
-      _Align.left => 0,
-      _Align.center => 1,
-      _Align.right => 2,
-    };
+  void alignment(ReceiptLineAlignment value) {
+    final code = value == ReceiptLineAlignment.center ? 1 : 0;
     _add([0x1B, 0x61, code]);
   }
 
@@ -213,12 +475,6 @@ class _EscPosWriter {
   void line(String value) {
     text(value);
     newline();
-  }
-
-  void columnsLine(String left, String right) {
-    for (final line in ReceiptLayout.columns(left, right, columns)) {
-      this.line(line);
-    }
   }
 
   void newline() => _add(const [0x0A]);
