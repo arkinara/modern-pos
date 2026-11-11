@@ -9,6 +9,8 @@ import 'package:modern_pos_mobile/features/checkout/checkout_controller.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_gateway.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_models.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_repository.dart';
+import 'package:modern_pos_mobile/features/offline/offline_sale_models.dart';
+import 'package:modern_pos_mobile/features/offline/offline_sale_store.dart';
 import 'package:modern_pos_mobile/features/printing/print_job_mirror.dart';
 import 'package:modern_pos_mobile/features/printing/print_job_models.dart';
 import 'package:modern_pos_mobile/features/printing/print_queue_repository.dart';
@@ -16,6 +18,7 @@ import 'package:modern_pos_mobile/features/printing/printer_controller.dart';
 import 'package:modern_pos_mobile/features/printing/receipt_identity.dart';
 
 import 'support/checkout_fakes.dart';
+import 'support/offline_fakes.dart';
 import 'support/fakes.dart';
 import 'support/printer_fakes.dart';
 
@@ -51,6 +54,7 @@ class Harness {
         ),
         cartRepositoryProvider.overrideWithValue(cartRepository),
         checkoutRepositoryProvider.overrideWithValue(this.repository),
+        offlineSaleStoreProvider.overrideWithValue(offlineStore),
         checkoutGatewayProvider.overrideWithValue(this.gateway),
         deviceIdentityProvider.overrideWithValue(FixedDeviceIdentity()),
         printerAdapterProvider.overrideWithValue(this.printer),
@@ -71,6 +75,7 @@ class Harness {
   late final InMemoryPrintQueueRepository printRepository;
   late final InMemoryPrinterConfigStore configStore;
   final InMemoryCartRepository cartRepository = InMemoryCartRepository();
+  final InMemoryOfflineSaleStore offlineStore = InMemoryOfflineSaleStore();
   late final ProviderContainer container;
 
   CheckoutController get controller =>
@@ -492,4 +497,29 @@ void main() {
     );
     expect(h.gateway.finalizeCalls, 1);
   });
+
+  test(
+    'airplane-mode sale is stored encrypted as pending and clears the cart',
+    () async {
+      final h = Harness();
+      await h.load();
+      h.gateway.online = false;
+
+      await h.controller.start();
+      var state = h.container.read(checkoutControllerProvider).requireValue;
+      expect(state.phase, CheckoutPhase.error);
+
+      await h.controller.queueOfflineSale();
+      state = h.container.read(checkoutControllerProvider).requireValue;
+      expect(state.phase, CheckoutPhase.queuedOffline);
+      expect(state.offlineKey, isNotNull);
+      expect(state.offlineTotalMinor, 50000);
+      expect(h.offlineStore.rows, hasLength(1));
+      final record = h.offlineStore.rows.values.single;
+      expect(record.state, OfflineSaleState.pending);
+      expect(record.payload.totalMinor, 50000);
+      expect(await h.cartRepository.load(), isEmpty);
+      expect(h.gateway.finalizeCalls, 0);
+    },
+  );
 }

@@ -35,6 +35,14 @@ abstract interface class CheckoutGateway {
     required String key,
     required String deviceId,
   });
+
+  Future<SalePage> listSales({
+    required String outletId,
+    DateTime? from,
+    DateTime? to,
+    String? cursor,
+    int limit = 100,
+  });
 }
 
 class HttpCheckoutGateway implements CheckoutGateway {
@@ -148,6 +156,33 @@ class HttpCheckoutGateway implements CheckoutGateway {
         throw const FormatException('Invalid recovery response');
       }
       return finalized;
+    });
+  }
+
+  @override
+  Future<SalePage> listSales({
+    required String outletId,
+    DateTime? from,
+    DateTime? to,
+    String? cursor,
+    int limit = 100,
+  }) async {
+    return _guard(() async {
+      final response = await _dio.get<dynamic>(
+        '/v1/outlets/${Uri.encodeComponent(outletId)}/sales',
+        queryParameters: {
+          'limit': limit,
+          'from': ?from?.toUtc().toIso8601String(),
+          'to': ?to?.toUtc().toIso8601String(),
+          'cursor': ?cursor,
+        },
+        options: _options,
+      );
+      final page = SalePage.fromJson(response.data);
+      if (page == null) {
+        throw const FormatException('Invalid sales response');
+      }
+      return page;
     });
   }
 

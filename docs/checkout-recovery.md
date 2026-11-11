@@ -1,9 +1,9 @@
 # Checkout and uncertain-outcome recovery (#12)
 
-Android cashier checkout is online-only. The Flutter client creates a server
-draft order, requests an immutable 60-second quote, records the tender, and
-sends one finalize request. Sales are never completed from a local cart, and a
-print failure never repeats the sale.
+Android cashier checkout normally creates a server draft order, requests an
+immutable 60-second quote, records the tender, and sends one finalize request.
+When the API is unreachable the cashier can record an offline capture in the
+encrypted queue (#19). A print failure never repeats the sale.
 
 ## Ownership boundary
 
@@ -26,7 +26,8 @@ print failure never repeats the sale.
    requires the entered amount to equal the total and omits tender/change.
 4. **Persist before network.** The client writes the finalize key, device id,
    order id, quote id, exact payment payload and totals to Drift
-   (`checkout_intents`) before the finalize request leaves the device.
+   (`checkout_intents`) before the finalize request leaves the device. The
+   payload is AES-256-GCM encrypted; see `docs/offline-sync.md`.
 5. **Finalize.** `POST /outlets/{id}/sales/finalize` with the same key and
    payload. The button is disabled in flight and the controller ignores
    duplicate calls, so repeated taps produce one HTTP request.
@@ -108,9 +109,11 @@ paid; the reference is available from sales history (#14).
 - #16 owns the print queue, automatic retries and reprints. #12 only renders and
   attempts one best-effort print after the sale exists.
 - #17 owns reversals. #12 has no reversal UI.
-- #19 owns offline sale sync. Offline completion is intentionally impossible;
-  the cart remains on the device and the sale is blocked until a confirmed
-  server connection exists.
+- #19 implements offline capture and sync in `docs/offline-sync.md`. Stock is
+  not reserved while offline; the server may reject a synced sale with
+  `INSUFFICIENT_STOCK`, which becomes a cashier-visible conflict. A cold offline
+  capture uses the local cart total and becomes a conflict if the server total
+  changed.
 - Sale history, reporting and CSV remain #14.
 - Hardware print output is `PENDING — requires Android device and printer`.
   A successful transport write is not proof of physical output.

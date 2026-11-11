@@ -31,6 +31,18 @@ class SettingsScreen extends StatelessWidget {
             onTap: () => context.push('/settings/print-queue'),
           ),
         ),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.cloud_sync_outlined),
+            title: const Text('Offline sales & sync'),
+            subtitle: const Text(
+              'Review pending, uncertain and conflict sales; retry encrypted '
+              'sync and reconcile with server sales.',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/offline-sync'),
+          ),
+        ),
         const Card(
           child: ListTile(
             leading: Icon(Icons.dns_outlined),

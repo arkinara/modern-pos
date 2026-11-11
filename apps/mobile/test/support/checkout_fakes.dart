@@ -91,12 +91,14 @@ class FakeCheckoutGateway implements CheckoutGateway {
   int createQuoteCalls = 0;
   int finalizeCalls = 0;
   int recoverCalls = 0;
+  int listSalesCalls = 0;
 
   String? lastOrderKey;
   String? lastFinalizeKey;
   Finalize? lastFinalizePayload;
   String? lastRecoverKey;
   String? lastRecoverDeviceId;
+  List<Sale> serverSales = const [];
 
   @override
   Future<bool> ping() async {
@@ -180,6 +182,18 @@ class FakeCheckoutGateway implements CheckoutGateway {
       return handler();
     }
     return finalized;
+  }
+
+  @override
+  Future<SalePage> listSales({
+    required String outletId,
+    DateTime? from,
+    DateTime? to,
+    String? cursor,
+    int limit = 100,
+  }) async {
+    listSalesCalls++;
+    return SalePage(items: serverSales, nextCursor: null);
   }
 }
 

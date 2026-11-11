@@ -92,6 +92,8 @@ class PendingCheckout {
     required this.createdAt,
     this.status = PendingCheckoutStatus.pending,
     this.saleReference,
+    this.orderKey = '',
+    this.orderVersion,
   });
 
   final String idempotencyKey;
@@ -106,6 +108,8 @@ class PendingCheckout {
   final DateTime createdAt;
   final PendingCheckoutStatus status;
   final String? saleReference;
+  final String orderKey;
+  final int? orderVersion;
 
   MoneyFormat get money =>
       MoneyFormat(currency: currency, currencyExponent: currencyExponent);
@@ -136,6 +140,8 @@ class PendingCheckout {
       createdAt: createdAt,
       status: status ?? this.status,
       saleReference: saleReference ?? this.saleReference,
+      orderKey: orderKey,
+      orderVersion: orderVersion,
     );
   }
 }
@@ -150,6 +156,7 @@ enum CheckoutPhase {
   recovering,
   inFlight,
   quoteExpired,
+  queuedOffline,
   completed,
   blocked,
   error,
@@ -170,6 +177,9 @@ class CheckoutState {
     this.reference = '',
     this.serverConfirmed = false,
     this.replayed = false,
+    this.offlineKey,
+    this.offlineTotalMinor,
+    this.orderKey,
   });
 
   final CheckoutPhase phase;
@@ -185,6 +195,9 @@ class CheckoutState {
   final String reference;
   final bool serverConfirmed;
   final bool replayed;
+  final String? offlineKey;
+  final int? offlineTotalMinor;
+  final String? orderKey;
 
   bool get hasPending => pending != null;
 
@@ -270,6 +283,9 @@ class CheckoutState {
     String? reference,
     bool? serverConfirmed,
     bool? replayed,
+    String? offlineKey,
+    int? offlineTotalMinor,
+    String? orderKey,
     bool clearPending = false,
     bool clearQuote = false,
     bool clearSale = false,
@@ -294,6 +310,9 @@ class CheckoutState {
       reference: reference ?? this.reference,
       serverConfirmed: serverConfirmed ?? this.serverConfirmed,
       replayed: replayed ?? this.replayed,
+      offlineKey: offlineKey ?? this.offlineKey,
+      offlineTotalMinor: offlineTotalMinor ?? this.offlineTotalMinor,
+      orderKey: orderKey ?? this.orderKey,
     );
   }
 }

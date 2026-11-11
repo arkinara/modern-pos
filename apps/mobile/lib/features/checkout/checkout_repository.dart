@@ -1,14 +1,12 @@
-import 'dart:convert';
-
-import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/database/app_database.dart';
-import '../../core/providers.dart';
+import '../offline/offline_sale_models.dart';
+import '../offline/offline_sale_store.dart';
 import 'checkout_models.dart';
 
-/// Durable checkout intent storage. The pending row is the proof that a key
-/// left the device and must be resolved before another sale starts.
+/// Durable checkout intent storage. The row is encrypted by [OfflineSaleStore]
+/// before it reaches SQLite, so a pending sale survives restarts without
+/// writing the payment or order payload in plaintext.
 abstract interface class CheckoutRepository {
   Future<PendingCheckout?> loadPending();
 
@@ -24,51 +22,47 @@ abstract interface class CheckoutRepository {
 }
 
 class DriftCheckoutRepository implements CheckoutRepository {
-  DriftCheckoutRepository(this._database);
+  DriftCheckoutRepository(this._store);
 
-  final AppDatabase _database;
+  final OfflineSaleStore _store;
 
   @override
   Future<PendingCheckout?> loadPending() async {
-    final query = _database.select(_database.checkoutIntents)
-      ..where(
-        (table) => table.status.equals(PendingCheckoutStatus.pending.name),
-      )
-      ..orderBy([(table) => OrderingTerm.desc(table.createdAt)])
-      ..limit(1);
-    final row = await query.getSingleOrNull();
-    return row == null ? null : _toPending(row);
+    final record = await _store.loadLatestActive();
+    return record == null ? null : _toPending(record);
   }
 
   @override
   Future<PendingCheckout?> loadByKey(String idempotencyKey) async {
-    final query = _database.select(_database.checkoutIntents)
-      ..where((table) => table.idempotencyKey.equals(idempotencyKey));
-    final row = await query.getSingleOrNull();
-    return row == null ? null : _toPending(row);
+    final record = await _store.loadById(idempotencyKey);
+    return record == null ? null : _toPending(record);
   }
 
   @override
   Future<void> savePending(PendingCheckout pending) async {
-    await _database
-        .into(_database.checkoutIntents)
-        .insertOnConflictUpdate(
-          CheckoutIntentsCompanion.insert(
-            idempotencyKey: pending.idempotencyKey,
-            deviceId: pending.deviceId,
-            outletId: pending.outletId,
-            orderId: pending.orderId,
-            quoteId: pending.quoteId,
-            paymentJson: jsonEncode(pending.payment.toJson()),
-            totalMinor: pending.totalMinor,
-            currency: pending.currency,
-            currencyExponent: pending.currencyExponent,
-            status: Value(pending.status.name),
-            saleReference: Value(pending.saleReference),
-            createdAt: pending.createdAt,
-            updatedAt: DateTime.now(),
-          ),
-        );
+    await _store.upsert(
+      OfflineSalePayload(
+        idempotencyKey: pending.idempotencyKey,
+        orderKey: pending.orderKey.isEmpty
+            ? pending.idempotencyKey
+            : pending.orderKey,
+        outletId: pending.outletId,
+        deviceId: pending.deviceId,
+        lines: const [],
+        tenderKind: pending.payment.kind,
+        amountMinor: pending.payment.amountMinor,
+        tenderedMinor: pending.payment.tenderedMinor ?? pending.totalMinor,
+        reference: pending.payment.reference,
+        totalMinor: pending.totalMinor,
+        currency: pending.currency,
+        currencyExponent: pending.currencyExponent,
+        createdAt: pending.createdAt,
+        orderId: pending.orderId,
+        quoteId: pending.quoteId,
+        orderVersion: pending.orderVersion,
+      ),
+      saleReference: pending.saleReference,
+    );
   }
 
   @override
@@ -76,65 +70,53 @@ class DriftCheckoutRepository implements CheckoutRepository {
     String idempotencyKey,
     String saleReference,
   ) async {
-    await (_database.update(
-      _database.checkoutIntents,
-    )..where((table) => table.idempotencyKey.equals(idempotencyKey))).write(
-      CheckoutIntentsCompanion(
-        status: Value(PendingCheckoutStatus.confirmed.name),
-        saleReference: Value(saleReference),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+    await _store.markSynced(idempotencyKey, saleReference);
   }
 
   @override
   Future<void> markFailed(String idempotencyKey) async {
-    await (_database.update(
-      _database.checkoutIntents,
-    )..where((table) => table.idempotencyKey.equals(idempotencyKey))).write(
-      CheckoutIntentsCompanion(
-        status: Value(PendingCheckoutStatus.failed.name),
-        updatedAt: Value(DateTime.now()),
-      ),
+    await _store.markFailed(
+      idempotencyKey,
+      'The server did not record this checkout after recovery.',
     );
   }
 
   @override
   Future<void> delete(String idempotencyKey) async {
-    await (_database.delete(
-      _database.checkoutIntents,
-    )..where((table) => table.idempotencyKey.equals(idempotencyKey))).go();
+    await _store.delete(idempotencyKey);
   }
 
-  PendingCheckout _toPending(CheckoutIntent row) {
+  PendingCheckout _toPending(OfflineSaleRecord record) {
+    final payload = record.payload;
+    final state = switch (record.state) {
+      OfflineSaleState.synced => PendingCheckoutStatus.confirmed,
+      OfflineSaleState.failed => PendingCheckoutStatus.failed,
+      _ => PendingCheckoutStatus.pending,
+    };
     return PendingCheckout(
-      idempotencyKey: row.idempotencyKey,
-      deviceId: row.deviceId,
-      outletId: row.outletId,
-      orderId: row.orderId,
-      quoteId: row.quoteId,
-      payment:
-          PaymentDraft.fromJson(
-            jsonDecode(row.paymentJson) as Map<String, dynamic>?,
-          ) ??
-          const PaymentDraft(
-            kind: TenderKind.cash,
-            amountMinor: 0,
-            tenderedMinor: 0,
-          ),
-      totalMinor: row.totalMinor,
-      currency: row.currency,
-      currencyExponent: row.currencyExponent,
-      createdAt: row.createdAt,
-      status: PendingCheckoutStatus.values.firstWhere(
-        (value) => value.name == row.status,
-        orElse: () => PendingCheckoutStatus.pending,
+      idempotencyKey: payload.idempotencyKey,
+      deviceId: payload.deviceId,
+      outletId: payload.outletId,
+      orderId: payload.orderId ?? '',
+      quoteId: payload.quoteId ?? '',
+      payment: PaymentDraft(
+        kind: payload.tenderKind,
+        amountMinor: payload.amountMinor,
+        tenderedMinor: payload.tenderedMinor,
+        reference: payload.reference,
       ),
-      saleReference: row.saleReference,
+      totalMinor: payload.totalMinor,
+      currency: payload.currency,
+      currencyExponent: payload.currencyExponent,
+      createdAt: payload.createdAt,
+      status: state,
+      saleReference: record.saleReference,
+      orderKey: payload.orderKey,
+      orderVersion: payload.orderVersion,
     );
   }
 }
 
 final checkoutRepositoryProvider = Provider<CheckoutRepository>((ref) {
-  return DriftCheckoutRepository(ref.watch(appDatabaseProvider));
+  return DriftCheckoutRepository(ref.watch(offlineSaleStoreProvider));
 });
