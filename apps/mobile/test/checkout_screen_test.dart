@@ -11,6 +11,8 @@ import 'package:modern_pos_mobile/features/cart/cart_line.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_gateway.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_models.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_repository.dart';
+import 'package:modern_pos_mobile/features/offline/offline_sale_models.dart';
+import 'package:modern_pos_mobile/features/offline/offline_sale_store.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_screen.dart';
 import 'package:modern_pos_mobile/features/printing/print_job_mirror.dart';
 import 'package:modern_pos_mobile/features/printing/print_queue_repository.dart';
@@ -19,6 +21,7 @@ import 'package:modern_pos_mobile/features/printing/receipt_identity.dart';
 import 'package:modern_pos_mobile/theme/app_theme.dart';
 
 import 'support/checkout_fakes.dart';
+import 'support/offline_fakes.dart';
 import 'support/fakes.dart';
 import 'support/printer_fakes.dart';
 
@@ -37,6 +40,7 @@ class WidgetHarness {
   final InMemoryPrintQueueRepository printRepository =
       InMemoryPrintQueueRepository();
   final InMemoryCartRepository cartRepository = InMemoryCartRepository();
+  final InMemoryOfflineSaleStore offlineStore = InMemoryOfflineSaleStore();
   late final InMemoryPrinterConfigStore configStore =
       InMemoryPrinterConfigStore(
         printer.connected ? testPrinterConfig() : null,
@@ -70,6 +74,7 @@ class WidgetHarness {
           ),
           cartRepositoryProvider.overrideWithValue(cartRepository),
           checkoutRepositoryProvider.overrideWithValue(repository),
+          offlineSaleStoreProvider.overrideWithValue(offlineStore),
           checkoutGatewayProvider.overrideWithValue(gateway),
           deviceIdentityProvider.overrideWithValue(FixedDeviceIdentity()),
           printerAdapterProvider.overrideWithValue(printer),
@@ -275,4 +280,27 @@ void main() {
       expect(h.printer.printCount, 1);
     },
   );
+
+  testWidgets('offline capture offers a durable pending sale', (tester) async {
+    final h = WidgetHarness();
+    h.gateway.online = false;
+    await h.pump(tester, size: const Size(320, 1400));
+
+    expect(find.textContaining('No confirmed server connection'), findsWidgets);
+    final button = find.widgetWithText(OutlinedButton, 'Record offline sale');
+    expect(button, findsOneWidget);
+
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Offline sale recorded'), findsOneWidget);
+    expect(
+      find.widgetWithText(FilledButton, 'Open offline sync'),
+      findsOneWidget,
+    );
+    expect(h.offlineStore.rows, hasLength(1));
+    expect(h.offlineStore.rows.values.single.state, OfflineSaleState.pending);
+    expect(await h.cartRepository.load(), isEmpty);
+    expect(h.gateway.finalizeCalls, 0);
+  });
 }

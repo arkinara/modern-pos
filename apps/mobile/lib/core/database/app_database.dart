@@ -34,10 +34,10 @@ class CartEntries extends Table {
   Set<Column> get primaryKey => {menuId, variantId};
 }
 
-/// Durable checkout intent written before the finalize request leaves the
-/// device. The server key is `(outletId, deviceId, idempotencyKey)`; retaining
-/// the exact payload lets a restart resolve the unknown outcome with the same
-/// key instead of starting a second sale.
+/// Durable checkout and offline-sale queue. The exact payload is encrypted
+/// with AES-256-GCM before the row is written; `payloadCipher`, `payloadNonce`
+/// and `payloadMac` are base64 envelopes. The legacy metadata columns are kept
+/// for schema compatibility but are deliberately blank for encrypted rows.
 class CheckoutIntents extends Table {
   TextColumn get idempotencyKey => text()();
   TextColumn get deviceId => text()();
@@ -50,6 +50,15 @@ class CheckoutIntents extends Table {
   IntColumn get currencyExponent => integer()();
   TextColumn get status => text().withDefault(const Constant('pending'))();
   TextColumn get saleReference => text().nullable()();
+  TextColumn get syncState => text().withDefault(const Constant('pending'))();
+  TextColumn get payloadCipher => text().nullable()();
+  TextColumn get payloadNonce => text().nullable()();
+  TextColumn get payloadMac => text().nullable()();
+  TextColumn get keyVersion => text().withDefault(const Constant('v1'))();
+  TextColumn get payloadDigest => text().nullable()();
+  IntColumn get attempts => integer().withDefault(const Constant(0))();
+  DateTimeColumn get nextAttemptAt => dateTime().nullable()();
+  TextColumn get lastError => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -111,7 +120,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -127,6 +136,17 @@ class AppDatabase extends _$AppDatabase {
         if (from < 4) {
           await m.createTable(printQueueJobs);
           await m.createTable(printQueueAudits);
+        }
+        if (from < 5) {
+          await m.addColumn(checkoutIntents, checkoutIntents.syncState);
+          await m.addColumn(checkoutIntents, checkoutIntents.payloadCipher);
+          await m.addColumn(checkoutIntents, checkoutIntents.payloadNonce);
+          await m.addColumn(checkoutIntents, checkoutIntents.payloadMac);
+          await m.addColumn(checkoutIntents, checkoutIntents.keyVersion);
+          await m.addColumn(checkoutIntents, checkoutIntents.payloadDigest);
+          await m.addColumn(checkoutIntents, checkoutIntents.attempts);
+          await m.addColumn(checkoutIntents, checkoutIntents.nextAttemptAt);
+          await m.addColumn(checkoutIntents, checkoutIntents.lastError);
         }
       },
     );

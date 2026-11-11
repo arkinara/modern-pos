@@ -996,6 +996,109 @@ class $CheckoutIntentsTable extends CheckoutIntents
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta(
+    'syncState',
+  );
+  @override
+  late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
+    'sync_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _payloadCipherMeta = const VerificationMeta(
+    'payloadCipher',
+  );
+  @override
+  late final GeneratedColumn<String> payloadCipher = GeneratedColumn<String>(
+    'payload_cipher',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _payloadNonceMeta = const VerificationMeta(
+    'payloadNonce',
+  );
+  @override
+  late final GeneratedColumn<String> payloadNonce = GeneratedColumn<String>(
+    'payload_nonce',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _payloadMacMeta = const VerificationMeta(
+    'payloadMac',
+  );
+  @override
+  late final GeneratedColumn<String> payloadMac = GeneratedColumn<String>(
+    'payload_mac',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _keyVersionMeta = const VerificationMeta(
+    'keyVersion',
+  );
+  @override
+  late final GeneratedColumn<String> keyVersion = GeneratedColumn<String>(
+    'key_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('v1'),
+  );
+  static const VerificationMeta _payloadDigestMeta = const VerificationMeta(
+    'payloadDigest',
+  );
+  @override
+  late final GeneratedColumn<String> payloadDigest = GeneratedColumn<String>(
+    'payload_digest',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta(
+    'attempts',
+  );
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+    'attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _nextAttemptAtMeta = const VerificationMeta(
+    'nextAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextAttemptAt =
+      GeneratedColumn<DateTime>(
+        'next_attempt_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1031,6 +1134,15 @@ class $CheckoutIntentsTable extends CheckoutIntents
     currencyExponent,
     status,
     saleReference,
+    syncState,
+    payloadCipher,
+    payloadNonce,
+    payloadMac,
+    keyVersion,
+    payloadDigest,
+    attempts,
+    nextAttemptAt,
+    lastError,
     createdAt,
     updatedAt,
   ];
@@ -1142,6 +1254,72 @@ class $CheckoutIntentsTable extends CheckoutIntents
         ),
       );
     }
+    if (data.containsKey('sync_state')) {
+      context.handle(
+        _syncStateMeta,
+        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
+      );
+    }
+    if (data.containsKey('payload_cipher')) {
+      context.handle(
+        _payloadCipherMeta,
+        payloadCipher.isAcceptableOrUnknown(
+          data['payload_cipher']!,
+          _payloadCipherMeta,
+        ),
+      );
+    }
+    if (data.containsKey('payload_nonce')) {
+      context.handle(
+        _payloadNonceMeta,
+        payloadNonce.isAcceptableOrUnknown(
+          data['payload_nonce']!,
+          _payloadNonceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('payload_mac')) {
+      context.handle(
+        _payloadMacMeta,
+        payloadMac.isAcceptableOrUnknown(data['payload_mac']!, _payloadMacMeta),
+      );
+    }
+    if (data.containsKey('key_version')) {
+      context.handle(
+        _keyVersionMeta,
+        keyVersion.isAcceptableOrUnknown(data['key_version']!, _keyVersionMeta),
+      );
+    }
+    if (data.containsKey('payload_digest')) {
+      context.handle(
+        _payloadDigestMeta,
+        payloadDigest.isAcceptableOrUnknown(
+          data['payload_digest']!,
+          _payloadDigestMeta,
+        ),
+      );
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(
+        _attemptsMeta,
+        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
+      );
+    }
+    if (data.containsKey('next_attempt_at')) {
+      context.handle(
+        _nextAttemptAtMeta,
+        nextAttemptAt.isAcceptableOrUnknown(
+          data['next_attempt_at']!,
+          _nextAttemptAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1211,6 +1389,42 @@ class $CheckoutIntentsTable extends CheckoutIntents
         DriftSqlType.string,
         data['${effectivePrefix}sale_reference'],
       ),
+      syncState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_state'],
+      )!,
+      payloadCipher: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_cipher'],
+      ),
+      payloadNonce: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_nonce'],
+      ),
+      payloadMac: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_mac'],
+      ),
+      keyVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key_version'],
+      )!,
+      payloadDigest: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_digest'],
+      ),
+      attempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempts'],
+      )!,
+      nextAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_attempt_at'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1240,6 +1454,15 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
   final int currencyExponent;
   final String status;
   final String? saleReference;
+  final String syncState;
+  final String? payloadCipher;
+  final String? payloadNonce;
+  final String? payloadMac;
+  final String keyVersion;
+  final String? payloadDigest;
+  final int attempts;
+  final DateTime? nextAttemptAt;
+  final String? lastError;
   final DateTime createdAt;
   final DateTime updatedAt;
   const CheckoutIntent({
@@ -1254,6 +1477,15 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
     required this.currencyExponent,
     required this.status,
     this.saleReference,
+    required this.syncState,
+    this.payloadCipher,
+    this.payloadNonce,
+    this.payloadMac,
+    required this.keyVersion,
+    this.payloadDigest,
+    required this.attempts,
+    this.nextAttemptAt,
+    this.lastError,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -1272,6 +1504,27 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
     map['status'] = Variable<String>(status);
     if (!nullToAbsent || saleReference != null) {
       map['sale_reference'] = Variable<String>(saleReference);
+    }
+    map['sync_state'] = Variable<String>(syncState);
+    if (!nullToAbsent || payloadCipher != null) {
+      map['payload_cipher'] = Variable<String>(payloadCipher);
+    }
+    if (!nullToAbsent || payloadNonce != null) {
+      map['payload_nonce'] = Variable<String>(payloadNonce);
+    }
+    if (!nullToAbsent || payloadMac != null) {
+      map['payload_mac'] = Variable<String>(payloadMac);
+    }
+    map['key_version'] = Variable<String>(keyVersion);
+    if (!nullToAbsent || payloadDigest != null) {
+      map['payload_digest'] = Variable<String>(payloadDigest);
+    }
+    map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || nextAttemptAt != null) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -1293,6 +1546,27 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
       saleReference: saleReference == null && nullToAbsent
           ? const Value.absent()
           : Value(saleReference),
+      syncState: Value(syncState),
+      payloadCipher: payloadCipher == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payloadCipher),
+      payloadNonce: payloadNonce == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payloadNonce),
+      payloadMac: payloadMac == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payloadMac),
+      keyVersion: Value(keyVersion),
+      payloadDigest: payloadDigest == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payloadDigest),
+      attempts: Value(attempts),
+      nextAttemptAt: nextAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAttemptAt),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1315,6 +1589,15 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
       currencyExponent: serializer.fromJson<int>(json['currencyExponent']),
       status: serializer.fromJson<String>(json['status']),
       saleReference: serializer.fromJson<String?>(json['saleReference']),
+      syncState: serializer.fromJson<String>(json['syncState']),
+      payloadCipher: serializer.fromJson<String?>(json['payloadCipher']),
+      payloadNonce: serializer.fromJson<String?>(json['payloadNonce']),
+      payloadMac: serializer.fromJson<String?>(json['payloadMac']),
+      keyVersion: serializer.fromJson<String>(json['keyVersion']),
+      payloadDigest: serializer.fromJson<String?>(json['payloadDigest']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      nextAttemptAt: serializer.fromJson<DateTime?>(json['nextAttemptAt']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1334,6 +1617,15 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
       'currencyExponent': serializer.toJson<int>(currencyExponent),
       'status': serializer.toJson<String>(status),
       'saleReference': serializer.toJson<String?>(saleReference),
+      'syncState': serializer.toJson<String>(syncState),
+      'payloadCipher': serializer.toJson<String?>(payloadCipher),
+      'payloadNonce': serializer.toJson<String?>(payloadNonce),
+      'payloadMac': serializer.toJson<String?>(payloadMac),
+      'keyVersion': serializer.toJson<String>(keyVersion),
+      'payloadDigest': serializer.toJson<String?>(payloadDigest),
+      'attempts': serializer.toJson<int>(attempts),
+      'nextAttemptAt': serializer.toJson<DateTime?>(nextAttemptAt),
+      'lastError': serializer.toJson<String?>(lastError),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1351,6 +1643,15 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
     int? currencyExponent,
     String? status,
     Value<String?> saleReference = const Value.absent(),
+    String? syncState,
+    Value<String?> payloadCipher = const Value.absent(),
+    Value<String?> payloadNonce = const Value.absent(),
+    Value<String?> payloadMac = const Value.absent(),
+    String? keyVersion,
+    Value<String?> payloadDigest = const Value.absent(),
+    int? attempts,
+    Value<DateTime?> nextAttemptAt = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => CheckoutIntent(
@@ -1367,6 +1668,21 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
     saleReference: saleReference.present
         ? saleReference.value
         : this.saleReference,
+    syncState: syncState ?? this.syncState,
+    payloadCipher: payloadCipher.present
+        ? payloadCipher.value
+        : this.payloadCipher,
+    payloadNonce: payloadNonce.present ? payloadNonce.value : this.payloadNonce,
+    payloadMac: payloadMac.present ? payloadMac.value : this.payloadMac,
+    keyVersion: keyVersion ?? this.keyVersion,
+    payloadDigest: payloadDigest.present
+        ? payloadDigest.value
+        : this.payloadDigest,
+    attempts: attempts ?? this.attempts,
+    nextAttemptAt: nextAttemptAt.present
+        ? nextAttemptAt.value
+        : this.nextAttemptAt,
+    lastError: lastError.present ? lastError.value : this.lastError,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -1393,6 +1709,27 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
       saleReference: data.saleReference.present
           ? data.saleReference.value
           : this.saleReference,
+      syncState: data.syncState.present ? data.syncState.value : this.syncState,
+      payloadCipher: data.payloadCipher.present
+          ? data.payloadCipher.value
+          : this.payloadCipher,
+      payloadNonce: data.payloadNonce.present
+          ? data.payloadNonce.value
+          : this.payloadNonce,
+      payloadMac: data.payloadMac.present
+          ? data.payloadMac.value
+          : this.payloadMac,
+      keyVersion: data.keyVersion.present
+          ? data.keyVersion.value
+          : this.keyVersion,
+      payloadDigest: data.payloadDigest.present
+          ? data.payloadDigest.value
+          : this.payloadDigest,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      nextAttemptAt: data.nextAttemptAt.present
+          ? data.nextAttemptAt.value
+          : this.nextAttemptAt,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1412,6 +1749,15 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
           ..write('currencyExponent: $currencyExponent, ')
           ..write('status: $status, ')
           ..write('saleReference: $saleReference, ')
+          ..write('syncState: $syncState, ')
+          ..write('payloadCipher: $payloadCipher, ')
+          ..write('payloadNonce: $payloadNonce, ')
+          ..write('payloadMac: $payloadMac, ')
+          ..write('keyVersion: $keyVersion, ')
+          ..write('payloadDigest: $payloadDigest, ')
+          ..write('attempts: $attempts, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
+          ..write('lastError: $lastError, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1419,7 +1765,7 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     idempotencyKey,
     deviceId,
     outletId,
@@ -1431,9 +1777,18 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
     currencyExponent,
     status,
     saleReference,
+    syncState,
+    payloadCipher,
+    payloadNonce,
+    payloadMac,
+    keyVersion,
+    payloadDigest,
+    attempts,
+    nextAttemptAt,
+    lastError,
     createdAt,
     updatedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1449,6 +1804,15 @@ class CheckoutIntent extends DataClass implements Insertable<CheckoutIntent> {
           other.currencyExponent == this.currencyExponent &&
           other.status == this.status &&
           other.saleReference == this.saleReference &&
+          other.syncState == this.syncState &&
+          other.payloadCipher == this.payloadCipher &&
+          other.payloadNonce == this.payloadNonce &&
+          other.payloadMac == this.payloadMac &&
+          other.keyVersion == this.keyVersion &&
+          other.payloadDigest == this.payloadDigest &&
+          other.attempts == this.attempts &&
+          other.nextAttemptAt == this.nextAttemptAt &&
+          other.lastError == this.lastError &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -1465,6 +1829,15 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
   final Value<int> currencyExponent;
   final Value<String> status;
   final Value<String?> saleReference;
+  final Value<String> syncState;
+  final Value<String?> payloadCipher;
+  final Value<String?> payloadNonce;
+  final Value<String?> payloadMac;
+  final Value<String> keyVersion;
+  final Value<String?> payloadDigest;
+  final Value<int> attempts;
+  final Value<DateTime?> nextAttemptAt;
+  final Value<String?> lastError;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -1480,6 +1853,15 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
     this.currencyExponent = const Value.absent(),
     this.status = const Value.absent(),
     this.saleReference = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.payloadCipher = const Value.absent(),
+    this.payloadNonce = const Value.absent(),
+    this.payloadMac = const Value.absent(),
+    this.keyVersion = const Value.absent(),
+    this.payloadDigest = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
+    this.lastError = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1496,6 +1878,15 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
     required int currencyExponent,
     this.status = const Value.absent(),
     this.saleReference = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.payloadCipher = const Value.absent(),
+    this.payloadNonce = const Value.absent(),
+    this.payloadMac = const Value.absent(),
+    this.keyVersion = const Value.absent(),
+    this.payloadDigest = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
+    this.lastError = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -1522,6 +1913,15 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
     Expression<int>? currencyExponent,
     Expression<String>? status,
     Expression<String>? saleReference,
+    Expression<String>? syncState,
+    Expression<String>? payloadCipher,
+    Expression<String>? payloadNonce,
+    Expression<String>? payloadMac,
+    Expression<String>? keyVersion,
+    Expression<String>? payloadDigest,
+    Expression<int>? attempts,
+    Expression<DateTime>? nextAttemptAt,
+    Expression<String>? lastError,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -1538,6 +1938,15 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
       if (currencyExponent != null) 'currency_exponent': currencyExponent,
       if (status != null) 'status': status,
       if (saleReference != null) 'sale_reference': saleReference,
+      if (syncState != null) 'sync_state': syncState,
+      if (payloadCipher != null) 'payload_cipher': payloadCipher,
+      if (payloadNonce != null) 'payload_nonce': payloadNonce,
+      if (payloadMac != null) 'payload_mac': payloadMac,
+      if (keyVersion != null) 'key_version': keyVersion,
+      if (payloadDigest != null) 'payload_digest': payloadDigest,
+      if (attempts != null) 'attempts': attempts,
+      if (nextAttemptAt != null) 'next_attempt_at': nextAttemptAt,
+      if (lastError != null) 'last_error': lastError,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -1556,6 +1965,15 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
     Value<int>? currencyExponent,
     Value<String>? status,
     Value<String?>? saleReference,
+    Value<String>? syncState,
+    Value<String?>? payloadCipher,
+    Value<String?>? payloadNonce,
+    Value<String?>? payloadMac,
+    Value<String>? keyVersion,
+    Value<String?>? payloadDigest,
+    Value<int>? attempts,
+    Value<DateTime?>? nextAttemptAt,
+    Value<String?>? lastError,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -1572,6 +1990,15 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
       currencyExponent: currencyExponent ?? this.currencyExponent,
       status: status ?? this.status,
       saleReference: saleReference ?? this.saleReference,
+      syncState: syncState ?? this.syncState,
+      payloadCipher: payloadCipher ?? this.payloadCipher,
+      payloadNonce: payloadNonce ?? this.payloadNonce,
+      payloadMac: payloadMac ?? this.payloadMac,
+      keyVersion: keyVersion ?? this.keyVersion,
+      payloadDigest: payloadDigest ?? this.payloadDigest,
+      attempts: attempts ?? this.attempts,
+      nextAttemptAt: nextAttemptAt ?? this.nextAttemptAt,
+      lastError: lastError ?? this.lastError,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -1614,6 +2041,33 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
     if (saleReference.present) {
       map['sale_reference'] = Variable<String>(saleReference.value);
     }
+    if (syncState.present) {
+      map['sync_state'] = Variable<String>(syncState.value);
+    }
+    if (payloadCipher.present) {
+      map['payload_cipher'] = Variable<String>(payloadCipher.value);
+    }
+    if (payloadNonce.present) {
+      map['payload_nonce'] = Variable<String>(payloadNonce.value);
+    }
+    if (payloadMac.present) {
+      map['payload_mac'] = Variable<String>(payloadMac.value);
+    }
+    if (keyVersion.present) {
+      map['key_version'] = Variable<String>(keyVersion.value);
+    }
+    if (payloadDigest.present) {
+      map['payload_digest'] = Variable<String>(payloadDigest.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (nextAttemptAt.present) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1640,6 +2094,15 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
           ..write('currencyExponent: $currencyExponent, ')
           ..write('status: $status, ')
           ..write('saleReference: $saleReference, ')
+          ..write('syncState: $syncState, ')
+          ..write('payloadCipher: $payloadCipher, ')
+          ..write('payloadNonce: $payloadNonce, ')
+          ..write('payloadMac: $payloadMac, ')
+          ..write('keyVersion: $keyVersion, ')
+          ..write('payloadDigest: $payloadDigest, ')
+          ..write('attempts: $attempts, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
+          ..write('lastError: $lastError, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -3572,6 +4035,15 @@ typedef $$CheckoutIntentsTableCreateCompanionBuilder =
       required int currencyExponent,
       Value<String> status,
       Value<String?> saleReference,
+      Value<String> syncState,
+      Value<String?> payloadCipher,
+      Value<String?> payloadNonce,
+      Value<String?> payloadMac,
+      Value<String> keyVersion,
+      Value<String?> payloadDigest,
+      Value<int> attempts,
+      Value<DateTime?> nextAttemptAt,
+      Value<String?> lastError,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -3589,6 +4061,15 @@ typedef $$CheckoutIntentsTableUpdateCompanionBuilder =
       Value<int> currencyExponent,
       Value<String> status,
       Value<String?> saleReference,
+      Value<String> syncState,
+      Value<String?> payloadCipher,
+      Value<String?> payloadNonce,
+      Value<String?> payloadMac,
+      Value<String> keyVersion,
+      Value<String?> payloadDigest,
+      Value<int> attempts,
+      Value<DateTime?> nextAttemptAt,
+      Value<String?> lastError,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -3655,6 +4136,51 @@ class $$CheckoutIntentsTableFilterComposer
 
   ColumnFilters<String> get saleReference => $composableBuilder(
     column: $table.saleReference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadCipher => $composableBuilder(
+    column: $table.payloadCipher,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadNonce => $composableBuilder(
+    column: $table.payloadNonce,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadMac => $composableBuilder(
+    column: $table.payloadMac,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get keyVersion => $composableBuilder(
+    column: $table.keyVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadDigest => $composableBuilder(
+    column: $table.payloadDigest,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3733,6 +4259,51 @@ class $$CheckoutIntentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadCipher => $composableBuilder(
+    column: $table.payloadCipher,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadNonce => $composableBuilder(
+    column: $table.payloadNonce,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadMac => $composableBuilder(
+    column: $table.payloadMac,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get keyVersion => $composableBuilder(
+    column: $table.keyVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadDigest => $composableBuilder(
+    column: $table.payloadDigest,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3796,6 +4367,45 @@ class $$CheckoutIntentsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => column);
+
+  GeneratedColumn<String> get payloadCipher => $composableBuilder(
+    column: $table.payloadCipher,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadNonce => $composableBuilder(
+    column: $table.payloadNonce,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadMac => $composableBuilder(
+    column: $table.payloadMac,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get keyVersion => $composableBuilder(
+    column: $table.keyVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadDigest => $composableBuilder(
+    column: $table.payloadDigest,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -3851,6 +4461,15 @@ class $$CheckoutIntentsTableTableManager
                 Value<int> currencyExponent = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String?> saleReference = const Value.absent(),
+                Value<String> syncState = const Value.absent(),
+                Value<String?> payloadCipher = const Value.absent(),
+                Value<String?> payloadNonce = const Value.absent(),
+                Value<String?> payloadMac = const Value.absent(),
+                Value<String> keyVersion = const Value.absent(),
+                Value<String?> payloadDigest = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3866,6 +4485,15 @@ class $$CheckoutIntentsTableTableManager
                 currencyExponent: currencyExponent,
                 status: status,
                 saleReference: saleReference,
+                syncState: syncState,
+                payloadCipher: payloadCipher,
+                payloadNonce: payloadNonce,
+                payloadMac: payloadMac,
+                keyVersion: keyVersion,
+                payloadDigest: payloadDigest,
+                attempts: attempts,
+                nextAttemptAt: nextAttemptAt,
+                lastError: lastError,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -3883,6 +4511,15 @@ class $$CheckoutIntentsTableTableManager
                 required int currencyExponent,
                 Value<String> status = const Value.absent(),
                 Value<String?> saleReference = const Value.absent(),
+                Value<String> syncState = const Value.absent(),
+                Value<String?> payloadCipher = const Value.absent(),
+                Value<String?> payloadNonce = const Value.absent(),
+                Value<String?> payloadMac = const Value.absent(),
+                Value<String> keyVersion = const Value.absent(),
+                Value<String?> payloadDigest = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -3898,6 +4535,15 @@ class $$CheckoutIntentsTableTableManager
                 currencyExponent: currencyExponent,
                 status: status,
                 saleReference: saleReference,
+                syncState: syncState,
+                payloadCipher: payloadCipher,
+                payloadNonce: payloadNonce,
+                payloadMac: payloadMac,
+                keyVersion: keyVersion,
+                payloadDigest: payloadDigest,
+                attempts: attempts,
+                nextAttemptAt: nextAttemptAt,
+                lastError: lastError,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

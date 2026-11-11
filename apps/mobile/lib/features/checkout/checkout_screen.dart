@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:modern_pos_api_client/api.dart' hide PrintJob;
 
 import '../../theme/app_theme.dart';
+import '../offline/offline_sync_controller.dart';
 import '../printing/print_job_models.dart';
 import 'checkout_controller.dart';
 import 'checkout_models.dart';
@@ -116,7 +117,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             'Check the connection and retry. The cart is still on this device.',
         actionLabel: 'Retry',
         onAction: () => ref.read(checkoutControllerProvider.notifier).start(),
+        secondaryLabel: state.message?.contains('connection') == true
+            ? 'Record offline sale'
+            : null,
+        onSecondary: state.message?.contains('connection') == true
+            ? () => ref
+                  .read(checkoutControllerProvider.notifier)
+                  .queueOfflineSale()
+            : null,
       ),
+      CheckoutPhase.queuedOffline => _OfflineQueuedPanel(state: state),
       CheckoutPhase.quoteExpired => _QuoteExpiredPanel(state: state),
       CheckoutPhase.awaitingTender => _TenderBody(
         state: state,
@@ -127,14 +137,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 }
 
-class _CheckoutScaffold extends StatelessWidget {
+class _CheckoutScaffold extends ConsumerWidget {
   const _CheckoutScaffold({required this.body, this.canPop = true});
 
   final Widget body;
   final bool canPop;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final offlineActive =
+        ref.watch(offlineSyncControllerProvider).value?.summary.active ?? 0;
     return PopScope(
       canPop: canPop,
       child: Scaffold(
@@ -142,6 +154,17 @@ class _CheckoutScaffold extends StatelessWidget {
           backgroundColor: PosColors.ink,
           foregroundColor: PosColors.surface,
           title: const Text('Checkout'),
+          actions: [
+            IconButton(
+              tooltip: 'Offline sales and sync',
+              onPressed: () => context.push('/settings/offline-sync'),
+              icon: Badge.count(
+                count: offlineActive,
+                isLabelVisible: offlineActive > 0,
+                child: const Icon(Icons.cloud_sync_outlined),
+              ),
+            ),
+          ],
         ),
         body: SafeArea(child: body),
       ),
@@ -182,6 +205,8 @@ class _MessagePanel extends StatelessWidget {
     required this.message,
     required this.actionLabel,
     required this.onAction,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
   final IconData icon;
@@ -189,6 +214,8 @@ class _MessagePanel extends StatelessWidget {
   final String message;
   final String actionLabel;
   final VoidCallback onAction;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -207,8 +234,109 @@ class _MessagePanel extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           FilledButton(onPressed: onAction, child: Text(actionLabel)),
+          if (secondaryLabel != null && onSecondary != null) ...[
+            const SizedBox(height: 8),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+              onPressed: onSecondary,
+              child: Text(secondaryLabel!),
+            ),
+          ],
+          if (secondaryLabel != null) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'An offline sale is stored encrypted on this device and synced '
+              'later. Stock is not reserved; the server may reject it as a '
+              'conflict. Do not ring the same cart twice.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: PosColors.warning, fontSize: 12),
+            ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _OfflineQueuedPanel extends ConsumerWidget {
+  const _OfflineQueuedPanel({required this.state});
+
+  final CheckoutState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final money = state.money;
+    final total = state.offlineTotalMinor ?? 0;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      children: [
+        Card(
+          color: PosColors.warningSoft,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 44,
+                  color: PosColors.warning,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Offline sale recorded',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  money.format(total),
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Key ${state.offlineKey ?? ''}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: PosColors.muted, fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  state.message ?? 'The sale is queued for encrypted sync.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: PosColors.muted),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Card(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'The cart was cleared because this sale is now a pending record. '
+              'Do not ring it again. Open Offline sync to retry or resolve a '
+              'server conflict caused by stock or a changed total.',
+              style: TextStyle(color: PosColors.muted),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+          onPressed: () => context.push('/settings/offline-sync'),
+          icon: const Icon(Icons.sync),
+          label: const Text('Open offline sync'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+          onPressed: () {
+            ref.read(checkoutControllerProvider.notifier).acknowledge();
+            context.go('/catalog');
+          },
+          child: const Text('New sale'),
+        ),
+      ],
     );
   }
 }

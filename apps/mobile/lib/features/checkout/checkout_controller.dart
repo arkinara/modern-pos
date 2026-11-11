@@ -7,6 +7,8 @@ import '../../core/device_identity.dart';
 import '../auth/auth_controller.dart';
 import '../cart/cart_controller.dart';
 import '../printing/print_job_models.dart';
+import '../offline/offline_sale_models.dart';
+import '../offline/offline_sale_store.dart';
 import '../printing/print_queue_service.dart';
 import 'checkout_gateway.dart';
 import 'checkout_models.dart';
@@ -34,6 +36,8 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
   CheckoutRepository get _repository => ref.read(checkoutRepositoryProvider);
 
   CheckoutGateway get _gateway => ref.read(checkoutGatewayProvider);
+
+  OfflineSaleStore get _offlineStore => ref.read(offlineSaleStoreProvider);
 
   @override
   Future<CheckoutState> build() async {
@@ -122,10 +126,11 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
         );
       }
 
+      final orderKey = generateUuidV4();
       final order = await _gateway.createOrder(
         outletId: outletId,
         deviceId: deviceId,
-        idempotencyKey: generateUuidV4(),
+        idempotencyKey: orderKey,
         lines: cart.lines
             .map(
               (line) => OrderWriteLinesInner(
@@ -147,6 +152,7 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
           order: order,
           quote: quote,
           serverConfirmed: true,
+          orderKey: orderKey,
         ),
       );
     } on CheckoutApiException catch (error) {
@@ -346,6 +352,8 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
         currency: quote.currency,
         currencyExponent: quote.currencyExponent,
         createdAt: DateTime.now(),
+        orderKey: current.orderKey ?? generateUuidV4(),
+        orderVersion: order.version,
       );
 
       await _repository.savePending(pending);
@@ -367,6 +375,11 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
       await _handleSubmitError(error, pending);
     } catch (_) {
       if (pending != null) {
+        await _offlineStore.markUncertain(
+          pending.idempotencyKey,
+          'The sale outcome is unknown. Resolve with the same checkout key.',
+          DateTime.now().add(const Duration(seconds: 2)),
+        );
         state = AsyncData(
           (state.value ?? current).copyWith(
             phase: CheckoutPhase.blocked,
@@ -377,6 +390,85 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
           ),
         );
       }
+    } finally {
+      _writeInFlight = false;
+    }
+  }
+
+  /// Captures a sale from the local cart while the API is unreachable. The
+  /// encrypted queue holds the exact lines and tender. At sync the server
+  /// creates the draft order and quote; a changed total or insufficient stock
+  /// becomes a visible conflict instead of a silent second sale.
+  Future<void> queueOfflineSale() async {
+    if (_writeInFlight) {
+      return;
+    }
+    final current = await future;
+    final cart = await ref.read(cartControllerProvider.future);
+    if (cart.lines.isEmpty) {
+      state = AsyncData(
+        current.copyWith(
+          phase: CheckoutPhase.blocked,
+          message: 'Add at least one item before recording an offline sale.',
+        ),
+      );
+      return;
+    }
+
+    _writeInFlight = true;
+    try {
+      final outletId = await _requireOutletId();
+      final deviceId = await ref.read(deviceIdentityProvider).deviceId();
+      final first = cart.lines.first;
+      final totalMinor = cart.totalMinor;
+      final payload = OfflineSalePayload(
+        idempotencyKey: generateUuidV4(),
+        orderKey: generateUuidV4(),
+        outletId: outletId,
+        deviceId: deviceId,
+        lines: cart.lines
+            .map(
+              (line) => OfflineSaleLine(
+                variantId: line.variantId,
+                name: line.itemName,
+                variantName: line.variantName,
+                quantity: line.quantity,
+                unitPriceMinor: line.unitPriceMinor,
+              ),
+            )
+            .toList(growable: false),
+        tenderKind: TenderKind.cash,
+        amountMinor: totalMinor,
+        tenderedMinor: totalMinor,
+        reference: null,
+        totalMinor: totalMinor,
+        currency: first.currency,
+        currencyExponent: first.currencyExponent,
+        createdAt: DateTime.now(),
+      );
+      await _offlineStore.upsert(payload);
+      await ref.read(cartRepositoryProvider).clear();
+      ref.invalidate(cartControllerProvider);
+      state = AsyncData(
+        CheckoutState(
+          phase: CheckoutPhase.queuedOffline,
+          offlineKey: payload.idempotencyKey,
+          offlineTotalMinor: totalMinor,
+          message:
+              'Offline sale saved as cash at the local cart total. The server '
+              'confirms price, tax, service and stock during sync. If the total '
+              'changed, the sale becomes a conflict and must be reviewed.',
+        ),
+      );
+    } catch (error) {
+      state = AsyncData(
+        current.copyWith(
+          phase: CheckoutPhase.blocked,
+          message:
+              'The offline sale could not be stored encryptedly: $error. '
+              'Do not take payment; retry after checking device storage.',
+        ),
+      );
     } finally {
       _writeInFlight = false;
     }
@@ -498,6 +590,12 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
     }
 
     if (error.statusCode == 409 && error.code == 'IDEMPOTENCY_CONFLICT') {
+      if (pending != null) {
+        await _offlineStore.markConflict(
+          pending.idempotencyKey,
+          '${error.message} The key was reused with a different payload.',
+        );
+      }
       state = AsyncData(
         current.copyWith(
           phase: CheckoutPhase.blocked,
@@ -510,6 +608,13 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
     }
 
     if (error.statusCode == 409 && error.code == 'IDEMPOTENCY_IN_PROGRESS') {
+      if (pending != null) {
+        await _offlineStore.markUncertain(
+          pending.idempotencyKey,
+          'The server is still processing this checkout.',
+          DateTime.now().add(const Duration(seconds: 2)),
+        );
+      }
       state = AsyncData(
         current.copyWith(
           phase: CheckoutPhase.inFlight,
@@ -523,6 +628,20 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
       return;
     }
 
+    if (pending != null) {
+      if (error.retryable || error.isOffline) {
+        await _offlineStore.markUncertain(
+          pending.idempotencyKey,
+          error.message,
+          DateTime.now().add(const Duration(seconds: 2)),
+        );
+      } else {
+        await _offlineStore.markConflict(
+          pending.idempotencyKey,
+          '${error.code}: ${error.message}',
+        );
+      }
+    }
     state = AsyncData(
       current.copyWith(
         phase: CheckoutPhase.blocked,
@@ -613,6 +732,11 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
         );
         _schedulePoll();
       } else if (error.isOffline) {
+        await _offlineStore.markUncertain(
+          pending.idempotencyKey,
+          error.message,
+          DateTime.now().add(const Duration(seconds: 2)),
+        );
         state = AsyncData(
           current.copyWith(
             phase: CheckoutPhase.blocked,
@@ -623,6 +747,11 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
           ),
         );
       } else {
+        await _offlineStore.markUncertain(
+          pending.idempotencyKey,
+          error.message,
+          DateTime.now().add(const Duration(seconds: 2)),
+        );
         state = AsyncData(
           current.copyWith(
             phase: CheckoutPhase.blocked,
@@ -700,7 +829,8 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
 
   Future<void> _clearCart() async {
     try {
-      await ref.read(cartControllerProvider.notifier).clear();
+      await ref.read(cartRepositoryProvider).clear();
+      ref.invalidate(cartControllerProvider);
     } catch (_) {
       // The sale is already committed; a local cart cleanup failure must not
       // change the checkout outcome.

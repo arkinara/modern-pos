@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
 import '../auth/auth_controller.dart';
 import '../cart/cart_controller.dart';
+import '../offline/offline_sync_controller.dart';
 
 /// Cashier shell: catalog and cart are first-class destinations. The existing
 /// dashboard and settings screens stay reachable and keep working.
@@ -19,6 +20,8 @@ class CashierShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartControllerProvider);
     final lines = cart.value?.lineCount ?? 0;
+    final offlineActive =
+        ref.watch(offlineSyncControllerProvider).value?.summary.active ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -26,6 +29,15 @@ class CashierShell extends ConsumerWidget {
         foregroundColor: PosColors.surface,
         title: Text(_titles[navigationShell.currentIndex]),
         actions: [
+          IconButton(
+            tooltip: 'Offline sales and sync',
+            onPressed: () => context.push('/settings/offline-sync'),
+            icon: Badge.count(
+              count: offlineActive,
+              isLabelVisible: offlineActive > 0,
+              child: const Icon(Icons.cloud_sync_outlined),
+            ),
+          ),
           IconButton(
             tooltip: 'Sign out',
             onPressed: () =>

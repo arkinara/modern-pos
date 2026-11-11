@@ -47,6 +47,35 @@ Reproduction:
    and total.
 5. Refresh owner stock and reports for the same local day.
 
+### Offline queue on a real Android device
+
+Status: `PENDING - requires Android device`.
+
+What was verified on this VPS: unit and widget tests prove AES-256-GCM
+round-trip, restart persistence through a real SQLite file, tamper and
+missing-key failures, no plaintext/key in raw rows, single-flight replay,
+`UNCERTAIN` recovery with `sales_recover`, conflict reasons from the server and
+reconciliation against the sales ledger. A two-device race against the real API
+left the last stock item at `0`, accepted exactly one sale and rejected the
+other with `422 INSUFFICIENT_STOCK`; the transcript is in `docs/offline-sync.md`.
+
+What was not verified: Android Keystore behaviour after process death, real
+airplane mode, and a second physical device. The VPS has no Android device.
+
+Reproduction:
+
+1. Install the debug APK on two Android devices and sign in as cashiers.
+2. Load the catalog, add the same low-stock item on both devices and enable
+   airplane mode.
+3. Use Checkout > Record offline sale on both devices. Confirm the pending key
+   and that the cart is cleared.
+4. Kill and reopen the app; confirm the pending item is still present and the
+   screen never shows plaintext SQLite data.
+5. Disable airplane mode on one device, open Settings > Offline sales & sync and
+   tap Sync now. Record the state and reference.
+6. Repeat on the second device. Confirm one sale, one conflict with the server
+   shortage reason, no negative stock and no duplicate sale.
+
 ### Printer disconnect on real hardware
 
 Status: `PENDING - requires printer + Android device`.
@@ -65,8 +94,11 @@ and record the visible state and paper result.
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Offline checkout and conflict resolution | Deferred to #19 | Checkout is online-only in Phase 1 |
-| Phase 2 features | Deferred to #20 | Not started in this ticket |
+| Offline checkout and conflict resolution | Implemented client-side in #19 | Encrypted queue + idempotent replay; no server sync API |
+| Production deployment and field rollout | Deferred to #20 | Not started in this ticket |
+| Stock reservation while offline | Not implemented | Server remains authoritative; rejected sales become conflicts |
+| Server-side sync API or queue | Not implemented | Contract unchanged; client replays existing idempotent endpoints |
+| Cold offline tax/service/rounding | Not guaranteed | A server total change becomes a cashier conflict |
 | Production deployment | Separate explicit decision | Single-VPS staging is not production |
 | User management UI and password reset | Not implemented | Users are seeded/provisioned outside the app |
 | Partial or line-level refunds | Not implemented | One full reversal per completed sale |
