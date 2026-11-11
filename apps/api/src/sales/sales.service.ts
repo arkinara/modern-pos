@@ -1,6 +1,7 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import {
+  OrderAuditAction,
   OrderState,
   PaymentKind,
   PaymentStatus,
@@ -17,8 +18,12 @@ import { CheckoutQueryDto } from './dto/checkout-query.dto';
 import { FinalizeDto } from './dto/finalize.dto';
 import { OrderCancelDto } from './dto/order-cancel.dto';
 import { OrderCreateDto } from './dto/order-create.dto';
+import { OrderListQueryDto } from './dto/order-list-query.dto';
+import { OrderSplitDto } from './dto/order-split.dto';
+import { OrderTransferDto } from './dto/order-transfer.dto';
 import { OrderUpdateDto } from './dto/order-update.dto';
 import { QuoteCreateDto } from './dto/quote-create.dto';
+import { TableCreateDto } from './dto/table-create.dto';
 import { FIXED_POINT_PATTERN, ReversalDto, RestockItemDto } from './dto/reversal.dto';
 import { SalesListQueryDto } from './dto/sales-list-query.dto';
 import { calculateTotals, normalizePayment, toWireMinor, type MoneyTotals } from './money';
@@ -40,6 +45,38 @@ export interface OrderResponse {
   state: OrderState;
   version: number;
   lines: OrderLineResponse[];
+  tableId?: string;
+  tableLabel?: string;
+  splitGroupId?: string;
+  parentOrderId?: string;
+}
+
+export interface TableResponse {
+  id: string;
+  label: string;
+  seatCount: number;
+  active: boolean;
+}
+
+export interface OrderAuditResponse {
+  id: string;
+  orderId: string;
+  action: OrderAuditAction;
+  actorId: string;
+  fromTableId?: string;
+  toTableId?: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface OrderPageResponse {
+  items: OrderResponse[];
+  nextCursor: string | null;
+}
+
+export interface OrderSplitResponse {
+  parentOrder: OrderResponse;
+  bills: OrderResponse[];
 }
 
 export interface TotalsResponse {
@@ -274,6 +311,7 @@ export class SalesService {
       operation: 'ORDER_CREATE',
       outletId,
       deviceId: dto.deviceId,
+      tableId: dto.tableId ?? null,
       lines: dto.lines.map((line) => ({
         variantId: line.variantId,
         quantity: line.quantity,
@@ -288,7 +326,10 @@ export class SalesService {
           idempotencyKey,
         },
       },
-      include: { lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+      include: {
+        lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+        table: { select: { label: true } },
+      },
     });
 
     if (prior) {
@@ -306,6 +347,9 @@ export class SalesService {
           dto.lines,
           'ITEM_UNAVAILABLE',
         );
+        const table = dto.tableId
+          ? await this.requireTable(tx, outletId, user.businessId, dto.tableId)
+          : null;
 
         const order = await tx.order.create({
           data: {
@@ -315,6 +359,7 @@ export class SalesService {
             deviceId: dto.deviceId,
             idempotencyKey,
             requestHash: hash,
+            ...(table ? { tableId: table.id } : {}),
             lines: {
               create: dto.lines.map((line) => ({
                 variantId: line.variantId,
@@ -322,7 +367,20 @@ export class SalesService {
               })),
             },
           },
-          include: { lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+          include: {
+            lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+            table: { select: { label: true } },
+          },
+        });
+
+        await this.writeAudit(tx, {
+          businessId: user.businessId,
+          outletId,
+          orderId: order.id,
+          actorId: user.id,
+          action: OrderAuditAction.OPEN,
+          toTableId: table?.id ?? null,
+          metadata: table ? { tableLabel: table.label } : {},
         });
 
         return this.toOrder(order);
@@ -337,7 +395,10 @@ export class SalesService {
               idempotencyKey,
             },
           },
-          include: { lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+          include: {
+            lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+            table: { select: { label: true } },
+          },
         });
 
         if (existing) {
@@ -395,6 +456,15 @@ export class SalesService {
         })),
       });
 
+      await this.writeAudit(tx, {
+        businessId: user.businessId,
+        outletId,
+        orderId,
+        actorId: user.id,
+        action: OrderAuditAction.UPDATE,
+        metadata: { fromVersion: order.version, toVersion: order.version + 1 },
+      });
+
       const refreshed = await this.loadOrder(tx, orderId);
       return this.toOrder(refreshed);
     });
@@ -434,7 +504,278 @@ export class SalesService {
       if (updated.count !== 1) {
         throw apiError(409, 'VERSION_CONFLICT', 'Order was changed by another request');
       }
+
+      await this.writeAudit(tx, {
+        businessId: user.businessId,
+        outletId,
+        orderId,
+        actorId: user.id,
+        action: OrderAuditAction.CANCEL,
+        fromTableId: order.tableId,
+        metadata: { stockConsumed: false },
+      });
     });
+  }
+
+  async listTables(outletId: string, user: AuthenticatedUser): Promise<{ items: TableResponse[] }> {
+    await this.requireOutlet(this.prisma, outletId, user.businessId);
+    const rows = await this.prisma.diningTable.findMany({
+      where: { outletId, businessId: user.businessId, active: true },
+      orderBy: [{ label: 'asc' }, { id: 'asc' }],
+    });
+
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        label: row.label,
+        seatCount: row.seatCount,
+        active: row.active,
+      })),
+    };
+  }
+
+  async createTable(
+    outletId: string,
+    dto: TableCreateDto,
+    user: AuthenticatedUser,
+  ): Promise<TableResponse> {
+    if (user.role !== Role.OWNER) {
+      throw apiError(403, 'FORBIDDEN', 'Only an owner can create tables');
+    }
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const outlet = await this.requireOutlet(tx, outletId, user.businessId);
+        const table = await tx.diningTable.create({
+          data: {
+            businessId: user.businessId,
+            outletId: outlet.id,
+            label: dto.label,
+            seatCount: dto.seatCount ?? 0,
+          },
+        });
+
+        return {
+          id: table.id,
+          label: table.label,
+          seatCount: table.seatCount,
+          active: table.active,
+        };
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw apiError(409, 'TABLE_EXISTS', 'A table with this label already exists');
+      }
+
+      throw error;
+    }
+  }
+
+  async listOpenOrders(
+    outletId: string,
+    query: OrderListQueryDto,
+    user: AuthenticatedUser,
+  ): Promise<OrderPageResponse> {
+    await this.requireOutlet(this.prisma, outletId, user.businessId);
+    const limit = query.limit ?? 100;
+
+    const rows = await this.prisma.order.findMany({
+      where: {
+        businessId: user.businessId,
+        outletId,
+        state: OrderState.DRAFT,
+      },
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+      include: {
+        lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+        table: { select: { label: true } },
+      },
+    });
+
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+
+    return {
+      items: page.map((order) => this.toOrder(order)),
+      nextCursor: hasMore ? (page[page.length - 1]?.id ?? null) : null,
+    };
+  }
+
+  async getOrder(
+    outletId: string,
+    orderId: string,
+    user: AuthenticatedUser,
+  ): Promise<OrderResponse> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, outletId, businessId: user.businessId },
+      include: {
+        lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+        table: { select: { label: true } },
+      },
+    });
+
+    if (!order) {
+      throw apiError(404, 'NOT_FOUND', 'Order not found');
+    }
+
+    return this.toOrder(order);
+  }
+
+  async transferOrder(
+    outletId: string,
+    orderId: string,
+    dto: OrderTransferDto,
+    user: AuthenticatedUser,
+  ): Promise<OrderResponse> {
+    if (user.role !== Role.OWNER) {
+      throw apiError(403, 'FORBIDDEN', 'Only an owner can transfer a table order');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const order = await this.requireOrder(tx, outletId, orderId, user);
+
+      if (order.state !== OrderState.DRAFT) {
+        throw apiError(409, 'ORDER_NOT_DRAFT', 'Only draft orders can be transferred');
+      }
+
+      if (order.version !== dto.version) {
+        throw apiError(409, 'VERSION_CONFLICT', 'Order was changed by another request');
+      }
+
+      if (order.tableId === dto.tableId) {
+        throw apiError(422, 'TABLE_UNCHANGED', 'Order is already assigned to this table');
+      }
+
+      const table = await this.requireTable(tx, outletId, user.businessId, dto.tableId);
+      const fromTable = order.tableId
+        ? await this.findTable(tx, outletId, user.businessId, order.tableId)
+        : null;
+
+      const updated = await tx.order.updateMany({
+        where: {
+          id: orderId,
+          outletId,
+          businessId: user.businessId,
+          state: OrderState.DRAFT,
+          version: dto.version,
+        },
+        data: { tableId: table.id, version: { increment: 1 } },
+      });
+
+      if (updated.count !== 1) {
+        throw apiError(409, 'VERSION_CONFLICT', 'Order was changed by another request');
+      }
+
+      await this.writeAudit(tx, {
+        businessId: user.businessId,
+        outletId,
+        orderId,
+        actorId: user.id,
+        action: OrderAuditAction.TRANSFER,
+        fromTableId: order.tableId,
+        toTableId: table.id,
+        metadata: {
+          fromTableLabel: fromTable?.label ?? null,
+          toTableLabel: table.label,
+        },
+      });
+
+      const refreshed = await this.loadOrder(tx, orderId);
+      return this.toOrder(refreshed);
+    });
+  }
+
+  async splitOrder(
+    outletId: string,
+    orderId: string,
+    key: string | undefined,
+    dto: OrderSplitDto,
+    user: AuthenticatedUser,
+  ): Promise<OrderSplitResponse> {
+    const idempotencyKey = requireIdempotencyKey(key);
+    const bills = this.normalizeSplitBills(dto.bills);
+    const hash = requestHash({
+      operation: 'ORDER_SPLIT',
+      outletId,
+      orderId,
+      version: dto.version,
+      bills,
+    });
+
+    const prior = await this.prisma.orderSplit.findUnique({
+      where: { outletId_idempotencyKey: { outletId, idempotencyKey } },
+    });
+
+    if (prior) {
+      return this.replaySplit(prior, outletId, orderId, hash, user);
+    }
+
+    try {
+      return await this.runSerializable(
+        () =>
+          this.prisma.$transaction(
+            async (tx) =>
+              this.applySplit(
+                tx,
+                outletId,
+                orderId,
+                idempotencyKey,
+                hash,
+                dto.version,
+                bills,
+                user,
+              ),
+            { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+          ),
+        'Order split',
+      );
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        const existing = await this.prisma.orderSplit.findUnique({
+          where: { outletId_idempotencyKey: { outletId, idempotencyKey } },
+        });
+
+        if (existing) {
+          return this.replaySplit(existing, outletId, orderId, hash, user);
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  async listOrderAudits(
+    outletId: string,
+    orderId: string,
+    user: AuthenticatedUser,
+  ): Promise<{ items: OrderAuditResponse[] }> {
+    if (user.role !== Role.OWNER) {
+      throw apiError(403, 'FORBIDDEN', 'Only an owner can read the order audit trail');
+    }
+
+    await this.requireOrder(this.prisma, outletId, orderId, user);
+    const rows = await this.prisma.orderAudit.findMany({
+      where: { orderId, outletId, businessId: user.businessId },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
+
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        orderId: row.orderId,
+        action: row.action,
+        actorId: row.actorId,
+        ...(row.fromTableId !== null ? { fromTableId: row.fromTableId } : {}),
+        ...(row.toTableId !== null ? { toTableId: row.toTableId } : {}),
+        metadata:
+          row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
+            ? (row.metadata as Record<string, unknown>)
+            : {},
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
   }
 
   async createQuote(
@@ -758,6 +1099,19 @@ export class SalesService {
                 quantity: line.quantity,
                 recipeVersion: line.recipeVersion,
               })),
+            });
+
+            await this.writeAudit(tx, {
+              businessId: user.businessId,
+              outletId,
+              orderId: order.id,
+              actorId: user.id,
+              action: OrderAuditAction.FINALIZE,
+              fromTableId: order.tableId,
+              metadata: {
+                saleId: sale.id,
+                totalMinor: toWireMinor(totals.totalMinor, 'totalMinor'),
+              },
             });
 
             await tx.checkoutRequest.update({
@@ -1354,6 +1708,291 @@ export class SalesService {
     };
   }
 
+  private normalizeSplitBills(
+    bills: { lines: { variantId: string; quantity: number }[] }[],
+  ): { lines: { variantId: string; quantity: number }[] }[] {
+    if (!Array.isArray(bills) || bills.length < 2) {
+      throw apiError(400, 'VALIDATION_ERROR', 'A split requires at least two bills');
+    }
+
+    return bills.map((bill, index) => {
+      if (!Array.isArray(bill.lines) || bill.lines.length === 0) {
+        throw apiError(400, 'VALIDATION_ERROR', `Bill ${index + 1} has no lines`);
+      }
+
+      const seen = new Set<string>();
+      const lines = bill.lines.map((line) => {
+        const variantId = line.variantId.toLowerCase();
+        const quantity = Number(line.quantity);
+
+        if (!UUID_PATTERN.test(variantId)) {
+          throw apiError(400, 'VALIDATION_ERROR', 'Split line variantId must be a UUID');
+        }
+
+        if (!Number.isInteger(quantity) || quantity < 1) {
+          throw apiError(400, 'VALIDATION_ERROR', 'Split line quantity must be a positive integer');
+        }
+
+        if (seen.has(variantId)) {
+          throw apiError(
+            422,
+            'SPLIT_MISMATCH',
+            'A bill cannot repeat the same variant; merge the quantities',
+          );
+        }
+
+        seen.add(variantId);
+        return { variantId, quantity };
+      });
+
+      return { lines };
+    });
+  }
+
+  private assertExactSplit(
+    orderLines: { variantId: string; quantity: number }[],
+    bills: { lines: { variantId: string; quantity: number }[] }[],
+  ): void {
+    const original = new Map<string, number>();
+    for (const line of orderLines) {
+      original.set(line.variantId, (original.get(line.variantId) ?? 0) + line.quantity);
+    }
+
+    const allocated = new Map<string, number>();
+    for (const bill of bills) {
+      for (const line of bill.lines) {
+        allocated.set(line.variantId, (allocated.get(line.variantId) ?? 0) + line.quantity);
+      }
+    }
+
+    const unknown = [...allocated.keys()].filter((variantId) => !original.has(variantId));
+    const mismatched = [...original.entries()].filter(
+      ([variantId, quantity]) => allocated.get(variantId) !== quantity,
+    );
+
+    if (unknown.length > 0 || mismatched.length > 0) {
+      throw apiError(
+        422,
+        'SPLIT_MISMATCH',
+        'Split bills must allocate every original quantity exactly once',
+        {
+          details: {
+            unknownVariantIds: unknown,
+            mismatchedVariantIds: mismatched.map(([variantId]) => variantId),
+          },
+        },
+      );
+    }
+  }
+
+  private async applySplit(
+    tx: Prisma.TransactionClient,
+    outletId: string,
+    orderId: string,
+    idempotencyKey: string,
+    hash: string,
+    version: number,
+    bills: { lines: { variantId: string; quantity: number }[] }[],
+    user: AuthenticatedUser,
+  ): Promise<OrderSplitResponse> {
+    const order = await this.requireOrder(tx, outletId, orderId, user);
+
+    if (order.state !== OrderState.DRAFT) {
+      throw apiError(409, 'ORDER_NOT_DRAFT', 'Only draft orders can be split');
+    }
+
+    if (order.version !== version) {
+      throw apiError(409, 'VERSION_CONFLICT', 'Order was changed by another request');
+    }
+
+    await this.requireSaleableLines(tx, outletId, user.businessId, order.lines, 'ITEM_UNAVAILABLE');
+    this.assertExactSplit(order.lines, bills);
+
+    const splitGroupId = randomUUID();
+    const updated = await tx.order.updateMany({
+      where: {
+        id: order.id,
+        outletId,
+        businessId: user.businessId,
+        state: OrderState.DRAFT,
+        version: order.version,
+      },
+      data: { state: OrderState.SPLIT, splitGroupId, version: { increment: 1 } },
+    });
+
+    if (updated.count !== 1) {
+      throw apiError(409, 'VERSION_CONFLICT', 'Order was changed by another request');
+    }
+
+    const children = [];
+    for (const bill of bills) {
+      const child = await tx.order.create({
+        data: {
+          businessId: user.businessId,
+          outletId,
+          cashierId: order.cashierId,
+          deviceId: order.deviceId,
+          idempotencyKey: randomUUID(),
+          requestHash: requestHash({
+            operation: 'ORDER_SPLIT_CHILD',
+            parentOrderId: order.id,
+            splitGroupId,
+            lines: bill.lines,
+          }),
+          tableId: order.tableId,
+          splitGroupId,
+          parentOrderId: order.id,
+          lines: {
+            create: bill.lines.map((line) => ({
+              variantId: line.variantId,
+              quantity: line.quantity,
+            })),
+          },
+        },
+        include: {
+          lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+          table: { select: { label: true } },
+        },
+      });
+      children.push(child);
+    }
+
+    await tx.orderSplit.create({
+      data: {
+        businessId: user.businessId,
+        outletId,
+        parentOrderId: order.id,
+        actorId: user.id,
+        idempotencyKey,
+        requestHash: hash,
+        splitGroupId,
+        billCount: children.length,
+        childOrderIds: children.map((child) => child.id),
+      },
+    });
+
+    await this.writeAudit(tx, {
+      businessId: user.businessId,
+      outletId,
+      orderId: order.id,
+      actorId: user.id,
+      action: OrderAuditAction.SPLIT,
+      fromTableId: order.tableId,
+      metadata: {
+        splitGroupId,
+        billCount: children.length,
+        childOrderIds: children.map((child) => child.id),
+      },
+    });
+
+    const refreshed = await this.loadOrder(tx, order.id);
+    return {
+      parentOrder: this.toOrder(refreshed),
+      bills: children.map((child) => this.toOrder(child)),
+    };
+  }
+
+  private async replaySplit(
+    record: {
+      parentOrderId: string;
+      requestHash: string;
+      childOrderIds: Prisma.JsonValue;
+    },
+    outletId: string,
+    orderId: string,
+    hash: string,
+    user: AuthenticatedUser,
+  ): Promise<OrderSplitResponse> {
+    if (record.requestHash !== hash || record.parentOrderId !== orderId) {
+      throw apiError(
+        409,
+        'IDEMPOTENCY_CONFLICT',
+        'Idempotency-Key was already used with a different split payload',
+      );
+    }
+
+    const ids = Array.isArray(record.childOrderIds)
+      ? record.childOrderIds.filter((value): value is string => typeof value === 'string')
+      : [];
+    const bills = [];
+
+    for (const id of ids) {
+      const child = await this.prisma.order.findFirst({
+        where: { id, outletId, businessId: user.businessId, parentOrderId: orderId },
+        include: {
+          lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+          table: { select: { label: true } },
+        },
+      });
+
+      if (!child) {
+        throw apiError(409, 'IDEMPOTENCY_IN_PROGRESS', 'Split is still being applied; retry');
+      }
+
+      bills.push(this.toOrder(child));
+    }
+
+    const parent = await this.loadOrder(this.prisma, orderId);
+    return { parentOrder: this.toOrder(parent), bills };
+  }
+
+  private async requireTable(
+    client: DbClient,
+    outletId: string,
+    businessId: string,
+    tableId: string,
+  ): Promise<{ id: string; label: string }> {
+    const table = await client.diningTable.findFirst({
+      where: { id: tableId, outletId, businessId, active: true },
+      select: { id: true, label: true },
+    });
+
+    if (!table) {
+      throw apiError(404, 'NOT_FOUND', 'Table not found');
+    }
+
+    return table;
+  }
+
+  private async findTable(
+    client: DbClient,
+    outletId: string,
+    businessId: string,
+    tableId: string,
+  ): Promise<{ id: string; label: string } | null> {
+    return client.diningTable.findFirst({
+      where: { id: tableId, outletId, businessId },
+      select: { id: true, label: true },
+    });
+  }
+
+  private async writeAudit(
+    client: DbClient,
+    input: {
+      businessId: string;
+      outletId: string;
+      orderId: string;
+      actorId: string;
+      action: OrderAuditAction;
+      fromTableId?: string | null;
+      toTableId?: string | null;
+      metadata?: Record<string, unknown>;
+    },
+  ): Promise<void> {
+    await client.orderAudit.create({
+      data: {
+        businessId: input.businessId,
+        outletId: input.outletId,
+        orderId: input.orderId,
+        actorId: input.actorId,
+        action: input.action,
+        fromTableId: input.fromTableId ?? null,
+        toTableId: input.toTableId ?? null,
+        metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
+      },
+    });
+  }
+
   private async replayOrder(
     order: {
       requestHash: string;
@@ -1361,6 +2000,10 @@ export class SalesService {
       version: number;
       id: string;
       deviceId: string;
+      tableId?: string | null;
+      splitGroupId?: string | null;
+      parentOrderId?: string | null;
+      table?: { label: string } | null;
       lines: { variantId: string; quantity: number }[];
     },
     hash: string,
@@ -1423,6 +2066,9 @@ export class SalesService {
     deviceId: string;
     state: OrderState;
     version: number;
+    tableId: string | null;
+    splitGroupId: string | null;
+    parentOrderId: string | null;
     lines: { variantId: string; quantity: number }[];
   }> {
     const order = await client.order.findFirst({
@@ -1446,11 +2092,18 @@ export class SalesService {
     deviceId: string;
     state: OrderState;
     version: number;
+    tableId: string | null;
+    splitGroupId: string | null;
+    parentOrderId: string | null;
+    table: { label: string } | null;
     lines: { variantId: string; quantity: number }[];
   }> {
     const order = await client.order.findUnique({
       where: { id: orderId },
-      include: { lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+      include: {
+        lines: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+        table: { select: { label: true } },
+      },
     });
 
     if (!order) {
@@ -1725,6 +2378,10 @@ export class SalesService {
     deviceId: string;
     state: OrderState;
     version: number;
+    tableId?: string | null;
+    splitGroupId?: string | null;
+    parentOrderId?: string | null;
+    table?: { label: string } | null;
     lines: { variantId: string; quantity: number }[];
   }): OrderResponse {
     return {
@@ -1732,6 +2389,10 @@ export class SalesService {
       deviceId: order.deviceId,
       state: order.state,
       version: order.version,
+      ...(order.tableId ? { tableId: order.tableId } : {}),
+      ...(order.table?.label ? { tableLabel: order.table.label } : {}),
+      ...(order.splitGroupId ? { splitGroupId: order.splitGroupId } : {}),
+      ...(order.parentOrderId ? { parentOrderId: order.parentOrderId } : {}),
       lines: order.lines.map((line) => ({
         variantId: line.variantId,
         quantity: line.quantity,

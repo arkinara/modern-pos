@@ -185,6 +185,10 @@ class ApiClient {
           return value is DateTime ? value : DateTime.tryParse(value);
         case 'Adjustment':
           return Adjustment.fromJson(value);
+        case 'AuditEntry':
+          return AuditEntry.fromJson(value);
+        case 'AuditPage':
+          return AuditPage.fromJson(value);
         case 'AuthMobileRefreshRequest':
           return AuthMobileRefreshRequest.fromJson(value);
         case 'AuthWebLoginRequest':
@@ -233,6 +237,8 @@ class ApiClient {
           return Order.fromJson(value);
         case 'OrderCancelRequest':
           return OrderCancelRequest.fromJson(value);
+        case 'OrderPage':
+          return OrderPage.fromJson(value);
         case 'OrderQuoteRequest':
           return OrderQuoteRequest.fromJson(value);
         case 'OrderUpdate':
@@ -287,6 +293,12 @@ class ApiClient {
           return Settings.fromJson(value);
         case 'SettingsUpdate':
           return SettingsUpdate.fromJson(value);
+        case 'SplitBill':
+          return SplitBill.fromJson(value);
+        case 'SplitResult':
+          return SplitResult.fromJson(value);
+        case 'SplitWrite':
+          return SplitWrite.fromJson(value);
         case 'Stock':
           return Stock.fromJson(value);
         case 'StockChange':
@@ -295,8 +307,16 @@ class ApiClient {
           return StockPage.fromJson(value);
         case 'StockWrite':
           return StockWrite.fromJson(value);
+        case 'Table':
+          return Table.fromJson(value);
+        case 'TablePage':
+          return TablePage.fromJson(value);
+        case 'TableWrite':
+          return TableWrite.fromJson(value);
         case 'Totals':
           return Totals.fromJson(value);
+        case 'TransferWrite':
+          return TransferWrite.fromJson(value);
         case 'User':
           return User.fromJson(value);
         case 'Variant':
