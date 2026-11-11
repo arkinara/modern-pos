@@ -15,30 +15,46 @@ class OrderWrite {
   OrderWrite({
     required this.deviceId,
     this.lines = const [],
+    this.tableId,
   });
 
   String deviceId;
 
   List<OrderWriteLinesInner> lines;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? tableId;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is OrderWrite &&
     other.deviceId == deviceId &&
-    _deepEquality.equals(other.lines, lines);
+    _deepEquality.equals(other.lines, lines) &&
+    other.tableId == tableId;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (deviceId.hashCode) +
-    (lines.hashCode);
+    (lines.hashCode) +
+    (tableId == null ? 0 : tableId!.hashCode);
 
   @override
-  String toString() => 'OrderWrite[deviceId=$deviceId, lines=$lines]';
+  String toString() => 'OrderWrite[deviceId=$deviceId, lines=$lines, tableId=$tableId]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'deviceId'] = this.deviceId;
       json[r'lines'] = this.lines;
+    if (this.tableId != null) {
+      json[r'tableId'] = this.tableId;
+    } else {
+      json[r'tableId'] = null;
+    }
     return json;
   }
 
@@ -63,6 +79,7 @@ class OrderWrite {
       return OrderWrite(
         deviceId: mapValueOfType<String>(json, r'deviceId')!,
         lines: OrderWriteLinesInner.listFromJson(json[r'lines']),
+        tableId: mapValueOfType<String>(json, r'tableId'),
       );
     }
     return null;

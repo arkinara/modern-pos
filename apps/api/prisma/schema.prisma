@@ -43,6 +43,16 @@ enum OrderState {
   DRAFT
   COMPLETED
   CANCELLED
+  SPLIT
+}
+
+enum OrderAuditAction {
+  OPEN
+  UPDATE
+  TRANSFER
+  SPLIT
+  CANCEL
+  FINALIZE
 }
 
 enum SaleState {
@@ -92,6 +102,9 @@ model Business {
   checkoutRequests CheckoutRequest[]
   printers         Printer[]
   printJobs        PrintJob[]
+  diningTables     DiningTable[]
+  orderAudits      OrderAudit[]
+  orderSplits      OrderSplit[]
 
   @@map("businesses")
 }
@@ -126,6 +139,9 @@ model Outlet {
   checkoutRequests CheckoutRequest[]
   printers         Printer[]
   printJobs        PrintJob[]
+  diningTables     DiningTable[]
+  orderAudits      OrderAudit[]
+  orderSplits      OrderSplit[]
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -143,13 +159,15 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business  Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  outlet    Outlet?         @relation(fields: [outletId], references: [id], onDelete: SetNull)
-  sessions  Session[]
-  movements StockMovement[]
-  orders    Order[]         @relation("OrderCashier")
-  sales     Sale[]          @relation("SaleCashier")
-  reversals SaleReversal[]  @relation("SaleReversalActor")
+  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet      Outlet?         @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  sessions    Session[]
+  movements   StockMovement[]
+  orders      Order[]         @relation("OrderCashier")
+  sales       Sale[]          @relation("SaleCashier")
+  reversals   SaleReversal[]  @relation("SaleReversalActor")
+  orderAudits OrderAudit[]    @relation("OrderAuditActor")
+  orderSplits OrderSplit[]    @relation("OrderSplitActor")
 
   @@map("users")
 }
@@ -369,8 +387,31 @@ model RecipeLine {
   @@map("recipe_lines")
 }
 
+// A physical table/seat inside one outlet. Orders reference a table only while
+// they are dine-in drafts; the label is stable for receipts and audit text.
+model DiningTable {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  outletId   String   @db.Uuid
+  label      String
+  seatCount  Int      @default(0)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  orders   Order[]
+
+  @@unique([outletId, label])
+  @@index([outletId, active])
+  @@map("dining_tables")
+}
+
 // An order is an online draft owned by one cashier/device. The optional sale is
 // unique per order so a different idempotency key cannot complete it twice.
+// A split parent becomes SPLIT and never settles; each child is a normal draft
+// with its own single sale, so stock and payment can never be duplicated.
 model Order {
   id             String     @id @default(uuid()) @db.Uuid
   businessId     String     @db.Uuid
@@ -381,20 +422,81 @@ model Order {
   version        Int        @default(1)
   idempotencyKey String     @db.Uuid
   requestHash    String
+  tableId        String?    @db.Uuid
+  splitGroupId   String?    @db.Uuid
+  parentOrderId  String?    @db.Uuid
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
-  business Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  outlet   Outlet      @relation(fields: [outletId], references: [id], onDelete: Cascade)
-  cashier  User        @relation("OrderCashier", fields: [cashierId], references: [id], onDelete: Restrict)
+  business Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet       @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  cashier  User         @relation("OrderCashier", fields: [cashierId], references: [id], onDelete: Restrict)
+  table    DiningTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  parent   Order?       @relation("OrderSplit", fields: [parentOrderId], references: [id], onDelete: SetNull)
+  children Order[]      @relation("OrderSplit")
   lines    OrderLine[]
   quotes   Quote[]
   sale     Sale?
+  audits   OrderAudit[]
+  splits   OrderSplit[] @relation("OrderSplitParent")
 
   @@unique([outletId, deviceId, idempotencyKey])
   @@index([businessId, outletId, state])
   @@index([cashierId])
+  @@index([tableId])
+  @@index([parentOrderId])
+  @@index([splitGroupId])
   @@map("orders")
+}
+
+// Append-only order transition log. A trigger rejects UPDATE and DELETE so the
+// trail remains a faithful record of who moved which order and when.
+model OrderAudit {
+  id          String           @id @default(uuid()) @db.Uuid
+  businessId  String           @db.Uuid
+  outletId    String           @db.Uuid
+  orderId     String           @db.Uuid
+  actorId     String           @db.Uuid
+  action      OrderAuditAction
+  fromTableId String?          @db.Uuid
+  toTableId   String?          @db.Uuid
+  metadata    Json             @default("{}")
+  createdAt   DateTime         @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actor    User     @relation("OrderAuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@index([outletId, createdAt])
+  @@map("order_audits")
+}
+
+// Durable idempotency mapping for one split request. The unique key reserves
+// the split inside the same transaction that creates the child bills.
+model OrderSplit {
+  id             String   @id @default(uuid()) @db.Uuid
+  businessId     String   @db.Uuid
+  outletId       String   @db.Uuid
+  parentOrderId  String   @db.Uuid
+  actorId        String   @db.Uuid
+  idempotencyKey String   @db.Uuid
+  requestHash    String
+  splitGroupId   String   @db.Uuid
+  billCount      Int
+  childOrderIds  Json
+  createdAt      DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  parent   Order    @relation("OrderSplitParent", fields: [parentOrderId], references: [id], onDelete: Restrict)
+  actor    User     @relation("OrderSplitActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@unique([outletId, idempotencyKey])
+  @@index([parentOrderId])
+  @@index([splitGroupId])
+  @@map("order_splits")
 }
 
 model OrderLine {

@@ -18,6 +18,10 @@ class Order {
     required this.state,
     required this.version,
     this.lines = const [],
+    this.tableId,
+    this.tableLabel,
+    this.splitGroupId,
+    this.parentOrderId,
   });
 
   String id;
@@ -31,13 +35,49 @@ class Order {
 
   List<OrderWriteLinesInner> lines;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? tableId;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? tableLabel;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? splitGroupId;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? parentOrderId;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is Order &&
     other.id == id &&
     other.deviceId == deviceId &&
     other.state == state &&
     other.version == version &&
-    _deepEquality.equals(other.lines, lines);
+    _deepEquality.equals(other.lines, lines) &&
+    other.tableId == tableId &&
+    other.tableLabel == tableLabel &&
+    other.splitGroupId == splitGroupId &&
+    other.parentOrderId == parentOrderId;
 
   @override
   int get hashCode =>
@@ -46,10 +86,14 @@ class Order {
     (deviceId.hashCode) +
     (state.hashCode) +
     (version.hashCode) +
-    (lines.hashCode);
+    (lines.hashCode) +
+    (tableId == null ? 0 : tableId!.hashCode) +
+    (tableLabel == null ? 0 : tableLabel!.hashCode) +
+    (splitGroupId == null ? 0 : splitGroupId!.hashCode) +
+    (parentOrderId == null ? 0 : parentOrderId!.hashCode);
 
   @override
-  String toString() => 'Order[id=$id, deviceId=$deviceId, state=$state, version=$version, lines=$lines]';
+  String toString() => 'Order[id=$id, deviceId=$deviceId, state=$state, version=$version, lines=$lines, tableId=$tableId, tableLabel=$tableLabel, splitGroupId=$splitGroupId, parentOrderId=$parentOrderId]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -58,6 +102,26 @@ class Order {
       json[r'state'] = this.state;
       json[r'version'] = this.version;
       json[r'lines'] = this.lines;
+    if (this.tableId != null) {
+      json[r'tableId'] = this.tableId;
+    } else {
+      json[r'tableId'] = null;
+    }
+    if (this.tableLabel != null) {
+      json[r'tableLabel'] = this.tableLabel;
+    } else {
+      json[r'tableLabel'] = null;
+    }
+    if (this.splitGroupId != null) {
+      json[r'splitGroupId'] = this.splitGroupId;
+    } else {
+      json[r'splitGroupId'] = null;
+    }
+    if (this.parentOrderId != null) {
+      json[r'parentOrderId'] = this.parentOrderId;
+    } else {
+      json[r'parentOrderId'] = null;
+    }
     return json;
   }
 
@@ -91,6 +155,10 @@ class Order {
         state: OrderStateEnum.fromJson(json[r'state'])!,
         version: mapValueOfType<int>(json, r'version')!,
         lines: OrderWriteLinesInner.listFromJson(json[r'lines']),
+        tableId: mapValueOfType<String>(json, r'tableId'),
+        tableLabel: mapValueOfType<String>(json, r'tableLabel'),
+        splitGroupId: mapValueOfType<String>(json, r'splitGroupId'),
+        parentOrderId: mapValueOfType<String>(json, r'parentOrderId'),
       );
     }
     return null;
@@ -151,6 +219,7 @@ enum OrderStateEnum {
   DRAFT._(r'DRAFT'),
   COMPLETED._(r'COMPLETED'),
   CANCELLED._(r'CANCELLED'),
+  SPLIT._(r'SPLIT'),
   ;
 
   /// Instantiate a new enum with the provided value.
@@ -212,6 +281,7 @@ class OrderStateEnumTypeTransformer {
         case r'DRAFT': return OrderStateEnum.DRAFT;
         case r'COMPLETED': return OrderStateEnum.COMPLETED;
         case r'CANCELLED': return OrderStateEnum.CANCELLED;
+        case r'SPLIT': return OrderStateEnum.SPLIT;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');

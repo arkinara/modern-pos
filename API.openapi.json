@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Modern POS API baseline",
-    "version": "0.6.0",
-    "description": "Implementation contract for M04 authentication and M05 business settings. Auth/session, outlet-scope and settings operations are implemented in apps/api; remaining domain operations are implementation targets for later tickets. Read ARCHITECTURE.md for rules and authorization."
+    "version": "0.7.0",
+    "description": "Implementation contract for the Modern POS API. Authentication, settings, catalog, stock, recipes, sales, reports, printing and the Phase 2 table-order extensions are implemented in apps/api. Read ARCHITECTURE.md for rules and authorization."
   },
   "servers": [
     {
@@ -3110,6 +3110,119 @@
       }
     },
     "/outlets/{outletId}/orders": {
+      "get": {
+        "operationId": "order_listOpen",
+        "summary": "List open draft orders with table state",
+        "tags": [
+          "order"
+        ],
+        "x-roles": [
+          "OWNER",
+          "CASHIER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "operationId": "order_create",
         "summary": "Create cashier draft order",
@@ -3374,6 +3487,109 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/OrderUpdate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "order_get",
+        "summary": "Read one order and its table assignment",
+        "tags": [
+          "order"
+        ],
+        "x-roles": [
+          "OWNER",
+          "CASHIER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -5619,6 +5835,548 @@
           }
         }
       }
+    },
+    "/outlets/{outletId}/tables": {
+      "get": {
+        "operationId": "table_list",
+        "summary": "List active dining tables",
+        "tags": [
+          "table"
+        ],
+        "x-roles": [
+          "OWNER",
+          "CASHIER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TablePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "table_create",
+        "summary": "Create a dining table (owner only)",
+        "tags": [
+          "table"
+        ],
+        "x-roles": [
+          "OWNER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TableWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Table"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/outlets/{outletId}/orders/{orderId}/transfer": {
+      "post": {
+        "operationId": "order_transfer",
+        "summary": "Transfer a table order to another table (owner only)",
+        "tags": [
+          "order"
+        ],
+        "x-roles": [
+          "OWNER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/outlets/{outletId}/orders/{orderId}/splits": {
+      "post": {
+        "operationId": "order_split",
+        "summary": "Split a draft order into independently settled bills",
+        "tags": [
+          "order"
+        ],
+        "x-roles": [
+          "OWNER",
+          "CASHIER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Persist before submission; same key and payload on retries."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/outlets/{outletId}/orders/{orderId}/audit": {
+      "get": {
+        "operationId": "order_auditList",
+        "summary": "Read the append-only order audit trail (owner only)",
+        "tags": [
+          "order"
+        ],
+        "x-roles": [
+          "OWNER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6472,6 +7230,10 @@
                 "quantity"
               ]
             }
+          },
+          "tableId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
@@ -6534,7 +7296,8 @@
             "enum": [
               "DRAFT",
               "COMPLETED",
-              "CANCELLED"
+              "CANCELLED",
+              "SPLIT"
             ]
           },
           "version": {
@@ -6562,6 +7325,22 @@
                 "quantity"
               ]
             }
+          },
+          "tableId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tableLabel": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "splitGroupId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parentOrderId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
@@ -6570,7 +7349,8 @@
           "state",
           "version",
           "lines"
-        ]
+        ],
+        "description": "Draft, completed, cancelled or split order. Table fields appear for dine-in drafts; a SPLIT parent never settles."
       },
       "Totals": {
         "type": "object",
@@ -7607,6 +8387,246 @@
           "taxBps",
           "serviceBps",
           "version"
+        ]
+      },
+      "TableWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "seatCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "Table": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "seatCount": {
+            "type": "integer"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "seatCount",
+          "active"
+        ]
+      },
+      "TablePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Table"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "OrderPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "TransferWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "tableId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "version",
+          "tableId"
+        ]
+      },
+      "SplitBill": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "variantId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100000
+                }
+              },
+              "required": [
+                "variantId",
+                "quantity"
+              ]
+            }
+          }
+        },
+        "required": [
+          "lines"
+        ]
+      },
+      "SplitWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "bills": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/SplitBill"
+            }
+          }
+        },
+        "required": [
+          "version",
+          "bills"
+        ]
+      },
+      "SplitResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "parentOrder": {
+            "$ref": "#/components/schemas/Order"
+          },
+          "bills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          }
+        },
+        "required": [
+          "parentOrder",
+          "bills"
+        ]
+      },
+      "AuditEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "UPDATE",
+              "TRANSFER",
+              "SPLIT",
+              "CANCEL",
+              "FINALIZE"
+            ]
+          },
+          "actorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromTableId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toTableId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "action",
+          "actorId",
+          "metadata",
+          "createdAt"
+        ]
+      },
+      "AuditPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       }
     }

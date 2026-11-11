@@ -9,6 +9,7 @@ import '../features/printing/print_queue_screen.dart';
 import '../features/printing/printer_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/cashier_shell.dart';
+import '../features/tables/tables_screen.dart';
 
 GoRouter createAppRouter() => GoRouter(
   initialLocation: '/catalog',
@@ -30,6 +31,14 @@ GoRouter createAppRouter() => GoRouter(
             GoRoute(
               path: '/cart',
               builder: (context, state) => const CartScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/tables',
+              builder: (context, state) => const TablesScreen(),
             ),
           ],
         ),

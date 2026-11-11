@@ -26,6 +26,10 @@ const VARIANT_ICED_COFFEE_REGULAR_ID = '00000000-0000-4000-8000-000000000040';
 const VARIANT_ICED_COFFEE_LARGE_ID = '00000000-0000-4000-8000-000000000041';
 const VARIANT_CHICKEN_RICE_ID = '00000000-0000-4000-8000-000000000042';
 
+const TABLE_MAIN_T1_ID = '00000000-0000-4000-8000-0000000000e1';
+const TABLE_MAIN_T2_ID = '00000000-0000-4000-8000-0000000000e2';
+const TABLE_SECOND_T1_ID = '00000000-0000-4000-8000-0000000000e3';
+
 const OTHER_BUSINESS_ID = '00000000-0000-4000-8000-000000000010';
 const OTHER_OUTLET_ID = '00000000-0000-4000-8000-000000000011';
 const OTHER_OWNER_ID = '00000000-0000-4000-8000-000000000012';
@@ -167,6 +171,49 @@ async function main(): Promise<void> {
         name: outlet.name,
         timezone: 'Asia/Jakarta',
         ...outletDefaults,
+      },
+    });
+  }
+
+  const diningTables = [
+    {
+      id: TABLE_MAIN_T1_ID,
+      businessId: BUSINESS_ID,
+      outletId: OUTLET_MAIN_ID,
+      label: 'T1',
+      seatCount: 4,
+    },
+    {
+      id: TABLE_MAIN_T2_ID,
+      businessId: BUSINESS_ID,
+      outletId: OUTLET_MAIN_ID,
+      label: 'T2',
+      seatCount: 2,
+    },
+    {
+      id: TABLE_SECOND_T1_ID,
+      businessId: BUSINESS_ID,
+      outletId: OUTLET_SECOND_ID,
+      label: 'T1',
+      seatCount: 4,
+    },
+  ];
+
+  for (const table of diningTables) {
+    await prisma.diningTable.upsert({
+      where: { outletId_label: { outletId: table.outletId, label: table.label } },
+      update: {
+        businessId: table.businessId,
+        seatCount: table.seatCount,
+        active: true,
+      },
+      create: {
+        id: table.id,
+        businessId: table.businessId,
+        outletId: table.outletId,
+        label: table.label,
+        seatCount: table.seatCount,
+        active: true,
       },
     });
   }
@@ -732,7 +779,7 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `Synthetic demo data seeded: ${users.length} users across ${outlets.length} outlets and 2 businesses, ${categories.length} categories, ${menuItems.length} menu items, ${variants.length} variants, ${STOCK_ITEMS.length} stock items and 2 completed demo sales.`,
+    `Synthetic demo data seeded: ${users.length} users across ${outlets.length} outlets and 2 businesses, ${diningTables.length} dining tables, ${categories.length} categories, ${menuItems.length} menu items, ${variants.length} variants, ${STOCK_ITEMS.length} stock items and 2 completed demo sales.`,
   );
 }
 

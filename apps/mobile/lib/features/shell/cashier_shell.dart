@@ -14,7 +14,7 @@ class CashierShell extends ConsumerWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  static const _titles = ['Catalog', 'Cart', 'Settings', 'Status'];
+  static const _titles = ['Catalog', 'Cart', 'Tables', 'Settings', 'Status'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,6 +71,11 @@ class CashierShell extends ConsumerWidget {
               child: const Icon(Icons.shopping_cart),
             ),
             label: 'Cart',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.table_restaurant_outlined),
+            selectedIcon: Icon(Icons.table_restaurant),
+            label: 'Tables',
           ),
           const NavigationDestination(
             icon: Icon(Icons.tune_outlined),

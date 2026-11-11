@@ -345,7 +345,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List open draft orders with table state */
+        get: operations["order_listOpen"];
         put?: never;
         /** Create cashier draft order */
         post: operations["order_create"];
@@ -362,7 +363,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Read one order and its table assignment */
+        get: operations["order_get"];
         /** Replace draft lines with revision check */
         put: operations["order_update"];
         post?: never;
@@ -627,6 +629,75 @@ export interface paths {
         patch: operations["settings_update"];
         trace?: never;
     };
+    "/outlets/{outletId}/tables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active dining tables */
+        get: operations["table_list"];
+        put?: never;
+        /** Create a dining table (owner only) */
+        post: operations["table_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/orders/{orderId}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transfer a table order to another table (owner only) */
+        post: operations["order_transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/orders/{orderId}/splits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Split a draft order into independently settled bills */
+        post: operations["order_split"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/orders/{orderId}/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the append-only order audit trail (owner only) */
+        get: operations["order_auditList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -843,6 +914,8 @@ export interface components {
                 variantId: string;
                 quantity: number;
             }[];
+            /** Format: uuid */
+            tableId?: string;
         };
         OrderUpdate: {
             version: number;
@@ -852,19 +925,27 @@ export interface components {
                 quantity: number;
             }[];
         };
+        /** @description Draft, completed, cancelled or split order. Table fields appear for dine-in drafts; a SPLIT parent never settles. */
         Order: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             deviceId: string;
             /** @enum {string} */
-            state: "DRAFT" | "COMPLETED" | "CANCELLED";
+            state: "DRAFT" | "COMPLETED" | "CANCELLED" | "SPLIT";
             version: number;
             lines: {
                 /** Format: uuid */
                 variantId: string;
                 quantity: number;
             }[];
+            /** Format: uuid */
+            tableId?: string;
+            tableLabel?: string;
+            /** Format: uuid */
+            splitGroupId?: string;
+            /** Format: uuid */
+            parentOrderId?: string;
         };
         Totals: {
             /** @description Currency minor units; IDR exponent 0 in demo. */
@@ -1127,6 +1208,67 @@ export interface components {
             taxBps: number;
             serviceBps: number;
             version: number;
+        };
+        TableWrite: {
+            label: string;
+            seatCount?: number;
+        };
+        Table: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            seatCount: number;
+            active: boolean;
+        };
+        TablePage: {
+            items: components["schemas"]["Table"][];
+        };
+        OrderPage: {
+            items: components["schemas"]["Order"][];
+            /** Format: uuid */
+            nextCursor: string | null;
+        };
+        TransferWrite: {
+            version: number;
+            /** Format: uuid */
+            tableId: string;
+        };
+        SplitBill: {
+            lines: {
+                /** Format: uuid */
+                variantId: string;
+                quantity: number;
+            }[];
+        };
+        SplitWrite: {
+            version: number;
+            bills: components["schemas"]["SplitBill"][];
+        };
+        SplitResult: {
+            parentOrder: components["schemas"]["Order"];
+            bills: components["schemas"]["Order"][];
+        };
+        AuditEntry: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** @enum {string} */
+            action: "OPEN" | "UPDATE" | "TRANSFER" | "SPLIT" | "CANCEL" | "FINALIZE";
+            /** Format: uuid */
+            actorId: string;
+            /** Format: uuid */
+            fromTableId?: string;
+            /** Format: uuid */
+            toTableId?: string;
+            metadata: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AuditPage: {
+            items: components["schemas"]["AuditEntry"][];
         };
     };
     responses: never;
@@ -3490,6 +3632,85 @@ export interface operations {
             };
         };
     };
+    order_listOpen: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPage"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     order_create: {
         parameters: {
             query?: never;
@@ -3582,6 +3803,83 @@ export interface operations {
             };
             /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    order_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Order"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5287,6 +5585,404 @@ export interface operations {
             };
             /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    table_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TablePage"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    table_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TableWrite"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Table"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    order_transfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferWrite"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Order"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    order_split: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Persist before submission; same key and payload on retries. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                outletId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SplitWrite"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SplitResult"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    order_auditList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

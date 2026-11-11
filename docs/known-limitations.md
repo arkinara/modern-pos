@@ -1,6 +1,6 @@
 # Known limitations and pending verification
 
-Status date: 2026-11-10. No device, printer or production infrastructure was available
+Status date: 2026-11-11. No device, printer or production infrastructure was available
 for this ticket. Nothing below is reported as passed without a reproduction recipe.
 
 ## Pending with reproduction recipes
@@ -76,6 +76,30 @@ Reproduction:
 6. Repeat on the second device. Confirm one sale, one conflict with the server
    shortage reason, no negative stock and no duplicate sale.
 
+### Dine-in table order flow on a physical Android device
+
+Status: `PENDING - requires Android device`.
+
+What was verified on this VPS: the live API transcript opened a table order,
+transferred it with an owner-only audit row, split it into two independently
+settled bills, proved exactly one stock movement per sold ingredient, replayed
+the split and finalize idempotently, cancelled an unpaid order without stock,
+and rejected stale versions. Flutter widget tests cover the Tables screen at
+320/768/1024/1440 px for loading, empty, error, open, transfer, split and cancel
+states.
+
+What was not verified: tapping the flow on real Android hardware, secure device
+identity across process restart, and real network loss during split or settle.
+
+Reproduction:
+
+1. Install the debug APK and sign in as `cashier.second@example.test`.
+2. Add items to the cart, open Tables, and tap Open order on T1.
+3. Sign in as `owner.second@example.test` and transfer the order to T2.
+4. As the cashier, split the order into two bills and settle each separately.
+5. Confirm the owner sales list shows two references whose totals sum to the
+   original quote, and stock movements show each ingredient deducted once.
+
 ### Printer disconnect on real hardware
 
 Status: `PENDING - requires printer + Android device`.
@@ -97,6 +121,9 @@ and record the visible state and paper result.
 | Offline checkout and conflict resolution | Implemented client-side in #19 | Encrypted queue + idempotent replay; no server sync API |
 | Production deployment and field rollout | Deferred to #20 | Not started in this ticket |
 | Stock reservation while offline | Not implemented | Server remains authoritative; rejected sales become conflicts |
+| Table order stock reservation | Not implemented by design | Opening/cancelling a draft reserves or consumes nothing; stock moves only at settlement (see `docs/table-orders.md`) |
+| Table management in the web back office | Not implemented | Tables are created through the API; the cashier app lists and uses them |
+| Multiple simultaneous open orders per table | Not blocked | The cashier app shows the first open order per table; the API lists all drafts |
 | Server-side sync API or queue | Not implemented | Contract unchanged; client replays existing idempotent endpoints |
 | Cold offline tax/service/rounding | Not guaranteed | A server total change becomes a cashier conflict |
 | Production deployment | Separate explicit decision | Single-VPS staging is not production |
@@ -113,7 +140,7 @@ and record the visible state and paper result.
 | Tax/service policy beyond fixed basis points | Not implemented | Settings support integer bps only |
 | Discounts, promotions, loyalty | Not implemented | Not in Phase 1 scope |
 | Multi-currency per sale | Not implemented | One currency/exponent per outlet |
-| User activity audit beyond sale/stock/reversal records | Not implemented | Reversal and movement actors are recorded |
+| User activity audit beyond sale/stock/reversal/order records | Not implemented | Order open/transfer/split/cancel/finalize transitions are append-only audited; admin/user changes are not |
 
 ## Verification limits of this ticket
 

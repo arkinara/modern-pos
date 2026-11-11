@@ -18,6 +18,8 @@ const DEVICE_ID = '00000000-0000-4000-8000-000000000090';
 const KEY_ONE = '11111111-1111-4111-8111-111111111111';
 const KEY_TWO = '22222222-2222-4222-8222-222222222222';
 const KEY_THREE = '33333333-3333-4333-8333-333333333333';
+const KEY_FOUR = '44444444-4444-4444-8444-444444444444';
+const KEY_FIVE = '55555555-5555-4555-8555-555555555555';
 
 function user(role: Role = Role.CASHIER, id = CASHIER_ID): AuthenticatedUser {
   return {
@@ -64,9 +66,50 @@ interface OrderRow {
   version: number;
   idempotencyKey: string;
   requestHash: string;
+  tableId?: string | null;
+  splitGroupId?: string | null;
+  parentOrderId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   lines: OrderLineRow[];
+}
+
+interface DiningTableRow {
+  id: string;
+  businessId: string;
+  outletId: string;
+  label: string;
+  seatCount: number;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface OrderAuditRow {
+  id: string;
+  businessId: string;
+  outletId: string;
+  orderId: string;
+  actorId: string;
+  action: string;
+  fromTableId: string | null;
+  toTableId: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: Date;
+}
+
+interface OrderSplitRow {
+  id: string;
+  businessId: string;
+  outletId: string;
+  parentOrderId: string;
+  actorId: string;
+  idempotencyKey: string;
+  requestHash: string;
+  splitGroupId: string;
+  billCount: number;
+  childOrderIds: string[];
+  createdAt: Date;
 }
 
 interface QuoteRow {
@@ -234,6 +277,9 @@ interface FakeState {
   sales: SaleRow[];
   checkouts: CheckoutRow[];
   reversals: ReversalRow[];
+  tables: DiningTableRow[];
+  orderAudits: OrderAuditRow[];
+  orderSplits: OrderSplitRow[];
 }
 
 function clone<T>(value: T): T {
@@ -296,6 +342,9 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
     sales: [],
     checkouts: [],
     reversals: [],
+    tables: [],
+    orderAudits: [],
+    orderSplits: [],
   };
 
   let sequence = 0;
@@ -303,10 +352,16 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
     `00000000-0000-4000-8000-${String(500 + sequence++).padStart(12, '0')}`;
   const now = new Date('2026-01-01T00:00:00.000Z');
 
-  const withLines = (order: OrderRow) => ({
-    ...clone(order),
-    lines: clone(order.lines).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
-  });
+  const withLines = (order: OrderRow) => {
+    const table = order.tableId
+      ? (state.tables.find((row) => row.id === order.tableId) ?? null)
+      : null;
+    return {
+      ...clone(order),
+      table: table ? { label: table.label } : null,
+      lines: clone(order.lines).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    };
+  };
 
   const withReceipt = (sale: SaleRow) => {
     const reversal = state.reversals.find((row) => row.saleId === sale.id);
@@ -505,6 +560,113 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         return { count: args.data.length };
       },
     },
+    diningTable: {
+      findFirst: async (args: { where: Record<string, unknown> }) => {
+        const table = state.tables.find((row) =>
+          Object.entries(args.where).every(
+            ([key, value]) =>
+              (row as unknown as Record<string, unknown>)[key] === value ||
+              (value === undefined &&
+                (row as unknown as Record<string, unknown>)[key] === undefined),
+          ),
+        );
+        return table ? clone(table) : null;
+      },
+      findMany: async (args: { where: Record<string, unknown> }) => {
+        return state.tables
+          .filter((row) =>
+            Object.entries(args.where).every(
+              ([key, value]) => (row as unknown as Record<string, unknown>)[key] === value,
+            ),
+          )
+          .sort((a, b) => a.label.localeCompare(b.label))
+          .map((row) => clone(row));
+      },
+      create: async (args: {
+        data: Omit<DiningTableRow, 'id' | 'active' | 'createdAt' | 'updatedAt'> & {
+          seatCount?: number;
+        };
+      }) => {
+        if (
+          state.tables.some(
+            (row) => row.outletId === args.data.outletId && row.label === args.data.label,
+          )
+        ) {
+          throw new Prisma.PrismaClientKnownRequestError('duplicate table', {
+            code: 'P2002',
+            clientVersion: '6.19.3',
+          });
+        }
+        const row: DiningTableRow = {
+          ...clone(args.data),
+          seatCount: args.data.seatCount ?? 0,
+          id: nextId(),
+          active: true,
+          createdAt: now,
+          updatedAt: now,
+        };
+        state.tables.push(row);
+        return clone(row);
+      },
+    },
+    orderAudit: {
+      create: async (args: { data: Omit<OrderAuditRow, 'id' | 'createdAt'> }) => {
+        const row: OrderAuditRow = {
+          ...clone(args.data),
+          fromTableId: args.data.fromTableId ?? null,
+          toTableId: args.data.toTableId ?? null,
+          metadata: (args.data.metadata as Record<string, unknown>) ?? {},
+          id: nextId(),
+          createdAt: now,
+        };
+        state.orderAudits.push(row);
+        return clone(row);
+      },
+      findMany: async (args: { where: Record<string, unknown> }) => {
+        return state.orderAudits
+          .filter((row) =>
+            Object.entries(args.where).every(
+              ([key, value]) => (row as unknown as Record<string, unknown>)[key] === value,
+            ),
+          )
+          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+          .map((row) => clone(row));
+      },
+    },
+    orderSplit: {
+      findUnique: async (args: {
+        where: { outletId_idempotencyKey: { outletId: string; idempotencyKey: string } };
+      }) => {
+        const key = args.where.outletId_idempotencyKey;
+        const row = state.orderSplits.find(
+          (split) => split.outletId === key.outletId && split.idempotencyKey === key.idempotencyKey,
+        );
+        return row ? clone(row) : null;
+      },
+      create: async (args: {
+        data: Omit<OrderSplitRow, 'id' | 'createdAt'> & { childOrderIds: string[] };
+      }) => {
+        if (
+          state.orderSplits.some(
+            (row) =>
+              row.outletId === args.data.outletId &&
+              row.idempotencyKey === args.data.idempotencyKey,
+          )
+        ) {
+          throw new Prisma.PrismaClientKnownRequestError('duplicate split key', {
+            code: 'P2002',
+            clientVersion: '6.19.3',
+          });
+        }
+        const row: OrderSplitRow = {
+          ...clone(args.data),
+          id: nextId(),
+          createdAt: now,
+        };
+        state.orderSplits.push(row);
+        return clone(row);
+      },
+    },
     order: {
       findUnique: async (args: {
         where:
@@ -544,6 +706,19 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         const order = state.orders.find((row) => matchesOrder(row, args.where));
         return order ? withLines(order) : null;
       },
+      findMany: async (args: {
+        where: Record<string, unknown>;
+        take: number;
+        cursor?: { id: string };
+      }) => {
+        let rows = state.orders.filter((row) => matchesOrder(row, args.where));
+        rows = rows.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+        if (args.cursor) {
+          const index = rows.findIndex((row) => row.id === args.cursor?.id);
+          rows = index === -1 ? [] : rows.slice(index + 1);
+        }
+        return rows.slice(0, args.take).map(withLines);
+      },
       create: async (args: {
         data: {
           businessId: string;
@@ -552,6 +727,9 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
           deviceId: string;
           idempotencyKey: string;
           requestHash: string;
+          tableId?: string | null;
+          splitGroupId?: string | null;
+          parentOrderId?: string | null;
           lines: { create: { variantId: string; quantity: number }[] };
         };
       }) => {
@@ -565,6 +743,9 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
           version: 1,
           idempotencyKey: args.data.idempotencyKey,
           requestHash: args.data.requestHash,
+          tableId: args.data.tableId ?? null,
+          splitGroupId: args.data.splitGroupId ?? null,
+          parentOrderId: args.data.parentOrderId ?? null,
           createdAt: now,
           updatedAt: now,
           lines: args.data.lines.create.map((line) => ({
@@ -584,11 +765,15 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         data: {
           state?: OrderState;
           version?: { increment: number };
+          tableId?: string | null;
+          splitGroupId?: string | null;
         };
       }) => {
         const order = state.orders.find((row) => matchesOrder(row, args.where));
         if (!order) return { count: 0 };
         if (args.data.state !== undefined) order.state = args.data.state;
+        if (args.data.tableId !== undefined) order.tableId = args.data.tableId;
+        if (args.data.splitGroupId !== undefined) order.splitGroupId = args.data.splitGroupId;
         if (args.data.version) order.version += args.data.version.increment;
         order.updatedAt = now;
         return { count: 1 };
@@ -2500,4 +2685,501 @@ test('serialization and deadlock retries are bounded at three attempts before a 
 
     assert.equal(attempts, 3);
   }
+});
+
+test('table orders open, transfer with an owner-only audit trail, and reject stale versions', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const owner = user(Role.OWNER, OWNER_ID);
+  const cashier = user();
+
+  await assert.rejects(
+    () => service.createTable(OUTLET_ID, { label: 'T1', seatCount: 4 }, cashier),
+    (error: unknown) => statusOf(error) === 403 && codeOf(error) === 'FORBIDDEN',
+  );
+
+  const tableOne = await service.createTable(OUTLET_ID, { label: 'T1', seatCount: 4 }, owner);
+  const tableTwo = await service.createTable(OUTLET_ID, { label: 'T2', seatCount: 2 }, owner);
+  const tables = await service.listTables(OUTLET_ID, cashier);
+  assert.deepEqual(
+    tables.items.map((table) => table.label),
+    ['T1', 'T2'],
+  );
+
+  await assert.rejects(
+    () => service.createTable(OUTLET_ID, { label: 'T1' }, owner),
+    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'TABLE_EXISTS',
+  );
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      tableId: tableOne.id,
+      lines: [{ variantId: VARIANT_A, quantity: 2 }],
+    },
+    cashier,
+  );
+
+  assert.equal(order.tableId, tableOne.id);
+  assert.equal(order.tableLabel, 'T1');
+  assert.equal(order.state, OrderState.DRAFT);
+  assert.equal(state.orderAudits.length, 1);
+  assert.equal(state.orderAudits[0]?.action, 'OPEN');
+  assert.equal(state.orderAudits[0]?.toTableId, tableOne.id);
+
+  await assert.rejects(
+    () => service.transferOrder(OUTLET_ID, order.id, { version: 1, tableId: tableTwo.id }, cashier),
+    (error: unknown) => statusOf(error) === 403 && codeOf(error) === 'FORBIDDEN',
+  );
+
+  await assert.rejects(
+    () => service.transferOrder(OUTLET_ID, order.id, { version: 99, tableId: tableTwo.id }, owner),
+    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'VERSION_CONFLICT',
+  );
+
+  const moved = await service.transferOrder(
+    OUTLET_ID,
+    order.id,
+    { version: 1, tableId: tableTwo.id },
+    owner,
+  );
+  assert.equal(moved.version, 2);
+  assert.equal(moved.tableId, tableTwo.id);
+  assert.equal(moved.tableLabel, 'T2');
+
+  const transferAudit = state.orderAudits.find((row) => row.action === 'TRANSFER');
+  assert.ok(transferAudit);
+  assert.equal(transferAudit.fromTableId, tableOne.id);
+  assert.equal(transferAudit.toTableId, tableTwo.id);
+  assert.deepEqual(transferAudit.metadata, { fromTableLabel: 'T1', toTableLabel: 'T2' });
+
+  await assert.rejects(
+    () => service.listOrderAudits(OUTLET_ID, order.id, cashier),
+    (error: unknown) => statusOf(error) === 403,
+  );
+  const audits = await service.listOrderAudits(OUTLET_ID, order.id, owner);
+  assert.deepEqual(
+    audits.items.map((row) => row.action),
+    ['OPEN', 'TRANSFER'],
+  );
+
+  const otherOutlet = '00000000-0000-4000-8000-000000000099';
+  await assert.rejects(
+    () => service.getOrder(otherOutlet, order.id, owner),
+    (error: unknown) => statusOf(error) === 404,
+  );
+});
+
+test('split bills partition items exactly, settle once each, and survive replay', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '20');
+  trackVariant(state, VARIANT_B, RECIPE_B_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '2' },
+  ]);
+  const actor = user();
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [
+        { variantId: VARIANT_A, quantity: 2 },
+        { variantId: VARIANT_B, quantity: 4 },
+      ],
+    },
+    actor,
+  );
+  const originalQuote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+
+  const split = await service.splitOrder(
+    OUTLET_ID,
+    order.id,
+    KEY_TWO,
+    {
+      version: 1,
+      bills: [
+        {
+          lines: [
+            { variantId: VARIANT_A, quantity: 1 },
+            { variantId: VARIANT_B, quantity: 1 },
+          ],
+        },
+        {
+          lines: [
+            { variantId: VARIANT_A, quantity: 1 },
+            { variantId: VARIANT_B, quantity: 3 },
+          ],
+        },
+      ],
+    },
+    actor,
+  );
+
+  assert.equal(split.parentOrder.state, OrderState.SPLIT);
+  assert.equal(split.parentOrder.version, 2);
+  assert.equal(split.bills.length, 2);
+  assert.equal(state.orders.length, 3);
+  assert.equal(state.orderSplits.length, 1);
+
+  const originalLines = new Map<string, number>();
+  for (const line of order.lines) {
+    originalLines.set(line.variantId, (originalLines.get(line.variantId) ?? 0) + line.quantity);
+  }
+  const splitLines = new Map<string, number>();
+  for (const bill of split.bills) {
+    for (const line of bill.lines) {
+      splitLines.set(line.variantId, (splitLines.get(line.variantId) ?? 0) + line.quantity);
+    }
+  }
+  assert.deepEqual(Object.fromEntries(splitLines), Object.fromEntries(originalLines));
+
+  const replay = await service.splitOrder(
+    OUTLET_ID,
+    order.id,
+    KEY_TWO,
+    {
+      version: 1,
+      bills: [
+        {
+          lines: [
+            { variantId: VARIANT_A, quantity: 1 },
+            { variantId: VARIANT_B, quantity: 1 },
+          ],
+        },
+        {
+          lines: [
+            { variantId: VARIANT_A, quantity: 1 },
+            { variantId: VARIANT_B, quantity: 3 },
+          ],
+        },
+      ],
+    },
+    actor,
+  );
+  assert.deepEqual(
+    replay.bills.map((bill) => bill.id),
+    split.bills.map((bill) => bill.id),
+  );
+  assert.equal(state.orders.length, 3);
+  assert.equal(state.orderSplits.length, 1);
+
+  const totals: number[] = [];
+  let firstQuoteId = '';
+  let firstSaleId = '';
+  for (const [index, bill] of split.bills.entries()) {
+    const quote = await service.createQuote(
+      OUTLET_ID,
+      bill.id,
+      { orderVersion: bill.version },
+      actor,
+    );
+    totals.push(quote.totals.totalMinor);
+    const finalized = await service.finalize(
+      OUTLET_ID,
+      index === 0 ? KEY_THREE : KEY_FOUR,
+      {
+        deviceId: DEVICE_ID,
+        orderId: bill.id,
+        quoteId: quote.id,
+        payment: finalizePayment(quote.totals.totalMinor),
+      },
+      actor,
+    );
+    if (index === 0) {
+      firstQuoteId = quote.id;
+      firstSaleId = finalized.sale.id;
+      assert.equal(state.sales.length, 1);
+      const remaining = await service.getOrder(OUTLET_ID, split.bills[1]!.id, actor);
+      assert.equal(remaining.state, OrderState.DRAFT);
+      const replaySale = await service.finalize(
+        OUTLET_ID,
+        KEY_THREE,
+        {
+          deviceId: DEVICE_ID,
+          orderId: bill.id,
+          quoteId: firstQuoteId,
+          payment: finalizePayment(quote.totals.totalMinor),
+        },
+        actor,
+      );
+      assert.equal(replaySale.replayed, true);
+      assert.equal(replaySale.sale.id, firstSaleId);
+      assert.equal(state.movements.length, 1);
+    }
+  }
+
+  assert.equal(
+    totals.reduce((sum, value) => sum + value, 0),
+    originalQuote.totals.totalMinor,
+  );
+  assert.equal(state.sales.length, 2);
+  assert.equal(state.movements.length, 2);
+  assert.equal(
+    state.movements.reduce((sum, movement) => sum + Number(movement.delta), 0),
+    -8,
+  );
+  const balance = state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID);
+  assert.equal(balance?.quantity, '12');
+  assert.equal(new Set(state.movements.map((movement) => movement.sourceId)).size, 2);
+});
+
+test('split rejects overlapping, missing, unknown quantities and stale versions without writes', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const actor = user();
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [
+        { variantId: VARIANT_A, quantity: 2 },
+        { variantId: VARIANT_B, quantity: 1 },
+      ],
+    },
+    actor,
+  );
+
+  await assert.rejects(
+    () =>
+      service.splitOrder(
+        OUTLET_ID,
+        order.id,
+        KEY_TWO,
+        {
+          version: 1,
+          bills: [
+            { lines: [{ variantId: VARIANT_A, quantity: 2 }] },
+            { lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+          ],
+        },
+        actor,
+      ),
+    (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'SPLIT_MISMATCH',
+  );
+
+  await assert.rejects(
+    () =>
+      service.splitOrder(
+        OUTLET_ID,
+        order.id,
+        KEY_TWO,
+        {
+          version: 1,
+          bills: [
+            { lines: [{ variantId: VARIANT_A, quantity: 2 }] },
+            { lines: [{ variantId: VARIANT_B, quantity: 2 }] },
+          ],
+        },
+        actor,
+      ),
+    (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'SPLIT_MISMATCH',
+  );
+
+  await assert.rejects(
+    () => service.splitOrder(OUTLET_ID, order.id, KEY_TWO, { version: 1, bills: [] }, actor),
+    (error: unknown) => statusOf(error) === 400,
+  );
+
+  await assert.rejects(
+    () =>
+      service.splitOrder(
+        OUTLET_ID,
+        order.id,
+        KEY_TWO,
+        {
+          version: 99,
+          bills: [
+            { lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+            { lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+          ],
+        },
+        actor,
+      ),
+    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'VERSION_CONFLICT',
+  );
+
+  assert.equal(state.orders.length, 1);
+  assert.equal(state.orders[0]?.state, OrderState.DRAFT);
+  assert.equal(state.orderSplits.length, 0);
+  assert.ok(state.orderAudits.every((row) => row.action !== 'SPLIT'));
+});
+
+test('concurrent splits on the same revision create one set of bills and one audit row', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const actor = user();
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    { deviceId: DEVICE_ID, lines: [{ variantId: VARIANT_A, quantity: 2 }] },
+    actor,
+  );
+
+  const original = (prisma as unknown as { $transaction: (...args: unknown[]) => Promise<unknown> })
+    .$transaction;
+  let tail = Promise.resolve();
+  (prisma as unknown as { $transaction: (...args: unknown[]) => Promise<unknown> }).$transaction =
+    async (operation: unknown, options?: unknown) => {
+      const previous = tail;
+      let release: () => void = () => undefined;
+      tail = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await previous;
+      try {
+        return await original(operation, options);
+      } finally {
+        release();
+      }
+    };
+
+  const payload = {
+    version: 1,
+    bills: [
+      { lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+      { lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+    ],
+  };
+
+  const results = await Promise.allSettled([
+    service.splitOrder(OUTLET_ID, order.id, KEY_TWO, payload, actor),
+    service.splitOrder(OUTLET_ID, order.id, KEY_THREE, payload, actor),
+  ]);
+
+  assert.equal(results.filter((result) => result.status === 'fulfilled').length, 1);
+  const rejected = results.filter((result) => result.status === 'rejected');
+  assert.equal(rejected.length, 1);
+  const failure = (rejected[0] as PromiseRejectedResult).reason as HttpException;
+  assert.equal(failure.getStatus(), 409);
+  const code = (failure.getResponse() as { code: string }).code;
+  assert.ok(code === 'VERSION_CONFLICT' || code === 'ORDER_NOT_DRAFT');
+
+  assert.equal(state.orderSplits.length, 1);
+  const parent = state.orders.find((row) => row.id === order.id);
+  assert.equal(parent?.state, OrderState.SPLIT);
+  const children = state.orders.filter((row) => row.parentOrderId === order.id);
+  assert.equal(children.length, 2);
+  const childQuantity = children.reduce(
+    (sum, child) => sum + child.lines.reduce((lineSum, line) => lineSum + line.quantity, 0),
+    0,
+  );
+  assert.equal(childQuantity, 2);
+  assert.equal(state.orderAudits.filter((row) => row.action === 'SPLIT').length, 1);
+});
+
+test('cancelling an unpaid table order consumes no stock, writes audit, and cannot be settled', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '2' },
+  ]);
+  const owner = user(Role.OWNER, OWNER_ID);
+  const actor = user();
+  const table = await service.createTable(OUTLET_ID, { label: 'T1' }, owner);
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      tableId: table.id,
+      lines: [{ variantId: VARIANT_A, quantity: 2 }],
+    },
+    actor,
+  );
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+
+  await service.cancelOrder(OUTLET_ID, order.id, { version: 1 }, actor);
+
+  assert.equal(state.movements.length, 0);
+  assert.equal(state.sales.length, 0);
+  const cancelAudit = state.orderAudits.find((row) => row.action === 'CANCEL');
+  assert.ok(cancelAudit);
+  assert.deepEqual(cancelAudit.metadata, { stockConsumed: false });
+  assert.equal(cancelAudit.fromTableId, table.id);
+
+  await assert.rejects(
+    () =>
+      service.finalize(
+        OUTLET_ID,
+        KEY_TWO,
+        {
+          deviceId: DEVICE_ID,
+          orderId: order.id,
+          quoteId: quote.id,
+          payment: finalizePayment(36000),
+        },
+        actor,
+      ),
+    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'ORDER_NOT_DRAFT',
+  );
+  assert.equal(state.movements.length, 0);
+  assert.equal(state.sales.length, 0);
+  const balance = state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID);
+  assert.equal(balance?.quantity, '10');
+});
+
+test('finalize records an audit row and split parents cannot be settled twice', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma);
+  const actor = user();
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    { deviceId: DEVICE_ID, lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+    actor,
+  );
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+  await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(18000),
+    },
+    actor,
+  );
+
+  const finalizeAudit = state.orderAudits.find((row) => row.action === 'FINALIZE');
+  assert.ok(finalizeAudit);
+  assert.equal(finalizeAudit.metadata.saleId, state.sales[0]?.id);
+
+  const other = await service.createOrder(
+    OUTLET_ID,
+    KEY_THREE,
+    { deviceId: DEVICE_ID, lines: [{ variantId: VARIANT_A, quantity: 2 }] },
+    actor,
+  );
+  const split = await service.splitOrder(
+    OUTLET_ID,
+    other.id,
+    KEY_FOUR,
+    {
+      version: 1,
+      bills: [
+        { lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+        { lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+      ],
+    },
+    actor,
+  );
+
+  assert.equal(split.parentOrder.state, OrderState.SPLIT);
+  await assert.rejects(
+    () => service.createQuote(OUTLET_ID, other.id, { orderVersion: 2 }, actor),
+    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'ORDER_NOT_DRAFT',
+  );
 });

@@ -13,6 +13,10 @@ Name | Type | Description | Notes
 **state** | **String** |  | 
 **version** | **int** |  | 
 **lines** | [**List<OrderWriteLinesInner>**](OrderWriteLinesInner.md) |  | [default to const []]
+**tableId** | **String** |  | [optional] 
+**tableLabel** | **String** |  | [optional] 
+**splitGroupId** | **String** |  | [optional] 
+**parentOrderId** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
