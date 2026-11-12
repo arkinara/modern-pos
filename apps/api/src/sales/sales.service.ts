@@ -1043,6 +1043,30 @@ export class SalesService {
       return this.replayCheckout(prior.requestHash, prior.saleId, outletId, hash, user);
     }
 
+    const preflightQuote = await this.prisma.quote.findFirst({
+      where: {
+        id: dto.quoteId,
+        orderId: dto.orderId,
+        outletId,
+        businessId: user.businessId,
+      },
+      select: { discountMinor: true },
+    });
+
+    if (preflightQuote) {
+      await this.assertApproval(this.prisma, {
+        businessId: user.businessId,
+        outletId,
+        orderId: dto.orderId,
+        actorId: user.id,
+        action: ApprovalAction.DISCOUNT,
+        amountMinor: preflightQuote.discountMinor,
+        user,
+        operation: 'DISCOUNT',
+        recordAllowed: false,
+      });
+    }
+
     try {
       return await this.runSerializable(async () => {
         return this.prisma.$transaction(
@@ -1494,6 +1518,25 @@ export class SalesService {
 
     if (prior) {
       return this.replayReversal(prior, saleId, hash);
+    }
+
+    const preflightSale = await this.prisma.sale.findFirst({
+      where: { id: saleId, outletId, businessId: user.businessId },
+      select: { id: true, orderId: true, totalMinor: true },
+    });
+
+    if (preflightSale) {
+      await this.assertApproval(this.prisma, {
+        businessId: user.businessId,
+        outletId,
+        orderId: preflightSale.orderId,
+        actorId: user.id,
+        action: ApprovalAction.REFUND,
+        amountMinor: partial ? BigInt(dto.refundMinor ?? 0) : preflightSale.totalMinor,
+        user,
+        operation: 'REFUND',
+        recordAllowed: false,
+      });
     }
 
     try {
@@ -2474,7 +2517,7 @@ export class SalesService {
   }
 
   private async assertApproval(
-    tx: Prisma.TransactionClient,
+    client: DbClient,
     input: {
       businessId: string;
       outletId: string;
@@ -2484,10 +2527,11 @@ export class SalesService {
       amountMinor: bigint;
       operation: string;
       user: AuthenticatedUser;
+      recordAllowed?: boolean;
     },
   ): Promise<void> {
     const rule = await this.promotions.findApprovalRule(
-      tx,
+      client,
       input.outletId,
       input.businessId,
       input.action,
@@ -2540,7 +2584,11 @@ export class SalesService {
       );
     }
 
-    await this.writeAudit(tx, {
+    if (input.recordAllowed === false) {
+      return;
+    }
+
+    await this.writeAudit(client, {
       businessId: input.businessId,
       outletId: input.outletId,
       orderId: input.orderId,

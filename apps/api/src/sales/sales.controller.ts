@@ -197,7 +197,7 @@ export class SalesController {
     return this.sales.getSale(outletId, saleId, user);
   }
 
-  @Roles(Role.OWNER)
+  @Roles(Role.OWNER, Role.CASHIER)
   @Post('sales/:saleId/reversals')
   @HttpCode(201)
   reverse(

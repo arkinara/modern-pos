@@ -3437,3 +3437,561 @@ test('finalize records an audit row and split parents cannot be settled twice', 
     (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'ORDER_NOT_DRAFT',
   );
 });
+
+function addPromotion(state: FakeState, overrides: Partial<PromotionRow> & { id: string }): void {
+  const row: PromotionRow = {
+    businessId: BUSINESS_ID,
+    outletId: OUTLET_ID,
+    name: 'Promotion',
+    kind: 'PERCENTAGE',
+    percentageBps: 1000,
+    amountMinor: null,
+    minBasketMinor: 0n,
+    startsAt: null,
+    endsAt: null,
+    active: true,
+    stacking: 'EXCLUSIVE',
+    priority: 0,
+    eligibility: {},
+    revision: 1,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
+  state.promotions.push(row);
+}
+
+function addApprovalRule(state: FakeState, action: string, thresholdMinor: bigint): void {
+  state.approvalRules.push({
+    id: `approval-${state.approvalRules.length + 1}`,
+    businessId: BUSINESS_ID,
+    outletId: OUTLET_ID,
+    action,
+    thresholdMinor,
+    active: true,
+    createdAt: nowDate(),
+    updatedAt: nowDate(),
+  });
+}
+
+function nowDate(): Date {
+  return new Date('2026-01-01T00:00:00.000Z');
+}
+
+function addModifier(
+  state: FakeState,
+  row: Partial<ModifierRow> & { id: string; menuItemId: string; name: string },
+): void {
+  state.modifiers.push({
+    businessId: BUSINESS_ID,
+    priceDeltaMinor: 0n,
+    stockItemId: null,
+    quantityPerSaleUnit: null,
+    active: true,
+    ...row,
+  });
+}
+
+test('a percentage promotion prices the quote, snapshots the sale, and writes a promotion audit', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  addPromotion(state, { id: '00000000-0000-4000-8000-0000000000f1', percentageBps: 1000 });
+
+  const actor = user();
+  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
+    deviceId: DEVICE_ID,
+    lines: [{ variantId: VARIANT_A, quantity: 1 }],
+  }, actor);
+  const quote = await service.createQuote(OUTLET_ID, order.id, {
+    orderVersion: 1,
+    promotionIds: ['00000000-0000-4000-8000-0000000000f1'],
+  }, actor);
+
+  assert.equal(quote.totals.subtotalMinor, 18000);
+  assert.equal(quote.totals.discountMinor, 1800);
+  assert.equal(quote.totals.totalMinor, 16200);
+  assert.equal(quote.promotions[0]?.discountMinor, 1800);
+
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(quote.totals.totalMinor),
+    },
+    actor,
+  );
+
+  assert.equal(finalized.sale.totals.discountMinor, 1800);
+  assert.equal(finalized.sale.totals.totalMinor, 16200);
+  assert.equal(finalized.sale.promotions[0]?.promotionId, '00000000-0000-4000-8000-0000000000f1');
+  assert.equal(
+    state.orderAudits.some((row) => row.action === 'PROMOTION' && row.orderId === order.id),
+    true,
+  );
+});
+
+test('a fixed promotion larger than the basket is capped at the basket subtotal', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  addPromotion(state, {
+    id: '00000000-0000-4000-8000-0000000000f2',
+    kind: 'FIXED_AMOUNT',
+    percentageBps: null,
+    amountMinor: 999999n,
+  });
+
+  const actor = user();
+  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
+    deviceId: DEVICE_ID,
+    lines: [{ variantId: VARIANT_A, quantity: 1 }],
+  }, actor);
+  const quote = await service.createQuote(OUTLET_ID, order.id, {
+    orderVersion: 1,
+    promotionIds: ['00000000-0000-4000-8000-0000000000f2'],
+  }, actor);
+
+  assert.equal(quote.totals.discountMinor, 18000);
+  assert.equal(quote.totals.totalMinor, 0);
+});
+
+test('incompatible promotion stacking is rejected server-side at quote time', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  addPromotion(state, { id: '00000000-0000-4000-8000-0000000000f3', stacking: 'EXCLUSIVE' });
+  addPromotion(state, {
+    id: '00000000-0000-4000-8000-0000000000f4',
+    stacking: 'STACKABLE',
+    percentageBps: 500,
+  });
+
+  const actor = user();
+  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
+    deviceId: DEVICE_ID,
+    lines: [{ variantId: VARIANT_A, quantity: 1 }],
+  }, actor);
+
+  await assert.rejects(
+    () =>
+      service.createQuote(OUTLET_ID, order.id, {
+        orderVersion: 1,
+        promotionIds: [
+          '00000000-0000-4000-8000-0000000000f3',
+          '00000000-0000-4000-8000-0000000000f4',
+        ],
+      }, actor),
+    (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'PROMOTION_STACK_NOT_ALLOWED',
+  );
+  assert.equal(state.quotes.length, 0);
+});
+
+test('item modifiers change the price, persist on the sale line, and consume stock once', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  addModifier(state, {
+    id: '00000000-0000-4000-8000-0000000000f5',
+    menuItemId: '00000000-0000-4000-8000-000000000030',
+    name: 'Extra shot',
+    priceDeltaMinor: 2000n,
+    stockItemId: STOCK_SHARED_ID,
+    quantityPerSaleUnit: '5',
+  });
+
+  const actor = user();
+  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
+    deviceId: DEVICE_ID,
+    lines: [
+      {
+        variantId: VARIANT_A,
+        quantity: 2,
+        modifiers: [{ modifierId: '00000000-0000-4000-8000-0000000000f5' }],
+      },
+    ],
+  }, actor);
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+
+  assert.equal(quote.lines[0]?.unitPriceMinor, 20000);
+  assert.equal(quote.lines[0]?.modifiers[0]?.priceDeltaMinor, 2000);
+  assert.equal(quote.lines[0]?.modifiers[0]?.lineDeltaMinor, 4000);
+
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(quote.totals.totalMinor),
+    },
+    actor,
+  );
+
+  assert.equal(finalized.sale.lines[0]?.modifiers[0]?.name, 'Extra shot');
+  assert.equal(state.balances[0]?.quantity, '0');
+  assert.equal(
+    state.movements.filter((row) => row.type === 'SALE').reduce((sum, row) => sum + Number(row.delta), 0),
+    -10,
+  );
+});
+
+test('partial refunds keep money and restock independent across multiple refunds', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '20');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const actor = user();
+  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
+    deviceId: DEVICE_ID,
+    lines: [{ variantId: VARIANT_A, quantity: 2 }],
+  }, actor);
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(quote.totals.totalMinor),
+    },
+    actor,
+  );
+  const saleLineId = finalized.sale.lines[0]!.id;
+  const owner = user(Role.OWNER, OWNER_ID);
+
+  const moneyOnly = await service.reverse(
+    OUTLET_ID,
+    finalized.sale.id,
+    KEY_THREE,
+    { reason: 'Goodwill refund', restock: [], refundMinor: 5000, lines: [{ saleLineId, quantity: 1 }] },
+    owner,
+  );
+  assert.equal(moneyOnly.kind, 'PARTIAL');
+  assert.equal(moneyOnly.refundMinor, 5000);
+  assert.equal(moneyOnly.restock.length, 0);
+  assert.equal(state.movements.filter((row) => row.type === 'REVERSAL').length, 0);
+
+  const restockOnly = await service.reverse(
+    OUTLET_ID,
+    finalized.sale.id,
+    KEY_FOUR,
+    {
+      reason: 'Item returned',
+      restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '1' }],
+      refundMinor: 0,
+      lines: [{ saleLineId, quantity: 1 }],
+    },
+    owner,
+  );
+  assert.equal(restockOnly.refundMinor, 0);
+  assert.equal(restockOnly.restock[0]?.quantity, '1');
+  assert.equal(state.movements.filter((row) => row.type === 'REVERSAL').length, 1);
+  assert.equal(state.balances[0]?.quantity, '15');
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_FIVE,
+        { reason: 'Again', restock: [], refundMinor: 0, lines: [{ saleLineId, quantity: 1 }] },
+        owner,
+      ),
+    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'REFUND_ALREADY_COMPLETED',
+  );
+});
+
+test('partial refund with both money and restock moves stock once and rejects unknown restock', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const actor = user();
+  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
+    deviceId: DEVICE_ID,
+    lines: [{ variantId: VARIANT_A, quantity: 2 }],
+  }, actor);
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(quote.totals.totalMinor),
+    },
+    actor,
+  );
+  const saleLineId = finalized.sale.lines[0]!.id;
+  const owner = user(Role.OWNER, OWNER_ID);
+
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        finalized.sale.id,
+        KEY_THREE,
+        {
+          reason: 'Invalid restock',
+          restock: [{ stockItemId: '00000000-0000-4000-8000-0000000000bb', quantity: '1' }],
+          refundMinor: 0,
+          lines: [{ saleLineId, quantity: 1 }],
+        },
+        owner,
+      ),
+    (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'RESTOCK_ITEM_NOT_SOLD',
+  );
+
+  const both = await service.reverse(
+    OUTLET_ID,
+    finalized.sale.id,
+    KEY_THREE,
+    {
+      reason: 'Returned one cup',
+      restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '3' }],
+      refundMinor: 1000,
+      lines: [{ saleLineId, quantity: 1 }],
+    },
+    owner,
+  );
+
+  assert.equal(both.refundMinor, 1000);
+  assert.equal(both.restock[0]?.quantity, '3');
+  assert.equal(state.balances[0]?.quantity, '7');
+  assert.equal(state.movements.filter((row) => row.type === 'REVERSAL').length, 1);
+});
+
+test('refund approval allows a cashier below threshold and refuses above it until owner acts', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  addApprovalRule(state, 'REFUND', 1000n);
+
+  async function saleFor(quantity: number, key: string) {
+    const actor = user();
+    const order = await service.createOrder(OUTLET_ID, key, {
+      deviceId: DEVICE_ID,
+      lines: [{ variantId: VARIANT_A, quantity }],
+    }, actor);
+    const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+    const finalized = await service.finalize(
+      OUTLET_ID,
+      `${key.slice(0, -1)}9`,
+      {
+        deviceId: DEVICE_ID,
+        orderId: order.id,
+        quoteId: quote.id,
+        payment: finalizePayment(quote.totals.totalMinor),
+      },
+      actor,
+    );
+    return finalized.sale;
+  }
+
+  const smallSale = await saleFor(1, KEY_ONE);
+  const smallRefund = await service.reverse(
+    OUTLET_ID,
+    smallSale.id,
+    KEY_TWO,
+    {
+      reason: 'Small refund',
+      restock: [],
+      refundMinor: 1000,
+      lines: [{ saleLineId: smallSale.lines[0]!.id, quantity: 1 }],
+    },
+    user(),
+  );
+  assert.equal(smallRefund.refundMinor, 1000);
+
+  const largeSale = await saleFor(2, KEY_THREE);
+  await assert.rejects(
+    () =>
+      service.reverse(
+        OUTLET_ID,
+        largeSale.id,
+        KEY_FOUR,
+        {
+          reason: 'Large refund',
+          restock: [],
+          refundMinor: 2000,
+          lines: [{ saleLineId: largeSale.lines[0]!.id, quantity: 1 }],
+        },
+        user(),
+      ),
+    (error: unknown) => statusOf(error) === 403 && codeOf(error) === 'APPROVAL_REQUIRED',
+  );
+  assert.equal(
+    state.orderAudits.some(
+      (row) =>
+        row.action === 'APPROVAL' &&
+        row.orderId === state.sales.find((sale) => sale.id === largeSale.id)?.orderId &&
+        row.metadata.allowed === false,
+    ),
+    true,
+  );
+
+  const ownerRefund = await service.reverse(
+    OUTLET_ID,
+    largeSale.id,
+    KEY_FOUR,
+    {
+      reason: 'Large refund',
+      restock: [],
+      refundMinor: 2000,
+      lines: [{ saleLineId: largeSale.lines[0]!.id, quantity: 1 }],
+    },
+    user(Role.OWNER, OWNER_ID),
+  );
+  assert.equal(ownerRefund.refundMinor, 2000);
+});
+
+test('discount approval blocks a cashier above the configured threshold and audits both decisions', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  addPromotion(state, { id: '00000000-0000-4000-8000-0000000000f6', percentageBps: 1000 });
+  addApprovalRule(state, 'DISCOUNT', 1000n);
+
+  const actor = user();
+  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
+    deviceId: DEVICE_ID,
+    lines: [{ variantId: VARIANT_A, quantity: 1 }],
+  }, actor);
+  const quote = await service.createQuote(OUTLET_ID, order.id, {
+    orderVersion: 1,
+    promotionIds: ['00000000-0000-4000-8000-0000000000f6'],
+  }, actor);
+
+  await assert.rejects(
+    () =>
+      service.finalize(
+        OUTLET_ID,
+        KEY_TWO,
+        {
+          deviceId: DEVICE_ID,
+          orderId: order.id,
+          quoteId: quote.id,
+          payment: finalizePayment(quote.totals.totalMinor),
+        },
+        actor,
+      ),
+    (error: unknown) => statusOf(error) === 403 && codeOf(error) === 'APPROVAL_REQUIRED',
+  );
+  assert.equal(
+    state.orderAudits.some((row) => row.action === 'APPROVAL' && row.metadata.allowed === false),
+    true,
+  );
+
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(quote.totals.totalMinor),
+    },
+    user(Role.OWNER, OWNER_ID),
+  );
+  assert.equal(finalized.sale.totals.discountMinor, 1800);
+  assert.equal(
+    state.orderAudits.some((row) => row.action === 'APPROVAL' && row.metadata.allowed === true),
+    true,
+  );
+});
+
+test('concurrent partial refunds with the same key create one reversal and one stock movement', async () => {
+  const { prisma, state } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+
+  const actor = user();
+  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
+    deviceId: DEVICE_ID,
+    lines: [{ variantId: VARIANT_A, quantity: 2 }],
+  }, actor);
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(quote.totals.totalMinor),
+    },
+    actor,
+  );
+  const saleLineId = finalized.sale.lines[0]!.id;
+  const owner = user(Role.OWNER, OWNER_ID);
+
+  let tail = Promise.resolve();
+  const original = prisma.$transaction.bind(prisma) as unknown as (
+    operation: (tx: unknown) => Promise<unknown>,
+    options?: unknown,
+  ) => Promise<unknown>;
+  (prisma as unknown as { $transaction: typeof original }).$transaction = async (
+    operation: (tx: unknown) => Promise<unknown>,
+    options?: unknown,
+  ) => {
+    const previous = tail;
+    let release: () => void = () => undefined;
+    tail = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+
+    try {
+      return await original(operation, options);
+    } finally {
+      release();
+    }
+  };
+
+  const results = await Promise.all([
+    service.reverse(
+      OUTLET_ID,
+      finalized.sale.id,
+      KEY_THREE,
+      {
+        reason: 'Duplicate request',
+        restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '3' }],
+        refundMinor: 500,
+        lines: [{ saleLineId, quantity: 1 }],
+      },
+      owner,
+    ),
+    service.reverse(
+      OUTLET_ID,
+      finalized.sale.id,
+      KEY_THREE,
+      {
+        reason: 'Duplicate request',
+        restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '3' }],
+        refundMinor: 500,
+        lines: [{ saleLineId, quantity: 1 }],
+      },
+      owner,
+    ),
+  ]);
+
+  assert.equal(results[0]?.id, results[1]?.id);
+  assert.equal(state.reversals.length, 1);
+  assert.equal(state.movements.filter((row) => row.type === 'REVERSAL').length, 1);
+  assert.equal(state.refundLines.length, 1);
+});

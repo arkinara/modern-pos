@@ -21,7 +21,7 @@ export interface CsvSaleRow {
   tenderedMinor: number | null;
   changeMinor: number | null;
   paymentReference: string | null;
-  rowType: 'SALE' | 'REVERSAL';
+  rowType: 'SALE' | 'REVERSAL' | 'REFUND';
   reversalReason: string | null;
 }
 

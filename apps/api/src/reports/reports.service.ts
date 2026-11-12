@@ -29,6 +29,7 @@ export interface DailyReportResponse {
   currencyExponent: number;
   grossItemSalesMinor: number;
   reversalItemValueMinor: number;
+  refundMoneyMinor: number;
   netItemSalesMinor: number;
   saleCount: number;
   reversalCount: number;
@@ -91,7 +92,11 @@ interface ReportSale {
 interface ReportReversal {
   id: string;
   saleId: string;
+  kind?: string;
   reason: string;
+  refundMinor?: bigint;
+  lines?: unknown;
+  refundLines?: { saleLineId: string; quantity: number }[];
   createdAt: Date;
   sale: {
     reference: string;
@@ -201,7 +206,12 @@ export class ReportsService {
 
     const grossItemSalesMinor = sales.reduce((sum, sale) => sum + sale.subtotalMinor, 0n);
     const reversalItemValueMinor = reversals.reduce(
-      (sum, reversal) => sum + reversal.sale.subtotalMinor,
+      (sum, reversal) =>
+        sum + (reversal.kind === 'PARTIAL' ? (reversal.refundMinor ?? 0n) : reversal.sale.subtotalMinor),
+      0n,
+    );
+    const refundMoneyMinor = reversals.reduce(
+      (sum, reversal) => sum + (reversal.refundMinor ?? reversal.sale.subtotalMinor),
       0n,
     );
     const netItemSalesMinor = grossItemSalesMinor - reversalItemValueMinor;
@@ -242,6 +252,7 @@ export class ReportsService {
       currencyExponent: outlet.currencyExponent,
       grossItemSalesMinor: wireMinor(grossItemSalesMinor, 'grossItemSalesMinor'),
       reversalItemValueMinor: wireMinor(reversalItemValueMinor, 'reversalItemValueMinor'),
+      refundMoneyMinor: wireMinor(refundMoneyMinor, 'refundMoneyMinor'),
       netItemSalesMinor: signedWireMinor(netItemSalesMinor, 'netItemSalesMinor'),
       saleCount,
       reversalCount,
@@ -315,6 +326,43 @@ export class ReportsService {
     }
 
     for (const reversal of reversals) {
+      if (reversal.kind === 'PARTIAL') {
+        const refundMinor = reversal.refundMinor ?? 0n;
+        const refundedQuantity = (reversal.refundLines ?? []).reduce(
+          (sum, line) => sum + line.quantity,
+          0,
+        );
+        const firstLine = reversal.sale.lines[0];
+
+        rows.push({
+          reference: reversal.sale.reference,
+          completedAtUtc: reversal.createdAt.toISOString(),
+          completedAtLocal: formatLocalTimestamp(reversal.createdAt, outlet.timezone),
+          timezone: reversal.sale.timezone,
+          state: SaleState.REVERSED,
+          currency: reversal.sale.currency,
+          currencyExponent: reversal.sale.currencyExponent,
+          itemName: firstLine?.name ?? 'Partial refund',
+          variantName: firstLine?.variantName ?? '',
+          quantity: -refundedQuantity,
+          unitPriceMinor: 0,
+          lineSubtotalMinor: signedWireMinor(-refundMinor, 'partialRefundMinor'),
+          saleSubtotalMinor: signedWireMinor(-refundMinor, 'partialRefundMinor'),
+          saleServiceMinor: 0,
+          saleTaxMinor: 0,
+          saleTotalMinor: signedWireMinor(-refundMinor, 'partialRefundMinor'),
+          paymentKind: null,
+          paymentStatus: null,
+          paymentAmountMinor: null,
+          tenderedMinor: null,
+          changeMinor: null,
+          paymentReference: null,
+          rowType: 'REFUND',
+          reversalReason: reversal.reason,
+        });
+        continue;
+      }
+
       for (const line of reversal.sale.lines) {
         rows.push({
           reference: reversal.sale.reference,
@@ -400,6 +448,7 @@ export class ReportsService {
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       include: {
+        refundLines: { select: { saleLineId: true, quantity: true } },
         sale: {
           select: {
             reference: true,
