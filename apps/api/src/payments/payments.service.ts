@@ -118,6 +118,7 @@ interface OnlinePaymentRow {
   currency: string;
   currencyExponent: number;
   qrPayload: string | null;
+  attempt: number;
   providerCreatedAt: Date | null;
   settledAt: Date | null;
   failedAt: Date | null;
@@ -248,7 +249,13 @@ export class PaymentsService {
     if (payment.status === PaymentStatus.FAILED) {
       const reset = await this.prisma.onlinePayment.updateMany({
         where: { id: payment.id, status: PaymentStatus.FAILED },
-        data: { status: PaymentStatus.PENDING, providerRef: null, failedAt: null, lastError: null },
+        data: {
+          status: PaymentStatus.PENDING,
+          providerRef: null,
+          failedAt: null,
+          lastError: null,
+          attempt: { increment: 1 },
+        },
       });
       if (reset.count === 1) {
         await this.prisma.paymentRecord.updateMany({
@@ -268,7 +275,7 @@ export class PaymentsService {
 
     if (!payment.providerRef) {
       const provider = await this.adapter().createPayment({
-        idempotencyKey: payment.id,
+        idempotencyKey: payment.attempt > 1 ? `${payment.id}:retry:${payment.attempt}` : payment.id,
         amountMinor: payment.amountMinor,
         currency: payment.currency,
       });
@@ -616,6 +623,10 @@ export class PaymentsService {
     }
 
     const payment = sale.onlinePayment;
+
+    if (input.amountMinor === 0n) {
+      return { performed: false, providerRefundRef: null };
+    }
 
     if (
       !payment ||

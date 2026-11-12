@@ -810,6 +810,7 @@ model OnlinePayment {
   currency         String          @db.VarChar(3)
   currencyExponent Int
   qrPayload        String?
+  attempt          Int             @default(1)
   providerCreatedAt DateTime?
   settledAt        DateTime?
   failedAt         DateTime?
