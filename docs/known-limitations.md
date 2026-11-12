@@ -128,7 +128,7 @@ and record the visible state and paper result.
 | Cold offline tax/service/rounding | Not guaranteed | A server total change becomes a cashier conflict |
 | Production deployment | Separate explicit decision | Single-VPS staging is not production |
 | User management UI and password reset | Not implemented | Users are seeded/provisioned outside the app |
-| Partial or line-level refunds | Not implemented | One full reversal per completed sale |
+| Partial or line-level refunds | Implemented (#21) | Partial item refunds with independent money-return and restock; no payment-provider refund (`externalRefundPerformed` stays `false`); a whole-sale reversal remains one full reversal. |
 | Payment-provider refunds/voids | Not implemented | Reversal never calls a provider |
 | LAN and USB printer transports | Not implemented | Bluetooth Classic SPP is the only candidate |
 | Hardware-verified Bluetooth result | PENDING | See `docs/printer-validation.md` |
@@ -141,7 +141,7 @@ and record the visible state and paper result.
 | Discounts and promotions | Partially implemented | Percentage/fixed promotions with explicit eligibility, stacking and half-up rounding are enforced server-side (#21). Loyalty is not implemented. |
 | External payment refunds | Not implemented | `externalRefundPerformed` is always false; no provider integration (#22). |
 | Multi-currency per sale | Not implemented | One currency/exponent per outlet |
-| User activity audit beyond sale/stock/reversal/order records | Not implemented | Order open/transfer/split/cancel/finalize transitions are append-only audited; admin/user changes are not |
+| User activity audit beyond sale/stock/reversal/order records | Partially implemented | Promotion, refund and approval decisions are append-only audited in `order_audits`; modifier catalog changes and admin/user changes are not audited |
 
 ## Promotions, modifiers, partial refunds and approvals (#21)
 

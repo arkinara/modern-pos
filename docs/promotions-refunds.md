@@ -50,8 +50,11 @@ amount and `totals.subtotalMinor` remains the gross item subtotal.
   rejected with `422 PROMOTION_STACK_NOT_ALLOWED`.
 - Any number of `STACKABLE` promotions may combine. They are applied by
   descending `priority`, then by promotion id for a deterministic order.
-- The same promotion id twice is rejected with `422 PROMOTION_DUPLICATE`.
-- Unknown promotion ids return `404 NOT_FOUND`.
+- A repeated promotion id in `promotionIds` is de-duplicated before pricing. The
+  request still succeeds with `201`, the promotion is applied once, and it
+  contributes one promotion entry and one `discountMinor`.
+- Unknown promotion ids return `404 NOT_FOUND` with `details.promotionIds`
+  listing the missing ids.
 
 The same rules are evaluated again at finalize. If a promotion, its window, its
 eligibility or the catalog price changed after the quote, finalize returns
