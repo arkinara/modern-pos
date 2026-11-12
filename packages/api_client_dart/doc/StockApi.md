@@ -171,7 +171,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **stockMovements**
-> MovementPage stockMovements(outletId, stockItemId, cursor, limit)
+> MovementPage stockMovements(outletId, stockItemId, cursor, limit, type, reason, supplierId, supplierReference)
 
 Read append-only stock ledger
 
@@ -190,9 +190,13 @@ final outletId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String |
 final stockItemId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
 final cursor = cursor_example; // String | 
 final limit = 56; // int | 
+final type = type_example; // String | 
+final reason = reason_example; // String | 
+final supplierId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final supplierReference = supplierReference_example; // String | 
 
 try {
-    final result = api_instance.stockMovements(outletId, stockItemId, cursor, limit);
+    final result = api_instance.stockMovements(outletId, stockItemId, cursor, limit, type, reason, supplierId, supplierReference);
     print(result);
 } catch (e) {
     print('Exception when calling StockApi->stockMovements: $e\n');
@@ -207,6 +211,10 @@ Name | Type | Description  | Notes
  **stockItemId** | **String**|  | 
  **cursor** | **String**|  | [optional] 
  **limit** | **int**|  | [optional] [default to 25]
+ **type** | **String**|  | [optional] 
+ **reason** | **String**|  | [optional] 
+ **supplierId** | **String**|  | [optional] 
+ **supplierReference** | **String**|  | [optional] 
 
 ### Return type
 

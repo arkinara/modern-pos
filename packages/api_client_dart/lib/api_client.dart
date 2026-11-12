@@ -277,6 +277,22 @@ class ApiClient {
           return OrderWriteLinesInner.fromJson(value);
         case 'Outlet':
           return Outlet.fromJson(value);
+        case 'OutletTransfer':
+          return OutletTransfer.fromJson(value);
+        case 'OutletTransferLine':
+          return OutletTransferLine.fromJson(value);
+        case 'OutletTransferLineWrite':
+          return OutletTransferLineWrite.fromJson(value);
+        case 'OutletTransferMutation':
+          return OutletTransferMutation.fromJson(value);
+        case 'OutletTransferPage':
+          return OutletTransferPage.fromJson(value);
+        case 'OutletTransferReceiveLineWrite':
+          return OutletTransferReceiveLineWrite.fromJson(value);
+        case 'OutletTransferReceiveWrite':
+          return OutletTransferReceiveWrite.fromJson(value);
+        case 'OutletTransferWrite':
+          return OutletTransferWrite.fromJson(value);
         case 'OutletUpdate':
           return OutletUpdate.fromJson(value);
         case 'Payment':
@@ -311,6 +327,20 @@ class ApiClient {
           return PromotionUpdate.fromJson(value);
         case 'PromotionWrite':
           return PromotionWrite.fromJson(value);
+        case 'PurchaseOrder':
+          return PurchaseOrder.fromJson(value);
+        case 'PurchaseOrderLine':
+          return PurchaseOrderLine.fromJson(value);
+        case 'PurchaseOrderLineWrite':
+          return PurchaseOrderLineWrite.fromJson(value);
+        case 'PurchaseOrderPage':
+          return PurchaseOrderPage.fromJson(value);
+        case 'PurchaseOrderReceipt':
+          return PurchaseOrderReceipt.fromJson(value);
+        case 'PurchaseOrderReceiptWrite':
+          return PurchaseOrderReceiptWrite.fromJson(value);
+        case 'PurchaseOrderWrite':
+          return PurchaseOrderWrite.fromJson(value);
         case 'Quote':
           return Quote.fromJson(value);
         case 'QuoteLinesInner':
@@ -383,10 +413,26 @@ class ApiClient {
           return Stock.fromJson(value);
         case 'StockChange':
           return StockChange.fromJson(value);
+        case 'StockCount':
+          return StockCount.fromJson(value);
+        case 'StockCountLine':
+          return StockCountLine.fromJson(value);
+        case 'StockCountLineWrite':
+          return StockCountLineWrite.fromJson(value);
+        case 'StockCountPage':
+          return StockCountPage.fromJson(value);
+        case 'StockCountWrite':
+          return StockCountWrite.fromJson(value);
         case 'StockPage':
           return StockPage.fromJson(value);
         case 'StockWrite':
           return StockWrite.fromJson(value);
+        case 'Supplier':
+          return Supplier.fromJson(value);
+        case 'SupplierPage':
+          return SupplierPage.fromJson(value);
+        case 'SupplierWrite':
+          return SupplierWrite.fromJson(value);
         case 'Table':
           return Table.fromJson(value);
         case 'TablePage':
@@ -405,6 +451,12 @@ class ApiClient {
           return VariantUpdate.fromJson(value);
         case 'VariantWrite':
           return VariantWrite.fromJson(value);
+        case 'Waste':
+          return Waste.fromJson(value);
+        case 'WastePage':
+          return WastePage.fromJson(value);
+        case 'WasteWrite':
+          return WasteWrite.fromJson(value);
         case 'WebSession':
           return WebSession.fromJson(value);
         case 'WebhookAck':

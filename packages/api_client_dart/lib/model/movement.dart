@@ -23,6 +23,16 @@ class Movement {
     required this.sourceReference,
     required this.actorId,
     required this.createdAt,
+    this.supplierId,
+    this.supplierName,
+    this.supplierReference,
+    this.purchaseOrderId,
+    this.purchaseOrderReference,
+    this.transferId,
+    this.transferReference,
+    this.stockCountId,
+    this.stockCountReference,
+    this.stockWasteId,
   });
 
   String id;
@@ -39,12 +49,42 @@ class Movement {
 
   String sourceId;
 
-  /// Human-readable sale reference resolved from sourceId for SALE and REVERSAL movements. Null for non-sale movements or when the referenced sale is missing. The ledger remains readable when a reference cannot be resolved.
+  /// Human-readable sale or transfer reference resolved from sourceId. Null when no reference applies or the referenced row is missing. The ledger remains readable when a reference cannot be resolved.
   String? sourceReference;
 
   String actorId;
 
   DateTime createdAt;
+
+  /// Supplier linked to this purchase receipt, when present.
+  String? supplierId;
+
+  /// Supplier display name resolved for a purchase receipt.
+  String? supplierName;
+
+  /// Supplier reference resolved for a purchase receipt.
+  String? supplierReference;
+
+  /// Purchase order linked to this receipt.
+  String? purchaseOrderId;
+
+  /// Purchase order reference resolved for a receipt.
+  String? purchaseOrderReference;
+
+  /// Outlet transfer linked to this movement.
+  String? transferId;
+
+  /// Outlet transfer reference resolved for a movement.
+  String? transferReference;
+
+  /// Stock count linked to this variance movement.
+  String? stockCountId;
+
+  /// Stock count reference resolved for a variance movement.
+  String? stockCountReference;
+
+  /// Waste record linked to this movement.
+  String? stockWasteId;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is Movement &&
@@ -57,7 +97,17 @@ class Movement {
     other.sourceId == sourceId &&
     other.sourceReference == sourceReference &&
     other.actorId == actorId &&
-    other.createdAt == createdAt;
+    other.createdAt == createdAt &&
+    other.supplierId == supplierId &&
+    other.supplierName == supplierName &&
+    other.supplierReference == supplierReference &&
+    other.purchaseOrderId == purchaseOrderId &&
+    other.purchaseOrderReference == purchaseOrderReference &&
+    other.transferId == transferId &&
+    other.transferReference == transferReference &&
+    other.stockCountId == stockCountId &&
+    other.stockCountReference == stockCountReference &&
+    other.stockWasteId == stockWasteId;
 
   @override
   int get hashCode =>
@@ -71,10 +121,20 @@ class Movement {
     (sourceId.hashCode) +
     (sourceReference == null ? 0 : sourceReference!.hashCode) +
     (actorId.hashCode) +
-    (createdAt.hashCode);
+    (createdAt.hashCode) +
+    (supplierId == null ? 0 : supplierId!.hashCode) +
+    (supplierName == null ? 0 : supplierName!.hashCode) +
+    (supplierReference == null ? 0 : supplierReference!.hashCode) +
+    (purchaseOrderId == null ? 0 : purchaseOrderId!.hashCode) +
+    (purchaseOrderReference == null ? 0 : purchaseOrderReference!.hashCode) +
+    (transferId == null ? 0 : transferId!.hashCode) +
+    (transferReference == null ? 0 : transferReference!.hashCode) +
+    (stockCountId == null ? 0 : stockCountId!.hashCode) +
+    (stockCountReference == null ? 0 : stockCountReference!.hashCode) +
+    (stockWasteId == null ? 0 : stockWasteId!.hashCode);
 
   @override
-  String toString() => 'Movement[id=$id, outletId=$outletId, stockItemId=$stockItemId, delta=$delta, type=$type, reason=$reason, sourceId=$sourceId, sourceReference=$sourceReference, actorId=$actorId, createdAt=$createdAt]';
+  String toString() => 'Movement[id=$id, outletId=$outletId, stockItemId=$stockItemId, delta=$delta, type=$type, reason=$reason, sourceId=$sourceId, sourceReference=$sourceReference, actorId=$actorId, createdAt=$createdAt, supplierId=$supplierId, supplierName=$supplierName, supplierReference=$supplierReference, purchaseOrderId=$purchaseOrderId, purchaseOrderReference=$purchaseOrderReference, transferId=$transferId, transferReference=$transferReference, stockCountId=$stockCountId, stockCountReference=$stockCountReference, stockWasteId=$stockWasteId]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -92,6 +152,56 @@ class Movement {
     }
       json[r'actorId'] = this.actorId;
       json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
+    if (this.supplierId != null) {
+      json[r'supplierId'] = this.supplierId;
+    } else {
+      json[r'supplierId'] = null;
+    }
+    if (this.supplierName != null) {
+      json[r'supplierName'] = this.supplierName;
+    } else {
+      json[r'supplierName'] = null;
+    }
+    if (this.supplierReference != null) {
+      json[r'supplierReference'] = this.supplierReference;
+    } else {
+      json[r'supplierReference'] = null;
+    }
+    if (this.purchaseOrderId != null) {
+      json[r'purchaseOrderId'] = this.purchaseOrderId;
+    } else {
+      json[r'purchaseOrderId'] = null;
+    }
+    if (this.purchaseOrderReference != null) {
+      json[r'purchaseOrderReference'] = this.purchaseOrderReference;
+    } else {
+      json[r'purchaseOrderReference'] = null;
+    }
+    if (this.transferId != null) {
+      json[r'transferId'] = this.transferId;
+    } else {
+      json[r'transferId'] = null;
+    }
+    if (this.transferReference != null) {
+      json[r'transferReference'] = this.transferReference;
+    } else {
+      json[r'transferReference'] = null;
+    }
+    if (this.stockCountId != null) {
+      json[r'stockCountId'] = this.stockCountId;
+    } else {
+      json[r'stockCountId'] = null;
+    }
+    if (this.stockCountReference != null) {
+      json[r'stockCountReference'] = this.stockCountReference;
+    } else {
+      json[r'stockCountReference'] = null;
+    }
+    if (this.stockWasteId != null) {
+      json[r'stockWasteId'] = this.stockWasteId;
+    } else {
+      json[r'stockWasteId'] = null;
+    }
     return json;
   }
 
@@ -139,6 +249,16 @@ class Movement {
         sourceReference: mapValueOfType<String>(json, r'sourceReference'),
         actorId: mapValueOfType<String>(json, r'actorId')!,
         createdAt: mapDateTime(json, r'createdAt', r'')!,
+        supplierId: mapValueOfType<String>(json, r'supplierId'),
+        supplierName: mapValueOfType<String>(json, r'supplierName'),
+        supplierReference: mapValueOfType<String>(json, r'supplierReference'),
+        purchaseOrderId: mapValueOfType<String>(json, r'purchaseOrderId'),
+        purchaseOrderReference: mapValueOfType<String>(json, r'purchaseOrderReference'),
+        transferId: mapValueOfType<String>(json, r'transferId'),
+        transferReference: mapValueOfType<String>(json, r'transferReference'),
+        stockCountId: mapValueOfType<String>(json, r'stockCountId'),
+        stockCountReference: mapValueOfType<String>(json, r'stockCountReference'),
+        stockWasteId: mapValueOfType<String>(json, r'stockWasteId'),
       );
     }
     return null;
@@ -204,6 +324,11 @@ enum MovementTypeEnum {
   OPENING._(r'OPENING'),
   RECEIPT._(r'RECEIPT'),
   ADJUSTMENT._(r'ADJUSTMENT'),
+  COUNT._(r'COUNT'),
+  WASTE._(r'WASTE'),
+  TRANSFER_OUT._(r'TRANSFER_OUT'),
+  TRANSFER_IN._(r'TRANSFER_IN'),
+  TRANSFER_CANCEL._(r'TRANSFER_CANCEL'),
   SALE._(r'SALE'),
   REVERSAL._(r'REVERSAL'),
   ;
@@ -267,6 +392,11 @@ class MovementTypeEnumTypeTransformer {
         case r'OPENING': return MovementTypeEnum.OPENING;
         case r'RECEIPT': return MovementTypeEnum.RECEIPT;
         case r'ADJUSTMENT': return MovementTypeEnum.ADJUSTMENT;
+        case r'COUNT': return MovementTypeEnum.COUNT;
+        case r'WASTE': return MovementTypeEnum.WASTE;
+        case r'TRANSFER_OUT': return MovementTypeEnum.TRANSFER_OUT;
+        case r'TRANSFER_IN': return MovementTypeEnum.TRANSFER_IN;
+        case r'TRANSFER_CANCEL': return MovementTypeEnum.TRANSFER_CANCEL;
         case r'SALE': return MovementTypeEnum.SALE;
         case r'REVERSAL': return MovementTypeEnum.REVERSAL;
         default:

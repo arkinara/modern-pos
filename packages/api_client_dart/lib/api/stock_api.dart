@@ -229,7 +229,15 @@ class StockApi {
   /// * [String] cursor:
   ///
   /// * [int] limit:
-  Future<Response> stockMovementsWithHttpInfo(String outletId, String stockItemId, { String? cursor, int? limit, Future<void>? abortTrigger, }) async {
+  ///
+  /// * [String] type:
+  ///
+  /// * [String] reason:
+  ///
+  /// * [String] supplierId:
+  ///
+  /// * [String] supplierReference:
+  Future<Response> stockMovementsWithHttpInfo(String outletId, String stockItemId, { String? cursor, int? limit, String? type, String? reason, String? supplierId, String? supplierReference, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/outlets/{outletId}/stock/{stockItemId}/movements'
       .replaceAll('{outletId}', outletId)
@@ -247,6 +255,18 @@ class StockApi {
     }
     if (limit != null) {
       queryParams.addAll(_queryParams('', 'limit', limit));
+    }
+    if (type != null) {
+      queryParams.addAll(_queryParams('', 'type', type));
+    }
+    if (reason != null) {
+      queryParams.addAll(_queryParams('', 'reason', reason));
+    }
+    if (supplierId != null) {
+      queryParams.addAll(_queryParams('', 'supplierId', supplierId));
+    }
+    if (supplierReference != null) {
+      queryParams.addAll(_queryParams('', 'supplierReference', supplierReference));
     }
 
     const contentTypes = <String>[];
@@ -275,8 +295,16 @@ class StockApi {
   /// * [String] cursor:
   ///
   /// * [int] limit:
-  Future<MovementPage?> stockMovements(String outletId, String stockItemId, { String? cursor, int? limit, Future<void>? abortTrigger, }) async {
-    final response = await stockMovementsWithHttpInfo(outletId, stockItemId, cursor: cursor, limit: limit, abortTrigger: abortTrigger,);
+  ///
+  /// * [String] type:
+  ///
+  /// * [String] reason:
+  ///
+  /// * [String] supplierId:
+  ///
+  /// * [String] supplierReference:
+  Future<MovementPage?> stockMovements(String outletId, String stockItemId, { String? cursor, int? limit, String? type, String? reason, String? supplierId, String? supplierReference, Future<void>? abortTrigger, }) async {
+    final response = await stockMovementsWithHttpInfo(outletId, stockItemId, cursor: cursor, limit: limit, type: type, reason: reason, supplierId: supplierId, supplierReference: supplierReference, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

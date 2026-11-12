@@ -35,8 +35,35 @@ enum StockMovementType {
   OPENING
   RECEIPT
   ADJUSTMENT
+  COUNT
+  WASTE
+  TRANSFER_OUT
+  TRANSFER_IN
+  TRANSFER_CANCEL
   SALE
   REVERSAL
+}
+
+enum PurchaseOrderState {
+  OPEN
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum WasteReason {
+  DAMAGE
+  EXPIRY
+  THEFT
+  SPOILAGE
+  OTHER
+}
+
+enum TransferState {
+  DRAFT
+  DISPATCHED
+  RECEIVED
+  CANCELLED
 }
 
 enum OrderState {
@@ -167,6 +194,11 @@ model Business {
   shiftMovements   ShiftCashMovement[]
   attendance       AttendanceRecord[]
   operationAudits  OperationAudit[]
+  suppliers        Supplier[]
+  purchaseOrders   PurchaseOrder[]
+  stockCounts      StockCount[]
+  stockWastes      StockWaste[]
+  outletTransfers  OutletTransfer[]
 
   @@map("businesses")
 }
@@ -188,7 +220,7 @@ model Outlet {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  business         Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business         Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
   users            User[]
   outletMenus      OutletMenu[]
   balances         StockBalance[]
@@ -212,6 +244,11 @@ model Outlet {
   shiftMovements   ShiftCashMovement[]
   attendance       AttendanceRecord[]
   operationAudits  OperationAudit[]
+  purchaseOrders   PurchaseOrder[]
+  stockCounts      StockCount[]
+  stockWastes      StockWaste[]
+  transfersFrom    OutletTransfer[]    @relation("TransferSourceOutlet")
+  transfersTo      OutletTransfer[]    @relation("TransferDestinationOutlet")
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -229,20 +266,27 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  outlet      Outlet?         @relation(fields: [outletId], references: [id], onDelete: SetNull)
-  sessions    Session[]
-  movements   StockMovement[]
-  orders      Order[]         @relation("OrderCashier")
-  sales       Sale[]          @relation("SaleCashier")
-  reversals   SaleReversal[]  @relation("SaleReversalActor")
-  orderAudits OrderAudit[]    @relation("OrderAuditActor")
-  orderSplits OrderSplit[]    @relation("OrderSplitActor")
-  shiftsOpened Shift[]        @relation("ShiftOpenedBy")
-  shiftsClosed Shift[]        @relation("ShiftClosedBy")
-  shiftCashMovements ShiftCashMovement[]
-  attendanceRecords AttendanceRecord[]
-  operationAudits   OperationAudit[]
+  business              Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet                Outlet?             @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  sessions              Session[]
+  movements             StockMovement[]
+  orders                Order[]             @relation("OrderCashier")
+  sales                 Sale[]              @relation("SaleCashier")
+  reversals             SaleReversal[]      @relation("SaleReversalActor")
+  orderAudits           OrderAudit[]        @relation("OrderAuditActor")
+  orderSplits           OrderSplit[]        @relation("OrderSplitActor")
+  shiftsOpened          Shift[]             @relation("ShiftOpenedBy")
+  shiftsClosed          Shift[]             @relation("ShiftClosedBy")
+  shiftCashMovements    ShiftCashMovement[]
+  attendanceRecords     AttendanceRecord[]
+  operationAudits       OperationAudit[]
+  purchaseOrdersCreated PurchaseOrder[]     @relation("PurchaseOrderCreatedBy")
+  stockCountsCreated    StockCount[]        @relation("StockCountActor")
+  stockWastesCreated    StockWaste[]        @relation("StockWasteActor")
+  transfersCreated      OutletTransfer[]    @relation("TransferCreatedBy")
+  transfersDispatched   OutletTransfer[]    @relation("TransferDispatchedBy")
+  transfersReceived     OutletTransfer[]    @relation("TransferReceivedBy")
+  transfersCancelled    OutletTransfer[]    @relation("TransferCancelledBy")
 
   @@map("users")
 }
@@ -384,11 +428,15 @@ model StockItem {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  business    Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  balances    StockBalance[]
-  movements   StockMovement[]
-  recipeLines RecipeLine[]
-  modifiers   MenuItemModifier[]
+  business           Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  balances           StockBalance[]
+  movements          StockMovement[]
+  recipeLines        RecipeLine[]
+  modifiers          MenuItemModifier[]
+  purchaseOrderLines PurchaseOrderLine[]
+  stockCountLines    StockCountLine[]
+  stockWastes        StockWaste[]
+  transferLines      OutletTransferLine[]
 
   @@unique([id, businessId])
   @@index([businessId, archivedAt])
@@ -415,24 +463,223 @@ model StockBalance {
 // Append-only ledger. The migration adds a trigger that rejects UPDATE and
 // DELETE so a balance is always derivable from SUM(delta) per outlet+item.
 model StockMovement {
-  id           String            @id @default(uuid()) @db.Uuid
-  outletId     String            @db.Uuid
-  stockItemId  String            @db.Uuid
-  delta        Decimal           @db.Decimal(20, 6)
-  type         StockMovementType
-  actorId      String            @db.Uuid
-  reason       String
-  sourceId     String            @db.Uuid
-  sourceLineId String?           @db.Uuid
-  createdAt    DateTime          @default(now())
+  id              String            @id @default(uuid()) @db.Uuid
+  outletId        String            @db.Uuid
+  stockItemId     String            @db.Uuid
+  delta           Decimal           @db.Decimal(20, 6)
+  type            StockMovementType
+  actorId         String            @db.Uuid
+  reason          String
+  sourceId        String            @db.Uuid
+  sourceLineId    String?           @db.Uuid
+  supplierId      String?           @db.Uuid
+  purchaseOrderId String?           @db.Uuid
+  transferId      String?           @db.Uuid
+  stockCountId    String?           @db.Uuid
+  stockWasteId    String?           @db.Uuid
+  createdAt       DateTime          @default(now())
 
-  outlet    Outlet    @relation(fields: [outletId], references: [id], onDelete: Restrict)
-  stockItem StockItem @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
-  actor     User      @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  outlet        Outlet          @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  stockItem     StockItem       @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  actor         User            @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  supplier      Supplier?       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder?  @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  transfer      OutletTransfer? @relation(fields: [transferId], references: [id], onDelete: Restrict)
+  stockCount    StockCount?     @relation(fields: [stockCountId], references: [id], onDelete: Restrict)
+  stockWaste    StockWaste?     @relation(fields: [stockWasteId], references: [id], onDelete: Restrict)
 
   @@index([outletId, stockItemId, createdAt])
+  @@index([outletId, createdAt])
   @@index([stockItemId])
+  @@index([supplierId, createdAt])
   @@map("stock_movements")
+}
+
+// Suppliers are business-wide records so a supplier can serve every outlet.
+// Reference is optional but unique per business when present.
+model Supplier {
+  id         String    @id @default(uuid()) @db.Uuid
+  businessId String    @db.Uuid
+  name       String
+  reference  String?
+  contact    String?
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  purchaseOrders PurchaseOrder[]
+  movements      StockMovement[]
+
+  @@unique([businessId, reference])
+  @@index([businessId, archivedAt])
+  @@map("suppliers")
+}
+
+// A purchase order always receives into one outlet. Ordered quantities are
+// stored in supplier units and in base units; the conversion is fixed at
+// creation so later receipts cannot drift from the agreed pack size.
+model PurchaseOrder {
+  id          String             @id @default(uuid()) @db.Uuid
+  businessId  String             @db.Uuid
+  outletId    String             @db.Uuid
+  supplierId  String             @db.Uuid
+  reference   String
+  state       PurchaseOrderState @default(OPEN)
+  createdById String             @db.Uuid
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  closedAt    DateTime?
+
+  business  Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet    Outlet              @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  supplier  Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  createdBy User                @relation("PurchaseOrderCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  lines     PurchaseOrderLine[]
+  movements StockMovement[]
+
+  @@unique([businessId, reference])
+  @@index([businessId, outletId, state])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderLine {
+  id                       String   @id @default(uuid()) @db.Uuid
+  purchaseOrderId          String   @db.Uuid
+  stockItemId              String   @db.Uuid
+  supplierUnit             String
+  unitsPerSupplierUnit     Decimal  @db.Decimal(20, 6)
+  orderedSupplierQuantity  Decimal  @db.Decimal(20, 6)
+  receivedSupplierQuantity Decimal  @default(0) @db.Decimal(20, 6)
+  orderedBaseQuantity      Decimal  @db.Decimal(20, 6)
+  receivedBaseQuantity     Decimal  @default(0) @db.Decimal(20, 6)
+  unitPrice                Decimal  @db.Decimal(20, 6)
+  version                  Int      @default(1)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  stockItem     StockItem     @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+
+  @@index([purchaseOrderId])
+  @@index([stockItemId])
+  @@map("purchase_order_lines")
+}
+
+// Count lines snapshot the system quantity at the moment of counting. Only
+// non-zero variances create ledger rows, so the count is never a silent
+// overwrite of the append-only ledger.
+model StockCount {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  outletId   String   @db.Uuid
+  reference  String
+  reason     String
+  actorId    String   @db.Uuid
+  createdAt  DateTime @default(now())
+
+  business  Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet    Outlet           @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  actor     User             @relation("StockCountActor", fields: [actorId], references: [id], onDelete: Restrict)
+  lines     StockCountLine[]
+  movements StockMovement[]
+
+  @@unique([businessId, reference])
+  @@index([outletId, createdAt])
+  @@map("stock_counts")
+}
+
+model StockCountLine {
+  id              String  @id @default(uuid()) @db.Uuid
+  stockCountId    String  @db.Uuid
+  stockItemId     String  @db.Uuid
+  systemQuantity  Decimal @db.Decimal(20, 6)
+  countedQuantity Decimal @db.Decimal(20, 6)
+  variance        Decimal @db.Decimal(20, 6)
+
+  stockCount StockCount @relation(fields: [stockCountId], references: [id], onDelete: Cascade)
+  stockItem  StockItem  @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+
+  @@unique([stockCountId, stockItemId])
+  @@index([stockItemId])
+  @@map("stock_count_lines")
+}
+
+model StockWaste {
+  id          String      @id @default(uuid()) @db.Uuid
+  businessId  String      @db.Uuid
+  outletId    String      @db.Uuid
+  stockItemId String      @db.Uuid
+  quantity    Decimal     @db.Decimal(20, 6)
+  reason      WasteReason
+  note        String?
+  actorId     String      @db.Uuid
+  createdAt   DateTime    @default(now())
+
+  business  Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet    Outlet          @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  stockItem StockItem       @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  actor     User            @relation("StockWasteActor", fields: [actorId], references: [id], onDelete: Restrict)
+  movements StockMovement[]
+
+  @@index([outletId, createdAt])
+  @@map("stock_wastes")
+}
+
+// Transfers move stock between outlets in the same business. Dispatch removes
+// from the source ledger; receive adds to the destination. The gap is the
+// visible in-transit quantity and is intentionally absent from both balances.
+model OutletTransfer {
+  id                  String        @id @default(uuid()) @db.Uuid
+  businessId          String        @db.Uuid
+  sourceOutletId      String        @db.Uuid
+  destinationOutletId String        @db.Uuid
+  reference           String
+  note                String?
+  state               TransferState @default(DRAFT)
+  createdById         String        @db.Uuid
+  dispatchedById      String?       @db.Uuid
+  receivedById        String?       @db.Uuid
+  cancelledById       String?       @db.Uuid
+  version             Int           @default(1)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  dispatchedAt        DateTime?
+  receivedAt          DateTime?
+  cancelledAt         DateTime?
+
+  business          Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  sourceOutlet      Outlet               @relation("TransferSourceOutlet", fields: [sourceOutletId], references: [id], onDelete: Restrict)
+  destinationOutlet Outlet               @relation("TransferDestinationOutlet", fields: [destinationOutletId], references: [id], onDelete: Restrict)
+  createdBy         User                 @relation("TransferCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  dispatchedBy      User?                @relation("TransferDispatchedBy", fields: [dispatchedById], references: [id], onDelete: Restrict)
+  receivedBy        User?                @relation("TransferReceivedBy", fields: [receivedById], references: [id], onDelete: Restrict)
+  cancelledBy       User?                @relation("TransferCancelledBy", fields: [cancelledById], references: [id], onDelete: Restrict)
+  lines             OutletTransferLine[]
+  movements         StockMovement[]
+
+  @@unique([businessId, reference])
+  @@index([businessId, sourceOutletId, state])
+  @@index([businessId, destinationOutletId, state])
+  @@map("outlet_transfers")
+}
+
+model OutletTransferLine {
+  id                 String   @id @default(uuid()) @db.Uuid
+  transferId         String   @db.Uuid
+  stockItemId        String   @db.Uuid
+  dispatchedQuantity Decimal  @db.Decimal(20, 6)
+  receivedQuantity   Decimal  @default(0) @db.Decimal(20, 6)
+  version            Int      @default(1)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  transfer  OutletTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  stockItem StockItem      @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+
+  @@unique([transferId, stockItemId])
+  @@index([stockItemId])
+  @@map("outlet_transfer_lines")
 }
 
 // Durable idempotency mapping for stock writes. The unique (outletId, key)
@@ -831,29 +1078,29 @@ model PaymentRecord {
 // record from PaymentRecord: a manual cash sale can never be reported as a
 // provider payment, and the provider lifecycle remains auditable on its own.
 model OnlinePayment {
-  id               String          @id @default(uuid()) @db.Uuid
-  businessId       String          @db.Uuid
-  outletId         String          @db.Uuid
-  saleId           String          @unique @db.Uuid
-  provider         PaymentProvider
-  providerRef      String?         @unique
-  status           PaymentStatus   @default(PENDING)
-  amountMinor      BigInt
-  refundedMinor    BigInt          @default(0)
-  currency         String          @db.VarChar(3)
-  currencyExponent Int
-  qrPayload        String?
-  attempt          Int             @default(1)
+  id                String          @id @default(uuid()) @db.Uuid
+  businessId        String          @db.Uuid
+  outletId          String          @db.Uuid
+  saleId            String          @unique @db.Uuid
+  provider          PaymentProvider
+  providerRef       String?         @unique
+  status            PaymentStatus   @default(PENDING)
+  amountMinor       BigInt
+  refundedMinor     BigInt          @default(0)
+  currency          String          @db.VarChar(3)
+  currencyExponent  Int
+  qrPayload         String?
+  attempt           Int             @default(1)
   providerCreatedAt DateTime?
-  settledAt        DateTime?
-  failedAt         DateTime?
-  lastError        String?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  settledAt         DateTime?
+  failedAt          DateTime?
+  lastError         String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
-  business Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  outlet   Outlet               @relation(fields: [outletId], references: [id], onDelete: Cascade)
-  sale     Sale                 @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  business Business              @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet                @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  sale     Sale                  @relation(fields: [saleId], references: [id], onDelete: Cascade)
   events   PaymentWebhookEvent[]
 
   @@index([businessId, outletId, status])
@@ -864,13 +1111,13 @@ model OnlinePayment {
 // Accepted provider webhook deliveries are stored by provider event id before
 // any local transition. The unique key is the concurrency-safe dedupe winner.
 model PaymentWebhookEvent {
-  id              String   @id @default(uuid()) @db.Uuid
+  id              String          @id @default(uuid()) @db.Uuid
   provider        PaymentProvider
   eventId         String
   eventType       String
-  onlinePaymentId String?  @db.Uuid
+  onlinePaymentId String?         @db.Uuid
   payload         Json
-  receivedAt      DateTime @default(now())
+  receivedAt      DateTime        @default(now())
   processedAt     DateTime?
 
   onlinePayment OnlinePayment? @relation(fields: [onlinePaymentId], references: [id], onDelete: SetNull)
@@ -1011,15 +1258,15 @@ model Shift {
 
 // Append-only paid-in/paid-out ledger with an actor and reason on every row.
 model ShiftCashMovement {
-  id          String                 @id @default(uuid()) @db.Uuid
-  businessId  String                 @db.Uuid
-  outletId    String                 @db.Uuid
-  shiftId     String                 @db.Uuid
-  actorId     String                 @db.Uuid
+  id          String                @id @default(uuid()) @db.Uuid
+  businessId  String                @db.Uuid
+  outletId    String                @db.Uuid
+  shiftId     String                @db.Uuid
+  actorId     String                @db.Uuid
   kind        ShiftCashMovementKind
   amountMinor BigInt
   reason      String
-  createdAt   DateTime               @default(now())
+  createdAt   DateTime              @default(now())
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)

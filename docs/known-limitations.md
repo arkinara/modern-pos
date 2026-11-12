@@ -172,6 +172,10 @@ and record the visible state and paper result.
 | External payment refunds | Partially implemented (#22) | Mock provider refunds are linked to reversals; real QRIS refunds are `PENDING - requires provider credentials/commercial setup`. |
 | Multi-currency per sale | Not implemented | One currency/exponent per outlet |
 | User activity audit beyond sale/stock/reversal/order records | Partially implemented | Promotion, refund and approval decisions are append-only audited in `order_audits`; modifier catalog changes and admin/user changes are not audited |
+| Supplier invoices, payments and tax | Not implemented | Purchase orders capture price only; no invoice, payable or landed-cost ledger |
+| Supplier portal or EDI integration | Not implemented | Suppliers are created manually through the API |
+| Barcode receiving and count scanning | Not implemented | Quantities are entered manually |
+| Transfer approval workflow | Not implemented | Cross-outlet transfer is owner-only; no second approver step |
 
 
 ## Online payments and reconciliation (#22)
@@ -205,6 +209,20 @@ in `docs/promotions-refunds.md`.
 What was not verified: any real payment-provider refund. No money moves through
 this API; `externalRefundPerformed` is always `false` and settlement remains a
 manual operational step. This is deferred to the payment-integration ticket.
+
+## Purchasing and stock control (#24)
+
+What was verified on this VPS: suppliers, purchase orders with repeated partial
+receipts, supplier-to-base and base-to-supplier conversion, exact-fraction and
+overflow rejection, over-receipt rejection, stock-count variance with reason and
+actor, waste with a mandatory reason, transfer dispatch/receive in-transit
+exclusion, cancel restoration, double-receive rejection and concurrent receive
+behaviour. The live transcript and movement counts are in the pull request.
+
+What was not verified: supplier invoices, supplier payments, landed cost, real
+supplier EDI or portal integration, and barcode scanning hardware. These are not
+part of ticket #24. Transfer reconciliation across a real multi-device warehouse
+operation also needs a later field test.
 
 ## Verification limits of this ticket
 

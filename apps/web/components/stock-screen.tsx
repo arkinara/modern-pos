@@ -1,6 +1,7 @@
 'use client';
 
 import type { ApiSchemas } from '@modern-pos/api-client';
+import Link from 'next/link';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowDownUp,
@@ -541,6 +542,12 @@ export function StockScreen() {
               Refreshing
             </p>
           ) : null}
+          <Button asChild variant="outline">
+            <Link href="/purchasing">
+              <ClipboardList aria-hidden="true" className="size-4" />
+              Purchasing
+            </Link>
+          </Button>
           <Button type="button" variant="outline" onClick={reloadStock}>
             <RefreshCw aria-hidden="true" className="size-4" />
             Reload

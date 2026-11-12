@@ -465,19 +465,23 @@ function balanceFor(
   );
 }
 
-test('every stock operation is owner-only per the contract', () => {
-  const handlers = [
+test('stock writes stay owner-only while cashiers can read outlet stock for counts', () => {
+  const ownerOnlyHandlers = [
     StockController.prototype.create,
     StockController.prototype.opening,
     StockController.prototype.receipt,
     StockController.prototype.adjustment,
-    StockController.prototype.list,
     StockController.prototype.movements,
   ];
 
-  for (const handler of handlers) {
+  for (const handler of ownerOnlyHandlers) {
     assert.deepEqual(Reflect.getMetadata(ROLES_KEY, handler), [Role.OWNER]);
   }
+
+  assert.deepEqual(Reflect.getMetadata(ROLES_KEY, StockController.prototype.list), [
+    Role.OWNER,
+    Role.CASHIER,
+  ]);
 });
 
 test('cross-tenant outlet access returns 404 before any stock read', async () => {
