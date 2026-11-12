@@ -2,9 +2,9 @@
 
 ## Purpose
 
-A completed sale can be corrected by an owner through one full reversal. This is the minimum safe
-correction path for Phase 1. Partial refunds, item-level refunds and payment-provider refunds are
-out of scope.
+A completed sale can be corrected by an owner through a full reversal or a partial refund. The
+manual, non-cash correction path is described here; online sales additionally use the provider
+refund flow in `docs/payments.md`.
 
 The original sale row is immutable. A reversal is a separate append-only record linked to the sale.
 `sales_get` returns the linked `reversal` object when one exists. The sale totals, sale lines and
@@ -44,8 +44,10 @@ A successful response is `201`:
 }
 ```
 
-`externalRefundPerformed` is always `false`. The response is a manual, non-cash correction record.
-It never claims a payment provider returned money.
+Manual reversals and non-cash corrections keep `externalRefundPerformed` `false`; the example above
+is that manual path and never claims a payment provider returned money. For an online sale the
+response can contain `externalRefundPerformed: true` once the provider confirms the refund, with
+`providerRefundRef` linking the reversal to the provider result. See `docs/payments.md`.
 
 ## Authorization and scoping
 

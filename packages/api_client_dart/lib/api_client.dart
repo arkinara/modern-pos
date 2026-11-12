@@ -245,6 +245,12 @@ class ApiClient {
           return Movement.fromJson(value);
         case 'MovementPage':
           return MovementPage.fromJson(value);
+        case 'OnlinePayment':
+          return OnlinePayment.fromJson(value);
+        case 'OnlinePaymentList':
+          return OnlinePaymentList.fromJson(value);
+        case 'OnlinePaymentListItem':
+          return OnlinePaymentListItem.fromJson(value);
         case 'Order':
           return Order.fromJson(value);
         case 'OrderCancelRequest':
@@ -299,6 +305,10 @@ class ApiClient {
           return RecipeLine.fromJson(value);
         case 'RecipeWrite':
           return RecipeWrite.fromJson(value);
+        case 'ReconciliationSummary':
+          return ReconciliationSummary.fromJson(value);
+        case 'ReconciliationSummaryErrorsInner':
+          return ReconciliationSummaryErrorsInner.fromJson(value);
         case 'RefundLine':
           return RefundLine.fromJson(value);
         case 'Restock':
@@ -313,10 +323,24 @@ class ApiClient {
           return SaleLine.fromJson(value);
         case 'SalePage':
           return SalePage.fromJson(value);
+        case 'SandboxEventResult':
+          return SandboxEventResult.fromJson(value);
+        case 'SandboxEventWrite':
+          return SandboxEventWrite.fromJson(value);
+        case 'SandboxPayment':
+          return SandboxPayment.fromJson(value);
+        case 'SandboxPaymentWrite':
+          return SandboxPaymentWrite.fromJson(value);
         case 'Settings':
           return Settings.fromJson(value);
         case 'SettingsUpdate':
           return SettingsUpdate.fromJson(value);
+        case 'SettlementDay':
+          return SettlementDay.fromJson(value);
+        case 'SettlementPayment':
+          return SettlementPayment.fromJson(value);
+        case 'SettlementReport':
+          return SettlementReport.fromJson(value);
         case 'SplitBill':
           return SplitBill.fromJson(value);
         case 'SplitResult':
@@ -351,6 +375,8 @@ class ApiClient {
           return VariantWrite.fromJson(value);
         case 'WebSession':
           return WebSession.fromJson(value);
+        case 'WebhookAck':
+          return WebhookAck.fromJson(value);
         default:
           dynamic match;
           if (value is List && (match = _regList.firstMatch(targetType)?.group(1)) != null) {

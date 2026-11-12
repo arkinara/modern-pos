@@ -172,12 +172,12 @@ export function normalizePayment(totalMinor: bigint, input: PaymentInputLike): N
     });
   }
 
-  if (input.kind === PaymentKind.MANUAL_EXTERNAL) {
+  if (input.kind === PaymentKind.MANUAL_EXTERNAL || input.kind === PaymentKind.ONLINE) {
     if (input.tenderedMinor !== undefined) {
       throw apiError(
         422,
         'PAYMENT_INVALID',
-        'MANUAL_EXTERNAL payments must omit tenderedMinor and changeMinor',
+        `${input.kind} payments must omit tenderedMinor and changeMinor`,
         { details: { reason: 'TENDER_NOT_ALLOWED' } },
       );
     }

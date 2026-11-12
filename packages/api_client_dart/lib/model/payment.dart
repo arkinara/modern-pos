@@ -192,6 +192,7 @@ class Payment {
 enum PaymentKindEnum {
   CASH._(r'CASH'),
   MANUAL_EXTERNAL._(r'MANUAL_EXTERNAL'),
+  ONLINE._(r'ONLINE'),
   ;
 
   /// Instantiate a new enum with the provided value.
@@ -252,6 +253,7 @@ class PaymentKindEnumTypeTransformer {
       switch (data) {
         case r'CASH': return PaymentKindEnum.CASH;
         case r'MANUAL_EXTERNAL': return PaymentKindEnum.MANUAL_EXTERNAL;
+        case r'ONLINE': return PaymentKindEnum.ONLINE;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');
@@ -269,6 +271,11 @@ class PaymentKindEnumTypeTransformer {
 
 enum PaymentStatusEnum {
   RECORDED._(r'RECORDED'),
+  PENDING._(r'PENDING'),
+  SUCCEEDED._(r'SUCCEEDED'),
+  FAILED._(r'FAILED'),
+  REFUNDED._(r'REFUNDED'),
+  PARTIALLY_REFUNDED._(r'PARTIALLY_REFUNDED'),
   ;
 
   /// Instantiate a new enum with the provided value.
@@ -328,6 +335,11 @@ class PaymentStatusEnumTypeTransformer {
     if (data != null) {
       switch (data) {
         case r'RECORDED': return PaymentStatusEnum.RECORDED;
+        case r'PENDING': return PaymentStatusEnum.PENDING;
+        case r'SUCCEEDED': return PaymentStatusEnum.SUCCEEDED;
+        case r'FAILED': return PaymentStatusEnum.FAILED;
+        case r'REFUNDED': return PaymentStatusEnum.REFUNDED;
+        case r'PARTIALLY_REFUNDED': return PaymentStatusEnum.PARTIALLY_REFUNDED;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');

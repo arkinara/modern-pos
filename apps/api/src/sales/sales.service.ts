@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import {
   ApprovalAction,
   OrderAuditAction,
@@ -17,6 +17,7 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { apiError } from '../common/api-error';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaymentsService } from '../payments/payments.service';
 import { PromotionsService } from '../promotions/promotions.service';
 import {
   applyPromotions,
@@ -201,7 +202,8 @@ export interface ReversalResponse {
   lines: RefundLineResponse[];
   createdAt: string;
   restock: RestockResponse[];
-  externalRefundPerformed: false;
+  externalRefundPerformed: boolean;
+  providerRefundRef?: string;
 }
 
 export interface SaleResponse {
@@ -322,6 +324,7 @@ interface SaleWithReceipt {
     createdAt: Date;
     restock: Prisma.JsonValue;
     externalRefundPerformed: boolean;
+    providerRefundRef: string | null;
     refundLines: { saleLineId: string; quantity: number }[];
   }[];
 }
@@ -398,7 +401,16 @@ export class SalesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly promotions: PromotionsService,
+    @Optional() private readonly payments?: PaymentsService,
   ) {}
+
+  private requirePayments(): PaymentsService {
+    if (!this.payments) {
+      throw apiError(500, 'PAYMENT_SERVICE_UNAVAILABLE', 'Payment service is not configured');
+    }
+
+    return this.payments;
+  }
 
   async createOrder(
     outletId: string,
@@ -1288,7 +1300,10 @@ export class SalesService {
                 payment: {
                   create: {
                     kind: payment.kind,
-                    status: PaymentStatus.RECORDED,
+                    status:
+                      payment.kind === PaymentKind.ONLINE
+                        ? PaymentStatus.PENDING
+                        : PaymentStatus.RECORDED,
                     amountMinor: payment.amountMinor,
                     tenderedMinor: payment.tenderedMinor,
                     changeMinor: payment.changeMinor,
@@ -1302,6 +1317,17 @@ export class SalesService {
                 reversals: { include: { refundLines: true }, orderBy: [{ createdAt: 'asc' }] },
               },
             });
+
+            if (payment.kind === PaymentKind.ONLINE) {
+              await this.requirePayments().registerFinalizedSale(tx, {
+                businessId: user.businessId,
+                outletId,
+                saleId: sale.id,
+                amountMinor: payment.amountMinor,
+                currency: quote.currency,
+                currencyExponent: quote.currencyExponent,
+              });
+            }
 
             const completed = await tx.order.updateMany({
               where: {
@@ -1522,7 +1548,12 @@ export class SalesService {
 
     const preflightSale = await this.prisma.sale.findFirst({
       where: { id: saleId, outletId, businessId: user.businessId },
-      select: { id: true, orderId: true, totalMinor: true },
+      select: {
+        id: true,
+        orderId: true,
+        totalMinor: true,
+        payment: { select: { kind: true } },
+      },
     });
 
     if (preflightSale) {
@@ -1536,6 +1567,21 @@ export class SalesService {
         user,
         operation: 'REFUND',
         recordAllowed: false,
+      });
+    }
+
+    let providerRefund: { performed: boolean; providerRefundRef: string | null } = {
+      performed: false,
+      providerRefundRef: null,
+    };
+
+    if (preflightSale?.payment?.kind === PaymentKind.ONLINE) {
+      providerRefund = await this.requirePayments().refundForReversal({
+        outletId,
+        saleId,
+        idempotencyKey,
+        amountMinor: partial ? BigInt(dto.refundMinor ?? 0) : preflightSale.totalMinor,
+        user,
       });
     }
 
@@ -1554,6 +1600,7 @@ export class SalesService {
                 refundMinor,
                 hash,
                 user,
+                providerRefund,
               }),
             { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
           ),
@@ -1687,6 +1734,8 @@ export class SalesService {
       lines: Prisma.JsonValue;
       createdAt: Date;
       restock: Prisma.JsonValue;
+      externalRefundPerformed: boolean;
+      providerRefundRef?: string | null;
     },
     saleId: string,
     hash: string,
@@ -1714,6 +1763,7 @@ export class SalesService {
       refundMinor: bigint | null;
       hash: string;
       user: AuthenticatedUser;
+      providerRefund: { performed: boolean; providerRefundRef: string | null };
     },
   ): Promise<ReversalResponse> {
     const { outletId, saleId, idempotencyKey, reason, restock, refundLines, hash, user } = context;
@@ -1917,11 +1967,16 @@ export class SalesService {
         refundMinor,
         lines: (refundLines ?? []) as unknown as Prisma.InputJsonValue,
         restock: restock as unknown as Prisma.InputJsonValue,
-        externalRefundPerformed: false,
+        externalRefundPerformed: context.providerRefund.performed,
+        providerRefundRef: context.providerRefund.providerRefundRef,
         idempotencyKey,
         requestHash: hash,
       },
     });
+
+    if (context.providerRefund.performed) {
+      await this.requirePayments().applyReversalRefund(tx, saleId, refundMinor);
+    }
 
     if (refundLines && refundLines.length > 0) {
       await tx.saleRefundLine.createMany({
@@ -1956,7 +2011,8 @@ export class SalesService {
         lines: refundLines ?? [],
         restock,
         reason,
-        externalRefundPerformed: false,
+        externalRefundPerformed: context.providerRefund.performed,
+        providerRefundRef: context.providerRefund.providerRefundRef,
       },
     });
 
@@ -2202,6 +2258,8 @@ export class SalesService {
     lines: Prisma.JsonValue;
     createdAt: Date;
     restock: Prisma.JsonValue;
+    externalRefundPerformed: boolean;
+    providerRefundRef?: string | null;
   }): ReversalResponse {
     if (!Array.isArray(record.restock)) {
       throw apiError(500, 'REVERSAL_CORRUPT', 'Stored reversal restock is invalid');
@@ -2228,7 +2286,8 @@ export class SalesService {
       lines,
       createdAt: record.createdAt.toISOString(),
       restock,
-      externalRefundPerformed: false,
+      externalRefundPerformed: record.externalRefundPerformed,
+      ...(record.providerRefundRef ? { providerRefundRef: record.providerRefundRef } : {}),
     };
   }
 

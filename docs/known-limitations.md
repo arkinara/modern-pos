@@ -1,6 +1,6 @@
 # Known limitations and pending verification
 
-Status date: 2026-11-11. No device, printer or production infrastructure was available
+Status date: 2026-11-12. No device, printer, real payment-provider account or production infrastructure was available
 for this ticket. Nothing below is reported as passed without a reproduction recipe.
 
 ## Pending with reproduction recipes
@@ -128,8 +128,8 @@ and record the visible state and paper result.
 | Cold offline tax/service/rounding | Not guaranteed | A server total change becomes a cashier conflict |
 | Production deployment | Separate explicit decision | Single-VPS staging is not production |
 | User management UI and password reset | Not implemented | Users are seeded/provisioned outside the app |
-| Partial or line-level refunds | Implemented (#21) | Partial item refunds with independent money-return and restock; no payment-provider refund (`externalRefundPerformed` stays `false`); a whole-sale reversal remains one full reversal. |
-| Payment-provider refunds/voids | Not implemented | Reversal never calls a provider |
+| Partial or line-level refunds | Implemented (#21) | Partial item refunds with independent money-return and restock. Online refunds now call the configured provider adapter (#22); cash and manual reversals keep `externalRefundPerformed = false`. |
+| Payment-provider refunds/voids | Sandbox-verified, real provider PENDING | Online refunds use the same reversal path and the provider adapter; live QRIS verification requires provider credentials/commercial setup. |
 | LAN and USB printer transports | Not implemented | Bluetooth Classic SPP is the only candidate |
 | Hardware-verified Bluetooth result | PENDING | See `docs/printer-validation.md` |
 | Automated off-host backups and retention | Not implemented | Procedure and dry run exist in `docs/backup-restore.md` |
@@ -139,9 +139,29 @@ and record the visible state and paper result.
 | Production TLS and secret manager | Not implemented | Staging uses local env placeholders |
 | Tax/service policy beyond fixed basis points | Not implemented | Settings support integer bps only |
 | Discounts and promotions | Partially implemented | Percentage/fixed promotions with explicit eligibility, stacking and half-up rounding are enforced server-side (#21). Loyalty is not implemented. |
-| External payment refunds | Not implemented | `externalRefundPerformed` is always false; no provider integration (#22). |
+| External payment refunds | Partially implemented (#22) | Mock provider refunds are linked to reversals; real QRIS refunds are `PENDING - requires provider credentials/commercial setup`. |
 | Multi-currency per sale | Not implemented | One currency/exponent per outlet |
 | User activity audit beyond sale/stock/reversal/order records | Partially implemented | Promotion, refund and approval decisions are append-only audited in `order_audits`; modifier catalog changes and admin/user changes are not audited |
+
+
+## Online payments and reconciliation (#22)
+
+What was verified on this VPS: finalize with `payment.kind = ONLINE` writes a
+pending online payment separate from cash recording; a signed sandbox
+`payment.succeeded` webhook settles it; duplicate and parallel duplicate
+deliveries produce one transition; invalid signatures and stale timestamps are
+rejected with no state change; an out-of-order success followed by pending keeps
+the final state `SUCCEEDED`; a lost client connection resolves through server
+refresh; a forced local `PENDING` drift reconciles to one settlement without a
+second stock movement or provider charge; an online refund goes through the
+sandbox provider and is linked to the existing reversal; unsettled and double
+refunds are rejected; the settlement report has zero drift. The live transcript
+and exact counts are in the pull request.
+
+What was not verified: any real QRIS provider call, real webhook delivery from a
+provider, production credential rotation, scheduled reconciliation and
+multi-instance deployment. Provider selection and commercial setup remain
+prerequisites. The step-by-step recipe is in `docs/payments.md`.
 
 ## Promotions, modifiers, partial refunds and approvals (#21)
 

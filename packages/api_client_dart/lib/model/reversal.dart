@@ -22,6 +22,7 @@ class Reversal {
     this.kind,
     this.refundMinor,
     this.lines = const [],
+    this.providerRefundRef,
   });
 
   String id;
@@ -34,6 +35,7 @@ class Reversal {
 
   List<Restock> restock;
 
+  /// True only when the configured provider adapter performed the refund. Cash and manual reversals stay false.
   bool externalRefundPerformed;
 
   ReversalKindEnum? kind;
@@ -52,6 +54,15 @@ class Reversal {
 
   List<RefundLine> lines;
 
+  /// Provider refund reference when a provider movement was performed.
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? providerRefundRef;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is Reversal &&
     other.id == id &&
@@ -62,7 +73,8 @@ class Reversal {
     other.externalRefundPerformed == externalRefundPerformed &&
     other.kind == kind &&
     other.refundMinor == refundMinor &&
-    _deepEquality.equals(other.lines, lines);
+    _deepEquality.equals(other.lines, lines) &&
+    other.providerRefundRef == providerRefundRef;
 
   @override
   int get hashCode =>
@@ -75,10 +87,11 @@ class Reversal {
     (externalRefundPerformed.hashCode) +
     (kind == null ? 0 : kind!.hashCode) +
     (refundMinor == null ? 0 : refundMinor!.hashCode) +
-    (lines.hashCode);
+    (lines.hashCode) +
+    (providerRefundRef == null ? 0 : providerRefundRef!.hashCode);
 
   @override
-  String toString() => 'Reversal[id=$id, saleId=$saleId, reason=$reason, createdAt=$createdAt, restock=$restock, externalRefundPerformed=$externalRefundPerformed, kind=$kind, refundMinor=$refundMinor, lines=$lines]';
+  String toString() => 'Reversal[id=$id, saleId=$saleId, reason=$reason, createdAt=$createdAt, restock=$restock, externalRefundPerformed=$externalRefundPerformed, kind=$kind, refundMinor=$refundMinor, lines=$lines, providerRefundRef=$providerRefundRef]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -99,6 +112,11 @@ class Reversal {
       json[r'refundMinor'] = null;
     }
       json[r'lines'] = this.lines;
+    if (this.providerRefundRef != null) {
+      json[r'providerRefundRef'] = this.providerRefundRef;
+    } else {
+      json[r'providerRefundRef'] = null;
+    }
     return json;
   }
 
@@ -138,6 +156,7 @@ class Reversal {
         kind: ReversalKindEnum.fromJson(json[r'kind']),
         refundMinor: mapValueOfType<int>(json, r'refundMinor'),
         lines: RefundLine.listFromJson(json[r'lines']),
+        providerRefundRef: mapValueOfType<String>(json, r'providerRefundRef'),
       );
     }
     return null;

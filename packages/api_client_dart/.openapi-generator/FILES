@@ -37,6 +37,9 @@ doc/Modifier.md
 doc/ModifierWrite.md
 doc/Movement.md
 doc/MovementPage.md
+doc/OnlinePayment.md
+doc/OnlinePaymentList.md
+doc/OnlinePaymentListItem.md
 doc/Order.md
 doc/OrderApi.md
 doc/OrderCancelRequest.md
@@ -50,6 +53,7 @@ doc/OutletApi.md
 doc/OutletUpdate.md
 doc/Payment.md
 doc/PaymentInput.md
+doc/PaymentsApi.md
 doc/PrintJob.md
 doc/PrintJobWrite.md
 doc/Printer.md
@@ -69,6 +73,8 @@ doc/Recipe.md
 doc/RecipeApi.md
 doc/RecipeLine.md
 doc/RecipeWrite.md
+doc/ReconciliationSummary.md
+doc/ReconciliationSummaryErrorsInner.md
 doc/RefundLine.md
 doc/ReportsApi.md
 doc/Restock.md
@@ -78,9 +84,17 @@ doc/Sale.md
 doc/SaleLine.md
 doc/SalePage.md
 doc/SalesApi.md
+doc/SandboxApi.md
+doc/SandboxEventResult.md
+doc/SandboxEventWrite.md
+doc/SandboxPayment.md
+doc/SandboxPaymentWrite.md
 doc/Settings.md
 doc/SettingsApi.md
 doc/SettingsUpdate.md
+doc/SettlementDay.md
+doc/SettlementPayment.md
+doc/SettlementReport.md
 doc/SplitBill.md
 doc/SplitResult.md
 doc/SplitWrite.md
@@ -100,6 +114,7 @@ doc/Variant.md
 doc/VariantUpdate.md
 doc/VariantWrite.md
 doc/WebSession.md
+doc/WebhookAck.md
 git_push.sh
 lib/api.dart
 lib/api/approvals_api.dart
@@ -108,11 +123,13 @@ lib/api/catalog_api.dart
 lib/api/device_api.dart
 lib/api/order_api.dart
 lib/api/outlet_api.dart
+lib/api/payments_api.dart
 lib/api/printing_api.dart
 lib/api/promotions_api.dart
 lib/api/recipe_api.dart
 lib/api/reports_api.dart
 lib/api/sales_api.dart
+lib/api/sandbox_api.dart
 lib/api/settings_api.dart
 lib/api/stock_api.dart
 lib/api/table_api.dart
@@ -155,6 +172,9 @@ lib/model/modifier.dart
 lib/model/modifier_write.dart
 lib/model/movement.dart
 lib/model/movement_page.dart
+lib/model/online_payment.dart
+lib/model/online_payment_list.dart
+lib/model/online_payment_list_item.dart
 lib/model/order.dart
 lib/model/order_cancel_request.dart
 lib/model/order_page.dart
@@ -182,6 +202,8 @@ lib/model/quote_lines_inner.dart
 lib/model/recipe.dart
 lib/model/recipe_line.dart
 lib/model/recipe_write.dart
+lib/model/reconciliation_summary.dart
+lib/model/reconciliation_summary_errors_inner.dart
 lib/model/refund_line.dart
 lib/model/restock.dart
 lib/model/reversal.dart
@@ -189,8 +211,15 @@ lib/model/reversal_write.dart
 lib/model/sale.dart
 lib/model/sale_line.dart
 lib/model/sale_page.dart
+lib/model/sandbox_event_result.dart
+lib/model/sandbox_event_write.dart
+lib/model/sandbox_payment.dart
+lib/model/sandbox_payment_write.dart
 lib/model/settings.dart
 lib/model/settings_update.dart
+lib/model/settlement_day.dart
+lib/model/settlement_payment.dart
+lib/model/settlement_report.dart
 lib/model/split_bill.dart
 lib/model/split_result.dart
 lib/model/split_write.dart
@@ -208,4 +237,5 @@ lib/model/variant.dart
 lib/model/variant_update.dart
 lib/model/variant_write.dart
 lib/model/web_session.dart
+lib/model/webhook_ack.dart
 pubspec.yaml

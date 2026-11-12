@@ -2,7 +2,7 @@
 
 import type { ApiSchemas } from '@modern-pos/api-client';
 import Link from 'next/link';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircleAlert, ReceiptText, RefreshCw, RotateCcw, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +46,36 @@ const inputClass =
   'h-12 w-full rounded-control border border-control bg-surface px-3 text-sm text-text';
 
 function paymentLabel(kind: Sale['payment']['kind']): string {
-  return kind === 'CASH' ? 'Cash' : 'Manual external';
+  if (kind === 'CASH') {
+    return 'Cash';
+  }
+  if (kind === 'ONLINE') {
+    return 'Online provider';
+  }
+  return 'Manual external';
+}
+
+function paymentStatusLabel(status: Sale['payment']['status']): string {
+  return status
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function paymentBadgeTone(
+  status: Sale['payment']['status'],
+): 'success' | 'warning' | 'danger' | 'neutral' {
+  if (status === 'SUCCEEDED' || status === 'RECORDED') {
+    return 'success';
+  }
+  if (status === 'FAILED') {
+    return 'danger';
+  }
+  if (status === 'REFUNDED' || status === 'PARTIALLY_REFUNDED') {
+    return 'warning';
+  }
+  return 'warning';
 }
 
 function ReverseSaleForm({
@@ -230,7 +259,9 @@ function ReverseSaleForm({
     try {
       const reversal = await api.reverseSale(outletId, sale.id, idempotency.current.key, payload);
       setSuccess(
-        'Correction recorded. The original sale is unchanged and this refund is linked separately. No money was returned by any payment provider.',
+        sale.payment.kind === 'ONLINE'
+          ? 'Correction recorded. The original sale is unchanged, the provider adapter performed the refund, and the reversal is linked separately.'
+          : 'Correction recorded. The original sale is unchanged and this refund is linked separately. No money was returned by any payment provider.',
       );
       setOpen(false);
       onReversed(reversal);
@@ -274,7 +305,9 @@ function ReverseSaleForm({
           <div className="sm:col-span-2">
             <dt className="text-xs uppercase tracking-[0.12em] text-muted">External refund</dt>
             <dd className="mt-1 text-text">
-              Not performed. This record never claims that a payment provider returned money.
+              {reversal.externalRefundPerformed
+                ? `Performed by the configured provider adapter${reversal.providerRefundRef ? ` (${reversal.providerRefundRef})` : ''}.`
+                : 'Not performed. This record never claims that a payment provider returned money.'}
             </dd>
           </div>
         </dl>
@@ -322,8 +355,10 @@ function ReverseSaleForm({
         <h3 className="text-base font-semibold text-text">Reverse this sale</h3>
         <p className="text-sm text-muted">
           The sale record is not deleted. Totals and items stay immutable. Choose a full reversal or
-          a partial refund that states money and restock independently. This is a manual correction
-          record; no money is returned by any payment provider.
+          a partial refund that states money and restock independently.
+          {sale.payment.kind === 'ONLINE'
+            ? ' Online refunds are sent through the configured provider adapter; the reversal record stays the single correction path.'
+            : ' This is a manual correction record; no money is returned by any payment provider.'}
         </p>
       </div>
 
@@ -596,6 +631,29 @@ function SaleDetail({
   onRetry: () => void;
   onClose: () => void;
 }) {
+  const queryClient = useQueryClient();
+  const online = sale?.payment.kind === 'ONLINE';
+  const onlinePayment = useQuery({
+    queryKey: ['online-payment', outletId, sale?.id],
+    queryFn: () => api.getOnlinePayment(outletId, sale?.id as string),
+    enabled: Boolean(sale?.id) && online,
+    retry: false,
+  });
+  const action = useMutation({
+    mutationFn: () =>
+      onlinePayment.data?.status === 'FAILED'
+        ? api.createOnlinePayment(outletId, sale?.id as string)
+        : api.refreshOnlinePayment(outletId, sale?.id as string),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['online-payment', outletId, sale?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['sale', outletId] }),
+        queryClient.invalidateQueries({ queryKey: ['sales', outletId] }),
+        queryClient.invalidateQueries({ queryKey: ['daily-report', outletId] }),
+      ]);
+    },
+  });
+
   return (
     <Card aria-live="polite">
       <CardHeader className="flex-row items-start justify-between gap-4">
@@ -725,6 +783,14 @@ function SaleDetail({
                     {formatMoney(sale.payment.amountMinor, sale.currency, sale.currencyExponent)}
                   </dd>
                 </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-muted">Payment status</dt>
+                  <dd>
+                    <Badge tone={paymentBadgeTone(sale.payment.status)}>
+                      {paymentStatusLabel(sale.payment.status)}
+                    </Badge>
+                  </dd>
+                </div>
                 {sale.payment.tenderedMinor !== undefined ? (
                   <div className="flex items-center justify-between gap-4">
                     <dt className="text-muted">Handed over</dt>
@@ -751,10 +817,51 @@ function SaleDetail({
                     <dd className="break-all font-mono text-text">{sale.payment.reference}</dd>
                   </div>
                 ) : null}
-                <p className="text-xs text-muted">
-                  Manual external means recorded only. No provider verification or refund is
-                  implied.
-                </p>
+                {online ? (
+                  <div className="flex flex-col gap-2 rounded-surface border border-border bg-surface-tint p-3">
+                    <p className="text-xs text-muted">
+                      Server-side provider lifecycle. The client only displays the state reported by
+                      the server; reconnect and refresh never create a second charge.
+                    </p>
+                    {onlinePayment.data?.providerRef ? (
+                      <p className="break-all font-mono text-xs text-text">
+                        {onlinePayment.data.providerRef}
+                      </p>
+                    ) : null}
+                    {onlinePayment.data?.status === 'PENDING' ||
+                    onlinePayment.data?.status === 'FAILED' ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={action.isPending}
+                        onClick={() => action.mutate()}
+                      >
+                        <RefreshCw aria-hidden="true" className="size-4" />
+                        {action.isPending
+                          ? 'Contacting provider…'
+                          : onlinePayment.data?.status === 'FAILED'
+                            ? 'Retry online payment'
+                            : 'Refresh payment status'}
+                      </Button>
+                    ) : null}
+                    {action.error ? (
+                      <p className="text-xs text-danger" role="alert">
+                        Provider unreachable. The sale stays recorded; retry later.
+                      </p>
+                    ) : null}
+                    {onlinePayment.error ? (
+                      <p className="text-xs text-danger" role="alert">
+                        Provider state unavailable. Retry the refresh.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted">
+                    Manual external means recorded only. No provider verification or refund is
+                    implied.
+                  </p>
+                )}
               </dl>
             </div>
 

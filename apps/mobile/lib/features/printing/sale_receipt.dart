@@ -28,6 +28,11 @@ ReceiptData receiptDataForSale(
   final receiptIdentity = identity ?? ReceiptIdentity.fallback;
   final payment = sale.payment;
   final isCash = payment.kind == PaymentKindEnum.CASH;
+  final tenderLabel = switch (payment.kind) {
+    PaymentKindEnum.CASH => 'Cash tendered',
+    PaymentKindEnum.ONLINE => 'Online payment',
+    _ => 'Manual external',
+  };
   final footer = <String>[
     if (receiptIdentity.receiptFooter.isNotEmpty) receiptIdentity.receiptFooter,
     if (copy) 'COPY - reprinted from the completed sale.',
@@ -58,7 +63,7 @@ ReceiptData receiptDataForSale(
     currencyExponent: sale.currencyExponent,
     reference: sale.reference,
     issuedAtLabel: outletLocalLabel(sale.completedAt, sale.timezone),
-    tenderLabel: isCash ? 'Cash tendered' : 'Manual external',
+    tenderLabel: tenderLabel,
     tenderedMinor: isCash
         ? (payment.tenderedMinor ?? payment.amountMinor)
         : payment.amountMinor,
