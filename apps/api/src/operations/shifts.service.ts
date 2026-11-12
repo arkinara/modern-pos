@@ -179,7 +179,7 @@ function toShiftResponse(shift: ShiftRow, outlet: OutletRecord): ShiftResponse {
     cashSalesMinor: toWireMinor(shift.cashSalesMinor, 'cashSalesMinor'),
     paidInMinor: toWireMinor(shift.paidInMinor, 'paidInMinor'),
     paidOutMinor: toWireMinor(shift.paidOutMinor, 'paidOutMinor'),
-    expectedCashMinor: toWireMinor(shift.expectedCashMinor, 'expectedCashMinor'),
+    expectedCashMinor: toSignedWireMinor(shift.expectedCashMinor, 'expectedCashMinor'),
     countedCashMinor:
       shift.countedCashMinor === null
         ? null

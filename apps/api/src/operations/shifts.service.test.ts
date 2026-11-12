@@ -526,6 +526,69 @@ test('closing reconciles expected cash from tenders and records a signed discrep
   assert.equal(audit.metadata.discrepancyMinor, -1_000);
 });
 
+test('closing with paid-outs above expected cash returns signed negative expected cash, not a 500', async () => {
+  const { service } = setup();
+  const opened = await service.openShift(
+    OUTLET_ID,
+    { openingFloatMinor: 100_000 },
+    user(Role.CASHIER),
+  );
+  await service.recordCashMovement(
+    OUTLET_ID,
+    opened.id,
+    { kind: ShiftCashMovementKind.PAID_OUT, amountMinor: 104_000, reason: 'Petty cash' },
+    user(Role.OWNER, OWNER_ID),
+  );
+
+  const closed = await service.closeShift(
+    OUTLET_ID,
+    opened.id,
+    { countedCashMinor: 0 },
+    user(Role.CASHIER),
+  );
+
+  assert.equal(closed.status, ShiftStatus.CLOSED);
+  assert.equal(closed.paidOutMinor, 104_000);
+  assert.equal(closed.expectedCashMinor, -4_000);
+  assert.equal(closed.discrepancyMinor, 4_000);
+});
+
+test('a stored negative expected cash row serializes in list, get and report', async () => {
+  const { service, state } = setup();
+  state.shifts.push({
+    id: 'shift-negative',
+    businessId: BUSINESS_ID,
+    outletId: OUTLET_ID,
+    openedById: CASHIER_ID,
+    closedById: CASHIER_ID,
+    status: ShiftStatus.CLOSED,
+    openingFloatMinor: 100_000n,
+    cashSalesMinor: 0n,
+    paidInMinor: 0n,
+    paidOutMinor: 104_000n,
+    expectedCashMinor: -4_000n,
+    countedCashMinor: 0n,
+    discrepancyMinor: 4_000n,
+    closeNote: null,
+    version: 2,
+    openedAt: new Date('2026-11-12T09:00:00.000Z'),
+    closedAt: new Date('2026-11-12T10:00:00.000Z'),
+    createdAt: new Date('2026-11-12T09:00:00.000Z'),
+    updatedAt: new Date('2026-11-12T10:00:00.000Z'),
+  });
+
+  const page = await service.listShifts(OUTLET_ID, {}, user(Role.CASHIER));
+  assert.equal(page.items.length, 1);
+  assert.equal(page.items[0].expectedCashMinor, -4_000);
+
+  const single = await service.getShift(OUTLET_ID, 'shift-negative', user(Role.CASHIER));
+  assert.equal(single.expectedCashMinor, -4_000);
+
+  const report = await service.shiftReport(OUTLET_ID, 'shift-negative', user(Role.OWNER, OWNER_ID));
+  assert.equal(report.shift.expectedCashMinor, -4_000);
+  assert.equal(report.shift.discrepancyMinor, 4_000);
+});
+
 test('closing twice returns 409 and concurrent closes produce one winner', async () => {
   const { service } = setup();
   const opened = await service.openShift(

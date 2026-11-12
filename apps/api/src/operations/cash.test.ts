@@ -21,6 +21,17 @@ test('expected cash arithmetic is opening + cash sales + paid-in - paid-out', ()
   assert.equal(100_000n + 45_000n + 20_000n - 15_000n, expected, 'independent hand arithmetic');
 });
 
+test('expected cash is negative when paid-outs exceed float, cash sales and paid-ins', () => {
+  const expected = expectedCashMinor({
+    openingFloatMinor: 100_000n,
+    cashSalesMinor: 0n,
+    paidInMinor: 0n,
+    paidOutMinor: 104_000n,
+  });
+
+  assert.equal(expected, -4_000n);
+});
+
 test('discrepancy is signed: positive over, negative short, zero matched', () => {
   assert.equal(discrepancyMinor(151_000n, 150_000n), 1_000n);
   assert.equal(discrepancyMinor(149_000n, 150_000n), -1_000n);

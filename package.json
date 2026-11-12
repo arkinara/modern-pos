@@ -16,7 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check apps/api apps/web packages/api-client .github package.json pnpm-workspace.yaml docker-compose.yml",
     "typecheck": "pnpm --filter @modern-pos/api-client typecheck && pnpm --filter @modern-pos/api typecheck && pnpm --filter @modern-pos/web typecheck",
-    "test": "pnpm --filter @modern-pos/api test",
+    "test": "pnpm --filter @modern-pos/api test && pnpm --filter @modern-pos/web test",
     "openapi:validate": "swagger-cli validate API.openapi.json",
     "openapi:generate:ts": "openapi-typescript API.openapi.json -o packages/api-client/src/schema.d.ts",
     "openapi:generate:dart": "openapi-generator-cli generate -i API.openapi.json -g dart -c tools/openapi-dart-config.json -o packages/api_client_dart",
