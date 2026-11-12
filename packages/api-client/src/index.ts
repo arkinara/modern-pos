@@ -109,6 +109,18 @@ export interface ApiClient {
     outletId: string,
     query: { from: string; to: string },
   ): Promise<ApiSchemas['DailyReport']>;
+  createOnlinePayment(outletId: string, saleId: string): Promise<ApiSchemas['OnlinePayment']>;
+  getOnlinePayment(outletId: string, saleId: string): Promise<ApiSchemas['OnlinePayment']>;
+  refreshOnlinePayment(outletId: string, saleId: string): Promise<ApiSchemas['OnlinePayment']>;
+  listOnlinePayments(
+    outletId: string,
+    query?: { limit?: number },
+  ): Promise<ApiSchemas['OnlinePaymentList']>;
+  reconcileOnlinePayments(outletId: string): Promise<ApiSchemas['ReconciliationSummary']>;
+  getSettlementReport(
+    outletId: string,
+    query: { from: string; to: string },
+  ): Promise<ApiSchemas['SettlementReport']>;
   exportSalesCsv(
     outletId: string,
     query: { from: string; to: string },
@@ -371,6 +383,35 @@ export function createApiClient({
     getDailyReport: (outletId, query) =>
       request<ApiSchemas['DailyReport']>(
         `/v1/outlets/${encodeURIComponent(outletId)}/reports/daily${toQueryString(query)}`,
+      ),
+    createOnlinePayment: (outletId, saleId) =>
+      request<ApiSchemas['OnlinePayment']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/sales/${encodeURIComponent(saleId)}/online-payment`,
+        { method: 'POST' },
+      ),
+    getOnlinePayment: (outletId, saleId) =>
+      request<ApiSchemas['OnlinePayment']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/sales/${encodeURIComponent(saleId)}/online-payment`,
+      ),
+    refreshOnlinePayment: (outletId, saleId) =>
+      request<ApiSchemas['OnlinePayment']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/sales/${encodeURIComponent(saleId)}/online-payment/refresh`,
+        { method: 'POST' },
+      ),
+    listOnlinePayments: (outletId, query) =>
+      request<ApiSchemas['OnlinePaymentList']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/online-payments${toQueryString({
+          limit: query?.limit,
+        })}`,
+      ),
+    reconcileOnlinePayments: (outletId) =>
+      request<ApiSchemas['ReconciliationSummary']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/online-payments/reconcile`,
+        { method: 'POST' },
+      ),
+    getSettlementReport: (outletId, query) =>
+      request<ApiSchemas['SettlementReport']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/online-payments/settlements${toQueryString(query)}`,
       ),
     exportSalesCsv: async (outletId, query) => {
       const exported = await requestText(

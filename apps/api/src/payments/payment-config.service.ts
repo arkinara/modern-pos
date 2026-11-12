@@ -43,7 +43,10 @@ export class PaymentConfigService {
   }
 
   get replayWindowSeconds(): number {
-    return readPositiveInteger(process.env.PAYMENT_WEBHOOK_REPLAY_SECONDS, DEFAULT_REPLAY_WINDOW_SECONDS);
+    return readPositiveInteger(
+      process.env.PAYMENT_WEBHOOK_REPLAY_SECONDS,
+      DEFAULT_REPLAY_WINDOW_SECONDS,
+    );
   }
 
   get providerBaseUrl(): string | null {

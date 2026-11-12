@@ -145,9 +145,7 @@ export class MockPaymentProviderService implements PaymentProviderAdapter {
 
     const refundedMinor = row.refundedMinor + input.amountMinor;
     const status =
-      refundedMinor === row.amountMinor
-        ? PaymentStatus.REFUNDED
-        : PaymentStatus.PARTIALLY_REFUNDED;
+      refundedMinor === row.amountMinor ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED;
 
     await this.prisma.sandboxProviderPayment.update({
       where: { id: row.id },

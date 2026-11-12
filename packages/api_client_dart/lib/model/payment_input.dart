@@ -161,6 +161,7 @@ class PaymentInput {
 enum PaymentInputKindEnum {
   CASH._(r'CASH'),
   MANUAL_EXTERNAL._(r'MANUAL_EXTERNAL'),
+  ONLINE._(r'ONLINE'),
   ;
 
   /// Instantiate a new enum with the provided value.
@@ -221,6 +222,7 @@ class PaymentInputKindEnumTypeTransformer {
       switch (data) {
         case r'CASH': return PaymentInputKindEnum.CASH;
         case r'MANUAL_EXTERNAL': return PaymentInputKindEnum.MANUAL_EXTERNAL;
+        case r'ONLINE': return PaymentInputKindEnum.ONLINE;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');

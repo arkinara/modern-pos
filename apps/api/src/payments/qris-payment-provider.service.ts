@@ -118,7 +118,11 @@ export class QrisPaymentProviderService implements PaymentProviderAdapter {
     const providerRef = wire.providerRef ?? wire.id;
 
     if (!providerRef) {
-      throw apiError(502, 'PROVIDER_ERROR', 'Provider response did not include a payment reference');
+      throw apiError(
+        502,
+        'PROVIDER_ERROR',
+        'Provider response did not include a payment reference',
+      );
     }
 
     return {

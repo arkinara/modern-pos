@@ -14,7 +14,10 @@ export function signWebhookPayload(secret: string, timestamp: number, rawBody: s
   return createHmac('sha256', secret).update(`${timestamp}.${rawBody}`).digest('hex');
 }
 
-function parseSignatureHeader(header: string | undefined): { timestamp: string; signatures: string[] } {
+function parseSignatureHeader(header: string | undefined): {
+  timestamp: string;
+  signatures: string[];
+} {
   if (!header) {
     return { timestamp: '', signatures: [] };
   }

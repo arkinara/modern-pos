@@ -1019,6 +1019,8 @@ class _ReceiptBody extends ConsumerWidget {
                 _AmountRow(
                   label: payment.kind == PaymentKindEnum.CASH
                       ? 'Cash tendered'
+                      : payment.kind == PaymentKindEnum.ONLINE
+                      ? 'Online payment'
                       : 'Manual external',
                   value: money.format(
                     payment.tenderedMinor ?? payment.amountMinor,

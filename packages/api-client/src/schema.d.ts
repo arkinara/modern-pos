@@ -794,6 +794,181 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/outlets/{outletId}/sales/{saleId}/online-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the server-side online payment state
+         * @description The client resolves reconnect state from the server and never assumes failure or recharges.
+         */
+        get: operations["payments_get"];
+        put?: never;
+        /**
+         * Create or replay the provider payment intent for a completed online sale
+         * @description Idempotent per sale: repeated calls return the same online payment and provider reference. A failed intent is reset to pending for an explicit retry. No stock or sale is created here.
+         */
+        post: operations["payments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/sales/{saleId}/online-payment/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve provider state after a lost client connection
+         * @description Fetches the provider record and applies pending/succeeded/failed without creating a second payment or stock movement.
+         */
+        post: operations["payments_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/online-payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List online payments for the outlet */
+        get: operations["payments_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/online-payments/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compare pending local payments with the provider and repair drift
+         * @description Read-only toward the provider: fetches each pending provider payment and applies the reported state. It never creates a provider charge.
+         */
+        post: operations["payments_reconcile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/online-payments/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Daily and per-payment captured/refunded settlement report */
+        get: operations["payments_settlements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a signed, replay-protected provider webhook
+         * @description Public endpoint. Invalid signatures and timestamps outside the replay window are rejected before any state change. Provider event ids are unique per provider for concurrency-safe dedupe. A duplicate delivery is acknowledged with duplicate=true.
+         */
+        post: operations["payments_webhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sandbox/provider/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a deterministic local sandbox provider payment
+         * @description Local sandbox only; disabled unless PAYMENT_PROVIDER=mock. It performs no real provider call.
+         */
+        post: operations["sandbox_payment_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sandbox/provider/payments/{providerRef}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a local sandbox provider payment */
+        get: operations["sandbox_payment_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sandbox/provider/payments/{providerRef}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Advance the sandbox ledger and issue a correctly signed webhook event
+         * @description Returns the signed event body for the caller to deliver. Reuse the same event id to exercise duplicate delivery; send succeeded before pending to exercise out-of-order delivery.
+         */
+        post: operations["sandbox_payment_event"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1098,7 +1273,7 @@ export interface components {
         };
         PaymentInput: {
             /** @enum {string} */
-            kind: "CASH" | "MANUAL_EXTERNAL";
+            kind: "CASH" | "MANUAL_EXTERNAL" | "ONLINE";
             /** @description Currency minor units; IDR exponent 0 in demo. */
             amountMinor: number;
             /** @description Currency minor units; IDR exponent 0 in demo. */
@@ -1130,9 +1305,9 @@ export interface components {
         };
         Payment: {
             /** @enum {string} */
-            kind: "CASH" | "MANUAL_EXTERNAL";
+            kind: "CASH" | "MANUAL_EXTERNAL" | "ONLINE";
             /** @enum {string} */
-            status: "RECORDED";
+            status: "RECORDED" | "PENDING" | "SUCCEEDED" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED";
             /** @description Currency minor units; IDR exponent 0 in demo. */
             amountMinor: number;
             /** @description Currency minor units; IDR exponent 0 in demo. */
@@ -1191,13 +1366,15 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             restock: components["schemas"]["Restock"][];
-            /** @enum {boolean} */
-            externalRefundPerformed: false;
+            /** @description True only when the configured provider adapter performed the refund. Cash and manual reversals stay false. */
+            externalRefundPerformed: boolean;
             /** @enum {string} */
             kind?: "FULL" | "PARTIAL";
             /** @description Currency minor units; IDR exponent 0 in demo. */
             refundMinor?: number;
             lines?: components["schemas"]["RefundLine"][];
+            /** @description Provider refund reference when a provider movement was performed. */
+            providerRefundRef?: string;
         };
         DailyReport: {
             /** Format: date */
@@ -1522,6 +1699,159 @@ export interface components {
             /** Format: uuid */
             saleLineId: string;
             quantity: number;
+        };
+        OnlinePayment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            saleId: string;
+            /** @enum {string} */
+            provider: "MOCK" | "QRIS";
+            providerRef?: string | null;
+            /** @enum {string} */
+            status: "PENDING" | "SUCCEEDED" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED";
+            /** @description Currency minor units; IDR exponent 0 in demo. */
+            amountMinor: number;
+            /** @description Currency minor units; IDR exponent 0 in demo. */
+            refundedMinor: number;
+            currency: string;
+            currencyExponent: number;
+            qrPayload?: string | null;
+            /** Format: date-time */
+            settledAt?: string | null;
+            /** Format: date-time */
+            failedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        OnlinePaymentListItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            saleId: string;
+            /** @enum {string} */
+            provider: "MOCK" | "QRIS";
+            providerRef?: string | null;
+            /** @enum {string} */
+            status: "PENDING" | "SUCCEEDED" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED";
+            /** @description Currency minor units; IDR exponent 0 in demo. */
+            amountMinor: number;
+            /** @description Currency minor units; IDR exponent 0 in demo. */
+            refundedMinor: number;
+            currency: string;
+            currencyExponent: number;
+            qrPayload?: string | null;
+            /** Format: date-time */
+            settledAt?: string | null;
+            /** Format: date-time */
+            failedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            saleReference: string;
+            /** Format: date-time */
+            saleCompletedAt: string;
+        };
+        OnlinePaymentList: {
+            items: components["schemas"]["OnlinePaymentListItem"][];
+        };
+        WebhookAck: {
+            /** @enum {boolean} */
+            received: true;
+            duplicate: boolean;
+            /** @enum {string|null} */
+            status?: "PENDING" | "SUCCEEDED" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED" | null;
+            eventId: string;
+        };
+        ReconciliationSummary: {
+            checked: number;
+            settled: number;
+            failed: number;
+            unchanged: number;
+            errors: {
+                /** Format: uuid */
+                paymentId: string;
+                code: string;
+            }[];
+            items: components["schemas"]["OnlinePayment"][];
+        };
+        SettlementDay: {
+            /** Format: date */
+            date: string;
+            paymentCount: number;
+            capturedMinor: number;
+            refundedMinor: number;
+            netMinor: number;
+            pendingMinor: number;
+            failedMinor: number;
+        };
+        SettlementPayment: {
+            /** Format: uuid */
+            paymentId: string;
+            /** Format: uuid */
+            saleId: string;
+            saleReference: string;
+            /** Format: date-time */
+            completedAt: string;
+            /** @enum {string} */
+            status: "PENDING" | "SUCCEEDED" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED";
+            capturedMinor: number;
+            refundedMinor: number;
+            netMinor: number;
+            /** Format: date-time */
+            settledAt?: string | null;
+        };
+        SettlementReport: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            timezone: string;
+            currency: string;
+            currencyExponent: number;
+            onlineSaleTotalMinor: number;
+            capturedMinor: number;
+            refundedMinor: number;
+            netMinor: number;
+            pendingMinor: number;
+            failedMinor: number;
+            driftMinor: number;
+            saleCount: number;
+            days: components["schemas"]["SettlementDay"][];
+            payments: components["schemas"]["SettlementPayment"][];
+            /** Format: date-time */
+            generatedAt: string;
+        };
+        SandboxEventWrite: {
+            /** @enum {string} */
+            type: "payment.pending" | "payment.succeeded" | "payment.failed";
+            eventId?: string;
+        };
+        SandboxEventResult: {
+            event: {
+                [key: string]: unknown;
+            };
+            timestamp: number;
+            signature: string;
+            rawBody: string;
+        };
+        SandboxPaymentWrite: {
+            /** Format: uuid */
+            idempotencyKey: string;
+            amountMinor: number;
+            currency: string;
+        };
+        SandboxPayment: {
+            providerRef: string;
+            /** @enum {string} */
+            status: "PENDING" | "SUCCEEDED" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED";
+            amountMinor: string;
+            currency: string;
+            qrPayload?: string | null;
+            refundedMinor: string;
         };
     };
     responses: never;
@@ -6906,6 +7236,682 @@ export interface operations {
             };
             /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    payments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                saleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    payments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                saleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    payments_refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                saleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 502; see ARCHITECTURE.md for stable error codes and recovery. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    payments_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePaymentList"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    payments_reconcile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationSummary"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 502; see ARCHITECTURE.md for stable error codes and recovery. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    payments_settlements: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementReport"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    payments_webhook: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Format t=<unix-seconds>,v1=<hex HMAC-SHA256 of t + "." + raw body>. */
+                "x-payment-signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookAck"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    sandbox_payment_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SandboxPaymentWrite"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SandboxPayment"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    sandbox_payment_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                providerRef: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SandboxPayment"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    sandbox_payment_event: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                providerRef: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SandboxEventWrite"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SandboxEventResult"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

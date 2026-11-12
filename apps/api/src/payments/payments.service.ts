@@ -128,7 +128,11 @@ interface OnlinePaymentRow {
 
 function wireMinor(value: bigint, field: string): number {
   if (value < 0n || value > BigInt(MAX_SAFE_MINOR_NUMBER)) {
-    throw apiError(500, 'MONEY_OUT_OF_RANGE', `${field} is outside the JavaScript safe-integer range`);
+    throw apiError(
+      500,
+      'MONEY_OUT_OF_RANGE',
+      `${field} is outside the JavaScript safe-integer range`,
+    );
   }
 
   return Number(value);
@@ -177,9 +181,7 @@ export class PaymentsService {
   ) {}
 
   private adapter(): PaymentProviderAdapter {
-    return this.config.provider === PaymentProvider.MOCK
-      ? this.mockProvider
-      : this.qrisProvider;
+    return this.config.provider === PaymentProvider.MOCK ? this.mockProvider : this.qrisProvider;
   }
 
   /** Called inside the finalize transaction; performs no provider network call. */
@@ -429,10 +431,7 @@ export class PaymentsService {
     return { checked: rows.length, settled, failed, unchanged, errors, items };
   }
 
-  async handleWebhook(
-    signatureHeader: string | undefined,
-    rawBody: string,
-  ): Promise<WebhookAck> {
+  async handleWebhook(signatureHeader: string | undefined, rawBody: string): Promise<WebhookAck> {
     const verification = verifyWebhookSignature({
       secret: this.config.requireWebhookSecret(),
       header: signatureHeader,
@@ -467,7 +466,8 @@ export class PaymentsService {
     const eventId = typeof event.id === 'string' ? event.id.trim() : '';
     const eventType = typeof event.type === 'string' ? event.type : '';
     const providerRef = typeof event.data?.providerRef === 'string' ? event.data.providerRef : '';
-    const providerName = typeof event.provider === 'string' ? event.provider : this.config.providerName;
+    const providerName =
+      typeof event.provider === 'string' ? event.provider : this.config.providerName;
 
     if (!eventId || !eventType || !providerRef) {
       throw apiError(
@@ -478,7 +478,11 @@ export class PaymentsService {
     }
 
     if (providerName !== this.config.providerName) {
-      throw apiError(401, 'WEBHOOK_PROVIDER_MISMATCH', 'Webhook provider does not match configuration');
+      throw apiError(
+        401,
+        'WEBHOOK_PROVIDER_MISMATCH',
+        'Webhook provider does not match configuration',
+      );
     }
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -511,7 +515,11 @@ export class PaymentsService {
               event.data?.amountMinor === undefined ? null : BigInt(String(event.data.amountMinor));
 
             if (amountMinor !== payment.amountMinor) {
-              throw apiError(422, 'WEBHOOK_AMOUNT_MISMATCH', 'Webhook amount does not match payment');
+              throw apiError(
+                422,
+                'WEBHOOK_AMOUNT_MISMATCH',
+                'Webhook amount does not match payment',
+              );
             }
 
             await tx.paymentWebhookEvent.create({
@@ -795,7 +803,10 @@ export class PaymentsService {
   }
 
   /** Reconciliation entry point used by tests and operators. */
-  async reconcilePending(outletId: string, user: AuthenticatedUser): Promise<ReconciliationSummary> {
+  async reconcilePending(
+    outletId: string,
+    user: AuthenticatedUser,
+  ): Promise<ReconciliationSummary> {
     return this.reconcile(outletId, user);
   }
 

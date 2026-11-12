@@ -1766,8 +1766,7 @@ export class SalesService {
       providerRefund: { performed: boolean; providerRefundRef: string | null };
     },
   ): Promise<ReversalResponse> {
-    const { outletId, saleId, idempotencyKey, reason, restock, refundLines, hash, user } =
-      context;
+    const { outletId, saleId, idempotencyKey, reason, restock, refundLines, hash, user } = context;
 
     await tx.$queryRaw`
       SELECT "id"

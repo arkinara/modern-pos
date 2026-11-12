@@ -123,3 +123,25 @@ test('manual external payment equals total and omits tender and change', () => {
     (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'PAYMENT_INVALID',
   );
 });
+
+test('online payment equals total and never records cash tender or change', () => {
+  const payment = normalizePayment(82751n, {
+    kind: PaymentKind.ONLINE,
+    amountMinor: 82751,
+    reference: 'INTENT-1',
+  });
+
+  assert.equal(payment.kind, PaymentKind.ONLINE);
+  assert.equal(payment.tenderedMinor, null);
+  assert.equal(payment.changeMinor, null);
+
+  assert.throws(
+    () =>
+      normalizePayment(82751n, {
+        kind: PaymentKind.ONLINE,
+        amountMinor: 82751,
+        tenderedMinor: 90000,
+      }),
+    (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'PAYMENT_INVALID',
+  );
+});
