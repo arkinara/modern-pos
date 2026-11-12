@@ -4,9 +4,11 @@ import { AuthModule } from './auth/auth.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { OutletScopeGuard } from './common/guards/outlet-scope.guard';
+import { PermissionsGuard } from './common/guards/permissions.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { RequestIdMiddleware } from './common/request-id.middleware';
 import { HealthController } from './health/health.controller';
+import { OperationsModule } from './operations/operations.module';
 import { OutletsModule } from './outlets/outlets.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrintingModule } from './printing/printing.module';
@@ -32,12 +34,14 @@ import { StockModule } from './stock/stock.module';
     PaymentsModule,
     ReportsModule,
     PrintingModule,
+    OperationsModule,
   ],
   controllers: [HealthController],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: OutletScopeGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: PermissionsGuard },
   ],
 })
 export class AppModule implements NestModule {

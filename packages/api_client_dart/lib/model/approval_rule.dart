@@ -143,6 +143,7 @@ class ApprovalRule {
 enum ApprovalRuleActionEnum {
   DISCOUNT._(r'DISCOUNT'),
   REFUND._(r'REFUND'),
+  CASH_OUT._(r'CASH_OUT'),
   ;
 
   /// Instantiate a new enum with the provided value.
@@ -203,6 +204,7 @@ class ApprovalRuleActionEnumTypeTransformer {
       switch (data) {
         case r'DISCOUNT': return ApprovalRuleActionEnum.DISCOUNT;
         case r'REFUND': return ApprovalRuleActionEnum.REFUND;
+        case r'CASH_OUT': return ApprovalRuleActionEnum.CASH_OUT;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');

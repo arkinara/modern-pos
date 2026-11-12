@@ -205,3 +205,51 @@ export function describeReversalError(error: unknown, fallback: string): string 
 
   return `${fallback} (HTTP ${error.status})`;
 }
+
+export function describeOperationError(error: unknown, fallback: string): string {
+  if (!(error instanceof ApiError)) {
+    return fallback;
+  }
+
+  const code = apiErrorCode(error);
+
+  if (error.status === 401) {
+    return 'Your session expired. Sign in again.';
+  }
+
+  if (error.status === 403) {
+    if (code === 'APPROVAL_REQUIRED') {
+      return 'This cash payout is above your approval limit. An owner must record it.';
+    }
+    return 'This account is not allowed to perform that operation.';
+  }
+
+  if (error.status === 404) {
+    return 'That record could not be found for this outlet. Reload and try again.';
+  }
+
+  if (error.status === 409) {
+    if (code === 'SHIFT_ALREADY_OPEN') {
+      return 'You already have an open shift in this outlet. Close it before opening another.';
+    }
+    if (code === 'SHIFT_ALREADY_CLOSED' || code === 'SHIFT_CLOSE_CONFLICT') {
+      return 'This shift was already closed. Reload the list to see the final count.';
+    }
+    if (code === 'SHIFT_NOT_YOURS') {
+      return 'Only the staff member who opened this shift can close it.';
+    }
+    if (code === 'ATTENDANCE_ALREADY_OPEN') {
+      return 'You are already clocked in. Clock out before starting another record.';
+    }
+    if (code === 'ATTENDANCE_NOT_OPEN') {
+      return 'There is no open attendance record to close.';
+    }
+    return 'Another change saved first. Reload and try again.';
+  }
+
+  if (error.status === 400 || error.status === 422) {
+    return 'The server rejected these values. Check the amount, count and reason.';
+  }
+
+  return `${fallback} (HTTP ${error.status})`;
+}

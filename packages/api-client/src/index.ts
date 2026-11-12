@@ -143,9 +143,50 @@ export interface ApiClient {
   listApprovalRules(outletId: string): Promise<ApiSchemas['ApprovalRule'][]>;
   upsertApprovalRule(
     outletId: string,
-    action: 'DISCOUNT' | 'REFUND',
+    action: 'DISCOUNT' | 'REFUND' | 'CASH_OUT',
     rule: ApiSchemas['ApprovalRuleWrite'],
   ): Promise<ApiSchemas['ApprovalRule']>;
+  listShifts(
+    outletId: string,
+    query?: { status?: ApiSchemas['Shift']['status']; cursor?: string; limit?: number },
+  ): Promise<ApiSchemas['ShiftPage']>;
+  openShift(outletId: string, shift: ApiSchemas['ShiftWrite']): Promise<ApiSchemas['Shift']>;
+  getShift(outletId: string, shiftId: string): Promise<ApiSchemas['Shift']>;
+  recordShiftCashMovement(
+    outletId: string,
+    shiftId: string,
+    movement: ApiSchemas['ShiftCashMovementWrite'],
+  ): Promise<ApiSchemas['Shift']>;
+  closeShift(
+    outletId: string,
+    shiftId: string,
+    close: ApiSchemas['ShiftCloseWrite'],
+  ): Promise<ApiSchemas['Shift']>;
+  getShiftReport(outletId: string, shiftId: string): Promise<ApiSchemas['ShiftReport']>;
+  listAttendance(
+    outletId: string,
+    query?: { userId?: string; from?: string; to?: string; cursor?: string; limit?: number },
+  ): Promise<ApiSchemas['AttendancePage']>;
+  clockInAttendance(
+    outletId: string,
+    body: ApiSchemas['AttendanceWrite'],
+  ): Promise<ApiSchemas['AttendanceRecord']>;
+  clockOutAttendance(
+    outletId: string,
+    body: ApiSchemas['AttendanceWrite'],
+  ): Promise<ApiSchemas['AttendanceRecord']>;
+  getPermissionMatrix(outletId: string): Promise<ApiSchemas['PermissionMatrix']>;
+  searchAudit(
+    outletId: string,
+    query?: {
+      actorId?: string;
+      from?: string;
+      to?: string;
+      action?: ApiSchemas['OperationAuditEntry']['action'];
+      cursor?: string;
+      limit?: number;
+    },
+  ): Promise<ApiSchemas['OperationAuditPage']>;
 }
 
 function toQueryString(query: Record<string, string | number | undefined>): string {
@@ -446,6 +487,57 @@ export function createApiClient({
       request<ApiSchemas['ApprovalRule']>(
         `/v1/outlets/${encodeURIComponent(outletId)}/approval-rules/${action}`,
         { method: 'PUT', body: JSON.stringify(rule) },
+      ),
+    listShifts: (outletId, query = {}) =>
+      request<ApiSchemas['ShiftPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/shifts${toQueryString(query)}`,
+      ),
+    openShift: (outletId, shift) =>
+      request<ApiSchemas['Shift']>(`/v1/outlets/${encodeURIComponent(outletId)}/shifts`, {
+        method: 'POST',
+        body: JSON.stringify(shift),
+      }),
+    getShift: (outletId, shiftId) =>
+      request<ApiSchemas['Shift']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/shifts/${encodeURIComponent(shiftId)}`,
+      ),
+    recordShiftCashMovement: (outletId, shiftId, movement) =>
+      request<ApiSchemas['Shift']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/shifts/${encodeURIComponent(
+          shiftId,
+        )}/cash-movements`,
+        { method: 'POST', body: JSON.stringify(movement) },
+      ),
+    closeShift: (outletId, shiftId, close) =>
+      request<ApiSchemas['Shift']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/shifts/${encodeURIComponent(shiftId)}/close`,
+        { method: 'POST', body: JSON.stringify(close) },
+      ),
+    getShiftReport: (outletId, shiftId) =>
+      request<ApiSchemas['ShiftReport']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/shifts/${encodeURIComponent(shiftId)}/report`,
+      ),
+    listAttendance: (outletId, query = {}) =>
+      request<ApiSchemas['AttendancePage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/attendance${toQueryString(query)}`,
+      ),
+    clockInAttendance: (outletId, body) =>
+      request<ApiSchemas['AttendanceRecord']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/attendance/clock-in`,
+        { method: 'POST', body: JSON.stringify(body) },
+      ),
+    clockOutAttendance: (outletId, body) =>
+      request<ApiSchemas['AttendanceRecord']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/attendance/clock-out`,
+        { method: 'POST', body: JSON.stringify(body) },
+      ),
+    getPermissionMatrix: (outletId) =>
+      request<ApiSchemas['PermissionMatrix']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/permissions`,
+      ),
+    searchAudit: (outletId, query = {}) =>
+      request<ApiSchemas['OperationAuditPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/audit${toQueryString(query)}`,
       ),
   };
 }

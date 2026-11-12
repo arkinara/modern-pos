@@ -189,6 +189,12 @@ class ApiClient {
           return ApprovalRule.fromJson(value);
         case 'ApprovalRuleWrite':
           return ApprovalRuleWrite.fromJson(value);
+        case 'AttendancePage':
+          return AttendancePage.fromJson(value);
+        case 'AttendanceRecord':
+          return AttendanceRecord.fromJson(value);
+        case 'AttendanceWrite':
+          return AttendanceWrite.fromJson(value);
         case 'AuditEntry':
           return AuditEntry.fromJson(value);
         case 'AuditPage':
@@ -251,6 +257,10 @@ class ApiClient {
           return OnlinePaymentList.fromJson(value);
         case 'OnlinePaymentListItem':
           return OnlinePaymentListItem.fromJson(value);
+        case 'OperationAuditEntry':
+          return OperationAuditEntry.fromJson(value);
+        case 'OperationAuditPage':
+          return OperationAuditPage.fromJson(value);
         case 'Order':
           return Order.fromJson(value);
         case 'OrderCancelRequest':
@@ -273,6 +283,12 @@ class ApiClient {
           return Payment.fromJson(value);
         case 'PaymentInput':
           return PaymentInput.fromJson(value);
+        case 'PermissionMatrix':
+          return PermissionMatrix.fromJson(value);
+        case 'PermissionMatrixOperationsInner':
+          return PermissionMatrixOperationsInner.fromJson(value);
+        case 'PermissionMatrixRolesInner':
+          return PermissionMatrixRolesInner.fromJson(value);
         case 'PrintJob':
           return PrintJob.fromJson(value);
         case 'PrintJobWrite':
@@ -341,6 +357,22 @@ class ApiClient {
           return SettlementPayment.fromJson(value);
         case 'SettlementReport':
           return SettlementReport.fromJson(value);
+        case 'Shift':
+          return Shift.fromJson(value);
+        case 'ShiftCashMovementWrite':
+          return ShiftCashMovementWrite.fromJson(value);
+        case 'ShiftCloseWrite':
+          return ShiftCloseWrite.fromJson(value);
+        case 'ShiftMovement':
+          return ShiftMovement.fromJson(value);
+        case 'ShiftPage':
+          return ShiftPage.fromJson(value);
+        case 'ShiftReport':
+          return ShiftReport.fromJson(value);
+        case 'ShiftTenderTotal':
+          return ShiftTenderTotal.fromJson(value);
+        case 'ShiftWrite':
+          return ShiftWrite.fromJson(value);
         case 'SplitBill':
           return SplitBill.fromJson(value);
         case 'SplitResult':

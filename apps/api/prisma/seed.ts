@@ -289,6 +289,22 @@ async function main(): Promise<void> {
     });
   }
 
+  // Cash payouts above this threshold need an owner; ordinary paid-ins and
+  // small paid-outs stay with the cashier who owns the open shift.
+  for (const outletId of [OUTLET_MAIN_ID, OUTLET_SECOND_ID]) {
+    await prisma.approvalRule.upsert({
+      where: { outletId_action: { outletId, action: 'CASH_OUT' } },
+      update: { thresholdMinor: 100000n, active: true },
+      create: {
+        businessId: BUSINESS_ID,
+        outletId,
+        action: 'CASH_OUT',
+        thresholdMinor: 100000n,
+        active: true,
+      },
+    });
+  }
+
   const categories = [
     { id: CATEGORY_BEVERAGES_ID, name: 'Beverages', sortOrder: 10 },
     { id: CATEGORY_FOOD_ID, name: 'Food', sortOrder: 20 },
