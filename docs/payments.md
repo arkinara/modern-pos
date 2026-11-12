@@ -76,8 +76,9 @@ Terminal rules:
 - A failure cannot undo a capture.
 - Refunds never move a payment back to `PENDING`.
 - A failed intent can be retried by calling the create endpoint again. This
-  resets the same local row and provider idempotency key; it never creates a
-  second sale.
+  resets the same local row; the provider idempotency key is scoped to the
+  retry attempt so the retry can obtain a fresh provider payment without ever
+  creating a second sale.
 
 The sale's `payment_records` row mirrors the online state (`PENDING`,
 `SUCCEEDED`, `FAILED`, `PARTIALLY_REFUNDED`, `REFUNDED`). Cash sales keep
@@ -96,7 +97,7 @@ must use the existing reversal path, which is audited.
 | --- | --- | --- |
 | Finalize | `Idempotency-Key` + `checkout_requests` | Same payload replays the same sale. |
 | Payment intent | Unique `saleId` on `online_payments` | Repeated create calls return one payment and one provider reference. |
-| Provider create | Online payment id passed as provider idempotency key | A lost client response cannot create a second provider payment. |
+| Provider create | Online payment id (plus attempt for an explicit failed retry) | A lost client response cannot create a second provider payment; a failed retry gets a fresh, still-deduped key. |
 | Webhook | Unique `(provider, eventId)` on `payment_webhook_events` | Duplicate and parallel deliveries produce exactly one transition. |
 | Refund | Reversal `Idempotency-Key` passed as provider refund idempotency key | A retried reversal does not refund twice. |
 
