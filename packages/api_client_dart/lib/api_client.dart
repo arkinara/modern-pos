@@ -185,6 +185,10 @@ class ApiClient {
           return value is DateTime ? value : DateTime.tryParse(value);
         case 'Adjustment':
           return Adjustment.fromJson(value);
+        case 'ApprovalRule':
+          return ApprovalRule.fromJson(value);
+        case 'ApprovalRuleWrite':
+          return ApprovalRuleWrite.fromJson(value);
         case 'AuditEntry':
           return AuditEntry.fromJson(value);
         case 'AuditPage':
@@ -217,6 +221,10 @@ class ApiClient {
           return Finalize.fromJson(value);
         case 'Finalized':
           return Finalized.fromJson(value);
+        case 'LineModifier':
+          return LineModifier.fromJson(value);
+        case 'LineModifierWrite':
+          return LineModifierWrite.fromJson(value);
         case 'Login':
           return Login.fromJson(value);
         case 'Menu':
@@ -229,6 +237,10 @@ class ApiClient {
           return MenuWrite.fromJson(value);
         case 'MobileSession':
           return MobileSession.fromJson(value);
+        case 'Modifier':
+          return Modifier.fromJson(value);
+        case 'ModifierWrite':
+          return ModifierWrite.fromJson(value);
         case 'Movement':
           return Movement.fromJson(value);
         case 'MovementPage':
@@ -267,6 +279,16 @@ class ApiClient {
           return PrintingStateRequest.fromJson(value);
         case 'PrintingUpdateRequest':
           return PrintingUpdateRequest.fromJson(value);
+        case 'Promotion':
+          return Promotion.fromJson(value);
+        case 'PromotionEligibility':
+          return PromotionEligibility.fromJson(value);
+        case 'PromotionSnapshot':
+          return PromotionSnapshot.fromJson(value);
+        case 'PromotionUpdate':
+          return PromotionUpdate.fromJson(value);
+        case 'PromotionWrite':
+          return PromotionWrite.fromJson(value);
         case 'Quote':
           return Quote.fromJson(value);
         case 'QuoteLinesInner':
@@ -277,6 +299,8 @@ class ApiClient {
           return RecipeLine.fromJson(value);
         case 'RecipeWrite':
           return RecipeWrite.fromJson(value);
+        case 'RefundLine':
+          return RefundLine.fromJson(value);
         case 'Restock':
           return Restock.fromJson(value);
         case 'Reversal':

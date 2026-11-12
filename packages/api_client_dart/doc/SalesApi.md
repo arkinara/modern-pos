@@ -13,7 +13,7 @@ Method | HTTP request | Description
 [**salesGet**](SalesApi.md#salesget) | **GET** /outlets/{outletId}/sales/{saleId} | Read immutable receipt data
 [**salesList**](SalesApi.md#saleslist) | **GET** /outlets/{outletId}/sales | List sales; cashiers see only authorized own sales
 [**salesRecover**](SalesApi.md#salesrecover) | **GET** /outlets/{outletId}/checkout-requests/{key} | Resolve uncertain checkout by original key
-[**salesReverse**](SalesApi.md#salesreverse) | **POST** /outlets/{outletId}/sales/{saleId}/reversals | Record full owner reversal and explicit restock
+[**salesReverse**](SalesApi.md#salesreverse) | **POST** /outlets/{outletId}/sales/{saleId}/reversals | Record a full reversal or a partial refund with explicit restock
 
 
 # **salesFinalize**
@@ -229,9 +229,9 @@ Name | Type | Description  | Notes
 # **salesReverse**
 > Reversal salesReverse(outletId, saleId, idempotencyKey, reversalWrite)
 
-Record full owner reversal and explicit restock
+Record a full reversal or a partial refund with explicit restock
 
-One reversal per sale; validate restock <= original consumed amount. Does not return money through any external provider.
+A full reversal omits lines and refundMinor. A partial refund names refunded sale lines, states refundMinor independently, and may restock any explicitly selected stock items. Approval rules decide whether a non-owner may proceed. No external provider performs money movement.
 
 ### Example
 ```dart

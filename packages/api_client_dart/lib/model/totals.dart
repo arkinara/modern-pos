@@ -17,6 +17,7 @@ class Totals {
     required this.serviceMinor,
     required this.taxMinor,
     required this.totalMinor,
+    this.discountMinor,
   });
 
   /// Currency minor units; IDR exponent 0 in demo.
@@ -43,12 +44,25 @@ class Totals {
   /// Maximum value: 9007199254740991
   int totalMinor;
 
+  /// Currency minor units; IDR exponent 0 in demo.
+  ///
+  /// Minimum value: 0
+  /// Maximum value: 9007199254740991
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? discountMinor;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is Totals &&
     other.subtotalMinor == subtotalMinor &&
     other.serviceMinor == serviceMinor &&
     other.taxMinor == taxMinor &&
-    other.totalMinor == totalMinor;
+    other.totalMinor == totalMinor &&
+    other.discountMinor == discountMinor;
 
   @override
   int get hashCode =>
@@ -56,10 +70,11 @@ class Totals {
     (subtotalMinor.hashCode) +
     (serviceMinor.hashCode) +
     (taxMinor.hashCode) +
-    (totalMinor.hashCode);
+    (totalMinor.hashCode) +
+    (discountMinor == null ? 0 : discountMinor!.hashCode);
 
   @override
-  String toString() => 'Totals[subtotalMinor=$subtotalMinor, serviceMinor=$serviceMinor, taxMinor=$taxMinor, totalMinor=$totalMinor]';
+  String toString() => 'Totals[subtotalMinor=$subtotalMinor, serviceMinor=$serviceMinor, taxMinor=$taxMinor, totalMinor=$totalMinor, discountMinor=$discountMinor]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -67,6 +82,11 @@ class Totals {
       json[r'serviceMinor'] = this.serviceMinor;
       json[r'taxMinor'] = this.taxMinor;
       json[r'totalMinor'] = this.totalMinor;
+    if (this.discountMinor != null) {
+      json[r'discountMinor'] = this.discountMinor;
+    } else {
+      json[r'discountMinor'] = null;
+    }
     return json;
   }
 
@@ -97,6 +117,7 @@ class Totals {
         serviceMinor: mapValueOfType<int>(json, r'serviceMinor')!,
         taxMinor: mapValueOfType<int>(json, r'taxMinor')!,
         totalMinor: mapValueOfType<int>(json, r'totalMinor')!,
+        discountMinor: mapValueOfType<int>(json, r'discountMinor'),
       );
     }
     return null;

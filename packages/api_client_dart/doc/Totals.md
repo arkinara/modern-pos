@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **serviceMinor** | **int** | Currency minor units; IDR exponent 0 in demo. | 
 **taxMinor** | **int** | Currency minor units; IDR exponent 0 in demo. | 
 **totalMinor** | **int** | Currency minor units; IDR exponent 0 in demo. | 
+**discountMinor** | **int** | Currency minor units; IDR exponent 0 in demo. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

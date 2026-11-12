@@ -26,6 +26,8 @@ class Sale {
     this.lines = const [],
     required this.payment,
     this.reversal,
+    this.promotions = const [],
+    this.refunds = const [],
   });
 
   String id;
@@ -62,6 +64,11 @@ class Sale {
   ///
   Reversal? reversal;
 
+  List<PromotionSnapshot> promotions;
+
+  /// All refund records linked to this sale, including full and partial refunds.
+  List<Reversal> refunds;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is Sale &&
     other.id == id &&
@@ -76,7 +83,9 @@ class Sale {
     other.totals == totals &&
     _deepEquality.equals(other.lines, lines) &&
     other.payment == payment &&
-    other.reversal == reversal;
+    other.reversal == reversal &&
+    _deepEquality.equals(other.promotions, promotions) &&
+    _deepEquality.equals(other.refunds, refunds);
 
   @override
   int get hashCode =>
@@ -93,10 +102,12 @@ class Sale {
     (totals.hashCode) +
     (lines.hashCode) +
     (payment.hashCode) +
-    (reversal == null ? 0 : reversal!.hashCode);
+    (reversal == null ? 0 : reversal!.hashCode) +
+    (promotions.hashCode) +
+    (refunds.hashCode);
 
   @override
-  String toString() => 'Sale[id=$id, orderId=$orderId, reference=$reference, state=$state, currency=$currency, currencyExponent=$currencyExponent, timezone=$timezone, completedAt=$completedAt, calculation=$calculation, totals=$totals, lines=$lines, payment=$payment, reversal=$reversal]';
+  String toString() => 'Sale[id=$id, orderId=$orderId, reference=$reference, state=$state, currency=$currency, currencyExponent=$currencyExponent, timezone=$timezone, completedAt=$completedAt, calculation=$calculation, totals=$totals, lines=$lines, payment=$payment, reversal=$reversal, promotions=$promotions, refunds=$refunds]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -117,6 +128,8 @@ class Sale {
     } else {
       json[r'reversal'] = null;
     }
+      json[r'promotions'] = this.promotions;
+      json[r'refunds'] = this.refunds;
     return json;
   }
 
@@ -172,6 +185,8 @@ class Sale {
         lines: SaleLine.listFromJson(json[r'lines']),
         payment: Payment.fromJson(json[r'payment'])!,
         reversal: Reversal.fromJson(json[r'reversal']),
+        promotions: PromotionSnapshot.listFromJson(json[r'promotions']),
+        refunds: Reversal.listFromJson(json[r'refunds']),
       );
     }
     return null;

@@ -14,6 +14,9 @@ Name | Type | Description | Notes
 **createdAt** | [**DateTime**](DateTime.md) |  | 
 **restock** | [**List<Restock>**](Restock.md) |  | [default to const []]
 **externalRefundPerformed** | **bool** |  | 
+**kind** | **String** |  | [optional] 
+**refundMinor** | **int** | Currency minor units; IDR exponent 0 in demo. | [optional] 
+**lines** | [**List<RefundLine>**](RefundLine.md) |  | [optional] [default to const []]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

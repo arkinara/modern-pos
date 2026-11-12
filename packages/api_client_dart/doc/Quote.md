@@ -18,6 +18,7 @@ Name | Type | Description | Notes
 **expiresAt** | [**DateTime**](DateTime.md) |  | 
 **totals** | [**Totals**](Totals.md) |  | 
 **lines** | [**List<QuoteLinesInner>**](QuoteLinesInner.md) |  | [default to const []]
+**promotions** | [**List<PromotionSnapshot>**](PromotionSnapshot.md) |  | [optional] [default to const []]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

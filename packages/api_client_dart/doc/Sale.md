@@ -21,6 +21,8 @@ Name | Type | Description | Notes
 **lines** | [**List<SaleLine>**](SaleLine.md) |  | [default to const []]
 **payment** | [**Payment**](Payment.md) |  | 
 **reversal** | [**Reversal**](Reversal.md) |  | [optional] 
+**promotions** | [**List<PromotionSnapshot>**](PromotionSnapshot.md) |  | [optional] [default to const []]
+**refunds** | [**List<Reversal>**](Reversal.md) | All refund records linked to this sale, including full and partial refunds. | [optional] [default to const []]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

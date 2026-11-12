@@ -9,6 +9,8 @@ import 'package:modern_pos_api_client/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **orderVersion** | **int** |  | 
+**promotionIds** | **List<String>** |  | [optional] [default to const []]
+**customerEmail** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

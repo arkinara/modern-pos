@@ -297,9 +297,9 @@ class SalesApi {
     return null;
   }
 
-  /// Record full owner reversal and explicit restock
+  /// Record a full reversal or a partial refund with explicit restock
   ///
-  /// One reversal per sale; validate restock <= original consumed amount. Does not return money through any external provider.
+  /// A full reversal omits lines and refundMinor. A partial refund names refunded sale lines, states refundMinor independently, and may restock any explicitly selected stock items. Approval rules decide whether a non-owner may proceed. No external provider performs money movement.
   ///
   /// Note: This method returns the HTTP [Response].
   ///
@@ -343,9 +343,9 @@ class SalesApi {
     );
   }
 
-  /// Record full owner reversal and explicit restock
+  /// Record a full reversal or a partial refund with explicit restock
   ///
-  /// One reversal per sale; validate restock <= original consumed amount. Does not return money through any external provider.
+  /// A full reversal omits lines and refundMinor. A partial refund names refunded sale lines, states refundMinor independently, and may restock any explicitly selected stock items. Approval rules decide whether a non-owner may proceed. No external provider performs money movement.
   ///
   /// Parameters:
   ///

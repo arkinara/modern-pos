@@ -1,6 +1,7 @@
 'use client';
 
 import type { ApiSchemas } from '@modern-pos/api-client';
+import Link from 'next/link';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircleAlert, ReceiptText, RefreshCw, RotateCcw, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -68,7 +69,22 @@ function ReverseSaleForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [partial, setPartial] = useState(false);
+  const [refundMinor, setRefundMinor] = useState('0');
+  const [lineSelection, setLineSelection] = useState<
+    Record<string, { selected: boolean; quantity: string }>
+  >({});
   const idempotency = useRef<{ signature: string; key: string } | null>(null);
+
+  const refundedByLine = new Map<string, number>();
+  for (const refund of sale.refunds ?? []) {
+    for (const line of refund.lines ?? []) {
+      refundedByLine.set(
+        line.saleLineId,
+        (refundedByLine.get(line.saleLineId) ?? 0) + line.quantity,
+      );
+    }
+  }
 
   useEffect(() => {
     if (!open) {
@@ -159,10 +175,31 @@ function ReverseSaleForm({
   const restockValid = selectedRestock.every(
     (item) => FIXED_POINT_PATTERN.test(item.quantity) && Number(item.quantity) > 0,
   );
-  const canSubmit = reason.trim().length >= 3 && restockValid && !submitting;
+  const refundLinePayload = sale.lines
+    .map((line) => ({
+      saleLineId: line.id,
+      quantity: Number(lineSelection[line.id]?.quantity ?? '0'),
+    }))
+    .filter((line) => lineSelection[line.saleLineId]?.selected);
+  const partialValid =
+    !partial ||
+    (refundLinePayload.length > 0 &&
+      refundLinePayload.every((line) => {
+        const sold = sale.lines.find((entry) => entry.id === line.saleLineId)?.quantity ?? 0;
+        const alreadyRefunded = refundedByLine.get(line.saleLineId) ?? 0;
+        return (
+          Number.isInteger(line.quantity) &&
+          line.quantity > 0 &&
+          line.quantity <= sold - alreadyRefunded
+        );
+      }) &&
+      /^[0-9]+$/.test(refundMinor.trim()) &&
+      Number(refundMinor) >= 0 &&
+      Number(refundMinor) <= sale.totals.totalMinor);
+  const canSubmit = reason.trim().length >= 3 && restockValid && partialValid && !submitting;
 
-  function signature(payload: Restock[]): string {
-    return JSON.stringify({ reason: reason.trim(), restock: payload });
+  function signature(payload: unknown): string {
+    return JSON.stringify(payload);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
@@ -174,8 +211,15 @@ function ReverseSaleForm({
       return;
     }
 
-    const payload = { reason: reason.trim(), restock: selectedRestock };
-    const signed = signature(selectedRestock);
+    const payload = partial
+      ? {
+          reason: reason.trim(),
+          restock: selectedRestock,
+          refundMinor: Number(refundMinor),
+          lines: refundLinePayload,
+        }
+      : { reason: reason.trim(), restock: selectedRestock };
+    const signed = signature(payload);
 
     if (!idempotency.current || idempotency.current.signature !== signed) {
       idempotency.current = { signature: signed, key: crypto.randomUUID() };
@@ -186,7 +230,7 @@ function ReverseSaleForm({
     try {
       const reversal = await api.reverseSale(outletId, sale.id, idempotency.current.key, payload);
       setSuccess(
-        'Reversal recorded. The original sale is unchanged and now linked to this reversal. No money was returned by any payment provider.',
+        'Correction recorded. The original sale is unchanged and this refund is linked separately. No money was returned by any payment provider.',
       );
       setOpen(false);
       onReversed(reversal);
@@ -256,11 +300,30 @@ function ReverseSaleForm({
 
   return (
     <section className="rounded-surface border border-border bg-surface-tint p-4 sm:p-6">
+      {(sale.refunds ?? []).length > 0 ? (
+        <div className="mb-4 rounded-control border border-border bg-surface p-3">
+          <h4 className="text-sm font-semibold text-text">Recorded refunds</h4>
+          <ul className="mt-2 flex flex-col gap-2 text-sm text-text">
+            {(sale.refunds ?? []).map((refund) => (
+              <li key={refund.id} className="flex flex-wrap justify-between gap-2 tabular-nums">
+                <span>
+                  {refund.kind === 'PARTIAL' ? 'Partial refund' : 'Full reversal'} ·{' '}
+                  {formatMoney(refund.refundMinor ?? 0, sale.currency, sale.currencyExponent)}
+                </span>
+                <span className="text-muted">
+                  {formatDateTimeInZone(refund.createdAt, sale.timezone)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-2">
         <h3 className="text-base font-semibold text-text">Reverse this sale</h3>
         <p className="text-sm text-muted">
-          The sale record is not deleted. Totals and items stay immutable. This is a manual
-          correction record; no money is returned by any payment provider.
+          The sale record is not deleted. Totals and items stay immutable. Choose a full reversal or
+          a partial refund that states money and restock independently. This is a manual correction
+          record; no money is returned by any payment provider.
         </p>
       </div>
 
@@ -290,6 +353,113 @@ function ReverseSaleForm({
               onChange={(event) => setReason(event.target.value)}
             />
           </label>
+
+          <fieldset className="rounded-control border border-border bg-surface p-3">
+            <legend className="px-1 text-sm font-semibold text-text">Refund scope</legend>
+            <div className="mt-2 flex flex-col gap-2 text-sm text-text">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="refund-scope"
+                  checked={!partial}
+                  onChange={() => setPartial(false)}
+                />
+                Full reversal
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="refund-scope"
+                  checked={partial}
+                  onChange={() => setPartial(true)}
+                />
+                Partial refund
+              </label>
+            </div>
+
+            {partial ? (
+              <div className="mt-4 flex flex-col gap-4">
+                <label className="flex flex-col gap-1 text-sm font-medium text-text">
+                  Money returned (minor units, 0 allowed)
+                  <input
+                    className={inputClass}
+                    inputMode="numeric"
+                    value={refundMinor}
+                    onChange={(event) => setRefundMinor(event.target.value.replace(/[^0-9]/g, ''))}
+                  />
+                  <span className="text-xs text-muted">
+                    Independent of stock: enter 0 for a restock-only refund.
+                  </span>
+                </label>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-text">Items refunded</h4>
+                  <ul className="mt-2 flex flex-col gap-2">
+                    {sale.lines.map((line) => {
+                      const sold = line.quantity;
+                      const already = refundedByLine.get(line.id) ?? 0;
+                      const remaining = Math.max(sold - already, 0);
+                      const field = lineSelection[line.id] ?? {
+                        selected: false,
+                        quantity: String(remaining),
+                      };
+                      return (
+                        <li
+                          key={line.id}
+                          className="rounded-control border border-border bg-surface-tint p-3"
+                        >
+                          <label className="flex items-start gap-3 text-sm text-text">
+                            <input
+                              type="checkbox"
+                              className="mt-0.5 size-4 shrink-0 rounded border-control"
+                              disabled={remaining === 0}
+                              checked={field.selected && remaining > 0}
+                              onChange={(event) =>
+                                setLineSelection((current) => ({
+                                  ...current,
+                                  [line.id]: {
+                                    selected: event.target.checked,
+                                    quantity: current[line.id]?.quantity ?? String(remaining),
+                                  },
+                                }))
+                              }
+                            />
+                            <span>
+                              <span className="font-medium">
+                                {line.name} · {line.variantName}
+                              </span>
+                              <span className="block text-xs text-muted">
+                                Sold {sold}; already refunded {already}; remaining {remaining}
+                              </span>
+                            </span>
+                          </label>
+                          {field.selected && remaining > 0 ? (
+                            <label className="mt-2 flex flex-col gap-1 text-sm font-medium text-text">
+                              Quantity to refund
+                              <input
+                                className={inputClass}
+                                inputMode="numeric"
+                                value={field.quantity}
+                                onChange={(event) =>
+                                  setLineSelection((current) => ({
+                                    ...current,
+                                    [line.id]: {
+                                      selected: true,
+                                      quantity: event.target.value.replace(/[^0-9]/g, ''),
+                                    },
+                                  }))
+                                }
+                              />
+                            </label>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
+          </fieldset>
 
           <div>
             <h4 className="text-sm font-semibold text-text">Restock ingredients</h4>
@@ -601,7 +771,7 @@ function SaleDetail({
 export function SalesScreen() {
   const outletId = useActiveOutletId();
   const { user } = useAuth();
-  const canReverse = user?.role === 'OWNER';
+  const canReverse = Boolean(user);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -657,6 +827,12 @@ export function SalesScreen() {
           Read-only history of records created by the Android app, filtered by outlet-local dates.
           This back office cannot create, edit or complete a sale.
         </p>
+        <Link
+          href="/promotions"
+          className="mt-4 inline-flex min-h-11 items-center rounded-control border border-control bg-surface px-4 text-sm font-medium text-text hover:bg-surface-muted"
+        >
+          Promotions and approvals
+        </Link>
       </header>
 
       <Card>

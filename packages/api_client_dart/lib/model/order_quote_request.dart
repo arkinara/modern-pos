@@ -14,26 +14,48 @@ class OrderQuoteRequest {
   /// Returns a new [OrderQuoteRequest] instance.
   OrderQuoteRequest({
     required this.orderVersion,
+    this.promotionIds = const [],
+    this.customerEmail,
   });
 
   /// Minimum value: 1
   int orderVersion;
 
+  List<String> promotionIds;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? customerEmail;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is OrderQuoteRequest &&
-    other.orderVersion == orderVersion;
+    other.orderVersion == orderVersion &&
+    _deepEquality.equals(other.promotionIds, promotionIds) &&
+    other.customerEmail == customerEmail;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (orderVersion.hashCode);
+    (orderVersion.hashCode) +
+    (promotionIds.hashCode) +
+    (customerEmail == null ? 0 : customerEmail!.hashCode);
 
   @override
-  String toString() => 'OrderQuoteRequest[orderVersion=$orderVersion]';
+  String toString() => 'OrderQuoteRequest[orderVersion=$orderVersion, promotionIds=$promotionIds, customerEmail=$customerEmail]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'orderVersion'] = this.orderVersion;
+      json[r'promotionIds'] = this.promotionIds;
+    if (this.customerEmail != null) {
+      json[r'customerEmail'] = this.customerEmail;
+    } else {
+      json[r'customerEmail'] = null;
+    }
     return json;
   }
 
@@ -55,6 +77,10 @@ class OrderQuoteRequest {
 
       return OrderQuoteRequest(
         orderVersion: mapValueOfType<int>(json, r'orderVersion')!,
+        promotionIds: json[r'promotionIds'] is Iterable
+            ? (json[r'promotionIds'] as Iterable).cast<String>().toList(growable: false)
+            : const [],
+        customerEmail: mapValueOfType<String>(json, r'customerEmail'),
       );
     }
     return null;
