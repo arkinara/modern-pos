@@ -822,7 +822,7 @@ export function SalesScreen() {
   return (
     <div className="flex w-full flex-col gap-6">
       <header>
-        <h1 className="text-3xl font-semibold tracking-tight text-text">Sales ledger</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-text">Sales</h1>
         <p className="mt-2 max-w-3xl text-sm text-muted">
           Read-only history of records created by the Android app, filtered by outlet-local dates.
           This back office cannot create, edit or complete a sale.
