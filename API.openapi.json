@@ -8225,6 +8225,7 @@
                 },
                 "modifiers": {
                   "type": "array",
+                  "maxItems": 20,
                   "items": {
                     "$ref": "#/components/schemas/LineModifierWrite"
                   }
@@ -9487,6 +9488,13 @@
                   "type": "integer",
                   "minimum": 1,
                   "maximum": 100000
+                },
+                "modifiers": {
+                  "type": "array",
+                  "maxItems": 20,
+                  "items": {
+                    "$ref": "#/components/schemas/LineModifierWrite"
+                  }
                 }
               },
               "required": [

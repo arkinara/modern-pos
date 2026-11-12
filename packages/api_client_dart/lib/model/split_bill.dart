@@ -16,7 +16,7 @@ class SplitBill {
     this.lines = const [],
   });
 
-  List<SplitBillLinesInner> lines;
+  List<OrderWriteLinesInner> lines;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is SplitBill &&
@@ -53,7 +53,7 @@ class SplitBill {
       }());
 
       return SplitBill(
-        lines: SplitBillLinesInner.listFromJson(json[r'lines']),
+        lines: OrderWriteLinesInner.listFromJson(json[r'lines']),
       );
     }
     return null;

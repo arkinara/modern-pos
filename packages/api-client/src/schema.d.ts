@@ -1354,6 +1354,7 @@ export interface components {
                 /** Format: uuid */
                 variantId: string;
                 quantity: number;
+                modifiers?: components["schemas"]["LineModifierWrite"][];
             }[];
         };
         SplitWrite: {

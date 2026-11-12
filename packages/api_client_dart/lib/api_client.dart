@@ -249,8 +249,6 @@ class ApiClient {
           return Order.fromJson(value);
         case 'OrderCancelRequest':
           return OrderCancelRequest.fromJson(value);
-        case 'OrderLinesInner':
-          return OrderLinesInner.fromJson(value);
         case 'OrderPage':
           return OrderPage.fromJson(value);
         case 'OrderQuoteRequest':
@@ -321,8 +319,6 @@ class ApiClient {
           return SettingsUpdate.fromJson(value);
         case 'SplitBill':
           return SplitBill.fromJson(value);
-        case 'SplitBillLinesInner':
-          return SplitBillLinesInner.fromJson(value);
         case 'SplitResult':
           return SplitResult.fromJson(value);
         case 'SplitWrite':

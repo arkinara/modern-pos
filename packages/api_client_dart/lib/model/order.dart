@@ -33,7 +33,7 @@ class Order {
   /// Minimum value: 1
   int version;
 
-  List<OrderLinesInner> lines;
+  List<OrderWriteLinesInner> lines;
 
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -154,7 +154,7 @@ class Order {
         deviceId: mapValueOfType<String>(json, r'deviceId')!,
         state: OrderStateEnum.fromJson(json[r'state'])!,
         version: mapValueOfType<int>(json, r'version')!,
-        lines: OrderLinesInner.listFromJson(json[r'lines']),
+        lines: OrderWriteLinesInner.listFromJson(json[r'lines']),
         tableId: mapValueOfType<String>(json, r'tableId'),
         tableLabel: mapValueOfType<String>(json, r'tableLabel'),
         splitGroupId: mapValueOfType<String>(json, r'splitGroupId'),
