@@ -4,6 +4,7 @@ import type { ApiSchemas } from '@modern-pos/api-client';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, CircleAlert, Download, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { OperationsLinks } from '@/components/operations-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -158,6 +159,8 @@ export function ReportsScreen() {
           app. Figures use the outlet IANA timezone and half-open local-day intervals.
         </p>
       </header>
+
+      <OperationsLinks />
 
       <Card>
         <CardHeader>

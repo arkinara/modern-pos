@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start -p 3000",
     "typecheck": "next typegen && tsc --noEmit",
+    "test": "node --test lib/*.test.mts",
     "format:check": "prettier --check app components lib",
     "verify:shell": "node scripts/verify-shell.cjs"
   },

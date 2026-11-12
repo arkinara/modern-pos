@@ -81,6 +81,26 @@ enum PromotionStacking {
 enum ApprovalAction {
   DISCOUNT
   REFUND
+  CASH_OUT
+}
+
+enum ShiftStatus {
+  OPEN
+  CLOSED
+}
+
+enum ShiftCashMovementKind {
+  PAID_IN
+  PAID_OUT
+}
+
+enum OperationAuditAction {
+  SHIFT_OPENED
+  SHIFT_CLOSED
+  CASH_PAID_IN
+  CASH_PAID_OUT
+  ATTENDANCE_CLOCK_IN
+  ATTENDANCE_CLOCK_OUT
 }
 
 enum PaymentKind {
@@ -143,6 +163,10 @@ model Business {
   approvalRules    ApprovalRule[]
   itemModifiers    MenuItemModifier[]
   onlinePayments   OnlinePayment[]
+  shifts           Shift[]
+  shiftMovements   ShiftCashMovement[]
+  attendance       AttendanceRecord[]
+  operationAudits  OperationAudit[]
 
   @@map("businesses")
 }
@@ -184,6 +208,10 @@ model Outlet {
   approvalRules    ApprovalRule[]
   itemModifiers    MenuItemModifier[]
   onlinePayments   OnlinePayment[]
+  shifts           Shift[]
+  shiftMovements   ShiftCashMovement[]
+  attendance       AttendanceRecord[]
+  operationAudits  OperationAudit[]
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -210,6 +238,11 @@ model User {
   reversals   SaleReversal[]  @relation("SaleReversalActor")
   orderAudits OrderAudit[]    @relation("OrderAuditActor")
   orderSplits OrderSplit[]    @relation("OrderSplitActor")
+  shiftsOpened Shift[]        @relation("ShiftOpenedBy")
+  shiftsClosed Shift[]        @relation("ShiftClosedBy")
+  shiftCashMovements ShiftCashMovement[]
+  attendanceRecords AttendanceRecord[]
+  operationAudits   OperationAudit[]
 
   @@map("users")
 }
@@ -938,4 +971,109 @@ model PrintJob {
   @@index([saleId])
   @@index([outletId, deviceId])
   @@map("print_jobs")
+}
+
+// A cashier shift owns one drawer from opening float to counted close. Monetary
+// values are integer minor units and the payout sum only changes through
+// append-only ShiftCashMovement rows. Status plus version make close a
+// compare-and-set so concurrent closes never double-count.
+model Shift {
+  id                String      @id @default(uuid()) @db.Uuid
+  businessId        String      @db.Uuid
+  outletId          String      @db.Uuid
+  openedById        String      @db.Uuid
+  closedById        String?     @db.Uuid
+  status            ShiftStatus @default(OPEN)
+  openingFloatMinor BigInt
+  cashSalesMinor    BigInt      @default(0)
+  paidInMinor       BigInt      @default(0)
+  paidOutMinor      BigInt      @default(0)
+  expectedCashMinor BigInt      @default(0)
+  countedCashMinor  BigInt?
+  discrepancyMinor  BigInt?
+  closeNote         String?
+  version           Int         @default(1)
+  openedAt          DateTime    @default(now())
+  closedAt          DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  business  Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet    Outlet              @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  openedBy  User                @relation("ShiftOpenedBy", fields: [openedById], references: [id], onDelete: Restrict)
+  closedBy  User?               @relation("ShiftClosedBy", fields: [closedById], references: [id], onDelete: Restrict)
+  movements ShiftCashMovement[]
+
+  @@index([outletId, status, openedAt])
+  @@index([openedById, status])
+  @@map("shifts")
+}
+
+// Append-only paid-in/paid-out ledger with an actor and reason on every row.
+model ShiftCashMovement {
+  id          String                 @id @default(uuid()) @db.Uuid
+  businessId  String                 @db.Uuid
+  outletId    String                 @db.Uuid
+  shiftId     String                 @db.Uuid
+  actorId     String                 @db.Uuid
+  kind        ShiftCashMovementKind
+  amountMinor BigInt
+  reason      String
+  createdAt   DateTime               @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  shift    Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  actor    User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([shiftId, createdAt])
+  @@index([outletId, createdAt])
+  @@map("shift_cash_movements")
+}
+
+// Attendance is deliberately independent from Shift: clocking in or out never
+// opens, closes or reconciles a drawer.
+model AttendanceRecord {
+  id           String    @id @default(uuid()) @db.Uuid
+  businessId   String    @db.Uuid
+  outletId     String    @db.Uuid
+  userId       String    @db.Uuid
+  clockInAt    DateTime  @default(now())
+  clockOutAt   DateTime?
+  clockInNote  String?
+  clockOutNote String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([outletId, userId, clockInAt])
+  @@index([outletId, clockInAt])
+  @@map("attendance_records")
+}
+
+// Operational audit surface for shift and attendance actions. It mirrors the
+// order_audits shape (businessId, outletId, actorId, action, metadata) but is
+// not order-scoped, so cash accountability events remain searchable.
+model OperationAudit {
+  id         String               @id @default(uuid()) @db.Uuid
+  businessId String               @db.Uuid
+  outletId   String               @db.Uuid
+  actorId    String               @db.Uuid
+  action     OperationAuditAction
+  entityType String
+  entityId   String               @db.Uuid
+  metadata   Json                 @default("{}")
+  createdAt  DateTime             @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  actor    User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([outletId, createdAt, id])
+  @@index([outletId, actorId, createdAt])
+  @@index([outletId, action, createdAt])
+  @@map("operation_audits")
 }

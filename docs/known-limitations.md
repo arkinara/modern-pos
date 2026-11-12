@@ -5,6 +5,36 @@ for this ticket. Nothing below is reported as passed without a reproduction reci
 
 ## Pending with reproduction recipes
 
+### Cash drawer and attendance hardware
+
+Status: `PENDING - requires cash drawer hardware and an Android device`.
+
+What was verified on this VPS: shift open, paid-in, paid-out, close with a
+counted amount, signed discrepancy, duplicate-close `409`, owner shift report,
+attendance clock in/out separation and owner audit search were exercised against
+the live API and are covered by unit tests. No physical drawer, printer pulse,
+barcode attendance device or employee card reader was available.
+
+Reproduction:
+
+1. Complete the verification transcript in this ticket on the staging database.
+2. Attach a physical drawer pulse reader and confirm paid-in/paid-out and close
+   do not send an unintended pulse.
+3. Record a real counted close and compare the printed/recorded discrepancy with
+   the report.
+4. Import or export attendance from the intended HR system only after an explicit
+   payroll integration ticket; C05 does not implement payroll export.
+
+### Staff operations on a physical Android device
+
+Status: `PENDING - requires Android device`.
+
+What was verified on this VPS: the C05 screens are back-office web routes that
+call the live API. The Flutter app was not given new shift or attendance screens
+in this ticket, so there is no device UI claim to verify. The debug APK still
+builds and the existing app tests remain green.
+
+
 ### Physical printed receipt
 
 Status: `PENDING - requires printer model + Android device`.
