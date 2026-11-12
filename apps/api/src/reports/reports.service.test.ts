@@ -301,6 +301,7 @@ test('daily report aggregates completed sales, payment kinds and menu quantities
   assert.deepEqual(report.paymentBreakdown, [
     { kind: PaymentKind.CASH, receivedMinor: 18000 },
     { kind: PaymentKind.MANUAL_EXTERNAL, receivedMinor: 35000 },
+    { kind: PaymentKind.ONLINE, receivedMinor: 0 },
   ]);
   assert.deepEqual(report.topItems, [
     { name: 'Iced Coffee', quantity: 3 },
@@ -325,6 +326,7 @@ test('empty range returns a zeroed report instead of an error', async () => {
   assert.deepEqual(report.paymentBreakdown, [
     { kind: PaymentKind.CASH, receivedMinor: 0 },
     { kind: PaymentKind.MANUAL_EXTERNAL, receivedMinor: 0 },
+    { kind: PaymentKind.ONLINE, receivedMinor: 0 },
   ]);
 });
 

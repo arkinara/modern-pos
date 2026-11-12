@@ -86,10 +86,21 @@ enum ApprovalAction {
 enum PaymentKind {
   CASH
   MANUAL_EXTERNAL
+  ONLINE
 }
 
 enum PaymentStatus {
   RECORDED
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentProvider {
+  MOCK
+  QRIS
 }
 
 enum PrinterTransport {
@@ -131,6 +142,7 @@ model Business {
   promotions       Promotion[]
   approvalRules    ApprovalRule[]
   itemModifiers    MenuItemModifier[]
+  onlinePayments   OnlinePayment[]
 
   @@map("businesses")
 }
@@ -171,6 +183,7 @@ model Outlet {
   promotions       Promotion[]
   approvalRules    ApprovalRule[]
   itemModifiers    MenuItemModifier[]
+  onlinePayments   OnlinePayment[]
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -639,6 +652,7 @@ model Sale {
   order            Order             @relation(fields: [orderId], references: [id], onDelete: Restrict)
   lines            SaleLine[]
   payment          PaymentRecord?
+  onlinePayment    OnlinePayment?
   reversals        SaleReversal[]
   checkoutRequests CheckoutRequest[]
   printJobs        PrintJob[]
@@ -683,6 +697,7 @@ model SaleReversal {
   lines                   Json             @default("[]")
   restock                 Json
   externalRefundPerformed Boolean          @default(false)
+  providerRefundRef       String?
   idempotencyKey          String           @db.Uuid
   requestHash             String
   createdAt               DateTime         @default(now())
@@ -777,6 +792,75 @@ model PaymentRecord {
   sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   @@map("payment_records")
+}
+
+// Online payment intent for a completed sale. It is intentionally a separate
+// record from PaymentRecord: a manual cash sale can never be reported as a
+// provider payment, and the provider lifecycle remains auditable on its own.
+model OnlinePayment {
+  id               String          @id @default(uuid()) @db.Uuid
+  businessId       String          @db.Uuid
+  outletId         String          @db.Uuid
+  saleId           String          @unique @db.Uuid
+  provider         PaymentProvider
+  providerRef      String?         @unique
+  status           PaymentStatus   @default(PENDING)
+  amountMinor      BigInt
+  refundedMinor    BigInt          @default(0)
+  currency         String          @db.VarChar(3)
+  currencyExponent Int
+  qrPayload        String?
+  providerCreatedAt DateTime?
+  settledAt        DateTime?
+  failedAt         DateTime?
+  lastError        String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  business Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet               @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  sale     Sale                 @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  events   PaymentWebhookEvent[]
+
+  @@index([businessId, outletId, status])
+  @@index([provider, status])
+  @@map("online_payments")
+}
+
+// Accepted provider webhook deliveries are stored by provider event id before
+// any local transition. The unique key is the concurrency-safe dedupe winner.
+model PaymentWebhookEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  provider        PaymentProvider
+  eventId         String
+  eventType       String
+  onlinePaymentId String?  @db.Uuid
+  payload         Json
+  receivedAt      DateTime @default(now())
+  processedAt     DateTime?
+
+  onlinePayment OnlinePayment? @relation(fields: [onlinePaymentId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, eventId])
+  @@index([onlinePaymentId])
+  @@map("payment_webhook_events")
+}
+
+// Deterministic in-repo sandbox provider ledger. It is never used when a real
+// provider is configured and holds no production credentials.
+model SandboxProviderPayment {
+  id             String        @id @default(uuid()) @db.Uuid
+  providerRef    String        @unique
+  idempotencyKey String        @unique
+  amountMinor    BigInt
+  refundedMinor  BigInt        @default(0)
+  currency       String        @db.VarChar(3)
+  status         PaymentStatus @default(PENDING)
+  refundKeys     Json          @default("[]")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("sandbox_provider_payments")
 }
 
 // Durable checkout recovery mapping. The request hash is reserved inside the

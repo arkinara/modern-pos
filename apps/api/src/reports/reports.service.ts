@@ -223,6 +223,7 @@ export class ReportsService {
     const received = new Map<PaymentKind, bigint>([
       [PaymentKind.CASH, 0n],
       [PaymentKind.MANUAL_EXTERNAL, 0n],
+      [PaymentKind.ONLINE, 0n],
     ]);
     const quantities = new Map<string, number>();
 
@@ -231,10 +232,17 @@ export class ReportsService {
         throw apiError(500, 'SALE_CORRUPT', 'Sale is missing its payment record');
       }
 
-      received.set(
-        sale.payment.kind,
-        (received.get(sale.payment.kind) ?? 0n) + sale.payment.amountMinor,
-      );
+      const settledOnline =
+        sale.payment.kind === PaymentKind.ONLINE
+          ? ['SUCCEEDED', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(sale.payment.status)
+          : true;
+
+      if (settledOnline) {
+        received.set(
+          sale.payment.kind,
+          (received.get(sale.payment.kind) ?? 0n) + sale.payment.amountMinor,
+        );
+      }
 
       for (const line of sale.lines) {
         quantities.set(line.name, (quantities.get(line.name) ?? 0) + line.quantity);
@@ -269,6 +277,10 @@ export class ReportsService {
             received.get(PaymentKind.MANUAL_EXTERNAL) ?? 0n,
             'paymentBreakdown',
           ),
+        },
+        {
+          kind: PaymentKind.ONLINE,
+          receivedMinor: wireMinor(received.get(PaymentKind.ONLINE) ?? 0n, 'paymentBreakdown'),
         },
       ],
       topItems,

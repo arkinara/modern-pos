@@ -8,6 +8,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestIdMiddleware } from './common/request-id.middleware';
 import { HealthController } from './health/health.controller';
 import { OutletsModule } from './outlets/outlets.module';
+import { PaymentsModule } from './payments/payments.module';
 import { PrintingModule } from './printing/printing.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PromotionsModule } from './promotions/promotions.module';
@@ -28,6 +29,7 @@ import { StockModule } from './stock/stock.module';
     RecipeModule,
     SalesModule,
     PromotionsModule,
+    PaymentsModule,
     ReportsModule,
     PrintingModule,
   ],
