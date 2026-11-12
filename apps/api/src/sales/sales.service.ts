@@ -3304,15 +3304,29 @@ export class SalesService {
 
   private lineSignatures(lines: QuoteLineSnapshot[]): string {
     return lines
-      .map((line) =>
-        [
+      .map((line) => {
+        const modifiers = (line.modifiers ?? [])
+          .map((modifier) =>
+            [
+              modifier.modifierId,
+              modifier.quantity,
+              modifier.priceDeltaMinor,
+              modifier.lineDeltaMinor,
+              modifier.stockItemId ?? '',
+              modifier.quantityPerSaleUnit ?? '',
+            ].join(':'),
+          )
+          .sort()
+          .join(',');
+
+        return [
           line.variantId,
           line.quantity,
           line.unitPriceMinor,
           line.lineSubtotalMinor,
-          JSON.stringify(line.modifiers ?? []),
-        ].join(':'),
-      )
+          modifiers,
+        ].join(':');
+      })
       .sort()
       .join('|');
   }
