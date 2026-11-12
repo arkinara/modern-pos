@@ -143,9 +143,12 @@ Rules enforced by the API:
   money or stock movement. The same key with a different payload returns
   `409 IDEMPOTENCY_CONFLICT`.
 
-`externalRefundPerformed` is always `false`. This build has no payment-provider
-integration and never claims that money was moved externally. Cash, card or
-wallet settlement remains an operational step outside this API.
+Manual reversals and other non-cash corrections keep `externalRefundPerformed`
+`false`; they never claim that money was moved externally. Online sales use the
+provider refund path described in `docs/payments.md`: `externalRefundPerformed`
+is `true` only after the provider confirms the refund, and the stored
+`providerRefundRef` links the reversal to that provider result. Cash, card or
+wallet settlement outside that provider flow remains an operational step.
 
 Reports show each refund as a linked record separate from the sale. Full
 reversals keep the existing CSV reversal rows; partial refunds add `REFUND` rows
@@ -177,7 +180,7 @@ system. New actions are:
 | Action | Written when | Metadata |
 | --- | --- | --- |
 | `PROMOTION` | A sale finalizes with one or more promotions. | `saleId`, `discountMinor`, promotion snapshot. |
-| `REFUND` | A full reversal or partial refund commits. | `saleId`, `reversalId`, `kind`, `refundMinor`, refunded lines, restock, reason, `externalRefundPerformed: false`. |
+| `REFUND` | A full reversal or partial refund commits. | `saleId`, `reversalId`, `kind`, `refundMinor`, refunded lines, restock, reason, `externalRefundPerformed` (`false` for manual corrections, `true` only for provider-confirmed refunds). |
 | `APPROVAL` | An approval threshold is evaluated. | `operation`, `action`, `allowed`, `elevated`, `reason`, `amountMinor`, `thresholdMinor`. |
 
 `GET /outlets/{outletId}/orders/{orderId}/audit` remains owner-only and returns
