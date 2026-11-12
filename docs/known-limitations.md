@@ -138,9 +138,23 @@ and record the visible state and paper result.
 | High availability / multiple API instances | Not implemented | Single VPS |
 | Production TLS and secret manager | Not implemented | Staging uses local env placeholders |
 | Tax/service policy beyond fixed basis points | Not implemented | Settings support integer bps only |
-| Discounts, promotions, loyalty | Not implemented | Not in Phase 1 scope |
+| Discounts and promotions | Partially implemented | Percentage/fixed promotions with explicit eligibility, stacking and half-up rounding are enforced server-side (#21). Loyalty is not implemented. |
+| External payment refunds | Not implemented | `externalRefundPerformed` is always false; no provider integration (#22). |
 | Multi-currency per sale | Not implemented | One currency/exponent per outlet |
 | User activity audit beyond sale/stock/reversal/order records | Not implemented | Order open/transfer/split/cancel/finalize transitions are append-only audited; admin/user changes are not |
+
+## Promotions, modifiers, partial refunds and approvals (#21)
+
+What was verified on this VPS: promotion eligibility, stacking rejection, half-up
+rounding, fixed-discount capping, modifier pricing and stock consumption, partial
+refunds with independent money/restock decisions, repeated-line rejection,
+idempotent concurrent refunds, approval thresholds for cashier and owner, and
+append-only approval/refund/promotion audit rows. Details and the limit list are
+in `docs/promotions-refunds.md`.
+
+What was not verified: any real payment-provider refund. No money moves through
+this API; `externalRefundPerformed` is always `false` and settlement remains a
+manual operational step. This is deferred to the payment-integration ticket.
 
 ## Verification limits of this ticket
 

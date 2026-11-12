@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 **deviceId** | **String** |  | 
 **state** | **String** |  | 
 **version** | **int** |  | 
-**lines** | [**List<OrderWriteLinesInner>**](OrderWriteLinesInner.md) |  | [default to const []]
+**lines** | [**List<OrderLinesInner>**](OrderLinesInner.md) |  | [default to const []]
 **tableId** | **String** |  | [optional] 
 **tableLabel** | **String** |  | [optional] 
 **splitGroupId** | **String** |  | [optional] 

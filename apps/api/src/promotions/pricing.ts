@@ -108,14 +108,10 @@ function matchesCustomer(rule: PromotionRule, customerEmail: string | null): boo
   return allowed.includes(customerEmail.trim().toLowerCase());
 }
 
-function eligibleSubtotal(
-  rule: PromotionRule,
-  lines: PromotionCandidateLine[],
-): bigint | null {
+function eligibleSubtotal(rule: PromotionRule, lines: PromotionCandidateLine[]): bigint | null {
   const variantIds = rule.eligibility.variantIds;
   const menuItemIds = rule.eligibility.menuItemIds;
-  const scoped =
-    (variantIds && variantIds.length > 0) || (menuItemIds && menuItemIds.length > 0);
+  const scoped = (variantIds && variantIds.length > 0) || (menuItemIds && menuItemIds.length > 0);
 
   let subtotal = 0n;
 
@@ -235,9 +231,14 @@ export function applyPromotions(
     const eligible = eligibleSubtotal(rule, lines);
 
     if (eligible === null || eligible <= 0n) {
-      throw apiError(422, 'PROMOTION_NOT_ELIGIBLE', 'Basket has no eligible items for this promotion', {
-        details: { promotionId: rule.id },
-      });
+      throw apiError(
+        422,
+        'PROMOTION_NOT_ELIGIBLE',
+        'Basket has no eligible items for this promotion',
+        {
+          details: { promotionId: rule.id },
+        },
+      );
     }
 
     if (eligible < rule.minBasketMinor) {

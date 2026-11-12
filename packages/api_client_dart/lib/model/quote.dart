@@ -23,6 +23,7 @@ class Quote {
     required this.expiresAt,
     required this.totals,
     this.lines = const [],
+    this.promotions = const [],
   });
 
   String id;
@@ -49,6 +50,8 @@ class Quote {
 
   List<QuoteLinesInner> lines;
 
+  List<PromotionSnapshot> promotions;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is Quote &&
     other.id == id &&
@@ -60,7 +63,8 @@ class Quote {
     other.calculation == calculation &&
     other.expiresAt == expiresAt &&
     other.totals == totals &&
-    _deepEquality.equals(other.lines, lines);
+    _deepEquality.equals(other.lines, lines) &&
+    _deepEquality.equals(other.promotions, promotions);
 
   @override
   int get hashCode =>
@@ -74,10 +78,11 @@ class Quote {
     (calculation.hashCode) +
     (expiresAt.hashCode) +
     (totals.hashCode) +
-    (lines.hashCode);
+    (lines.hashCode) +
+    (promotions.hashCode);
 
   @override
-  String toString() => 'Quote[id=$id, orderId=$orderId, orderVersion=$orderVersion, settingsVersion=$settingsVersion, currency=$currency, currencyExponent=$currencyExponent, calculation=$calculation, expiresAt=$expiresAt, totals=$totals, lines=$lines]';
+  String toString() => 'Quote[id=$id, orderId=$orderId, orderVersion=$orderVersion, settingsVersion=$settingsVersion, currency=$currency, currencyExponent=$currencyExponent, calculation=$calculation, expiresAt=$expiresAt, totals=$totals, lines=$lines, promotions=$promotions]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -91,6 +96,7 @@ class Quote {
       json[r'expiresAt'] = this.expiresAt.toUtc().toIso8601String();
       json[r'totals'] = this.totals;
       json[r'lines'] = this.lines;
+      json[r'promotions'] = this.promotions;
     return json;
   }
 
@@ -139,6 +145,7 @@ class Quote {
         expiresAt: mapDateTime(json, r'expiresAt', r'')!,
         totals: Totals.fromJson(json[r'totals'])!,
         lines: QuoteLinesInner.listFromJson(json[r'lines']),
+        promotions: PromotionSnapshot.listFromJson(json[r'promotions']),
       );
     }
     return null;

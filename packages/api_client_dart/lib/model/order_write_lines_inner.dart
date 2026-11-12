@@ -15,6 +15,7 @@ class OrderWriteLinesInner {
   OrderWriteLinesInner({
     required this.variantId,
     required this.quantity,
+    this.modifiers = const [],
   });
 
   String variantId;
@@ -23,24 +24,29 @@ class OrderWriteLinesInner {
   /// Maximum value: 100000
   int quantity;
 
+  List<LineModifierWrite> modifiers;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is OrderWriteLinesInner &&
     other.variantId == variantId &&
-    other.quantity == quantity;
+    other.quantity == quantity &&
+    _deepEquality.equals(other.modifiers, modifiers);
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (variantId.hashCode) +
-    (quantity.hashCode);
+    (quantity.hashCode) +
+    (modifiers.hashCode);
 
   @override
-  String toString() => 'OrderWriteLinesInner[variantId=$variantId, quantity=$quantity]';
+  String toString() => 'OrderWriteLinesInner[variantId=$variantId, quantity=$quantity, modifiers=$modifiers]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'variantId'] = this.variantId;
       json[r'quantity'] = this.quantity;
+      json[r'modifiers'] = this.modifiers;
     return json;
   }
 
@@ -65,6 +71,7 @@ class OrderWriteLinesInner {
       return OrderWriteLinesInner(
         variantId: mapValueOfType<String>(json, r'variantId')!,
         quantity: mapValueOfType<int>(json, r'quantity')!,
+        modifiers: LineModifierWrite.listFromJson(json[r'modifiers']),
       );
     }
     return null;

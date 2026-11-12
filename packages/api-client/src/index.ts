@@ -113,6 +113,27 @@ export interface ApiClient {
     outletId: string,
     query: { from: string; to: string },
   ): Promise<{ filename: string; csv: string }>;
+  listPromotions(outletId: string): Promise<ApiSchemas['Promotion'][]>;
+  createPromotion(
+    outletId: string,
+    promotion: ApiSchemas['PromotionWrite'],
+  ): Promise<ApiSchemas['Promotion']>;
+  updatePromotion(
+    outletId: string,
+    promotionId: string,
+    promotion: ApiSchemas['PromotionUpdate'],
+  ): Promise<ApiSchemas['Promotion']>;
+  listModifiers(outletId: string): Promise<ApiSchemas['Modifier'][]>;
+  createModifier(
+    outletId: string,
+    modifier: ApiSchemas['ModifierWrite'],
+  ): Promise<ApiSchemas['Modifier']>;
+  listApprovalRules(outletId: string): Promise<ApiSchemas['ApprovalRule'][]>;
+  upsertApprovalRule(
+    outletId: string,
+    action: 'DISCOUNT' | 'REFUND',
+    rule: ApiSchemas['ApprovalRuleWrite'],
+  ): Promise<ApiSchemas['ApprovalRule']>;
 }
 
 function toQueryString(query: Record<string, string | number | undefined>): string {
@@ -357,5 +378,33 @@ export function createApiClient({
       );
       return { filename: exported.filename, csv: exported.body };
     },
+    listPromotions: (outletId) =>
+      request<ApiSchemas['Promotion'][]>(`/v1/outlets/${encodeURIComponent(outletId)}/promotions`),
+    createPromotion: (outletId, promotion) =>
+      request<ApiSchemas['Promotion']>(`/v1/outlets/${encodeURIComponent(outletId)}/promotions`, {
+        method: 'POST',
+        body: JSON.stringify(promotion),
+      }),
+    updatePromotion: (outletId, promotionId, promotion) =>
+      request<ApiSchemas['Promotion']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/promotions/${encodeURIComponent(promotionId)}`,
+        { method: 'PATCH', body: JSON.stringify(promotion) },
+      ),
+    listModifiers: (outletId) =>
+      request<ApiSchemas['Modifier'][]>(`/v1/outlets/${encodeURIComponent(outletId)}/modifiers`),
+    createModifier: (outletId, modifier) =>
+      request<ApiSchemas['Modifier']>(`/v1/outlets/${encodeURIComponent(outletId)}/modifiers`, {
+        method: 'POST',
+        body: JSON.stringify(modifier),
+      }),
+    listApprovalRules: (outletId) =>
+      request<ApiSchemas['ApprovalRule'][]>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/approval-rules`,
+      ),
+    upsertApprovalRule: (outletId, action, rule) =>
+      request<ApiSchemas['ApprovalRule']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/approval-rules/${action}`,
+        { method: 'PUT', body: JSON.stringify(rule) },
+      ),
   };
 }

@@ -16,6 +16,8 @@ Method | HTTP request | Description
 [**catalogList**](CatalogApi.md#cataloglist) | **GET** /outlets/{outletId}/menu | Search catalog with advisory availability
 [**catalogUpdate**](CatalogApi.md#catalogupdate) | **PATCH** /outlets/{outletId}/menu/{menuId} | Update menu using revision
 [**catalogUpdateVariant**](CatalogApi.md#catalogupdatevariant) | **PATCH** /outlets/{outletId}/variants/{variantId} | Update price and stock policy
+[**modifiersCreate**](CatalogApi.md#modifierscreate) | **POST** /outlets/{outletId}/modifiers | Create an item modifier
+[**modifiersList**](CatalogApi.md#modifierslist) | **GET** /outlets/{outletId}/modifiers | List item modifiers visible to the outlet
 
 
 # **catalogArchive**
@@ -364,6 +366,104 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **modifiersCreate**
+> Modifier modifiersCreate(outletId, modifierWrite)
+
+Create an item modifier
+
+A modifier changes the unit price and may consume one stock item per selected modifier quantity.
+
+### Example
+```dart
+import 'package:modern_pos_api_client/api.dart';
+// TODO Configure HTTP Bearer authorization: bearerAuth
+// Case 1. Use String Token
+//defaultApiClient.getAuthentication<HttpBearerAuth>('bearerAuth').setAccessToken('YOUR_ACCESS_TOKEN');
+// Case 2. Use Function which generate token.
+// String yourTokenGeneratorFunction() { ... }
+//defaultApiClient.getAuthentication<HttpBearerAuth>('bearerAuth').setAccessToken(yourTokenGeneratorFunction);
+
+final api_instance = CatalogApi();
+final outletId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final modifierWrite = ModifierWrite(); // ModifierWrite | 
+
+try {
+    final result = api_instance.modifiersCreate(outletId, modifierWrite);
+    print(result);
+} catch (e) {
+    print('Exception when calling CatalogApi->modifiersCreate: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **outletId** | **String**|  | 
+ **modifierWrite** | [**ModifierWrite**](ModifierWrite.md)|  | 
+
+### Return type
+
+[**Modifier**](Modifier.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **modifiersList**
+> List<Modifier> modifiersList(outletId)
+
+List item modifiers visible to the outlet
+
+### Example
+```dart
+import 'package:modern_pos_api_client/api.dart';
+// TODO Configure HTTP Bearer authorization: bearerAuth
+// Case 1. Use String Token
+//defaultApiClient.getAuthentication<HttpBearerAuth>('bearerAuth').setAccessToken('YOUR_ACCESS_TOKEN');
+// Case 2. Use Function which generate token.
+// String yourTokenGeneratorFunction() { ... }
+//defaultApiClient.getAuthentication<HttpBearerAuth>('bearerAuth').setAccessToken(yourTokenGeneratorFunction);
+
+final api_instance = CatalogApi();
+final outletId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.modifiersList(outletId);
+    print(result);
+} catch (e) {
+    print('Exception when calling CatalogApi->modifiersList: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **outletId** | **String**|  | 
+
+### Return type
+
+[**List<Modifier>**](Modifier.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

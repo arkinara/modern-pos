@@ -15,30 +15,57 @@ class ReversalWrite {
   ReversalWrite({
     required this.reason,
     this.restock = const [],
+    this.refundMinor,
+    this.lines = const [],
   });
 
   String reason;
 
   List<Restock> restock;
 
+  /// Currency minor units; IDR exponent 0 in demo.
+  ///
+  /// Minimum value: 0
+  /// Maximum value: 9007199254740991
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? refundMinor;
+
+  /// Omit for a full reversal; provide one or more lines for a partial refund.
+  List<RefundLine> lines;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ReversalWrite &&
     other.reason == reason &&
-    _deepEquality.equals(other.restock, restock);
+    _deepEquality.equals(other.restock, restock) &&
+    other.refundMinor == refundMinor &&
+    _deepEquality.equals(other.lines, lines);
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (reason.hashCode) +
-    (restock.hashCode);
+    (restock.hashCode) +
+    (refundMinor == null ? 0 : refundMinor!.hashCode) +
+    (lines.hashCode);
 
   @override
-  String toString() => 'ReversalWrite[reason=$reason, restock=$restock]';
+  String toString() => 'ReversalWrite[reason=$reason, restock=$restock, refundMinor=$refundMinor, lines=$lines]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'reason'] = this.reason;
       json[r'restock'] = this.restock;
+    if (this.refundMinor != null) {
+      json[r'refundMinor'] = this.refundMinor;
+    } else {
+      json[r'refundMinor'] = null;
+    }
+      json[r'lines'] = this.lines;
     return json;
   }
 
@@ -63,6 +90,8 @@ class ReversalWrite {
       return ReversalWrite(
         reason: mapValueOfType<String>(json, r'reason')!,
         restock: Restock.listFromJson(json[r'restock']),
+        refundMinor: mapValueOfType<int>(json, r'refundMinor'),
+        lines: RefundLine.listFromJson(json[r'lines']),
       );
     }
     return null;

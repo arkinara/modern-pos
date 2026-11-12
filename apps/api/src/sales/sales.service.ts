@@ -1659,9 +1659,14 @@ export class SalesService {
       }
 
       if (seen.has(saleLineId)) {
-        throw apiError(422, 'DUPLICATE_REFUND_LINE', 'A sale line can appear only once per refund', {
-          details: { saleLineId },
-        });
+        throw apiError(
+          422,
+          'DUPLICATE_REFUND_LINE',
+          'A sale line can appear only once per refund',
+          {
+            details: { saleLineId },
+          },
+        );
       }
 
       seen.add(saleLineId);
@@ -1764,13 +1769,18 @@ export class SalesService {
     const refundMinor = partial ? (context.refundMinor ?? 0n) : sale.totalMinor;
 
     if (priorRefunded + refundMinor > sale.totalMinor) {
-      throw apiError(422, 'REFUND_EXCEEDS_SALE', 'Refund amount exceeds the unrefunded sale total', {
-        details: {
-          saleTotalMinor: toWireMinor(sale.totalMinor, 'totalMinor'),
-          alreadyRefundedMinor: toWireMinor(priorRefunded, 'alreadyRefundedMinor'),
-          requestedMinor: toWireMinor(refundMinor, 'refundMinor'),
+      throw apiError(
+        422,
+        'REFUND_EXCEEDS_SALE',
+        'Refund amount exceeds the unrefunded sale total',
+        {
+          details: {
+            saleTotalMinor: toWireMinor(sale.totalMinor, 'totalMinor'),
+            alreadyRefundedMinor: toWireMinor(priorRefunded, 'alreadyRefundedMinor'),
+            requestedMinor: toWireMinor(refundMinor, 'refundMinor'),
+          },
         },
-      });
+      );
     }
 
     if (refundLines) {
@@ -1796,9 +1806,18 @@ export class SalesService {
         const already = priorByLine.get(line.saleLineId) ?? 0;
 
         if (already >= sold) {
-          throw apiError(409, 'REFUND_ALREADY_COMPLETED', 'This sale line is already fully refunded', {
-            details: { saleLineId: line.saleLineId, soldQuantity: sold, refundedQuantity: already },
-          });
+          throw apiError(
+            409,
+            'REFUND_ALREADY_COMPLETED',
+            'This sale line is already fully refunded',
+            {
+              details: {
+                saleLineId: line.saleLineId,
+                soldQuantity: sold,
+                refundedQuantity: already,
+              },
+            },
+          );
         }
 
         if (already + line.quantity > sold) {
@@ -1944,9 +1963,7 @@ export class SalesService {
     return this.toReversal(reversal);
   }
 
-  private sumPriorRestock(
-    reversals: { restock: Prisma.JsonValue }[],
-  ): Map<string, Prisma.Decimal> {
+  private sumPriorRestock(reversals: { restock: Prisma.JsonValue }[]): Map<string, Prisma.Decimal> {
     const totals = new Map<string, Prisma.Decimal>();
 
     for (const reversal of reversals) {
@@ -3113,7 +3130,11 @@ export class SalesService {
     variants: Map<string, VariantPricingRecord>,
   ): Promise<Map<string, ModifierRecord>> {
     const ids = [
-      ...new Set(lines.flatMap((line) => this.readStoredLineModifiers(line.modifiers).map((m) => m.modifierId))),
+      ...new Set(
+        lines.flatMap((line) =>
+          this.readStoredLineModifiers(line.modifiers).map((m) => m.modifierId),
+        ),
+      ),
     ];
 
     if (ids.length === 0) {
@@ -3140,9 +3161,7 @@ export class SalesService {
           name: row.name,
           priceDeltaMinor: row.priceDeltaMinor,
           stockItemId: row.stockItemId,
-          quantityPerSaleUnit: row.quantityPerSaleUnit
-            ? row.quantityPerSaleUnit.toString()
-            : null,
+          quantityPerSaleUnit: row.quantityPerSaleUnit ? row.quantityPerSaleUnit.toString() : null,
         },
       ]),
     );
@@ -3264,8 +3283,7 @@ export class SalesService {
     const sameLines =
       quotedLines.length === currentLines.length &&
       this.lineSignatures(quotedLines) === this.lineSignatures(currentLines);
-    const samePromotions =
-      JSON.stringify(quotedPromotions) === JSON.stringify(currentPromotions);
+    const samePromotions = JSON.stringify(quotedPromotions) === JSON.stringify(currentPromotions);
 
     if (
       !sameLines ||

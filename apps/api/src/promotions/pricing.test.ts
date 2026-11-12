@@ -154,7 +154,12 @@ test('stacking allows only compatible promotions and rejects duplicate ids', () 
     percentageBps: 500,
     stacking: PromotionStacking.STACKABLE,
   });
-  const exclusive = rule({ id: 'exclusive', amountMinor: 100n, kind: PromotionKind.FIXED_AMOUNT, percentageBps: null });
+  const exclusive = rule({
+    id: 'exclusive',
+    amountMinor: 100n,
+    kind: PromotionKind.FIXED_AMOUNT,
+    percentageBps: null,
+  });
 
   const combined = applyPromotions(lines(1000n, 1), [stackable, { ...stackable, id: 'stack2' }], {
     outletId: OUTLET_ID,

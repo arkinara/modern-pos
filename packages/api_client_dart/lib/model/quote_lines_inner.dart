@@ -20,6 +20,7 @@ class QuoteLinesInner {
     required this.unitPriceMinor,
     required this.lineSubtotalMinor,
     required this.recipeVersion,
+    this.modifiers = const [],
   });
 
   String variantId;
@@ -47,6 +48,8 @@ class QuoteLinesInner {
   /// Minimum value: 1
   int? recipeVersion;
 
+  List<LineModifier> modifiers;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is QuoteLinesInner &&
     other.variantId == variantId &&
@@ -55,7 +58,8 @@ class QuoteLinesInner {
     other.quantity == quantity &&
     other.unitPriceMinor == unitPriceMinor &&
     other.lineSubtotalMinor == lineSubtotalMinor &&
-    other.recipeVersion == recipeVersion;
+    other.recipeVersion == recipeVersion &&
+    _deepEquality.equals(other.modifiers, modifiers);
 
   @override
   int get hashCode =>
@@ -66,10 +70,11 @@ class QuoteLinesInner {
     (quantity.hashCode) +
     (unitPriceMinor.hashCode) +
     (lineSubtotalMinor.hashCode) +
-    (recipeVersion == null ? 0 : recipeVersion!.hashCode);
+    (recipeVersion == null ? 0 : recipeVersion!.hashCode) +
+    (modifiers.hashCode);
 
   @override
-  String toString() => 'QuoteLinesInner[variantId=$variantId, name=$name, variantName=$variantName, quantity=$quantity, unitPriceMinor=$unitPriceMinor, lineSubtotalMinor=$lineSubtotalMinor, recipeVersion=$recipeVersion]';
+  String toString() => 'QuoteLinesInner[variantId=$variantId, name=$name, variantName=$variantName, quantity=$quantity, unitPriceMinor=$unitPriceMinor, lineSubtotalMinor=$lineSubtotalMinor, recipeVersion=$recipeVersion, modifiers=$modifiers]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -84,6 +89,7 @@ class QuoteLinesInner {
     } else {
       json[r'recipeVersion'] = null;
     }
+      json[r'modifiers'] = this.modifiers;
     return json;
   }
 
@@ -122,6 +128,7 @@ class QuoteLinesInner {
         unitPriceMinor: mapValueOfType<int>(json, r'unitPriceMinor')!,
         lineSubtotalMinor: mapValueOfType<int>(json, r'lineSubtotalMinor')!,
         recipeVersion: mapValueOfType<int>(json, r'recipeVersion'),
+        modifiers: LineModifier.listFromJson(json[r'modifiers']),
       );
     }
     return null;

@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Modern POS API baseline",
-    "version": "0.7.0",
-    "description": "Implementation contract for the Modern POS API. Authentication, settings, catalog, stock, recipes, sales, reports, printing and the Phase 2 table-order extensions are implemented in apps/api. Read ARCHITECTURE.md for rules and authorization."
+    "version": "0.8.0",
+    "description": "Implementation contract for the Modern POS API. Authentication, settings, catalog, stock, recipes, sales, reports, printing, the Phase 2 table-order extensions, promotions, item modifiers, partial refunds and approval rules are implemented in apps/api. Read ARCHITECTURE.md for rules and authorization."
   },
   "servers": [
     {
@@ -3868,6 +3868,19 @@
                   "orderVersion": {
                     "type": "integer",
                     "minimum": 1
+                  },
+                  "promotionIds": {
+                    "type": "array",
+                    "maxItems": 20,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "customerEmail": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 200
                   }
                 },
                 "required": [
@@ -4429,12 +4442,13 @@
     "/outlets/{outletId}/sales/{saleId}/reversals": {
       "post": {
         "operationId": "sales_reverse",
-        "summary": "Record full owner reversal and explicit restock",
+        "summary": "Record a full reversal or a partial refund with explicit restock",
         "tags": [
           "sales"
         ],
         "x-roles": [
-          "OWNER"
+          "OWNER",
+          "CASHIER"
         ],
         "parameters": [
           {
@@ -4568,7 +4582,7 @@
             }
           }
         },
-        "description": "One reversal per sale; validate restock <= original consumed amount. Does not return money through any external provider."
+        "description": "A full reversal omits lines and refundMinor. A partial refund names refunded sale lines, states refundMinor independently, and may restock any explicitly selected stock items. Approval rules decide whether a non-owner may proceed. No external provider performs money movement."
       }
     },
     "/outlets/{outletId}/reports/daily": {
@@ -6377,6 +6391,882 @@
           }
         }
       }
+    },
+    "/outlets/{outletId}/promotions": {
+      "get": {
+        "operationId": "promotions_list",
+        "summary": "List promotions visible to the outlet",
+        "tags": [
+          "promotions"
+        ],
+        "x-roles": [
+          "OWNER",
+          "CASHIER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Promotion"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error 503; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "promotions_create",
+        "summary": "Create an outlet promotion",
+        "tags": [
+          "promotions"
+        ],
+        "x-roles": [
+          "OWNER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Promotion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error 503; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionWrite"
+              }
+            }
+          }
+        },
+        "description": "Eligibility, stacking and rounding are enforced by the server. The outlet scope is the request outlet."
+      }
+    },
+    "/outlets/{outletId}/promotions/{promotionId}": {
+      "patch": {
+        "operationId": "promotions_update",
+        "summary": "Update a promotion with optimistic revision",
+        "tags": [
+          "promotions"
+        ],
+        "x-roles": [
+          "OWNER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "promotionId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Promotion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error 503; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/outlets/{outletId}/modifiers": {
+      "get": {
+        "operationId": "modifiers_list",
+        "summary": "List item modifiers visible to the outlet",
+        "tags": [
+          "catalog"
+        ],
+        "x-roles": [
+          "OWNER",
+          "CASHIER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Modifier"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error 503; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "modifiers_create",
+        "summary": "Create an item modifier",
+        "tags": [
+          "catalog"
+        ],
+        "x-roles": [
+          "OWNER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Modifier"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error 503; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModifierWrite"
+              }
+            }
+          }
+        },
+        "description": "A modifier changes the unit price and may consume one stock item per selected modifier quantity."
+      }
+    },
+    "/outlets/{outletId}/approval-rules": {
+      "get": {
+        "operationId": "approval_rules_list",
+        "summary": "List configured approval thresholds",
+        "tags": [
+          "approvals"
+        ],
+        "x-roles": [
+          "OWNER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalRule"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error 503; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/outlets/{outletId}/approval-rules/{action}": {
+      "put": {
+        "operationId": "approval_rules_upsert",
+        "summary": "Create or replace an approval threshold",
+        "tags": [
+          "approvals"
+        ],
+        "x-roles": [
+          "OWNER"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outletId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DISCOUNT",
+                "REFUND"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRule"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error 400; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error 401; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error 403; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error 404; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error 422; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error 429; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error 503; see ARCHITECTURE.md for stable error codes and recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRuleWrite"
+              }
+            }
+          }
+        },
+        "description": "Owner always passes. A non-owner passes only when the amount is at or below the active threshold."
+      }
     }
   },
   "components": {
@@ -7223,6 +8113,13 @@
                   "type": "integer",
                   "minimum": 1,
                   "maximum": 100000
+                },
+                "modifiers": {
+                  "type": "array",
+                  "maxItems": 20,
+                  "items": {
+                    "$ref": "#/components/schemas/LineModifierWrite"
+                  }
                 }
               },
               "required": [
@@ -7265,6 +8162,13 @@
                   "type": "integer",
                   "minimum": 1,
                   "maximum": 100000
+                },
+                "modifiers": {
+                  "type": "array",
+                  "maxItems": 20,
+                  "items": {
+                    "$ref": "#/components/schemas/LineModifierWrite"
+                  }
                 }
               },
               "required": [
@@ -7318,6 +8222,12 @@
                   "type": "integer",
                   "minimum": 1,
                   "maximum": 100000
+                },
+                "modifiers": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LineModifierWrite"
+                  }
                 }
               },
               "required": [
@@ -7375,6 +8285,12 @@
             "description": "Currency minor units; IDR exponent 0 in demo."
           },
           "totalMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "discountMinor": {
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991,
@@ -7505,6 +8421,12 @@
                   "type": "integer",
                   "minimum": 1,
                   "nullable": true
+                },
+                "modifiers": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LineModifier"
+                  }
                 }
               },
               "required": [
@@ -7516,6 +8438,12 @@
                 "lineSubtotalMinor",
                 "recipeVersion"
               ]
+            }
+          },
+          "promotions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromotionSnapshot"
             }
           }
         },
@@ -7626,6 +8554,12 @@
             "minimum": 0,
             "maximum": 9007199254740991,
             "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "modifiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LineModifier"
+            }
           }
         },
         "required": [
@@ -7740,7 +8674,20 @@
           },
           "reversal": {
             "$ref": "#/components/schemas/Reversal",
-            "description": "Present only after an owner records a reversal for this sale."
+            "description": "Present only after a full reversal. Partial refunds appear in refunds."
+          },
+          "promotions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromotionSnapshot"
+            }
+          },
+          "refunds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reversal"
+            },
+            "description": "All refund records linked to this sale, including full and partial refunds."
           }
         },
         "required": [
@@ -7807,6 +8754,20 @@
             "items": {
               "$ref": "#/components/schemas/Restock"
             }
+          },
+          "refundMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "lines": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/RefundLine"
+            },
+            "description": "Omit for a full reversal; provide one or more lines for a partial refund."
           }
         },
         "required": [
@@ -7844,6 +8805,25 @@
             "enum": [
               false
             ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "FULL",
+              "PARTIAL"
+            ]
+          },
+          "refundMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RefundLine"
+            }
           }
         },
         "required": [
@@ -8627,6 +9607,508 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "PromotionEligibility": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "variantIds": {
+            "type": "array",
+            "maxItems": 500,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "menuItemIds": {
+            "type": "array",
+            "maxItems": 500,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "customerEmails": {
+            "type": "array",
+            "maxItems": 500,
+            "items": {
+              "type": "string",
+              "format": "email",
+              "maxLength": 200
+            }
+          }
+        },
+        "description": "Explicit allow lists. Missing or empty means all variants/items/customers for the scoped outlet."
+      },
+      "Promotion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED_AMOUNT"
+            ]
+          },
+          "percentageBps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000,
+            "nullable": true
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo.",
+            "nullable": true
+          },
+          "minBasketMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "stacking": {
+            "type": "string",
+            "enum": [
+              "EXCLUSIVE",
+              "STACKABLE"
+            ]
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": -1000,
+            "maximum": 1000
+          },
+          "eligibility": {
+            "$ref": "#/components/schemas/PromotionEligibility"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "percentageBps",
+          "amountMinor",
+          "minBasketMinor",
+          "startsAt",
+          "endsAt",
+          "active",
+          "stacking",
+          "priority",
+          "eligibility",
+          "revision",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PromotionWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED_AMOUNT"
+            ]
+          },
+          "percentageBps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "minBasketMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "stacking": {
+            "type": "string",
+            "enum": [
+              "EXCLUSIVE",
+              "STACKABLE"
+            ]
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": -1000,
+            "maximum": 1000
+          },
+          "eligibility": {
+            "$ref": "#/components/schemas/PromotionEligibility"
+          }
+        },
+        "required": [
+          "name",
+          "kind"
+        ]
+      },
+      "PromotionUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED_AMOUNT"
+            ]
+          },
+          "percentageBps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "minBasketMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "stacking": {
+            "type": "string",
+            "enum": [
+              "EXCLUSIVE",
+              "STACKABLE"
+            ]
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": -1000,
+            "maximum": 1000
+          },
+          "eligibility": {
+            "$ref": "#/components/schemas/PromotionEligibility"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "revision"
+        ]
+      },
+      "PromotionSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "promotionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED_AMOUNT"
+            ]
+          },
+          "discountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          }
+        },
+        "required": [
+          "promotionId",
+          "name",
+          "kind",
+          "discountMinor"
+        ]
+      },
+      "Modifier": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "menuItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "priceDeltaMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "stockItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "quantityPerSaleUnit": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,12})(\\.[0-9]{1,6})?$",
+            "nullable": true
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "menuItemId",
+          "name",
+          "priceDeltaMinor",
+          "stockItemId",
+          "quantityPerSaleUnit",
+          "active"
+        ]
+      },
+      "ModifierWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "menuItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "priceDeltaMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "stockItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityPerSaleUnit": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,12})(\\.[0-9]{1,6})?$"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "menuItemId",
+          "name",
+          "priceDeltaMinor"
+        ]
+      },
+      "ApprovalRule": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "DISCOUNT",
+              "REFUND"
+            ]
+          },
+          "thresholdMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "thresholdMinor",
+          "active"
+        ]
+      },
+      "ApprovalRuleWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "thresholdMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Currency minor units; IDR exponent 0 in demo."
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "thresholdMinor"
+        ]
+      },
+      "LineModifier": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "modifierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "priceDeltaMinor": {
+            "type": "integer"
+          },
+          "lineDeltaMinor": {
+            "type": "integer"
+          },
+          "stockItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "modifierId",
+          "name",
+          "quantity",
+          "priceDeltaMinor",
+          "lineDeltaMinor",
+          "stockItemId"
+        ]
+      },
+      "LineModifierWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "modifierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "modifierId"
+        ]
+      },
+      "RefundLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "saleLineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          }
+        },
+        "required": [
+          "saleLineId",
+          "quantity"
         ]
       }
     }

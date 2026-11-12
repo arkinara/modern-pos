@@ -163,7 +163,8 @@ export function calculateDiscountedTotals(
   };
 }
 
-export function normalizePayment(totalMinor: bigint, input: PaymentInputLike): NormalizedPayment {  const amountMinor = toMinor(input.amountMinor, 'payment.amountMinor');
+export function normalizePayment(totalMinor: bigint, input: PaymentInputLike): NormalizedPayment {
+  const amountMinor = toMinor(input.amountMinor, 'payment.amountMinor');
 
   if (amountMinor !== totalMinor) {
     throw apiError(422, 'PAYMENT_INVALID', 'payment.amountMinor must equal the quoted total', {

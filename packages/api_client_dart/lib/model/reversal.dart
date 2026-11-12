@@ -19,6 +19,9 @@ class Reversal {
     required this.createdAt,
     this.restock = const [],
     required this.externalRefundPerformed,
+    this.kind,
+    this.refundMinor,
+    this.lines = const [],
   });
 
   String id;
@@ -33,6 +36,22 @@ class Reversal {
 
   bool externalRefundPerformed;
 
+  ReversalKindEnum? kind;
+
+  /// Currency minor units; IDR exponent 0 in demo.
+  ///
+  /// Minimum value: 0
+  /// Maximum value: 9007199254740991
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? refundMinor;
+
+  List<RefundLine> lines;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is Reversal &&
     other.id == id &&
@@ -40,7 +59,10 @@ class Reversal {
     other.reason == reason &&
     other.createdAt == createdAt &&
     _deepEquality.equals(other.restock, restock) &&
-    other.externalRefundPerformed == externalRefundPerformed;
+    other.externalRefundPerformed == externalRefundPerformed &&
+    other.kind == kind &&
+    other.refundMinor == refundMinor &&
+    _deepEquality.equals(other.lines, lines);
 
   @override
   int get hashCode =>
@@ -50,10 +72,13 @@ class Reversal {
     (reason.hashCode) +
     (createdAt.hashCode) +
     (restock.hashCode) +
-    (externalRefundPerformed.hashCode);
+    (externalRefundPerformed.hashCode) +
+    (kind == null ? 0 : kind!.hashCode) +
+    (refundMinor == null ? 0 : refundMinor!.hashCode) +
+    (lines.hashCode);
 
   @override
-  String toString() => 'Reversal[id=$id, saleId=$saleId, reason=$reason, createdAt=$createdAt, restock=$restock, externalRefundPerformed=$externalRefundPerformed]';
+  String toString() => 'Reversal[id=$id, saleId=$saleId, reason=$reason, createdAt=$createdAt, restock=$restock, externalRefundPerformed=$externalRefundPerformed, kind=$kind, refundMinor=$refundMinor, lines=$lines]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -63,6 +88,17 @@ class Reversal {
       json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
       json[r'restock'] = this.restock;
       json[r'externalRefundPerformed'] = this.externalRefundPerformed;
+    if (this.kind != null) {
+      json[r'kind'] = this.kind;
+    } else {
+      json[r'kind'] = null;
+    }
+    if (this.refundMinor != null) {
+      json[r'refundMinor'] = this.refundMinor;
+    } else {
+      json[r'refundMinor'] = null;
+    }
+      json[r'lines'] = this.lines;
     return json;
   }
 
@@ -99,6 +135,9 @@ class Reversal {
         createdAt: mapDateTime(json, r'createdAt', r'')!,
         restock: Restock.listFromJson(json[r'restock']),
         externalRefundPerformed: mapValueOfType<bool>(json, r'externalRefundPerformed')!,
+        kind: ReversalKindEnum.fromJson(json[r'kind']),
+        refundMinor: mapValueOfType<int>(json, r'refundMinor'),
+        lines: RefundLine.listFromJson(json[r'lines']),
       );
     }
     return null;
@@ -154,4 +193,82 @@ class Reversal {
     'externalRefundPerformed',
   };
 }
+
+
+enum ReversalKindEnum {
+  FULL._(r'FULL'),
+  PARTIAL._(r'PARTIAL'),
+  ;
+
+  /// Instantiate a new enum with the provided value.
+  const ReversalKindEnum._(this._value);
+
+  /// The underlying value of this enum member.
+  final String _value;
+
+  @override
+  String toString() => _value;
+
+  /// Encodes this enum as a value suitable for JSON.
+  String toJson() => _value;
+
+  /// Returns the instance of [ReversalKindEnum] that was successfully decoded
+  /// from the passed [value] on success, null otherwise.
+  static ReversalKindEnum? fromJson(dynamic value) => ReversalKindEnumTypeTransformer().decode(value);
+
+  /// Returns a [List] containing instances of [ReversalKindEnum]
+  /// that were successfully decoded from the passed [JSON][json].
+  static List<ReversalKindEnum> listFromJson(dynamic json, {bool growable = false,}) {
+    final result = <ReversalKindEnum>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = ReversalKindEnum.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
+}
+
+/// Transformation class that can [encode] an instance of [ReversalKindEnum] to String,
+/// and [decode] dynamic data back to [ReversalKindEnum].
+class ReversalKindEnumTypeTransformer {
+  factory ReversalKindEnumTypeTransformer() => _instance ??= const ReversalKindEnumTypeTransformer._();
+
+  const ReversalKindEnumTypeTransformer._();
+
+  String encode(ReversalKindEnum data) => data._value;
+
+  /// Returns the instance of [ReversalKindEnum] that was successfully decoded
+  /// from the passed [data] value on success, null otherwise.
+  ///
+  /// If [allowNull] is true and the [dynamic value][data] cannot be decoded successfully,
+  /// then null is returned. However, if [allowNull] is false and the [dynamic value][data]
+  /// cannot be decoded successfully, then an [UnimplementedError] is thrown.
+  ///
+  /// The [allowNull] is very handy when an API changes and a new enum value is added or removed,
+  /// and users are still using an old app with the old code.
+  ReversalKindEnum? decode(dynamic data, {bool allowNull = true}) {
+    if (data is ReversalKindEnum) {
+      return data;
+    }
+    if (data != null) {
+      switch (data) {
+        case r'FULL': return ReversalKindEnum.FULL;
+        case r'PARTIAL': return ReversalKindEnum.PARTIAL;
+        default:
+          if (!allowNull) {
+            throw ArgumentError('Unknown enum value to decode: $data');
+          }
+      }
+    }
+    return null;
+  }
+
+  /// The singleton instance of this transformer.
+  static ReversalKindEnumTypeTransformer? _instance;
+}
+
 

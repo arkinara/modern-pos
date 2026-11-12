@@ -207,7 +207,8 @@ export class ReportsService {
     const grossItemSalesMinor = sales.reduce((sum, sale) => sum + sale.subtotalMinor, 0n);
     const reversalItemValueMinor = reversals.reduce(
       (sum, reversal) =>
-        sum + (reversal.kind === 'PARTIAL' ? (reversal.refundMinor ?? 0n) : reversal.sale.subtotalMinor),
+        sum +
+        (reversal.kind === 'PARTIAL' ? (reversal.refundMinor ?? 0n) : reversal.sale.subtotalMinor),
       0n,
     );
     const refundMoneyMinor = reversals.reduce(

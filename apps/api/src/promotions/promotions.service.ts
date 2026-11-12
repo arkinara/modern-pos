@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  ApprovalAction,
-  PromotionKind,
-  PromotionStacking,
-  Prisma,
-  Role,
-} from '@prisma/client';
+import { ApprovalAction, PromotionKind, PromotionStacking, Prisma, Role } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { apiError } from '../common/api-error';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,11 +10,7 @@ import {
   PromotionCreateDto,
   PromotionUpdateDto,
 } from './dto/promotion.dto';
-import {
-  normalizeEligibility,
-  type PromotionEligibility,
-  type PromotionRule,
-} from './pricing';
+import { normalizeEligibility, type PromotionEligibility, type PromotionRule } from './pricing';
 
 export interface PromotionResponse {
   id: string;
@@ -349,7 +339,11 @@ export class PromotionsService {
     const isPercentage = dto.kind === PromotionKind.PERCENTAGE;
 
     if (isPercentage && dto.percentageBps === undefined) {
-      throw apiError(422, 'INVALID_PROMOTION', 'percentageBps is required for percentage promotions');
+      throw apiError(
+        422,
+        'INVALID_PROMOTION',
+        'percentageBps is required for percentage promotions',
+      );
     }
 
     if (!isPercentage && dto.amountMinor === undefined) {

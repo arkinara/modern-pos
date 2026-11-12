@@ -445,4 +445,123 @@ class CatalogApi {
     }
     return null;
   }
+
+  /// Create an item modifier
+  ///
+  /// A modifier changes the unit price and may consume one stock item per selected modifier quantity.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] outletId (required):
+  ///
+  /// * [ModifierWrite] modifierWrite (required):
+  Future<Response> modifiersCreateWithHttpInfo(String outletId, ModifierWrite modifierWrite, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/outlets/{outletId}/modifiers'
+      .replaceAll('{outletId}', outletId);
+
+    // ignore: prefer_final_locals
+    Object? postBody = modifierWrite;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Create an item modifier
+  ///
+  /// A modifier changes the unit price and may consume one stock item per selected modifier quantity.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] outletId (required):
+  ///
+  /// * [ModifierWrite] modifierWrite (required):
+  Future<Modifier?> modifiersCreate(String outletId, ModifierWrite modifierWrite, { Future<void>? abortTrigger, }) async {
+    final response = await modifiersCreateWithHttpInfo(outletId, modifierWrite, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'Modifier',) as Modifier;
+    
+    }
+    return null;
+  }
+
+  /// List item modifiers visible to the outlet
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] outletId (required):
+  Future<Response> modifiersListWithHttpInfo(String outletId, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/outlets/{outletId}/modifiers'
+      .replaceAll('{outletId}', outletId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// List item modifiers visible to the outlet
+  ///
+  /// Parameters:
+  ///
+  /// * [String] outletId (required):
+  Future<List<Modifier>?> modifiersList(String outletId, { Future<void>? abortTrigger, }) async {
+    final response = await modifiersListWithHttpInfo(outletId, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<Modifier>') as List)
+        .cast<Modifier>()
+        .toList(growable: false);
+
+    }
+    return null;
+  }
 }

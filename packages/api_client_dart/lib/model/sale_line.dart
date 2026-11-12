@@ -20,6 +20,7 @@ class SaleLine {
     required this.quantity,
     required this.unitPriceMinor,
     required this.lineSubtotalMinor,
+    this.modifiers = const [],
   });
 
   String id;
@@ -46,6 +47,8 @@ class SaleLine {
   /// Maximum value: 9007199254740991
   int lineSubtotalMinor;
 
+  List<LineModifier> modifiers;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is SaleLine &&
     other.id == id &&
@@ -54,7 +57,8 @@ class SaleLine {
     other.variantName == variantName &&
     other.quantity == quantity &&
     other.unitPriceMinor == unitPriceMinor &&
-    other.lineSubtotalMinor == lineSubtotalMinor;
+    other.lineSubtotalMinor == lineSubtotalMinor &&
+    _deepEquality.equals(other.modifiers, modifiers);
 
   @override
   int get hashCode =>
@@ -65,10 +69,11 @@ class SaleLine {
     (variantName.hashCode) +
     (quantity.hashCode) +
     (unitPriceMinor.hashCode) +
-    (lineSubtotalMinor.hashCode);
+    (lineSubtotalMinor.hashCode) +
+    (modifiers.hashCode);
 
   @override
-  String toString() => 'SaleLine[id=$id, variantId=$variantId, name=$name, variantName=$variantName, quantity=$quantity, unitPriceMinor=$unitPriceMinor, lineSubtotalMinor=$lineSubtotalMinor]';
+  String toString() => 'SaleLine[id=$id, variantId=$variantId, name=$name, variantName=$variantName, quantity=$quantity, unitPriceMinor=$unitPriceMinor, lineSubtotalMinor=$lineSubtotalMinor, modifiers=$modifiers]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -79,6 +84,7 @@ class SaleLine {
       json[r'quantity'] = this.quantity;
       json[r'unitPriceMinor'] = this.unitPriceMinor;
       json[r'lineSubtotalMinor'] = this.lineSubtotalMinor;
+      json[r'modifiers'] = this.modifiers;
     return json;
   }
 
@@ -118,6 +124,7 @@ class SaleLine {
         quantity: mapValueOfType<int>(json, r'quantity')!,
         unitPriceMinor: mapValueOfType<int>(json, r'unitPriceMinor')!,
         lineSubtotalMinor: mapValueOfType<int>(json, r'lineSubtotalMinor')!,
+        modifiers: LineModifier.listFromJson(json[r'modifiers']),
       );
     }
     return null;

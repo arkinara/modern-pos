@@ -1053,8 +1053,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         const row = state.promotions.find((promotion) =>
           Object.entries(args.where).every(
             ([key, value]) =>
-              (promotion as unknown as Record<string, unknown>)[key] === value ||
-              value === null,
+              (promotion as unknown as Record<string, unknown>)[key] === value || value === null,
           ),
         );
         return row ? clone(row) : null;
@@ -1063,7 +1062,9 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         const row = state.promotions.find((promotion) => promotion.id === args.where.id);
         return row ? clone(row) : null;
       },
-      create: async (args: { data: Omit<PromotionRow, 'id' | 'revision' | 'createdAt' | 'updatedAt'> }) => {
+      create: async (args: {
+        data: Omit<PromotionRow, 'id' | 'revision' | 'createdAt' | 'updatedAt'>;
+      }) => {
         const row: PromotionRow = {
           ...clone(args.data),
           id: nextId(),
@@ -1080,8 +1081,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
       }) => {
         const row = state.promotions.find((promotion) =>
           Object.entries(args.where).every(
-            ([key, value]) =>
-              (promotion as unknown as Record<string, unknown>)[key] === value,
+            ([key, value]) => (promotion as unknown as Record<string, unknown>)[key] === value,
           ),
         );
         if (!row) return { count: 0 };
@@ -1208,7 +1208,6 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
           externalRefundPerformed?: boolean;
         };
       }) => {
-
         if (
           state.reversals.some(
             (reversal) =>
@@ -3498,14 +3497,24 @@ test('a percentage promotion prices the quote, snapshots the sale, and writes a 
   addPromotion(state, { id: '00000000-0000-4000-8000-0000000000f1', percentageBps: 1000 });
 
   const actor = user();
-  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
-    deviceId: DEVICE_ID,
-    lines: [{ variantId: VARIANT_A, quantity: 1 }],
-  }, actor);
-  const quote = await service.createQuote(OUTLET_ID, order.id, {
-    orderVersion: 1,
-    promotionIds: ['00000000-0000-4000-8000-0000000000f1'],
-  }, actor);
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [{ variantId: VARIANT_A, quantity: 1 }],
+    },
+    actor,
+  );
+  const quote = await service.createQuote(
+    OUTLET_ID,
+    order.id,
+    {
+      orderVersion: 1,
+      promotionIds: ['00000000-0000-4000-8000-0000000000f1'],
+    },
+    actor,
+  );
 
   assert.equal(quote.totals.subtotalMinor, 18000);
   assert.equal(quote.totals.discountMinor, 1800);
@@ -3544,14 +3553,24 @@ test('a fixed promotion larger than the basket is capped at the basket subtotal'
   });
 
   const actor = user();
-  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
-    deviceId: DEVICE_ID,
-    lines: [{ variantId: VARIANT_A, quantity: 1 }],
-  }, actor);
-  const quote = await service.createQuote(OUTLET_ID, order.id, {
-    orderVersion: 1,
-    promotionIds: ['00000000-0000-4000-8000-0000000000f2'],
-  }, actor);
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [{ variantId: VARIANT_A, quantity: 1 }],
+    },
+    actor,
+  );
+  const quote = await service.createQuote(
+    OUTLET_ID,
+    order.id,
+    {
+      orderVersion: 1,
+      promotionIds: ['00000000-0000-4000-8000-0000000000f2'],
+    },
+    actor,
+  );
 
   assert.equal(quote.totals.discountMinor, 18000);
   assert.equal(quote.totals.totalMinor, 0);
@@ -3568,20 +3587,30 @@ test('incompatible promotion stacking is rejected server-side at quote time', as
   });
 
   const actor = user();
-  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
-    deviceId: DEVICE_ID,
-    lines: [{ variantId: VARIANT_A, quantity: 1 }],
-  }, actor);
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [{ variantId: VARIANT_A, quantity: 1 }],
+    },
+    actor,
+  );
 
   await assert.rejects(
     () =>
-      service.createQuote(OUTLET_ID, order.id, {
-        orderVersion: 1,
-        promotionIds: [
-          '00000000-0000-4000-8000-0000000000f3',
-          '00000000-0000-4000-8000-0000000000f4',
-        ],
-      }, actor),
+      service.createQuote(
+        OUTLET_ID,
+        order.id,
+        {
+          orderVersion: 1,
+          promotionIds: [
+            '00000000-0000-4000-8000-0000000000f3',
+            '00000000-0000-4000-8000-0000000000f4',
+          ],
+        },
+        actor,
+      ),
     (error: unknown) => statusOf(error) === 422 && codeOf(error) === 'PROMOTION_STACK_NOT_ALLOWED',
   );
   assert.equal(state.quotes.length, 0);
@@ -3602,16 +3631,21 @@ test('item modifiers change the price, persist on the sale line, and consume sto
   });
 
   const actor = user();
-  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
-    deviceId: DEVICE_ID,
-    lines: [
-      {
-        variantId: VARIANT_A,
-        quantity: 2,
-        modifiers: [{ modifierId: '00000000-0000-4000-8000-0000000000f5' }],
-      },
-    ],
-  }, actor);
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [
+        {
+          variantId: VARIANT_A,
+          quantity: 2,
+          modifiers: [{ modifierId: '00000000-0000-4000-8000-0000000000f5' }],
+        },
+      ],
+    },
+    actor,
+  );
   const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
 
   assert.equal(quote.lines[0]?.unitPriceMinor, 20000);
@@ -3633,7 +3667,9 @@ test('item modifiers change the price, persist on the sale line, and consume sto
   assert.equal(finalized.sale.lines[0]?.modifiers[0]?.name, 'Extra shot');
   assert.equal(state.balances[0]?.quantity, '0');
   assert.equal(
-    state.movements.filter((row) => row.type === 'SALE').reduce((sum, row) => sum + Number(row.delta), 0),
+    state.movements
+      .filter((row) => row.type === 'SALE')
+      .reduce((sum, row) => sum + Number(row.delta), 0),
     -10,
   );
 });
@@ -3648,10 +3684,15 @@ test('partial refunds keep money and restock independent across multiple refunds
   ]);
 
   const actor = user();
-  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
-    deviceId: DEVICE_ID,
-    lines: [{ variantId: VARIANT_A, quantity: 2 }],
-  }, actor);
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [{ variantId: VARIANT_A, quantity: 2 }],
+    },
+    actor,
+  );
   const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
   const finalized = await service.finalize(
     OUTLET_ID,
@@ -3671,7 +3712,12 @@ test('partial refunds keep money and restock independent across multiple refunds
     OUTLET_ID,
     finalized.sale.id,
     KEY_THREE,
-    { reason: 'Goodwill refund', restock: [], refundMinor: 5000, lines: [{ saleLineId, quantity: 1 }] },
+    {
+      reason: 'Goodwill refund',
+      restock: [],
+      refundMinor: 5000,
+      lines: [{ saleLineId, quantity: 1 }],
+    },
     owner,
   );
   assert.equal(moneyOnly.kind, 'PARTIAL');
@@ -3719,10 +3765,15 @@ test('partial refund with both money and restock moves stock once and rejects un
   ]);
 
   const actor = user();
-  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
-    deviceId: DEVICE_ID,
-    lines: [{ variantId: VARIANT_A, quantity: 2 }],
-  }, actor);
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [{ variantId: VARIANT_A, quantity: 2 }],
+    },
+    actor,
+  );
   const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
   const finalized = await service.finalize(
     OUTLET_ID,
@@ -3781,10 +3832,15 @@ test('refund approval allows a cashier below threshold and refuses above it unti
 
   async function saleFor(quantity: number, key: string) {
     const actor = user();
-    const order = await service.createOrder(OUTLET_ID, key, {
-      deviceId: DEVICE_ID,
-      lines: [{ variantId: VARIANT_A, quantity }],
-    }, actor);
+    const order = await service.createOrder(
+      OUTLET_ID,
+      key,
+      {
+        deviceId: DEVICE_ID,
+        lines: [{ variantId: VARIANT_A, quantity }],
+      },
+      actor,
+    );
     const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
     const finalized = await service.finalize(
       OUTLET_ID,
@@ -3864,14 +3920,24 @@ test('discount approval blocks a cashier above the configured threshold and audi
   addApprovalRule(state, 'DISCOUNT', 1000n);
 
   const actor = user();
-  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
-    deviceId: DEVICE_ID,
-    lines: [{ variantId: VARIANT_A, quantity: 1 }],
-  }, actor);
-  const quote = await service.createQuote(OUTLET_ID, order.id, {
-    orderVersion: 1,
-    promotionIds: ['00000000-0000-4000-8000-0000000000f6'],
-  }, actor);
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [{ variantId: VARIANT_A, quantity: 1 }],
+    },
+    actor,
+  );
+  const quote = await service.createQuote(
+    OUTLET_ID,
+    order.id,
+    {
+      orderVersion: 1,
+      promotionIds: ['00000000-0000-4000-8000-0000000000f6'],
+    },
+    actor,
+  );
 
   await assert.rejects(
     () =>
@@ -3921,10 +3987,15 @@ test('concurrent partial refunds with the same key create one reversal and one s
   ]);
 
   const actor = user();
-  const order = await service.createOrder(OUTLET_ID, KEY_ONE, {
-    deviceId: DEVICE_ID,
-    lines: [{ variantId: VARIANT_A, quantity: 2 }],
-  }, actor);
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    {
+      deviceId: DEVICE_ID,
+      lines: [{ variantId: VARIANT_A, quantity: 2 }],
+    },
+    actor,
+  );
   const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, actor);
   const finalized = await service.finalize(
     OUTLET_ID,
