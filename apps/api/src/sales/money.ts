@@ -12,6 +12,10 @@ export interface MoneyTotals {
   totalMinor: bigint;
 }
 
+export interface DiscountedTotals extends MoneyTotals {
+  discountMinor: bigint;
+}
+
 export interface PricedLine {
   unitPriceMinor: bigint;
   quantity: number;
@@ -114,8 +118,52 @@ export function calculateTotals(
   return { subtotalMinor, serviceMinor, taxMinor, totalMinor };
 }
 
-export function normalizePayment(totalMinor: bigint, input: PaymentInputLike): NormalizedPayment {
-  const amountMinor = toMinor(input.amountMinor, 'payment.amountMinor');
+/**
+ * Discounts reduce the taxable basket first. Service is charged on the
+ * discounted subtotal and tax on the discounted subtotal plus service, all
+ * rounded half-up to integer minor units.
+ */
+export function calculateDiscountedTotals(
+  lines: PricedLine[],
+  serviceBps: number,
+  taxBps: number,
+  discountMinor: bigint,
+): DiscountedTotals {
+  const base = calculateTotals(lines, 0, 0);
+
+  if (discountMinor < 0n) {
+    throw apiError(500, 'MONEY_CALCULATION_FAILED', 'Discount must be nonnegative');
+  }
+
+  if (discountMinor > base.subtotalMinor) {
+    throw apiError(500, 'MONEY_CALCULATION_FAILED', 'Discount exceeds the basket subtotal');
+  }
+
+  const discountedSubtotal = base.subtotalMinor - discountMinor;
+  const serviceMinor = halfUpDiv(discountedSubtotal * BigInt(serviceBps));
+  const taxableMinor = discountedSubtotal + serviceMinor;
+
+  if (taxableMinor > MAX_SAFE_MINOR) {
+    throw apiError(422, 'MONEY_OUT_OF_RANGE', 'Taxable amount exceeds the safe-integer range');
+  }
+
+  const taxMinor = halfUpDiv(taxableMinor * BigInt(taxBps));
+  const totalMinor = discountedSubtotal + serviceMinor + taxMinor;
+
+  if (totalMinor > MAX_SAFE_MINOR) {
+    throw apiError(422, 'MONEY_OUT_OF_RANGE', 'Total exceeds the safe-integer range');
+  }
+
+  return {
+    subtotalMinor: base.subtotalMinor,
+    discountMinor,
+    serviceMinor,
+    taxMinor,
+    totalMinor,
+  };
+}
+
+export function normalizePayment(totalMinor: bigint, input: PaymentInputLike): NormalizedPayment {  const amountMinor = toMinor(input.amountMinor, 'payment.amountMinor');
 
   if (amountMinor !== totalMinor) {
     throw apiError(422, 'PAYMENT_INVALID', 'payment.amountMinor must equal the quoted total', {

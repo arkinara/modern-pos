@@ -1,12 +1,15 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import {
+  ApprovalAction,
   OrderAuditAction,
   OrderState,
   PaymentKind,
   PaymentStatus,
   Prisma,
+  PromotionKind,
   Role,
+  SaleReversalKind,
   SaleState,
   StockMovementType,
   StockPolicy,
@@ -14,10 +17,18 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { apiError } from '../common/api-error';
 import { PrismaService } from '../prisma/prisma.service';
+import { PromotionsService } from '../promotions/promotions.service';
+import {
+  applyPromotions,
+  type AppliedPromotion,
+  type PromotionCandidateLine,
+  type PromotionRule,
+} from '../promotions/pricing';
 import { CheckoutQueryDto } from './dto/checkout-query.dto';
 import { FinalizeDto } from './dto/finalize.dto';
 import { OrderCancelDto } from './dto/order-cancel.dto';
 import { OrderCreateDto } from './dto/order-create.dto';
+import { OrderLineModifierDto } from './dto/order-line.dto';
 import { OrderListQueryDto } from './dto/order-list-query.dto';
 import { OrderSplitDto } from './dto/order-split.dto';
 import { OrderTransferDto } from './dto/order-transfer.dto';
@@ -26,7 +37,14 @@ import { QuoteCreateDto } from './dto/quote-create.dto';
 import { TableCreateDto } from './dto/table-create.dto';
 import { FIXED_POINT_PATTERN, ReversalDto, RestockItemDto } from './dto/reversal.dto';
 import { SalesListQueryDto } from './dto/sales-list-query.dto';
-import { calculateTotals, normalizePayment, toWireMinor, type MoneyTotals } from './money';
+import {
+  calculateDiscountedTotals,
+  calculateTotals,
+  normalizePayment,
+  toWireMinor,
+  type DiscountedTotals,
+  type MoneyTotals,
+} from './money';
 import { localDateRangeUtc } from './outlet-time';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -34,9 +52,17 @@ const QUOTE_TTL_MS = 60_000;
 const MAX_TRANSACTION_ATTEMPTS = 3;
 const ROUNDING_RULE = 'HALF_UP';
 
+export interface OrderLineModifierResponse {
+  modifierId: string;
+  quantity: number;
+  name?: string;
+  priceDeltaMinor?: number;
+}
+
 export interface OrderLineResponse {
   variantId: string;
   quantity: number;
+  modifiers?: OrderLineModifierResponse[];
 }
 
 export interface OrderResponse {
@@ -81,6 +107,7 @@ export interface OrderSplitResponse {
 
 export interface TotalsResponse {
   subtotalMinor: number;
+  discountMinor: number;
   serviceMinor: number;
   taxMinor: number;
   totalMinor: number;
@@ -94,6 +121,22 @@ export interface CalculationRulesResponse {
   rounding: string;
 }
 
+export interface PromotionSnapshotResponse {
+  promotionId: string;
+  name: string;
+  kind: PromotionKind;
+  discountMinor: number;
+}
+
+export interface LineModifierResponse {
+  modifierId: string;
+  name: string;
+  quantity: number;
+  priceDeltaMinor: number;
+  lineDeltaMinor: number;
+  stockItemId: string | null;
+}
+
 export interface QuoteLineResponse {
   variantId: string;
   name: string;
@@ -102,6 +145,7 @@ export interface QuoteLineResponse {
   unitPriceMinor: number;
   lineSubtotalMinor: number;
   recipeVersion: number | null;
+  modifiers: LineModifierResponse[];
 }
 
 export interface QuoteResponse {
@@ -114,6 +158,7 @@ export interface QuoteResponse {
   calculation: CalculationRulesResponse;
   expiresAt: string;
   totals: TotalsResponse;
+  promotions: PromotionSnapshotResponse[];
   lines: QuoteLineResponse[];
 }
 
@@ -125,6 +170,7 @@ export interface SaleLineResponse {
   quantity: number;
   unitPriceMinor: number;
   lineSubtotalMinor: number;
+  modifiers: LineModifierResponse[];
 }
 
 export interface PaymentResponse {
@@ -141,10 +187,18 @@ export interface RestockResponse {
   quantity: string;
 }
 
+export interface RefundLineResponse {
+  saleLineId: string;
+  quantity: number;
+}
+
 export interface ReversalResponse {
   id: string;
   saleId: string;
+  kind: SaleReversalKind;
   reason: string;
+  refundMinor: number;
+  lines: RefundLineResponse[];
   createdAt: string;
   restock: RestockResponse[];
   externalRefundPerformed: false;
@@ -161,9 +215,11 @@ export interface SaleResponse {
   completedAt: string;
   calculation: CalculationRulesResponse;
   totals: TotalsResponse;
+  promotions: PromotionSnapshotResponse[];
   lines: SaleLineResponse[];
   payment: PaymentResponse;
   reversal?: ReversalResponse;
+  refunds?: ReversalResponse[];
 }
 
 export interface FinalizedResponse {
@@ -176,14 +232,47 @@ export interface SalePageResponse {
   nextCursor: string | null;
 }
 
+interface StoredOrderLineModifier {
+  modifierId: string;
+  quantity: number;
+}
+
+interface ModifierRecord {
+  id: string;
+  menuItemId: string;
+  name: string;
+  priceDeltaMinor: bigint;
+  stockItemId: string | null;
+  quantityPerSaleUnit: string | null;
+}
+
 interface QuoteLineSnapshot {
   variantId: string;
+  menuItemId: string;
   name: string;
   variantName: string;
   quantity: number;
   unitPriceMinor: number;
   lineSubtotalMinor: number;
   recipeVersion: number | null;
+  modifiers: ResolvedLineModifierSnapshot[];
+}
+
+interface ResolvedLineModifierSnapshot {
+  modifierId: string;
+  name: string;
+  quantity: number;
+  priceDeltaMinor: number;
+  lineDeltaMinor: number;
+  stockItemId: string | null;
+  quantityPerSaleUnit: string | null;
+}
+
+interface PromotionSnapshotRow {
+  promotionId: string;
+  name: string;
+  kind: PromotionKind;
+  discountMinor: number;
 }
 
 interface SaleWithReceipt {
@@ -200,9 +289,11 @@ interface SaleWithReceipt {
   timezone: string;
   completedAt: Date;
   subtotalMinor: bigint;
+  discountMinor: bigint;
   serviceMinor: bigint;
   taxMinor: bigint;
   totalMinor: bigint;
+  promotions: Prisma.JsonValue;
   lines: {
     id: string;
     variantId: string;
@@ -211,6 +302,7 @@ interface SaleWithReceipt {
     quantity: number;
     unitPriceMinor: bigint;
     lineSubtotalMinor: bigint;
+    modifiers: Prisma.JsonValue;
   }[];
   payment: {
     kind: PaymentKind;
@@ -220,14 +312,18 @@ interface SaleWithReceipt {
     changeMinor: bigint | null;
     reference: string | null;
   } | null;
-  reversal: {
+  reversals: {
     id: string;
     saleId: string;
+    kind: SaleReversalKind;
     reason: string;
+    refundMinor: bigint;
+    lines: Prisma.JsonValue;
     createdAt: Date;
     restock: Prisma.JsonValue;
     externalRefundPerformed: boolean;
-  } | null;
+    refundLines: { saleLineId: string; quantity: number }[];
+  }[];
 }
 
 type DbClient = Prisma.TransactionClient | PrismaService;
@@ -239,6 +335,7 @@ interface VariantPricingRecord {
   active: boolean;
   stockPolicy: StockPolicy;
   menuItem: {
+    id: string;
     name: string;
     archivedAt: Date | null;
     category: { archivedAt: Date | null };
@@ -298,7 +395,10 @@ function sleep(milliseconds: number): Promise<void> {
 
 @Injectable()
 export class SalesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly promotions: PromotionsService,
+  ) {}
 
   async createOrder(
     outletId: string,
@@ -315,6 +415,7 @@ export class SalesService {
       lines: dto.lines.map((line) => ({
         variantId: line.variantId,
         quantity: line.quantity,
+        modifiers: this.normalizeOrderLineModifiers(line.modifiers),
       })),
     });
 
@@ -340,12 +441,18 @@ export class SalesService {
     try {
       return await this.prisma.$transaction(async (tx) => {
         const outlet = await this.requireOutlet(tx, outletId, user.businessId);
-        await this.requireSaleableLines(
+        const variants = await this.requireSaleableLines(
           tx,
           outletId,
           user.businessId,
           dto.lines,
           'ITEM_UNAVAILABLE',
+        );
+        const lineModifiers = await this.resolveOrderModifiers(
+          tx,
+          user.businessId,
+          variants,
+          dto.lines,
         );
         const table = dto.tableId
           ? await this.requireTable(tx, outletId, user.businessId, dto.tableId)
@@ -361,9 +468,10 @@ export class SalesService {
             requestHash: hash,
             ...(table ? { tableId: table.id } : {}),
             lines: {
-              create: dto.lines.map((line) => ({
+              create: dto.lines.map((line, index) => ({
                 variantId: line.variantId,
                 quantity: line.quantity,
+                modifiers: lineModifiers[index] as unknown as Prisma.InputJsonValue,
               })),
             },
           },
@@ -428,7 +536,19 @@ export class SalesService {
         throw apiError(409, 'VERSION_CONFLICT', 'Order was changed by another request');
       }
 
-      await this.requireSaleableLines(tx, outletId, user.businessId, dto.lines, 'ITEM_UNAVAILABLE');
+      const variants = await this.requireSaleableLines(
+        tx,
+        outletId,
+        user.businessId,
+        dto.lines,
+        'ITEM_UNAVAILABLE',
+      );
+      const lineModifiers = await this.resolveOrderModifiers(
+        tx,
+        user.businessId,
+        variants,
+        dto.lines,
+      );
 
       const updated = await tx.order.updateMany({
         where: {
@@ -449,10 +569,11 @@ export class SalesService {
 
       await tx.orderLine.deleteMany({ where: { orderId } });
       await tx.orderLine.createMany({
-        data: dto.lines.map((line) => ({
+        data: dto.lines.map((line, index) => ({
           orderId,
           variantId: line.variantId,
           quantity: line.quantity,
+          modifiers: lineModifiers[index] as unknown as Prisma.InputJsonValue,
         })),
       });
 
@@ -809,16 +930,42 @@ export class SalesService {
         user.businessId,
         order.lines.map((line) => line.variantId),
       );
-      const snapshots = this.buildQuoteLines(order.lines, variants, false, recipes);
-      const totals = calculateTotals(
+      const modifierById = await this.loadModifierRecords(
+        tx,
+        user.businessId,
+        order.lines,
+        variants,
+      );
+      const snapshots = this.buildQuoteLines(order.lines, variants, false, recipes, modifierById);
+      const now = new Date();
+      const customerEmail = this.normalizeCustomerEmail(dto.customerEmail);
+      const rules = await this.promotions.loadPromotionRules(
+        tx,
+        outletId,
+        user.businessId,
+        dto.promotionIds ?? [],
+      );
+      const pricing = applyPromotions(
+        snapshots.map((line) => ({
+          variantId: line.variantId,
+          menuItemId: line.menuItemId,
+          unitPriceMinor: BigInt(line.unitPriceMinor),
+          quantity: line.quantity,
+        })),
+        rules,
+        { outletId, now, customerEmail },
+      );
+      const totals = calculateDiscountedTotals(
         snapshots.map((line) => ({
           unitPriceMinor: BigInt(line.unitPriceMinor),
           quantity: line.quantity,
         })),
         outlet.serviceBps,
         outlet.taxBps,
+        pricing.discountMinor,
       );
-      const expiresAt = new Date(Date.now() + QUOTE_TTL_MS);
+      const promotionSnapshots = this.toPromotionSnapshots(pricing.promotions);
+      const expiresAt = new Date(now.getTime() + QUOTE_TTL_MS);
 
       const quote = await tx.quote.create({
         data: {
@@ -834,11 +981,14 @@ export class SalesService {
           pricingMode: outlet.pricingMode,
           rounding: ROUNDING_RULE,
           expiresAt,
+          customerEmail,
           subtotalMinor: totals.subtotalMinor,
+          discountMinor: totals.discountMinor,
           serviceMinor: totals.serviceMinor,
           taxMinor: totals.taxMinor,
           totalMinor: totals.totalMinor,
           lines: snapshots as unknown as Prisma.InputJsonValue,
+          promotions: promotionSnapshots as unknown as Prisma.InputJsonValue,
         },
       });
 
@@ -852,6 +1002,7 @@ export class SalesService {
         calculation: this.toCalculation(quote),
         expiresAt: quote.expiresAt.toISOString(),
         totals: this.toTotals(totals),
+        promotions: promotionSnapshots,
         lines: snapshots,
       };
     });
@@ -993,18 +1144,59 @@ export class SalesService {
               user.businessId,
               order.lines.map((line) => line.variantId),
             );
-            const currentLines = this.buildQuoteLines(order.lines, variants, true, recipes);
-            const currentTotals = calculateTotals(
+            const modifierById = await this.loadModifierRecords(
+              tx,
+              user.businessId,
+              order.lines,
+              variants,
+            );
+            const currentLines = this.buildQuoteLines(
+              order.lines,
+              variants,
+              true,
+              recipes,
+              modifierById,
+            );
+            const quotedLines = this.readQuoteLines(quote.lines);
+            const quotedPromotions = this.readPromotionSnapshots(quote.promotions);
+            const currentRules = await this.promotions.loadPromotionRules(
+              tx,
+              outletId,
+              user.businessId,
+              quotedPromotions.map((promotion) => promotion.promotionId),
+            );
+            const currentPricing = applyPromotions(
+              currentLines.map((line) => ({
+                variantId: line.variantId,
+                menuItemId: line.menuItemId,
+                unitPriceMinor: BigInt(line.unitPriceMinor),
+                quantity: line.quantity,
+              })),
+              currentRules,
+              {
+                outletId,
+                now,
+                customerEmail: this.normalizeCustomerEmail(quote.customerEmail ?? undefined),
+              },
+            );
+            const currentTotals = calculateDiscountedTotals(
               currentLines.map((line) => ({
                 unitPriceMinor: BigInt(line.unitPriceMinor),
                 quantity: line.quantity,
               })),
               outlet.serviceBps,
               outlet.taxBps,
+              currentPricing.discountMinor,
             );
-            const quotedLines = this.readQuoteLines(quote.lines);
 
-            this.assertQuoteStillValid(quotedLines, currentLines, quote, currentTotals);
+            this.assertQuoteStillValid(
+              quotedLines,
+              currentLines,
+              quote,
+              currentTotals,
+              quotedPromotions,
+              this.toPromotionSnapshots(currentPricing.promotions),
+            );
 
             const currentRecipeVersions = new Map(
               currentLines.map((line) => [line.variantId, line.recipeVersion]),
@@ -1013,12 +1205,25 @@ export class SalesService {
               ...line,
               recipeVersion: currentRecipeVersions.get(line.variantId) ?? line.recipeVersion,
             }));
-            const totals: MoneyTotals = {
+            const totals: DiscountedTotals = {
               subtotalMinor: quote.subtotalMinor,
+              discountMinor: quote.discountMinor,
               serviceMinor: quote.serviceMinor,
               taxMinor: quote.taxMinor,
               totalMinor: quote.totalMinor,
             };
+
+            await this.assertApproval(tx, {
+              businessId: user.businessId,
+              outletId,
+              orderId: order.id,
+              actorId: user.id,
+              action: ApprovalAction.DISCOUNT,
+              amountMinor: totals.discountMinor,
+              user,
+              operation: 'DISCOUNT',
+            });
+
             const payment = normalizePayment(totals.totalMinor, dto.payment);
 
             const sale = await tx.sale.create({
@@ -1038,9 +1243,11 @@ export class SalesService {
                 rounding: ROUNDING_RULE,
                 timezone: outlet.timezone,
                 subtotalMinor: totals.subtotalMinor,
+                discountMinor: totals.discountMinor,
                 serviceMinor: totals.serviceMinor,
                 taxMinor: totals.taxMinor,
                 totalMinor: totals.totalMinor,
+                promotions: quotedPromotions as unknown as Prisma.InputJsonValue,
                 completedAt: now,
                 lines: {
                   create: snapshots.map((line) => ({
@@ -1050,6 +1257,7 @@ export class SalesService {
                     quantity: line.quantity,
                     unitPriceMinor: BigInt(line.unitPriceMinor),
                     lineSubtotalMinor: BigInt(line.lineSubtotalMinor),
+                    modifiers: (line.modifiers ?? []) as unknown as Prisma.InputJsonValue,
                     recipeVersion: line.recipeVersion,
                   })),
                 },
@@ -1067,7 +1275,7 @@ export class SalesService {
               include: {
                 lines: { orderBy: [{ id: 'asc' }] },
                 payment: true,
-                reversal: true,
+                reversals: { include: { refundLines: true }, orderBy: [{ createdAt: 'asc' }] },
               },
             });
 
@@ -1098,8 +1306,25 @@ export class SalesService {
                 variantId: line.variantId,
                 quantity: line.quantity,
                 recipeVersion: line.recipeVersion,
+                modifiers: line.modifiers ?? [],
               })),
             });
+
+            if (quotedPromotions.length > 0) {
+              await this.writeAudit(tx, {
+                businessId: user.businessId,
+                outletId,
+                orderId: order.id,
+                actorId: user.id,
+                action: OrderAuditAction.PROMOTION,
+                fromTableId: order.tableId,
+                metadata: {
+                  saleId: sale.id,
+                  discountMinor: toWireMinor(totals.discountMinor, 'discountMinor'),
+                  promotions: quotedPromotions,
+                },
+              });
+            }
 
             await this.writeAudit(tx, {
               businessId: user.businessId,
@@ -1208,7 +1433,7 @@ export class SalesService {
       include: {
         lines: { orderBy: [{ id: 'asc' }] },
         payment: true,
-        reversal: true,
+        reversals: { include: { refundLines: true }, orderBy: [{ createdAt: 'asc' }] },
       },
     });
 
@@ -1238,18 +1463,25 @@ export class SalesService {
     dto: ReversalDto,
     user: AuthenticatedUser,
   ): Promise<ReversalResponse> {
-    if (user.role !== Role.OWNER) {
-      throw apiError(403, 'FORBIDDEN', 'Only an owner can reverse a sale');
-    }
-
     const idempotencyKey = requireIdempotencyKey(key);
     const reason = this.normalizeReason(dto.reason);
     const restock = this.normalizeRestock(dto.restock);
+    const refundLines = this.normalizeRefundLines(dto.lines);
+    const partial = refundLines !== undefined;
+
+    if (partial && dto.refundMinor === undefined) {
+      throw apiError(422, 'REFUND_AMOUNT_REQUIRED', 'A partial refund must state refundMinor');
+    }
+
+    const refundMinor =
+      dto.refundMinor !== undefined ? BigInt(dto.refundMinor) : partial ? 0n : null;
     const hash = requestHash({
       operation: 'SALE_REVERSE',
       outletId,
       saleId,
       reason,
+      refundMinor: refundMinor === null ? null : refundMinor.toString(),
+      lines: refundLines ?? null,
       restock: restock.map((item) => ({
         stockItemId: item.stockItemId.toLowerCase(),
         quantity: item.quantity,
@@ -1264,18 +1496,22 @@ export class SalesService {
       return this.replayReversal(prior, saleId, hash);
     }
 
-    const alreadyReversed = await this.prisma.saleReversal.findUnique({ where: { saleId } });
-
-    if (alreadyReversed) {
-      throw apiError(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed');
-    }
-
     try {
       return await this.runSerializable(
         () =>
           this.prisma.$transaction(
             async (tx) =>
-              this.applyReversal(tx, outletId, saleId, idempotencyKey, reason, restock, hash, user),
+              this.applyReversal(tx, {
+                outletId,
+                saleId,
+                idempotencyKey,
+                reason,
+                restock,
+                refundLines,
+                refundMinor,
+                hash,
+                user,
+              }),
             { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
           ),
         'Sale reversal',
@@ -1288,12 +1524,6 @@ export class SalesService {
 
         if (sameKey) {
           return this.replayReversal(sameKey, saleId, hash);
-        }
-
-        const existing = await this.prisma.saleReversal.findUnique({ where: { saleId } });
-
-        if (existing) {
-          throw apiError(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed');
         }
       }
 
@@ -1362,12 +1592,51 @@ export class SalesService {
     return normalized.sort((a, b) => a.stockItemId.localeCompare(b.stockItemId));
   }
 
+  private normalizeRefundLines(
+    input: { saleLineId: string; quantity: number }[] | undefined,
+  ): { saleLineId: string; quantity: number }[] | undefined {
+    if (input === undefined) {
+      return undefined;
+    }
+
+    if (!Array.isArray(input) || input.length === 0) {
+      throw apiError(422, 'REFUND_LINES_REQUIRED', 'A partial refund must name at least one line');
+    }
+
+    const seen = new Set<string>();
+    const lines = input.map((line) => {
+      const saleLineId = line.saleLineId.toLowerCase();
+
+      if (!UUID_PATTERN.test(saleLineId)) {
+        throw apiError(400, 'VALIDATION_ERROR', 'refund line saleLineId must be a UUID');
+      }
+
+      if (!Number.isInteger(line.quantity) || line.quantity < 1) {
+        throw apiError(400, 'VALIDATION_ERROR', 'refund line quantity must be a positive integer');
+      }
+
+      if (seen.has(saleLineId)) {
+        throw apiError(422, 'DUPLICATE_REFUND_LINE', 'A sale line can appear only once per refund', {
+          details: { saleLineId },
+        });
+      }
+
+      seen.add(saleLineId);
+      return { saleLineId, quantity: line.quantity };
+    });
+
+    return lines.sort((a, b) => a.saleLineId.localeCompare(b.saleLineId));
+  }
+
   private replayReversal(
     record: {
       saleId: string;
       requestHash: string;
       id: string;
+      kind: SaleReversalKind;
       reason: string;
+      refundMinor: bigint;
+      lines: Prisma.JsonValue;
       createdAt: Date;
       restock: Prisma.JsonValue;
     },
@@ -1387,14 +1656,20 @@ export class SalesService {
 
   private async applyReversal(
     tx: Prisma.TransactionClient,
-    outletId: string,
-    saleId: string,
-    idempotencyKey: string,
-    reason: string,
-    restock: { stockItemId: string; quantity: string }[],
-    hash: string,
-    user: AuthenticatedUser,
+    context: {
+      outletId: string;
+      saleId: string;
+      idempotencyKey: string;
+      reason: string;
+      restock: { stockItemId: string; quantity: string }[];
+      refundLines: { saleLineId: string; quantity: number }[] | undefined;
+      refundMinor: bigint | null;
+      hash: string;
+      user: AuthenticatedUser;
+    },
   ): Promise<ReversalResponse> {
+    const { outletId, saleId, idempotencyKey, reason, restock, refundLines, hash, user } = context;
+
     await tx.$queryRaw`
       SELECT "id"
       FROM "sales"
@@ -1412,21 +1687,108 @@ export class SalesService {
       throw apiError(404, 'NOT_FOUND', 'Sale not found');
     }
 
-    const existing = await tx.saleReversal.findUnique({ where: { saleId } });
+    const existing = await tx.saleReversal.findMany({
+      where: { saleId },
+      include: { refundLines: true },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
 
-    if (existing) {
-      if (existing.idempotencyKey === idempotencyKey) {
-        return this.replayReversal(existing, saleId, hash);
-      }
+    const replay = existing.find((row) => row.idempotencyKey === idempotencyKey);
 
-      throw apiError(409, 'SALE_ALREADY_REVERSED', 'This sale has already been reversed');
+    if (replay) {
+      return this.replayReversal(replay, saleId, hash);
     }
 
     if (sale.state !== SaleState.COMPLETED) {
       throw apiError(409, 'SALE_NOT_COMPLETED', 'Only completed sales can be reversed');
     }
 
+    const partial = refundLines !== undefined;
+
+    if (!partial && existing.length > 0) {
+      throw apiError(
+        409,
+        'SALE_ALREADY_REVERSED',
+        'This sale already has refunds; use a partial refund instead',
+      );
+    }
+
+    if (partial && existing.some((row) => row.kind === SaleReversalKind.FULL)) {
+      throw apiError(409, 'SALE_ALREADY_REVERSED', 'This sale has already been fully reversed');
+    }
+
+    const priorRefunded = existing.reduce((sum, row) => sum + row.refundMinor, 0n);
+    const refundMinor = partial ? (context.refundMinor ?? 0n) : sale.totalMinor;
+
+    if (priorRefunded + refundMinor > sale.totalMinor) {
+      throw apiError(422, 'REFUND_EXCEEDS_SALE', 'Refund amount exceeds the unrefunded sale total', {
+        details: {
+          saleTotalMinor: toWireMinor(sale.totalMinor, 'totalMinor'),
+          alreadyRefundedMinor: toWireMinor(priorRefunded, 'alreadyRefundedMinor'),
+          requestedMinor: toWireMinor(refundMinor, 'refundMinor'),
+        },
+      });
+    }
+
+    if (refundLines) {
+      const priorByLine = new Map<string, number>();
+
+      for (const row of existing) {
+        for (const line of row.refundLines) {
+          priorByLine.set(line.saleLineId, (priorByLine.get(line.saleLineId) ?? 0) + line.quantity);
+        }
+      }
+
+      const soldByLine = new Map(sale.lines.map((line) => [line.id, line.quantity]));
+
+      for (const line of refundLines) {
+        const sold = soldByLine.get(line.saleLineId);
+
+        if (sold === undefined) {
+          throw apiError(422, 'REFUND_LINE_NOT_FOUND', 'Refund line does not belong to this sale', {
+            details: { saleLineId: line.saleLineId },
+          });
+        }
+
+        const already = priorByLine.get(line.saleLineId) ?? 0;
+
+        if (already >= sold) {
+          throw apiError(409, 'REFUND_ALREADY_COMPLETED', 'This sale line is already fully refunded', {
+            details: { saleLineId: line.saleLineId, soldQuantity: sold, refundedQuantity: already },
+          });
+        }
+
+        if (already + line.quantity > sold) {
+          throw apiError(
+            422,
+            'REFUND_EXCEEDS_LINE',
+            'Refund quantity exceeds the remaining quantity on the sale line',
+            {
+              details: {
+                saleLineId: line.saleLineId,
+                soldQuantity: sold,
+                refundedQuantity: already,
+                requested: line.quantity,
+              },
+            },
+          );
+        }
+      }
+    }
+
+    await this.assertApproval(tx, {
+      businessId: user.businessId,
+      outletId,
+      orderId: sale.orderId,
+      actorId: user.id,
+      action: ApprovalAction.REFUND,
+      amountMinor: refundMinor,
+      user,
+      operation: 'REFUND',
+    });
+
     const consumed = await this.loadConsumedStock(tx, outletId, sale);
+    const priorRestock = this.sumPriorRestock(existing);
 
     if (restock.length > 0) {
       const ids = [...new Set(restock.map((item) => item.stockItemId))];
@@ -1460,7 +1822,9 @@ export class SalesService {
           );
         }
 
-        if (quantity.greaterThan(consumedQuantity)) {
+        const alreadyRestocked = priorRestock.get(item.stockItemId) ?? new Prisma.Decimal(0);
+
+        if (alreadyRestocked.plus(quantity).greaterThan(consumedQuantity)) {
           throw apiError(
             422,
             'RESTOCK_EXCEEDS_SOLD',
@@ -1469,6 +1833,7 @@ export class SalesService {
               details: {
                 stockItemId: item.stockItemId,
                 consumed: consumedQuantity.toString(),
+                alreadyRestocked: alreadyRestocked.toString(),
                 requested: quantity.toString(),
               },
             },
@@ -1485,13 +1850,26 @@ export class SalesService {
         outletId,
         saleId,
         actorId: user.id,
+        kind: partial ? SaleReversalKind.PARTIAL : SaleReversalKind.FULL,
         reason,
+        refundMinor,
+        lines: (refundLines ?? []) as unknown as Prisma.InputJsonValue,
         restock: restock as unknown as Prisma.InputJsonValue,
         externalRefundPerformed: false,
         idempotencyKey,
         requestHash: hash,
       },
     });
+
+    if (refundLines && refundLines.length > 0) {
+      await tx.saleRefundLine.createMany({
+        data: refundLines.map((line) => ({
+          reversalId: reversal.id,
+          saleLineId: line.saleLineId,
+          quantity: line.quantity,
+        })),
+      });
+    }
 
     await this.applyReversalRestock(tx, {
       outletId,
@@ -1502,28 +1880,86 @@ export class SalesService {
       items: restock,
     });
 
+    await this.writeAudit(tx, {
+      businessId: user.businessId,
+      outletId,
+      orderId: sale.orderId,
+      actorId: user.id,
+      action: OrderAuditAction.REFUND,
+      metadata: {
+        saleId,
+        reversalId: reversal.id,
+        kind: partial ? 'PARTIAL' : 'FULL',
+        refundMinor: toWireMinor(refundMinor, 'refundMinor'),
+        lines: refundLines ?? [],
+        restock,
+        reason,
+        externalRefundPerformed: false,
+      },
+    });
+
     return this.toReversal(reversal);
+  }
+
+  private sumPriorRestock(
+    reversals: { restock: Prisma.JsonValue }[],
+  ): Map<string, Prisma.Decimal> {
+    const totals = new Map<string, Prisma.Decimal>();
+
+    for (const reversal of reversals) {
+      const entries = this.readRestockEntries(reversal.restock);
+
+      for (const entry of entries) {
+        totals.set(
+          entry.stockItemId,
+          (totals.get(entry.stockItemId) ?? new Prisma.Decimal(0)).plus(entry.quantity),
+        );
+      }
+    }
+
+    return totals;
+  }
+
+  private readRestockEntries(
+    value: Prisma.JsonValue,
+  ): { stockItemId: string; quantity: Prisma.Decimal }[] {
+    if (!Array.isArray(value)) {
+      throw apiError(500, 'REVERSAL_CORRUPT', 'Stored reversal restock is invalid');
+    }
+
+    return value.map((entry) => {
+      const item = entry as { stockItemId?: unknown; quantity?: unknown };
+
+      if (typeof item.stockItemId !== 'string' || typeof item.quantity !== 'string') {
+        throw apiError(500, 'REVERSAL_CORRUPT', 'Stored reversal restock is invalid');
+      }
+
+      return { stockItemId: item.stockItemId, quantity: new Prisma.Decimal(item.quantity) };
+    });
   }
 
   private async loadConsumedStock(
     tx: Prisma.TransactionClient,
     outletId: string,
     sale: {
-      lines: { variantId: string; quantity: number; recipeVersion: number | null }[];
+      lines: {
+        variantId: string;
+        quantity: number;
+        recipeVersion: number | null;
+        modifiers?: Prisma.JsonValue;
+      }[];
     },
   ): Promise<Map<string, Prisma.Decimal>> {
     const consumed = new Map<string, Prisma.Decimal>();
     const zero = new Prisma.Decimal(0);
     const variantIds = [...new Set(sale.lines.map((line) => line.variantId))];
-
-    if (variantIds.length === 0) {
-      return consumed;
-    }
-
-    const variants = await tx.menuVariant.findMany({
-      where: { id: { in: variantIds } },
-      select: { id: true, stockPolicy: true },
-    });
+    const variants =
+      variantIds.length === 0
+        ? []
+        : await tx.menuVariant.findMany({
+            where: { id: { in: variantIds } },
+            select: { id: true, stockPolicy: true },
+          });
     const policies = new Map(variants.map((variant) => [variant.id, variant.stockPolicy]));
     const pins = new Map<string, { variantId: string; version: number }>();
 
@@ -1538,52 +1974,72 @@ export class SalesService {
       });
     }
 
-    if (pins.size === 0) {
-      return consumed;
+    const recipeByPin = new Map<
+      string,
+      {
+        variantId: string;
+        version: number;
+        lines: { stockItemId: string; quantityPerSaleUnit: Prisma.Decimal }[];
+      }
+    >();
+
+    if (pins.size > 0) {
+      const recipes = await tx.recipeVersion.findMany({
+        where: {
+          outletId,
+          OR: [...pins.values()].map((pin) => ({
+            variantId: pin.variantId,
+            version: pin.version,
+          })),
+        },
+        select: {
+          variantId: true,
+          version: true,
+          lines: { select: { stockItemId: true, quantityPerSaleUnit: true } },
+        },
+      });
+
+      for (const recipe of recipes) {
+        recipeByPin.set(`${recipe.variantId}:${recipe.version}`, recipe);
+      }
     }
 
-    const recipes = await tx.recipeVersion.findMany({
-      where: {
-        outletId,
-        OR: [...pins.values()].map((pin) => ({
-          variantId: pin.variantId,
-          version: pin.version,
-        })),
-      },
-      select: {
-        variantId: true,
-        version: true,
-        lines: { select: { stockItemId: true, quantityPerSaleUnit: true } },
-      },
-    });
-    const recipeByPin = new Map(
-      recipes.map((recipe) => [`${recipe.variantId}:${recipe.version}`, recipe]),
-    );
-
     for (const line of sale.lines) {
-      if (policies.get(line.variantId) !== StockPolicy.TRACKED) {
-        continue;
+      if (policies.get(line.variantId) === StockPolicy.TRACKED) {
+        const recipe =
+          line.recipeVersion === null
+            ? null
+            : recipeByPin.get(`${line.variantId}:${line.recipeVersion}`);
+
+        if (!recipe) {
+          throw apiError(
+            409,
+            'RECIPE_SNAPSHOT_MISSING',
+            'The pinned recipe version for this sale is unavailable',
+            { details: { variantId: line.variantId, recipeVersion: line.recipeVersion } },
+          );
+        }
+
+        for (const recipeLine of recipe.lines) {
+          const amount = new Prisma.Decimal(recipeLine.quantityPerSaleUnit).mul(line.quantity);
+          consumed.set(
+            recipeLine.stockItemId,
+            (consumed.get(recipeLine.stockItemId) ?? zero).plus(amount),
+          );
+        }
       }
 
-      const recipe =
-        line.recipeVersion === null
-          ? null
-          : recipeByPin.get(`${line.variantId}:${line.recipeVersion}`);
+      for (const modifier of this.readConsumedModifiers(line.modifiers)) {
+        if (!modifier.stockItemId || !modifier.quantityPerSaleUnit) {
+          continue;
+        }
 
-      if (!recipe) {
-        throw apiError(
-          409,
-          'RECIPE_SNAPSHOT_MISSING',
-          'The pinned recipe version for this sale is unavailable',
-          { details: { variantId: line.variantId, recipeVersion: line.recipeVersion } },
-        );
-      }
-
-      for (const recipeLine of recipe.lines) {
-        const amount = new Prisma.Decimal(recipeLine.quantityPerSaleUnit).mul(line.quantity);
+        const amount = new Prisma.Decimal(modifier.quantityPerSaleUnit)
+          .mul(modifier.quantity)
+          .mul(line.quantity);
         consumed.set(
-          recipeLine.stockItemId,
-          (consumed.get(recipeLine.stockItemId) ?? zero).plus(amount),
+          modifier.stockItemId,
+          (consumed.get(modifier.stockItemId) ?? zero).plus(amount),
         );
       }
     }
@@ -1680,7 +2136,10 @@ export class SalesService {
   private toReversal(record: {
     id: string;
     saleId: string;
+    kind: SaleReversalKind;
     reason: string;
+    refundMinor: bigint;
+    lines: Prisma.JsonValue;
     createdAt: Date;
     restock: Prisma.JsonValue;
   }): ReversalResponse {
@@ -1698,14 +2157,35 @@ export class SalesService {
       return { stockItemId: item.stockItemId, quantity: item.quantity };
     });
 
+    const lines = this.readRefundLines(record.lines);
+
     return {
       id: record.id,
       saleId: record.saleId,
+      kind: record.kind,
       reason: record.reason,
+      refundMinor: toWireMinor(record.refundMinor, 'refundMinor'),
+      lines,
       createdAt: record.createdAt.toISOString(),
       restock,
       externalRefundPerformed: false,
     };
+  }
+
+  private readRefundLines(value: Prisma.JsonValue): RefundLineResponse[] {
+    if (!Array.isArray(value)) {
+      throw apiError(500, 'REVERSAL_CORRUPT', 'Stored refund lines are invalid');
+    }
+
+    return value.map((entry) => {
+      const item = entry as { saleLineId?: unknown; quantity?: unknown };
+
+      if (typeof item.saleLineId !== 'string' || typeof item.quantity !== 'number') {
+        throw apiError(500, 'REVERSAL_CORRUPT', 'Stored refund lines are invalid');
+      }
+
+      return { saleLineId: item.saleLineId, quantity: item.quantity };
+    });
   }
 
   private normalizeSplitBills(
@@ -1993,6 +2473,127 @@ export class SalesService {
     });
   }
 
+  private async assertApproval(
+    tx: Prisma.TransactionClient,
+    input: {
+      businessId: string;
+      outletId: string;
+      orderId: string;
+      actorId: string;
+      action: ApprovalAction;
+      amountMinor: bigint;
+      operation: string;
+      user: AuthenticatedUser;
+    },
+  ): Promise<void> {
+    const rule = await this.promotions.findApprovalRule(
+      tx,
+      input.outletId,
+      input.businessId,
+      input.action,
+    );
+    const elevated = input.user.role === Role.OWNER;
+
+    if (!rule || !rule.active) {
+      if (input.action === ApprovalAction.REFUND && !elevated) {
+        await this.recordApprovalAudit(this.prisma, input, {
+          allowed: false,
+          reason: 'NO_RULE_OWNER_ONLY',
+          thresholdMinor: null,
+        });
+        throw apiError(
+          403,
+          'FORBIDDEN',
+          'Refunds without a configured approval rule require an owner',
+          {
+            details: {
+              action: input.action,
+              amountMinor: toWireMinor(input.amountMinor, 'amountMinor'),
+              thresholdMinor: null,
+            },
+          },
+        );
+      }
+
+      return;
+    }
+
+    const allowed = elevated || input.amountMinor <= rule.thresholdMinor;
+
+    if (!allowed) {
+      await this.recordApprovalAudit(this.prisma, input, {
+        allowed: false,
+        reason: 'THRESHOLD_EXCEEDED',
+        thresholdMinor: rule.thresholdMinor,
+      });
+      throw apiError(
+        403,
+        'APPROVAL_REQUIRED',
+        'This operation needs owner approval because it exceeds the configured threshold',
+        {
+          details: {
+            action: input.action,
+            amountMinor: toWireMinor(input.amountMinor, 'amountMinor'),
+            thresholdMinor: toWireMinor(rule.thresholdMinor, 'thresholdMinor'),
+          },
+        },
+      );
+    }
+
+    await this.writeAudit(tx, {
+      businessId: input.businessId,
+      outletId: input.outletId,
+      orderId: input.orderId,
+      actorId: input.actorId,
+      action: OrderAuditAction.APPROVAL,
+      metadata: {
+        operation: input.operation,
+        action: input.action,
+        allowed: true,
+        elevated,
+        amountMinor: toWireMinor(input.amountMinor, 'amountMinor'),
+        thresholdMinor: toWireMinor(rule.thresholdMinor, 'thresholdMinor'),
+      },
+    });
+  }
+
+  private async recordApprovalAudit(
+    client: DbClient,
+    input: {
+      businessId: string;
+      outletId: string;
+      orderId: string;
+      actorId: string;
+      action: ApprovalAction;
+      amountMinor: bigint;
+      operation: string;
+      user: AuthenticatedUser;
+    },
+    decision: { allowed: boolean; reason: string; thresholdMinor: bigint | null },
+  ): Promise<void> {
+    await client.orderAudit.create({
+      data: {
+        businessId: input.businessId,
+        outletId: input.outletId,
+        orderId: input.orderId,
+        actorId: input.actorId,
+        action: OrderAuditAction.APPROVAL,
+        metadata: {
+          operation: input.operation,
+          action: input.action,
+          allowed: decision.allowed,
+          elevated: input.user.role === Role.OWNER,
+          reason: decision.reason,
+          amountMinor: toWireMinor(input.amountMinor, 'amountMinor'),
+          thresholdMinor:
+            decision.thresholdMinor === null
+              ? null
+              : toWireMinor(decision.thresholdMinor, 'thresholdMinor'),
+        } as unknown as Prisma.InputJsonValue,
+      },
+    });
+  }
+
   private async replayOrder(
     order: {
       requestHash: string;
@@ -2069,7 +2670,7 @@ export class SalesService {
     tableId: string | null;
     splitGroupId: string | null;
     parentOrderId: string | null;
-    lines: { variantId: string; quantity: number }[];
+    lines: { variantId: string; quantity: number; modifiers: Prisma.JsonValue }[];
   }> {
     const order = await client.order.findFirst({
       where: { id: orderId, outletId, businessId: user.businessId },
@@ -2096,7 +2697,7 @@ export class SalesService {
     splitGroupId: string | null;
     parentOrderId: string | null;
     table: { label: string } | null;
-    lines: { variantId: string; quantity: number }[];
+    lines: { variantId: string; quantity: number; modifiers: Prisma.JsonValue }[];
   }> {
     const order = await client.order.findUnique({
       where: { id: orderId },
@@ -2190,6 +2791,7 @@ export class SalesService {
       include: {
         menuItem: {
           select: {
+            id: true,
             name: true,
             archivedAt: true,
             category: { select: { archivedAt: true } },
@@ -2218,10 +2820,15 @@ export class SalesService {
   }
 
   private buildQuoteLines(
-    orderLines: { variantId: string; quantity: number }[],
+    orderLines: {
+      variantId: string;
+      quantity: number;
+      modifiers?: Prisma.JsonValue | StoredOrderLineModifier[];
+    }[],
     variants: Map<string, VariantPricingRecord>,
     strict = false,
     recipes: Map<string, number> = new Map(),
+    modifierById: Map<string, ModifierRecord> = new Map(),
   ): QuoteLineSnapshot[] {
     return orderLines.map((line) => {
       const variant = variants.get(line.variantId);
@@ -2250,23 +2857,309 @@ export class SalesService {
         );
       }
 
-      const unitPriceMinor = toWireMinor(variant.priceMinor, 'unitPriceMinor');
+      const modifiers = this.readStoredLineModifiers(line.modifiers).map((stored) => {
+        const modifier = modifierById.get(stored.modifierId);
+
+        if (!modifier) {
+          throw apiError(
+            strict ? 409 : 422,
+            strict ? 'QUOTE_STALE' : 'ITEM_UNAVAILABLE',
+            'A selected modifier is no longer available',
+            { details: { modifierId: stored.modifierId } },
+          );
+        }
+
+        if (modifier.menuItemId !== variant.menuItem.id) {
+          throw apiError(422, 'INVALID_MODIFIER', 'Modifier does not belong to this menu item', {
+            details: { modifierId: stored.modifierId },
+          });
+        }
+
+        const unitDelta = modifier.priceDeltaMinor * BigInt(stored.quantity);
+
+        return {
+          modifierId: modifier.id,
+          name: modifier.name,
+          quantity: stored.quantity,
+          priceDeltaMinor: toWireMinor(modifier.priceDeltaMinor, 'priceDeltaMinor'),
+          lineDeltaMinor: toWireMinor(unitDelta * BigInt(line.quantity), 'lineDeltaMinor'),
+          stockItemId: modifier.stockItemId,
+          quantityPerSaleUnit: modifier.quantityPerSaleUnit,
+        } satisfies ResolvedLineModifierSnapshot;
+      });
+
+      const unitPriceMinor = modifiers.reduce(
+        (sum, modifier) => sum + BigInt(modifier.priceDeltaMinor) * BigInt(modifier.quantity),
+        variant.priceMinor,
+      );
+
+      if (unitPriceMinor < 0n) {
+        throw apiError(422, 'INVALID_MODIFIER', 'Modifiers cannot make a unit price negative', {
+          details: { variantId: line.variantId },
+        });
+      }
+
       const lineSubtotal = calculateTotals(
-        [{ unitPriceMinor: variant.priceMinor, quantity: line.quantity }],
+        [{ unitPriceMinor, quantity: line.quantity }],
         0,
         0,
       ).subtotalMinor;
 
       return {
         variantId: line.variantId,
+        menuItemId: variant.menuItem.id,
         name: variant.menuItem.name,
         variantName: variant.name,
         quantity: line.quantity,
-        unitPriceMinor,
+        unitPriceMinor: toWireMinor(unitPriceMinor, 'unitPriceMinor'),
         lineSubtotalMinor: toWireMinor(lineSubtotal, 'lineSubtotalMinor'),
         recipeVersion,
+        modifiers,
       };
     });
+  }
+
+  private normalizeOrderLineModifiers(
+    modifiers: OrderLineModifierDto[] | undefined,
+  ): StoredOrderLineModifier[] {
+    if (modifiers === undefined) {
+      return [];
+    }
+
+    if (!Array.isArray(modifiers)) {
+      throw apiError(400, 'VALIDATION_ERROR', 'modifiers must be an array');
+    }
+
+    const seen = new Set<string>();
+    const normalized = modifiers.map((modifier) => {
+      const modifierId = modifier.modifierId.toLowerCase();
+      const quantity = modifier.quantity ?? 1;
+
+      if (!UUID_PATTERN.test(modifierId)) {
+        throw apiError(400, 'VALIDATION_ERROR', 'modifierId must be a UUID');
+      }
+
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+        throw apiError(422, 'INVALID_MODIFIER', 'modifier quantity must be between 1 and 100');
+      }
+
+      if (seen.has(modifierId)) {
+        throw apiError(422, 'DUPLICATE_MODIFIER', 'A modifier can appear only once per line', {
+          details: { modifierId },
+        });
+      }
+
+      seen.add(modifierId);
+      return { modifierId, quantity };
+    });
+
+    return normalized.sort((a, b) => a.modifierId.localeCompare(b.modifierId));
+  }
+
+  private readStoredLineModifiers(
+    value: Prisma.JsonValue | StoredOrderLineModifier[] | undefined,
+  ): StoredOrderLineModifier[] {
+    if (value === undefined) {
+      return [];
+    }
+
+    if (!Array.isArray(value)) {
+      throw apiError(500, 'ORDER_LINE_CORRUPT', 'Stored line modifiers are invalid');
+    }
+
+    return value.map((entry) => {
+      const item = entry as { modifierId?: unknown; quantity?: unknown };
+
+      if (typeof item.modifierId !== 'string' || typeof item.quantity !== 'number') {
+        throw apiError(500, 'ORDER_LINE_CORRUPT', 'Stored line modifiers are invalid');
+      }
+
+      return { modifierId: item.modifierId, quantity: item.quantity };
+    });
+  }
+
+  private readConsumedModifiers(value: Prisma.JsonValue | undefined): {
+    stockItemId: string | null;
+    quantityPerSaleUnit: string | null;
+    quantity: number;
+  }[] {
+    if (value === undefined) {
+      return [];
+    }
+
+    if (!Array.isArray(value)) {
+      throw apiError(500, 'SALE_CORRUPT', 'Stored sale line modifiers are invalid');
+    }
+
+    return value.map((entry) => {
+      const item = entry as {
+        stockItemId?: unknown;
+        quantityPerSaleUnit?: unknown;
+        quantity?: unknown;
+      };
+
+      if (typeof item.quantity !== 'number') {
+        throw apiError(500, 'SALE_CORRUPT', 'Stored sale line modifiers are invalid');
+      }
+
+      return {
+        stockItemId: typeof item.stockItemId === 'string' ? item.stockItemId : null,
+        quantityPerSaleUnit:
+          typeof item.quantityPerSaleUnit === 'string' ? item.quantityPerSaleUnit : null,
+        quantity: item.quantity,
+      };
+    });
+  }
+
+  private async resolveOrderModifiers(
+    client: DbClient,
+    businessId: string,
+    variants: Map<string, VariantPricingRecord>,
+    lines: {
+      variantId: string;
+      quantity: number;
+      modifiers?: OrderLineModifierDto[];
+    }[],
+  ): Promise<StoredOrderLineModifier[][]> {
+    const normalized = lines.map((line) => this.normalizeOrderLineModifiers(line.modifiers));
+    const ids = [...new Set(normalized.flat().map((modifier) => modifier.modifierId))];
+
+    if (ids.length === 0) {
+      return normalized;
+    }
+
+    const rows = await client.menuItemModifier.findMany({
+      where: { id: { in: ids }, businessId, active: true },
+      select: {
+        id: true,
+        menuItemId: true,
+        name: true,
+        priceDeltaMinor: true,
+        stockItemId: true,
+        quantityPerSaleUnit: true,
+      },
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+
+    lines.forEach((line, index) => {
+      const variant = variants.get(line.variantId);
+
+      for (const modifier of normalized[index] ?? []) {
+        const row = byId.get(modifier.modifierId);
+
+        if (!row || row.menuItemId !== variant?.menuItem.id) {
+          throw apiError(422, 'INVALID_MODIFIER', 'Modifier is not available for this item', {
+            details: { modifierId: modifier.modifierId, variantId: line.variantId },
+          });
+        }
+      }
+    });
+
+    return normalized;
+  }
+
+  private async loadModifierRecords(
+    client: DbClient,
+    businessId: string,
+    lines: { modifiers?: Prisma.JsonValue | StoredOrderLineModifier[] }[],
+    variants: Map<string, VariantPricingRecord>,
+  ): Promise<Map<string, ModifierRecord>> {
+    const ids = [
+      ...new Set(lines.flatMap((line) => this.readStoredLineModifiers(line.modifiers).map((m) => m.modifierId))),
+    ];
+
+    if (ids.length === 0) {
+      return new Map();
+    }
+
+    const rows = await client.menuItemModifier.findMany({
+      where: { id: { in: ids }, businessId, active: true },
+      select: {
+        id: true,
+        menuItemId: true,
+        name: true,
+        priceDeltaMinor: true,
+        stockItemId: true,
+        quantityPerSaleUnit: true,
+      },
+    });
+    const byId = new Map(
+      rows.map((row) => [
+        row.id,
+        {
+          id: row.id,
+          menuItemId: row.menuItemId,
+          name: row.name,
+          priceDeltaMinor: row.priceDeltaMinor,
+          stockItemId: row.stockItemId,
+          quantityPerSaleUnit: row.quantityPerSaleUnit
+            ? row.quantityPerSaleUnit.toString()
+            : null,
+        },
+      ]),
+    );
+    const menuItemIds = new Set([...variants.values()].map((variant) => variant.menuItem.id));
+
+    for (const id of ids) {
+      const row = byId.get(id);
+
+      if (!row || !menuItemIds.has(row.menuItemId)) {
+        throw apiError(422, 'INVALID_MODIFIER', 'Modifier is not available for this item', {
+          details: { modifierId: id },
+        });
+      }
+    }
+
+    return byId;
+  }
+
+  private readPromotionSnapshots(value: Prisma.JsonValue): PromotionSnapshotResponse[] {
+    if (!Array.isArray(value)) {
+      throw apiError(500, 'PROMOTION_CORRUPT', 'Stored promotion snapshot is invalid');
+    }
+
+    return value.map((entry) => {
+      const item = entry as {
+        promotionId?: unknown;
+        name?: unknown;
+        kind?: unknown;
+        discountMinor?: unknown;
+      };
+
+      if (
+        typeof item.promotionId !== 'string' ||
+        typeof item.name !== 'string' ||
+        (item.kind !== PromotionKind.PERCENTAGE && item.kind !== PromotionKind.FIXED_AMOUNT) ||
+        typeof item.discountMinor !== 'number'
+      ) {
+        throw apiError(500, 'PROMOTION_CORRUPT', 'Stored promotion snapshot is invalid');
+      }
+
+      return {
+        promotionId: item.promotionId,
+        name: item.name,
+        kind: item.kind,
+        discountMinor: item.discountMinor,
+      };
+    });
+  }
+
+  private toPromotionSnapshots(promotions: AppliedPromotion[]): PromotionSnapshotResponse[] {
+    return promotions.map((promotion) => ({
+      promotionId: promotion.promotionId,
+      name: promotion.name,
+      kind: promotion.kind,
+      discountMinor: toWireMinor(promotion.discountMinor, 'discountMinor'),
+    }));
+  }
+
+  private normalizeCustomerEmail(value: string | undefined): string | null {
+    if (value === undefined) {
+      return null;
+    }
+
+    const email = value.trim().toLowerCase();
+    return email.length > 0 ? email : null;
   }
 
   private async loadRecipeVersions(
@@ -2311,19 +3204,26 @@ export class SalesService {
     currentLines: QuoteLineSnapshot[],
     quote: {
       subtotalMinor: bigint;
+      discountMinor: bigint;
       serviceMinor: bigint;
       taxMinor: bigint;
       totalMinor: bigint;
     },
-    currentTotals: MoneyTotals,
+    currentTotals: DiscountedTotals,
+    quotedPromotions: PromotionSnapshotResponse[],
+    currentPromotions: PromotionSnapshotResponse[],
   ): void {
     const sameLines =
       quotedLines.length === currentLines.length &&
       this.lineSignatures(quotedLines) === this.lineSignatures(currentLines);
+    const samePromotions =
+      JSON.stringify(quotedPromotions) === JSON.stringify(currentPromotions);
 
     if (
       !sameLines ||
+      !samePromotions ||
       quote.subtotalMinor !== currentTotals.subtotalMinor ||
+      quote.discountMinor !== currentTotals.discountMinor ||
       quote.serviceMinor !== currentTotals.serviceMinor ||
       quote.taxMinor !== currentTotals.taxMinor ||
       quote.totalMinor !== currentTotals.totalMinor
@@ -2331,7 +3231,7 @@ export class SalesService {
       throw apiError(
         409,
         'QUOTE_STALE',
-        'Prices or charges changed after the quote; request a new quote',
+        'Prices, promotions or charges changed after the quote; request a new quote',
       );
     }
   }
@@ -2339,7 +3239,13 @@ export class SalesService {
   private lineSignatures(lines: QuoteLineSnapshot[]): string {
     return lines
       .map((line) =>
-        [line.variantId, line.quantity, line.unitPriceMinor, line.lineSubtotalMinor].join(':'),
+        [
+          line.variantId,
+          line.quantity,
+          line.unitPriceMinor,
+          line.lineSubtotalMinor,
+          JSON.stringify(line.modifiers ?? []),
+        ].join(':'),
       )
       .sort()
       .join('|');
@@ -2362,7 +3268,7 @@ export class SalesService {
       include: {
         lines: { orderBy: [{ id: 'asc' }] },
         payment: true,
-        reversal: true,
+        reversals: { include: { refundLines: true }, orderBy: [{ createdAt: 'asc' }] },
       },
     });
 
@@ -2382,7 +3288,7 @@ export class SalesService {
     splitGroupId?: string | null;
     parentOrderId?: string | null;
     table?: { label: string } | null;
-    lines: { variantId: string; quantity: number }[];
+    lines: { variantId: string; quantity: number; modifiers?: Prisma.JsonValue }[];
   }): OrderResponse {
     return {
       id: order.id,
@@ -2396,6 +3302,14 @@ export class SalesService {
       lines: order.lines.map((line) => ({
         variantId: line.variantId,
         quantity: line.quantity,
+        ...(this.readStoredLineModifiers(line.modifiers).length > 0
+          ? {
+              modifiers: this.readStoredLineModifiers(line.modifiers).map((modifier) => ({
+                modifierId: modifier.modifierId,
+                quantity: modifier.quantity,
+              })),
+            }
+          : {}),
       })),
     };
   }
@@ -2416,9 +3330,16 @@ export class SalesService {
     };
   }
 
-  private toTotals(totals: MoneyTotals): TotalsResponse {
+  private toTotals(totals: {
+    subtotalMinor: bigint;
+    discountMinor?: bigint;
+    serviceMinor: bigint;
+    taxMinor: bigint;
+    totalMinor: bigint;
+  }): TotalsResponse {
     return {
       subtotalMinor: toWireMinor(totals.subtotalMinor, 'subtotalMinor'),
+      discountMinor: toWireMinor(totals.discountMinor ?? 0n, 'discountMinor'),
       serviceMinor: toWireMinor(totals.serviceMinor, 'serviceMinor'),
       taxMinor: toWireMinor(totals.taxMinor, 'taxMinor'),
       totalMinor: toWireMinor(totals.totalMinor, 'totalMinor'),
@@ -2457,10 +3378,12 @@ export class SalesService {
       calculation: this.toCalculation(sale),
       totals: {
         subtotalMinor: toWireMinor(sale.subtotalMinor, 'subtotalMinor'),
+        discountMinor: toWireMinor(sale.discountMinor, 'discountMinor'),
         serviceMinor: toWireMinor(sale.serviceMinor, 'serviceMinor'),
         taxMinor: toWireMinor(sale.taxMinor, 'taxMinor'),
         totalMinor: toWireMinor(sale.totalMinor, 'totalMinor'),
       },
+      promotions: this.readPromotionSnapshots(sale.promotions),
       lines: sale.lines.map((line) => ({
         id: line.id,
         variantId: line.variantId,
@@ -2469,10 +3392,56 @@ export class SalesService {
         quantity: line.quantity,
         unitPriceMinor: toWireMinor(line.unitPriceMinor, 'unitPriceMinor'),
         lineSubtotalMinor: toWireMinor(line.lineSubtotalMinor, 'lineSubtotalMinor'),
+        modifiers: this.readSaleLineModifiers(line.modifiers),
       })),
       payment: paymentResponse,
-      ...(sale.reversal ? { reversal: this.toReversal(sale.reversal) } : {}),
+      ...(sale.reversals?.some((row) => row.kind === SaleReversalKind.FULL)
+        ? {
+            reversal: this.toReversal(
+              sale.reversals.find((row) => row.kind === SaleReversalKind.FULL)!,
+            ),
+          }
+        : {}),
+      ...(sale.reversals && sale.reversals.length > 0
+        ? { refunds: sale.reversals.map((row) => this.toReversal(row)) }
+        : {}),
     };
+  }
+
+  private readSaleLineModifiers(value: Prisma.JsonValue): LineModifierResponse[] {
+    if (!Array.isArray(value)) {
+      throw apiError(500, 'SALE_CORRUPT', 'Stored sale line modifiers are invalid');
+    }
+
+    return value.map((entry) => {
+      const item = entry as {
+        modifierId?: unknown;
+        name?: unknown;
+        quantity?: unknown;
+        priceDeltaMinor?: unknown;
+        lineDeltaMinor?: unknown;
+        stockItemId?: unknown;
+      };
+
+      if (
+        typeof item.modifierId !== 'string' ||
+        typeof item.name !== 'string' ||
+        typeof item.quantity !== 'number' ||
+        typeof item.priceDeltaMinor !== 'number' ||
+        typeof item.lineDeltaMinor !== 'number'
+      ) {
+        throw apiError(500, 'SALE_CORRUPT', 'Stored sale line modifiers are invalid');
+      }
+
+      return {
+        modifierId: item.modifierId,
+        name: item.name,
+        quantity: item.quantity,
+        priceDeltaMinor: item.priceDeltaMinor,
+        lineDeltaMinor: item.lineDeltaMinor,
+        stockItemId: typeof item.stockItemId === 'string' ? item.stockItemId : null,
+      };
+    });
   }
 
   private async runSerializable<T>(
@@ -2512,7 +3481,12 @@ export class SalesService {
       orderId: string;
       saleId: string;
       actorId: string;
-      lines: { variantId: string; quantity: number; recipeVersion: number | null }[];
+      lines: {
+        variantId: string;
+        quantity: number;
+        recipeVersion: number | null;
+        modifiers?: ResolvedLineModifierSnapshot[];
+      }[];
     },
   ): Promise<void> {
     const { outletId, orderId, saleId, actorId, lines } = context;
@@ -2634,6 +3608,20 @@ export class SalesService {
         const amount = new Prisma.Decimal(recipeLine.quantityPerSaleUnit).mul(line.quantity);
         const previous = consumption.get(recipeLine.stockItemId) ?? zero;
         consumption.set(recipeLine.stockItemId, previous.plus(amount));
+      }
+    }
+
+    for (const line of lines) {
+      for (const modifier of line.modifiers ?? []) {
+        if (!modifier.stockItemId || !modifier.quantityPerSaleUnit) {
+          continue;
+        }
+
+        const amount = new Prisma.Decimal(modifier.quantityPerSaleUnit)
+          .mul(modifier.quantity)
+          .mul(line.quantity);
+        const previous = consumption.get(modifier.stockItemId) ?? zero;
+        consumption.set(modifier.stockItemId, previous.plus(amount));
       }
     }
 

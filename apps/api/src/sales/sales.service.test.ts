@@ -4,6 +4,7 @@ import { HttpException } from '@nestjs/common';
 import { OrderState, PaymentKind, Prisma, Role, SaleState, StockPolicy } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import type { PrismaService } from '../prisma/prisma.service';
+import { PromotionsService } from '../promotions/promotions.service';
 import { SalesService } from './sales.service';
 import { calculateTotals } from './money';
 
@@ -41,6 +42,7 @@ interface VariantRow {
   active: boolean;
   stockPolicy: StockPolicy;
   menuItem: {
+    id: string;
     name: string;
     archivedAt: Date | null;
     category: { archivedAt: Date | null };
@@ -53,6 +55,7 @@ interface OrderLineRow {
   orderId: string;
   variantId: string;
   quantity: number;
+  modifiers: unknown[];
   createdAt: Date;
 }
 
@@ -126,7 +129,10 @@ interface QuoteRow {
   pricingMode: string;
   rounding: string;
   expiresAt: Date;
+  customerEmail?: string | null;
   subtotalMinor: bigint;
+  discountMinor: bigint;
+  promotions: unknown[];
   serviceMinor: bigint;
   taxMinor: bigint;
   totalMinor: bigint;
@@ -143,6 +149,7 @@ interface SaleLineRow {
   quantity: number;
   unitPriceMinor: bigint;
   lineSubtotalMinor: bigint;
+  modifiers: unknown[];
   recipeVersion: number | null;
 }
 
@@ -175,6 +182,8 @@ interface SaleRow {
   rounding: string;
   timezone: string;
   subtotalMinor: bigint;
+  discountMinor: bigint;
+  promotions: unknown[];
   serviceMinor: bigint;
   taxMinor: bigint;
   totalMinor: bigint;
@@ -190,12 +199,64 @@ interface ReversalRow {
   outletId: string;
   saleId: string;
   actorId: string;
+  kind: string;
   reason: string;
+  refundMinor: bigint;
+  lines: unknown[];
   restock: unknown;
   externalRefundPerformed: boolean;
   idempotencyKey: string;
   requestHash: string;
   createdAt: Date;
+}
+
+interface RefundLineRow {
+  id: string;
+  reversalId: string;
+  saleLineId: string;
+  quantity: number;
+}
+
+interface ModifierRow {
+  id: string;
+  businessId: string;
+  menuItemId: string;
+  name: string;
+  priceDeltaMinor: bigint;
+  stockItemId: string | null;
+  quantityPerSaleUnit: string | null;
+  active: boolean;
+}
+
+interface PromotionRow {
+  id: string;
+  businessId: string;
+  outletId: string | null;
+  name: string;
+  kind: string;
+  percentageBps: number | null;
+  amountMinor: bigint | null;
+  minBasketMinor: bigint;
+  startsAt: Date | null;
+  endsAt: Date | null;
+  active: boolean;
+  stacking: string;
+  priority: number;
+  eligibility: Record<string, unknown>;
+  revision: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface ApprovalRuleRow {
+  id: string;
+  businessId: string;
+  outletId: string;
+  action: string;
+  thresholdMinor: bigint;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface CheckoutRow {
@@ -280,6 +341,10 @@ interface FakeState {
   tables: DiningTableRow[];
   orderAudits: OrderAuditRow[];
   orderSplits: OrderSplitRow[];
+  refundLines: RefundLineRow[];
+  modifiers: ModifierRow[];
+  promotions: PromotionRow[];
+  approvalRules: ApprovalRuleRow[];
 }
 
 function clone<T>(value: T): T {
@@ -311,6 +376,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         active: true,
         stockPolicy: StockPolicy.UNTRACKED,
         menuItem: {
+          id: '00000000-0000-4000-8000-000000000030',
           name: 'Iced Coffee',
           archivedAt: null,
           category: { archivedAt: null },
@@ -325,6 +391,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         active: true,
         stockPolicy: StockPolicy.UNTRACKED,
         menuItem: {
+          id: '00000000-0000-4000-8000-000000000031',
           name: 'Chicken Rice',
           archivedAt: null,
           category: { archivedAt: null },
@@ -345,6 +412,10 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
     tables: [],
     orderAudits: [],
     orderSplits: [],
+    refundLines: [],
+    modifiers: [],
+    promotions: [],
+    approvalRules: [],
   };
 
   let sequence = 0;
@@ -364,12 +435,20 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
   };
 
   const withReceipt = (sale: SaleRow) => {
-    const reversal = state.reversals.find((row) => row.saleId === sale.id);
+    const reversals = state.reversals
+      .filter((row) => row.saleId === sale.id)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .map((row) => ({
+        ...clone(row),
+        refundLines: state.refundLines
+          .filter((line) => line.reversalId === row.id)
+          .map((line) => ({ saleLineId: line.saleLineId, quantity: line.quantity })),
+      }));
     return {
       ...clone(sale),
       lines: clone(sale.lines),
       payment: sale.payment ? clone(sale.payment) : null,
-      reversal: reversal ? clone(reversal) : null,
+      reversals,
     };
   };
 
@@ -730,7 +809,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
           tableId?: string | null;
           splitGroupId?: string | null;
           parentOrderId?: string | null;
-          lines: { create: { variantId: string; quantity: number }[] };
+          lines: { create: { variantId: string; quantity: number; modifiers?: unknown[] }[] };
         };
       }) => {
         const order: OrderRow = {
@@ -753,6 +832,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
             orderId: '',
             variantId: line.variantId,
             quantity: line.quantity,
+            modifiers: clone(line.modifiers ?? []),
             createdAt: now,
           })),
         };
@@ -789,7 +869,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         return { count: 0 };
       },
       createMany: async (args: {
-        data: { orderId: string; variantId: string; quantity: number }[];
+        data: { orderId: string; variantId: string; quantity: number; modifiers?: unknown[] }[];
       }) => {
         for (const line of args.data) {
           const order = state.orders.find((row) => row.id === line.orderId);
@@ -799,6 +879,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
             orderId: line.orderId,
             variantId: line.variantId,
             quantity: line.quantity,
+            modifiers: clone(line.modifiers ?? []),
             createdAt: now,
           });
         }
@@ -831,6 +912,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
               quantity: number;
               unitPriceMinor: bigint;
               lineSubtotalMinor: bigint;
+              modifiers?: unknown[];
               recipeVersion: number | null;
             }[];
           };
@@ -865,6 +947,8 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
             rounding: args.data.rounding,
             timezone: args.data.timezone,
             subtotalMinor: args.data.subtotalMinor,
+            discountMinor: args.data.discountMinor ?? 0n,
+            promotions: clone(args.data.promotions ?? []),
             serviceMinor: args.data.serviceMinor,
             taxMinor: args.data.taxMinor,
             totalMinor: args.data.totalMinor,
@@ -880,6 +964,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
             quantity: line.quantity,
             unitPriceMinor: line.unitPriceMinor,
             lineSubtotalMinor: line.lineSubtotalMinor,
+            modifiers: clone(line.modifiers ?? []),
             recipeVersion: line.recipeVersion,
           })),
           payment: {
@@ -922,6 +1007,163 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         return rows.slice(0, args.take).map(withReceipt);
       },
     },
+    menuItemModifier: {
+      findMany: async (args: {
+        where: { id: { in: string[] }; businessId?: string; active?: boolean };
+      }) => {
+        return state.modifiers
+          .filter(
+            (row) =>
+              args.where.id.in.includes(row.id) &&
+              (args.where.businessId === undefined || row.businessId === args.where.businessId) &&
+              (args.where.active === undefined || row.active === args.where.active),
+          )
+          .map((row) => clone(row));
+      },
+    },
+    promotion: {
+      findMany: async (args: { where: Record<string, unknown> }) => {
+        return state.promotions
+          .filter((row) => {
+            const where = args.where;
+            if (where.businessId !== undefined && row.businessId !== where.businessId) {
+              return false;
+            }
+            if (where.id !== undefined) {
+              const ids = (where.id as { in: string[] }).in;
+              if (!ids.includes(row.id)) return false;
+            }
+            if (where.OR !== undefined) {
+              const clauses = where.OR as Record<string, unknown>[];
+              if (
+                !clauses.some((clause) =>
+                  Object.entries(clause).every(
+                    ([key, value]) => (row as unknown as Record<string, unknown>)[key] === value,
+                  ),
+                )
+              ) {
+                return false;
+              }
+            }
+            return true;
+          })
+          .map((row) => clone(row));
+      },
+      findFirst: async (args: { where: Record<string, unknown> }) => {
+        const row = state.promotions.find((promotion) =>
+          Object.entries(args.where).every(
+            ([key, value]) =>
+              (promotion as unknown as Record<string, unknown>)[key] === value ||
+              value === null,
+          ),
+        );
+        return row ? clone(row) : null;
+      },
+      findUnique: async (args: { where: { id: string } }) => {
+        const row = state.promotions.find((promotion) => promotion.id === args.where.id);
+        return row ? clone(row) : null;
+      },
+      create: async (args: { data: Omit<PromotionRow, 'id' | 'revision' | 'createdAt' | 'updatedAt'> }) => {
+        const row: PromotionRow = {
+          ...clone(args.data),
+          id: nextId(),
+          revision: 1,
+          createdAt: now,
+          updatedAt: now,
+        };
+        state.promotions.push(row);
+        return clone(row);
+      },
+      updateMany: async (args: {
+        where: Record<string, unknown>;
+        data: Record<string, unknown>;
+      }) => {
+        const row = state.promotions.find((promotion) =>
+          Object.entries(args.where).every(
+            ([key, value]) =>
+              (promotion as unknown as Record<string, unknown>)[key] === value,
+          ),
+        );
+        if (!row) return { count: 0 };
+        const data = clone(args.data);
+        for (const [key, value] of Object.entries(data)) {
+          if (key === 'revision' && typeof value === 'object' && value !== null) {
+            row.revision += (value as { increment: number }).increment;
+          } else {
+            (row as unknown as Record<string, unknown>)[key] = value;
+          }
+        }
+        row.updatedAt = now;
+        return { count: 1 };
+      },
+    },
+    approvalRule: {
+      findFirst: async (args: { where: Record<string, unknown> }) => {
+        const row = state.approvalRules.find((rule) =>
+          Object.entries(args.where).every(
+            ([key, value]) => (rule as unknown as Record<string, unknown>)[key] === value,
+          ),
+        );
+        return row ? clone(row) : null;
+      },
+      findMany: async (args: { where: Record<string, unknown> }) => {
+        return state.approvalRules
+          .filter((row) =>
+            Object.entries(args.where).every(
+              ([key, value]) => (row as unknown as Record<string, unknown>)[key] === value,
+            ),
+          )
+          .map((row) => clone(row));
+      },
+      upsert: async (args: {
+        where: { outletId_action: { outletId: string; action: string } };
+        create: Omit<ApprovalRuleRow, 'id' | 'createdAt' | 'updatedAt'>;
+        update: { thresholdMinor: bigint; active: boolean };
+      }) => {
+        const key = args.where.outletId_action;
+        const existing = state.approvalRules.find(
+          (row) => row.outletId === key.outletId && row.action === key.action,
+        );
+        if (existing) {
+          existing.thresholdMinor = args.update.thresholdMinor;
+          existing.active = args.update.active;
+          existing.updatedAt = now;
+          return clone(existing);
+        }
+        const row: ApprovalRuleRow = {
+          ...clone(args.create),
+          id: nextId(),
+          createdAt: now,
+          updatedAt: now,
+        };
+        state.approvalRules.push(row);
+        return clone(row);
+      },
+    },
+    saleRefundLine: {
+      createMany: async (args: {
+        data: { reversalId: string; saleLineId: string; quantity: number }[];
+      }) => {
+        for (const line of args.data) {
+          state.refundLines.push({
+            id: nextId(),
+            reversalId: line.reversalId,
+            saleLineId: line.saleLineId,
+            quantity: line.quantity,
+          });
+        }
+        return { count: args.data.length };
+      },
+      findMany: async (args: { where: Record<string, unknown> }) => {
+        return state.refundLines
+          .filter((row) =>
+            Object.entries(args.where).every(
+              ([key, value]) => (row as unknown as Record<string, unknown>)[key] === value,
+            ),
+          )
+          .map((row) => clone(row));
+      },
+    },
     saleReversal: {
       findUnique: async (args: {
         where:
@@ -946,17 +1188,26 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
             );
         return row ? clone(row) : null;
       },
+      findMany: async (args: {
+        where: { saleId?: string };
+        include?: { refundLines?: boolean };
+        orderBy?: unknown;
+      }) => {
+        return state.reversals
+          .filter((row) => args.where.saleId === undefined || row.saleId === args.where.saleId)
+          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+          .map((row) => ({
+            ...clone(row),
+            refundLines: state.refundLines
+              .filter((line) => line.reversalId === row.id)
+              .map((line) => ({ saleLineId: line.saleLineId, quantity: line.quantity })),
+          }));
+      },
       create: async (args: {
         data: Omit<ReversalRow, 'id' | 'createdAt' | 'externalRefundPerformed'> & {
           externalRefundPerformed?: boolean;
         };
       }) => {
-        if (state.reversals.some((reversal) => reversal.saleId === args.data.saleId)) {
-          throw new Prisma.PrismaClientKnownRequestError('duplicate sale reversal', {
-            code: 'P2002',
-            clientVersion: '6.19.3',
-          });
-        }
 
         if (
           state.reversals.some(
@@ -973,6 +1224,9 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
 
         const row: ReversalRow = {
           ...clone(args.data),
+          kind: args.data.kind ?? 'FULL',
+          refundMinor: args.data.refundMinor ?? 0n,
+          lines: clone(args.data.lines ?? []),
           externalRefundPerformed: args.data.externalRefundPerformed ?? false,
           id: nextId(),
           createdAt: now,
@@ -1084,7 +1338,7 @@ function codeOf(error: unknown): string | undefined {
 
 test('order creation is idempotent and rejects a changed payload', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const created = await service.createOrder(
@@ -1130,7 +1384,7 @@ test('order creation is idempotent and rejects a changed payload', async () => {
 
 test('quote uses shared settings, snapshots names and expires in 60 seconds', async () => {
   const { prisma } = createFakePrisma({ serviceBps: 500, taxBps: 1100 });
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1170,7 +1424,7 @@ test('quote uses shared settings, snapshots names and expires in 60 seconds', as
 
 test('cash finalize records totals, payment and change; replay returns the same sale', async () => {
   const { prisma, state } = createFakePrisma({ serviceBps: 500, taxBps: 1100 });
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1246,7 +1500,7 @@ test('cash finalize records totals, payment and change; replay returns the same 
 
 test('sale lines preserve the historical price after a catalog price change', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1280,7 +1534,7 @@ test('sale lines preserve the historical price after a catalog price change', as
 
 test('finalize pins the recipe version at sale time; later versions never rewrite it', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   state.recipes.push({
@@ -1342,7 +1596,7 @@ test('finalize pins the recipe version at sale time; later versions never rewrit
 
 test('finalize pins each variant recipe version independently by variantId', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   state.recipes.push(
@@ -1407,7 +1661,7 @@ test('finalize pins each variant recipe version independently by variantId', asy
 
 test('quote line matching is order-independent by variantId', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   state.recipes.push(
@@ -1469,7 +1723,7 @@ test('quote line matching is order-independent by variantId', async () => {
 
 test('tracked variants without a published recipe are rejected at sale time', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const tracked = state.variants.find((row) => row.id === VARIANT_A);
@@ -1491,7 +1745,7 @@ test('tracked variants without a published recipe are rejected at sale time', as
 
 test('completed sale snapshots calculation rules after a settings change', async () => {
   const { prisma, state } = createFakePrisma({ serviceBps: 500, taxBps: 1100 });
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1569,7 +1823,7 @@ test('completed sale snapshots calculation rules after a settings change', async
 
 test('a cashier cannot access another cashier draft order', async () => {
   const { prisma } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const ownerCashier = user();
   const otherCashier = user(Role.CASHIER, OTHER_CASHIER_ID);
 
@@ -1604,7 +1858,7 @@ test('a cashier cannot access another cashier draft order', async () => {
 
 test('a changed order or settings version makes the quote stale without creating a sale', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1643,7 +1897,7 @@ test('a changed order or settings version makes the quote stale without creating
 
 test('expired quotes are rejected before any payment is recorded', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1678,7 +1932,7 @@ test('expired quotes are rejected before any payment is recorded', async () => {
 
 test('insufficient cash and manual external tender are rejected with nothing written', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1729,7 +1983,7 @@ test('insufficient cash and manual external tender are rejected with nothing wri
 
 test('a different key for a completed order returns ORDER_ALREADY_COMPLETED with the sale id', async () => {
   const { prisma } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1775,7 +2029,7 @@ test('a different key for a completed order returns ORDER_ALREADY_COMPLETED with
 
 test('stale order versions and cancelling a completed order are rejected', async () => {
   const { prisma } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1817,7 +2071,7 @@ test('stale order versions and cancelling a completed order are rejected', async
 
 test('sales list filters to the cashier own sales while owners see the outlet', async () => {
   const { prisma } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const cashier = user();
 
   const order = await service.createOrder(
@@ -1852,7 +2106,7 @@ test('sales list filters to the cashier own sales while owners see the outlet', 
 
 test('manual external payment records the equal amount with no tender or change', async () => {
   const { prisma } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1887,7 +2141,7 @@ test('manual external payment records the equal amount with no tender or change'
 
 test('an outlet settings change after the quote makes it stale', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -1995,7 +2249,7 @@ function finalizePayment(amountMinor: number) {
 
 test('selling two tracked products consuming three units each deducts exactly six once', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   setBalance(state, STOCK_SHARED_ID, '10');
   trackVariant(state, VARIANT_A, RECIPE_A_ID, [
@@ -2053,7 +2307,7 @@ test('selling two tracked products consuming three units each deducts exactly si
 
 test('a shared ingredient across two sale lines consumes the sum, not one line', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Fresh Milk');
   setBalance(state, STOCK_SHARED_ID, '10');
   trackVariant(state, VARIANT_A, RECIPE_A_ID, [
@@ -2088,7 +2342,7 @@ test('a shared ingredient across two sale lines consumes the sum, not one line',
 
 test('insufficient stock rejects the sale with item-specific shortages and no writes', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   addStockItem(state, STOCK_SECOND_ID, 'Fresh Milk');
   setBalance(state, STOCK_SHARED_ID, '5');
@@ -2156,7 +2410,7 @@ test('insufficient stock rejects the sale with item-specific shortages and no wr
 
 test('cancelled orders never deduct stock when finalization is attempted', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   setBalance(state, STOCK_SHARED_ID, '10');
   trackVariant(state, VARIANT_A, RECIPE_A_ID, [
@@ -2194,7 +2448,7 @@ test('cancelled orders never deduct stock when finalization is attempted', async
 
 test('simultaneous finalizations cannot oversell; only one sale and movement commit', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   setBalance(state, STOCK_SHARED_ID, '6');
   trackVariant(state, VARIANT_A, RECIPE_A_ID, [
@@ -2273,7 +2527,7 @@ test('simultaneous finalizations cannot oversell; only one sale and movement com
 
 test('owner reversal validates reason, keeps the sale immutable, and links the reversal', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   setBalance(state, STOCK_SHARED_ID, '10');
   trackVariant(state, VARIANT_A, RECIPE_A_ID, [
@@ -2375,7 +2629,7 @@ test('owner reversal validates reason, keeps the sale immutable, and links the r
 
 test('a sale that is not completed cannot be reversed', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const {
     actor: cashier,
     order,
@@ -2409,7 +2663,7 @@ test('a sale that is not completed cannot be reversed', async () => {
 
 test('reversal restocks only explicitly selected sold items and rejects invalid selections', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const untouchedStockId = '00000000-0000-4000-8000-000000000052';
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   addStockItem(state, STOCK_SECOND_ID, 'Fresh Milk');
@@ -2510,7 +2764,7 @@ test('reversal restocks only explicitly selected sold items and rejects invalid 
 
 test('reversal idempotency replays the same response and rejects a second key', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   setBalance(state, STOCK_SHARED_ID, '10');
   trackVariant(state, VARIANT_A, RECIPE_A_ID, [
@@ -2574,7 +2828,7 @@ test('reversal idempotency replays the same response and rejects a second key', 
 
 test('concurrent reversal with the same key creates one reversal and one stock movement set', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   setBalance(state, STOCK_SHARED_ID, '10');
   trackVariant(state, VARIANT_A, RECIPE_A_ID, [
@@ -2648,7 +2902,7 @@ test('serialization and deadlock retries are bounded at three attempts before a 
 
   for (const failure of failures) {
     const { prisma } = createFakePrisma();
-    const service = new SalesService(prisma);
+    const service = new SalesService(prisma, new PromotionsService(prisma));
     let attempts = 0;
     const serializationFailure = new Prisma.PrismaClientKnownRequestError(
       'concurrent transaction failure',
@@ -2689,7 +2943,7 @@ test('serialization and deadlock retries are bounded at three attempts before a 
 
 test('table orders open, transfer with an owner-only audit trail, and reject stale versions', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const owner = user(Role.OWNER, OWNER_ID);
   const cashier = user();
 
@@ -2774,7 +3028,7 @@ test('table orders open, transfer with an owner-only audit trail, and reject sta
 
 test('split bills partition items exactly, settle once each, and survive replay', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   setBalance(state, STOCK_SHARED_ID, '20');
   trackVariant(state, VARIANT_B, RECIPE_B_ID, [
@@ -2930,7 +3184,7 @@ test('split bills partition items exactly, settle once each, and survive replay'
 
 test('split rejects overlapping, missing, unknown quantities and stale versions without writes', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -3013,7 +3267,7 @@ test('split rejects overlapping, missing, unknown quantities and stale versions 
 
 test('concurrent splits on the same revision create one set of bills and one audit row', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
@@ -3077,7 +3331,7 @@ test('concurrent splits on the same revision create one set of bills and one aud
 
 test('cancelling an unpaid table order consumes no stock, writes audit, and cannot be settled', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
   setBalance(state, STOCK_SHARED_ID, '10');
   trackVariant(state, VARIANT_A, RECIPE_A_ID, [
@@ -3131,7 +3385,7 @@ test('cancelling an unpaid table order consumes no stock, writes audit, and cann
 
 test('finalize records an audit row and split parents cannot be settled twice', async () => {
   const { prisma, state } = createFakePrisma();
-  const service = new SalesService(prisma);
+  const service = new SalesService(prisma, new PromotionsService(prisma));
   const actor = user();
 
   const order = await service.createOrder(
