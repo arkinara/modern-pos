@@ -54,6 +54,31 @@ Boundary: cancelling an item prints a `CANCEL` station job but does not reverse
 the sale or restock ingredients. Money and stock reversal remain the explicit
 sale-reversal path (`#17`).
 
+### Multi-outlet bookkeeping and costed margin
+
+Status: `IMPLEMENTED on the staging database; real payroll/accounting integration PENDING`.
+
+What was verified on this VPS: two outlets with live sales, purchase receipts,
+manual expenses, stock waste and one reversal were read through per-outlet
+reports and the consolidated owner view. Consolidated totals were checked as the
+arithmetic sum of per-outlet rows, including the combined average-bill division
+and stock value. A cashier read against the other outlet returned `404` on every
+new bookkeeping route, and the owner-only consolidated route returned `403`
+after the cashier passed the scope check. Moving average and last purchase
+produced different COGS from the same receipts. The margin gate returned null
+profit and margin with `COSTING_METHOD_UNDEFINED` and
+`EXPENSE_CATEGORIES_UNDEFINED`. Sales, reversals, payments and accounting CSVs
+were parsed back and reconciled field-by-field to the same period's API report.
+
+What was not verified: a real payroll, accounts-payable, tax or bank-ledger
+integration; FIFO/LIFO/landed cost; production data volume; and a serializable
+cross-query snapshot for the accounting summary while a sale commits between
+reads. See `docs/multi-outlet-bookkeeping.md`.
+
+Boundary: purchases are capitalised into inventory cost and are not also counted
+as an operating expense. Stock waste is derived at cost. Opening balances,
+manual receipts without a purchase order and transfer-ins do not invent a cost.
+
 ### Physical printed receipt
 
 Status: `PENDING - requires printer model + Android device`.

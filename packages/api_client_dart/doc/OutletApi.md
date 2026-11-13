@@ -11,6 +11,7 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**outletGet**](OutletApi.md#outletget) | **GET** /outlets/{outletId} | Read authorized outlet configuration
 [**outletUpdate**](OutletApi.md#outletupdate) | **PATCH** /outlets/{outletId} | Update outlet settings
+[**outletsList**](OutletApi.md#outletslist) | **GET** /outlets | List outlets visible to the caller
 
 
 # **outletGet**
@@ -105,6 +106,49 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **outletsList**
+> OutletList outletsList()
+
+List outlets visible to the caller
+
+### Example
+```dart
+import 'package:modern_pos_api_client/api.dart';
+// TODO Configure HTTP Bearer authorization: bearerAuth
+// Case 1. Use String Token
+//defaultApiClient.getAuthentication<HttpBearerAuth>('bearerAuth').setAccessToken('YOUR_ACCESS_TOKEN');
+// Case 2. Use Function which generate token.
+// String yourTokenGeneratorFunction() { ... }
+//defaultApiClient.getAuthentication<HttpBearerAuth>('bearerAuth').setAccessToken(yourTokenGeneratorFunction);
+
+final api_instance = OutletApi();
+
+try {
+    final result = api_instance.outletsList();
+    print(result);
+} catch (e) {
+    print('Exception when calling OutletApi->outletsList: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**OutletList**](OutletList.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

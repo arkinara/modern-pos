@@ -10,6 +10,11 @@ import { OutletResponse, OutletsService } from './outlets.service';
 export class OutletsController {
   constructor(private readonly outlets: OutletsService) {}
 
+  @Get()
+  list(@CurrentUser() user: AuthenticatedUser): Promise<{ items: OutletResponse[] }> {
+    return this.outlets.listAuthorized(user);
+  }
+
   @Get(':outletId')
   get(
     @Param('outletId') outletId: string,

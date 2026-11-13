@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
+import { BookkeepingModule } from './bookkeeping/bookkeeping.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { OutletScopeGuard } from './common/guards/outlet-scope.guard';
@@ -35,6 +36,7 @@ import { StockModule } from './stock/stock.module';
     PromotionsModule,
     PaymentsModule,
     ReportsModule,
+    BookkeepingModule,
     PrintingModule,
     OperationsModule,
   ],

@@ -2,6 +2,7 @@
 
 import type { ApiSchemas } from '@modern-pos/api-client';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { BarChart3, CircleAlert, Download, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { OperationsLinks } from '@/components/operations-links';
@@ -161,6 +162,15 @@ export function ReportsScreen() {
       </header>
 
       <OperationsLinks />
+
+      <div>
+        <Link
+          href="/bookkeeping"
+          className="inline-flex min-h-10 items-center rounded-control border border-control bg-surface px-4 text-sm font-medium text-text transition-colors hover:bg-surface-muted"
+        >
+          Bookkeeping and auditable exports
+        </Link>
+      </div>
 
       <Card>
         <CardHeader>
