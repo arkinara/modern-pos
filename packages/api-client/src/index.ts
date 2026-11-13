@@ -323,6 +323,53 @@ export interface ApiClient {
     jobId: string,
     idempotencyKey: string,
   ): Promise<ApiSchemas['StationJob']>;
+
+  listChannels(outletId: string): Promise<ApiSchemas['ChannelList']>;
+  listChannelOrders(
+    outletId: string,
+    query?: {
+      state?: ApiSchemas['ChannelOrder']['state'];
+      channel?: ApiSchemas['ChannelOrder']['channel'];
+      search?: string;
+      limit?: number;
+    },
+  ): Promise<ApiSchemas['ChannelOrderList']>;
+  createManualChannelOrder(
+    outletId: string,
+    order: ApiSchemas['ChannelOrderManualWrite'],
+  ): Promise<ApiSchemas['ChannelOrderCreateResult']>;
+  getChannelOrder(outletId: string, orderId: string): Promise<ApiSchemas['ChannelOrder']>;
+  acceptChannelOrder(outletId: string, orderId: string): Promise<ApiSchemas['ChannelOrder']>;
+  cancelChannelOrder(
+    outletId: string,
+    orderId: string,
+    cancellation: ApiSchemas['ChannelOrderCancelWrite'],
+  ): Promise<ApiSchemas['ChannelOrder']>;
+  fulfillChannelOrder(
+    outletId: string,
+    orderId: string,
+    fulfilment: ApiSchemas['ChannelOrderFulfillWrite'],
+  ): Promise<ApiSchemas['ChannelOrder']>;
+  listCustomers(
+    outletId: string,
+    query?: { search?: string; limit?: number },
+  ): Promise<ApiSchemas['CustomerList']>;
+  createCustomer(
+    outletId: string,
+    customer: ApiSchemas['CustomerWrite'],
+  ): Promise<ApiSchemas['Customer']>;
+  getCustomer(outletId: string, customerId: string): Promise<ApiSchemas['Customer']>;
+  getCustomerRetentionPolicy(outletId: string): Promise<ApiSchemas['CustomerRetentionPolicy']>;
+  updateCustomerRetentionPolicy(
+    outletId: string,
+    policy: ApiSchemas['CustomerRetentionPolicyUpdate'],
+  ): Promise<ApiSchemas['CustomerRetentionPolicy']>;
+  purgeCustomers(outletId: string): Promise<ApiSchemas['CustomerPurgeResult']>;
+  createDigitalReceipt(
+    outletId: string,
+    saleId: string,
+    receipt: ApiSchemas['ReceiptWrite'],
+  ): Promise<ApiSchemas['DigitalReceipt']>;
 }
 
 function toQueryString(query: Record<string, string | number | undefined>): string {
@@ -858,6 +905,75 @@ export function createApiClient({
           jobId,
         )}/reprints`,
         { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey } },
+      ),
+
+    listChannels: (outletId) =>
+      request<ApiSchemas['ChannelList']>(`/v1/outlets/${encodeURIComponent(outletId)}/channels`),
+    listChannelOrders: (outletId, query = {}) =>
+      request<ApiSchemas['ChannelOrderList']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/channel-orders${toQueryString(query)}`,
+      ),
+    createManualChannelOrder: (outletId, order) =>
+      request<ApiSchemas['ChannelOrderCreateResult']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/channel-orders`,
+        { method: 'POST', body: JSON.stringify(order) },
+      ),
+    getChannelOrder: (outletId, orderId) =>
+      request<ApiSchemas['ChannelOrder']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/channel-orders/${encodeURIComponent(orderId)}`,
+      ),
+    acceptChannelOrder: (outletId, orderId) =>
+      request<ApiSchemas['ChannelOrder']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/channel-orders/${encodeURIComponent(
+          orderId,
+        )}/accept`,
+        { method: 'POST' },
+      ),
+    cancelChannelOrder: (outletId, orderId, cancellation) =>
+      request<ApiSchemas['ChannelOrder']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/channel-orders/${encodeURIComponent(
+          orderId,
+        )}/cancel`,
+        { method: 'POST', body: JSON.stringify(cancellation) },
+      ),
+    fulfillChannelOrder: (outletId, orderId, fulfilment) =>
+      request<ApiSchemas['ChannelOrder']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/channel-orders/${encodeURIComponent(
+          orderId,
+        )}/fulfill`,
+        { method: 'POST', body: JSON.stringify(fulfilment) },
+      ),
+    listCustomers: (outletId, query = {}) =>
+      request<ApiSchemas['CustomerList']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/customers${toQueryString(query)}`,
+      ),
+    createCustomer: (outletId, customer) =>
+      request<ApiSchemas['Customer']>(`/v1/outlets/${encodeURIComponent(outletId)}/customers`, {
+        method: 'POST',
+        body: JSON.stringify(customer),
+      }),
+    getCustomer: (outletId, customerId) =>
+      request<ApiSchemas['Customer']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/customers/${encodeURIComponent(customerId)}`,
+      ),
+    getCustomerRetentionPolicy: (outletId) =>
+      request<ApiSchemas['CustomerRetentionPolicy']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/customers/retention-policy`,
+      ),
+    updateCustomerRetentionPolicy: (outletId, policy) =>
+      request<ApiSchemas['CustomerRetentionPolicy']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/customers/retention-policy`,
+        { method: 'PUT', body: JSON.stringify(policy) },
+      ),
+    purgeCustomers: (outletId) =>
+      request<ApiSchemas['CustomerPurgeResult']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/customers/purge`,
+        { method: 'POST' },
+      ),
+    createDigitalReceipt: (outletId, saleId, receipt) =>
+      request<ApiSchemas['DigitalReceipt']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/sales/${encodeURIComponent(saleId)}/receipt`,
+        { method: 'POST', body: JSON.stringify(receipt) },
       ),
   };
 }

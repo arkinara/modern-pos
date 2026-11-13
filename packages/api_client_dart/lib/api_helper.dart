@@ -55,6 +55,18 @@ String parameterToString(dynamic value) {
   if (value is DateTime) {
     return value.toUtc().toIso8601String();
   }
+  if (value is ChannelOrderState) {
+    return ChannelOrderStateTypeTransformer().encode(value).toString();
+  }
+  if (value is ChannelPaymentMode) {
+    return ChannelPaymentModeTypeTransformer().encode(value).toString();
+  }
+  if (value is ChannelPaymentStatus) {
+    return ChannelPaymentStatusTypeTransformer().encode(value).toString();
+  }
+  if (value is OrderChannel) {
+    return OrderChannelTypeTransformer().encode(value).toString();
+  }
   if (value is StationJobKind) {
     return StationJobKindTypeTransformer().encode(value).toString();
   }

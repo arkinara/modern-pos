@@ -5,6 +5,8 @@ const links = [
   { href: '/attendance', label: 'Attendance' },
   { href: '/permissions', label: 'Permissions' },
   { href: '/audit', label: 'Audit search' },
+  { href: '/ordering', label: 'Online ordering' },
+  { href: '/customers', label: 'Customers' },
 ];
 
 export function OperationsLinks() {

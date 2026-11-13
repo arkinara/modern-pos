@@ -57,6 +57,8 @@ export ANDROID_SDK_ROOT=/home/ubuntu/android-sdk
 | `SIGN_IN_MAX_ATTEMPTS` | API process | `5` failures per IP + email |
 | `SIGN_IN_WINDOW_SECONDS` | API process | `900` |
 | `SEED_PASSWORD` | API seed | synthetic demo password only |
+| `CHANNEL_WEBHOOK_SECRET` | API process | local-only HMAC secret for signed web channel orders |
+| `CHANNEL_WEBHOOK_REPLAY_SECONDS` | API process | `300`; replay window for channel deliveries |
 
 Copy the examples before running locally:
 
