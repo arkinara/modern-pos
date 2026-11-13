@@ -200,26 +200,50 @@ net sales, sale count and reversal count.
 All exports are owner-only and outlet-scoped. They use UTF-8, RFC 4180 quoting
 (comma separator, CRLF line endings, doubled quotes), a final CRLF, and
 formula-trigger neutralisation (`=`, `+`, `-`, `@`, tab, carriage return get a
-leading apostrophe). Empty ranges produce a header row only.
+leading apostrophe). Empty ranges produce a header row only for `sales.csv`,
+`reversals.csv` and `payments.csv`. `accounting.csv` always emits its summary
+row, so an empty range produces a header plus one zero-valued summary row.
 
 Every export includes the report range and `generatedAt`. Filenames contain the
 outlet slug and range.
 
 ### `exports/sales.csv`
 
-One row per sale line for completed sales in range, followed by one row per
-reversed/refunded line. The existing `reports/sales.csv` column definitions are
-unchanged; these columns are appended:
+One row per sale line for completed sales in range (in `completedAt` descending
+order), followed by reversal and refund rows. `REVERSAL` rows repeat one per
+original sale line; a `PARTIAL` reversal is a single `REFUND` row. Sale-level
+fields are repeated on every line row. Monetary columns are integer minor units
+of `currency`; the column order is exactly:
 
 | Column | Definition |
 | --- | --- |
+| `reference` | Sale reference. Reversal and refund rows repeat the corrected sale's reference. |
+| `completedAtUtc` | Sale completion instant in UTC on `SALE` rows; reversal creation instant in UTC on `REVERSAL`/`REFUND` rows. |
+| `completedAtLocal` | Same instant as `completedAtUtc`, rendered in `timezone`. |
+| `timezone` | Outlet IANA timezone; on reversal rows, the original sale's timezone. |
+| `state` | `COMPLETED` on `SALE` rows; `REVERSED` on `REVERSAL`/`REFUND` rows. |
+| `currency` | Sale currency snapshot (ISO 4217). |
+| `currencyExponent` | Snapshot minor-unit exponent for `currency`. |
+| `itemName` | Sale line item name. A `REFUND` row uses the first original line name, or `Partial refund` when there is no line. |
+| `variantName` | Sale line variant name; empty when the item has no variant. |
+| `quantity` | Line quantity. Negative on `REVERSAL` rows; a `REFUND` row uses the negated sum of refunded quantities. |
+| `unitPriceMinor` | Per-unit price in minor units. Negative on `REVERSAL` rows; `0` on `REFUND` rows. |
+| `lineSubtotalMinor` | Line subtotal in minor units. Negative on `REVERSAL` rows; the negated explicit refund amount on `REFUND` rows. |
+| `saleSubtotalMinor` | Immutable sale subtotal snapshot in minor units. Negative on `REVERSAL`/`REFUND` rows; a full reversal repeats the negated sale subtotal on each line, while a partial refund uses the negated refund amount. |
+| `saleServiceMinor` | Sale service charge in minor units; `0` on `REVERSAL`/`REFUND` rows. |
+| `saleTaxMinor` | Sale tax in minor units; `0` on `REVERSAL`/`REFUND` rows. |
+| `saleTotalMinor` | Immutable sale total in minor units. Negative on `REVERSAL` rows (negated sale subtotal); the negated refund amount on `REFUND` rows. |
+| `paymentKind` | Recorded payment kind (`CASH`, `MANUAL_EXTERNAL` or `ONLINE`) on `SALE` rows; blank on `REVERSAL`/`REFUND` rows. |
+| `paymentStatus` | Recorded payment status on `SALE` rows; blank on `REVERSAL`/`REFUND` rows. |
+| `paymentAmountMinor` | Recorded payment amount in minor units on `SALE` rows; blank on `REVERSAL`/`REFUND` rows. |
+| `tenderedMinor` | Cash tendered in minor units when recorded; blank otherwise and on `REVERSAL`/`REFUND` rows. |
+| `changeMinor` | Cash change in minor units when recorded; blank otherwise and on `REVERSAL`/`REFUND` rows. |
+| `paymentReference` | External or manual payment reference when present; blank otherwise and on `REVERSAL`/`REFUND` rows. |
+| `rowType` | `SALE`, `REVERSAL` or `REFUND`. |
+| `reversalReason` | Operator reversal reason on `REVERSAL`/`REFUND` rows; blank on `SALE` rows. |
 | `reportFrom` | Inclusive outlet-local start date of this export. |
-| `reportTo` | Inclusive outlet-local end date. |
+| `reportTo` | Inclusive outlet-local end date of this export. |
 | `generatedAt` | UTC ISO-8601 timestamp when the export was generated. |
-
-Existing columns keep their documented daily-report meaning: `rowType` is
-`SALE`, `REVERSAL` or `REFUND`; reversal rows carry negative item quantities and
-money; `saleSubtotalMinor` is the immutable sale snapshot subtotal.
 
 ### `exports/reversals.csv`
 
@@ -273,7 +297,9 @@ unsettled attempts.
 
 ### `exports/accounting.csv`
 
-One summary row per outlet and range. Columns:
+One summary row per outlet and range; the export always emits this row, so an
+empty range produces one zero-valued summary row (costing and margin fields are
+blank when unavailable). Columns:
 
 | Column | Definition |
 | --- | --- |
