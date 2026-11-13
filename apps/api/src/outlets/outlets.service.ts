@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Outlet } from '@prisma/client';
+import { Role, type Outlet } from '@prisma/client';
 import { apiError } from '../common/api-error';
 import { isValidTimeZone, TIMEZONE_VALIDATION_MESSAGE } from '../common/timezone';
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -22,6 +22,21 @@ export interface OutletResponse {
 @Injectable()
 export class OutletsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async listAuthorized(user: AuthenticatedUser): Promise<{ items: OutletResponse[] }> {
+    const outletIds =
+      user.role === Role.OWNER ? user.outletIds : user.outletId === null ? [] : [user.outletId];
+
+    const outlets =
+      outletIds.length === 0
+        ? []
+        : await this.prisma.outlet.findMany({
+            where: { id: { in: outletIds }, businessId: user.businessId },
+            orderBy: [{ name: 'asc' }, { id: 'asc' }],
+          });
+
+    return { items: outlets.map((outlet) => this.toResponse(outlet)) };
+  }
 
   async getAuthorized(outletId: string, user: AuthenticatedUser): Promise<OutletResponse> {
     const outlet = await this.prisma.outlet.findFirst({

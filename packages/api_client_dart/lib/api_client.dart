@@ -203,6 +203,8 @@ class ApiClient {
           return AuthMobileRefreshRequest.fromJson(value);
         case 'AuthWebLoginRequest':
           return AuthWebLoginRequest.fromJson(value);
+        case 'BookkeepingConfiguration':
+          return BookkeepingConfiguration.fromJson(value);
         case 'CalculationRules':
           return CalculationRules.fromJson(value);
         case 'CatalogArchiveRequest':
@@ -211,6 +213,14 @@ class ApiClient {
           return Category.fromJson(value);
         case 'CategoryWrite':
           return CategoryWrite.fromJson(value);
+        case 'ConsolidatedOutlet':
+          return ConsolidatedOutlet.fromJson(value);
+        case 'ConsolidatedReport':
+          return ConsolidatedReport.fromJson(value);
+        case 'ConsolidatedReportConsolidated':
+          return ConsolidatedReportConsolidated.fromJson(value);
+        case 'CostingUpdate':
+          return CostingUpdate.fromJson(value);
         case 'DailyReport':
           return DailyReport.fromJson(value);
         case 'DailyReportPaymentBreakdownInner':
@@ -223,6 +233,20 @@ class ApiClient {
           return DeviceCreateRequest.fromJson(value);
         case 'Error':
           return Error.fromJson(value);
+        case 'Expense':
+          return Expense.fromJson(value);
+        case 'ExpenseBreakdownEntry':
+          return ExpenseBreakdownEntry.fromJson(value);
+        case 'ExpenseCategory':
+          return ExpenseCategory.fromJson(value);
+        case 'ExpenseCategoryList':
+          return ExpenseCategoryList.fromJson(value);
+        case 'ExpenseCategoryWrite':
+          return ExpenseCategoryWrite.fromJson(value);
+        case 'ExpensePage':
+          return ExpensePage.fromJson(value);
+        case 'ExpenseWrite':
+          return ExpenseWrite.fromJson(value);
         case 'Finalize':
           return Finalize.fromJson(value);
         case 'Finalized':
@@ -277,6 +301,8 @@ class ApiClient {
           return OrderWriteLinesInner.fromJson(value);
         case 'Outlet':
           return Outlet.fromJson(value);
+        case 'OutletList':
+          return OutletList.fromJson(value);
         case 'OutletTransfer':
           return OutletTransfer.fromJson(value);
         case 'OutletTransferLine':
@@ -297,6 +323,8 @@ class ApiClient {
           return OutletUpdate.fromJson(value);
         case 'Payment':
           return Payment.fromJson(value);
+        case 'PaymentBreakdownEntry':
+          return PaymentBreakdownEntry.fromJson(value);
         case 'PaymentInput':
           return PaymentInput.fromJson(value);
         case 'PermissionMatrix':
@@ -317,6 +345,16 @@ class ApiClient {
           return PrintingStateRequest.fromJson(value);
         case 'PrintingUpdateRequest':
           return PrintingUpdateRequest.fromJson(value);
+        case 'ProfitReport':
+          return ProfitReport.fromJson(value);
+        case 'ProfitReportCogs':
+          return ProfitReportCogs.fromJson(value);
+        case 'ProfitReportExpenses':
+          return ProfitReportExpenses.fromJson(value);
+        case 'ProfitReportRevenue':
+          return ProfitReportRevenue.fromJson(value);
+        case 'ProfitReportWaste':
+          return ProfitReportWaste.fromJson(value);
         case 'Promotion':
           return Promotion.fromJson(value);
         case 'PromotionEligibility':

@@ -36,6 +36,7 @@ export interface ApiClient {
   refreshWeb(csrfToken: string): Promise<ApiSchemas['WebSession']>;
   signOut(): Promise<void>;
   getMe(): Promise<ApiSchemas['User']>;
+  listOutlets(): Promise<ApiSchemas['OutletList']>;
   getOutlet(outletId: string): Promise<ApiSchemas['Outlet']>;
   getSettings(outletId: string): Promise<ApiSchemas['Settings']>;
   updateSettings(
@@ -130,6 +131,37 @@ export interface ApiClient {
   ): Promise<ApiSchemas['SettlementReport']>;
   exportSalesCsv(
     outletId: string,
+    query: { from: string; to: string },
+  ): Promise<{ filename: string; csv: string }>;
+  getBookkeeping(outletId: string): Promise<ApiSchemas['BookkeepingConfiguration']>;
+  updateCostingMethod(
+    outletId: string,
+    costingMethod: 'MOVING_AVERAGE' | 'LAST_PURCHASE',
+  ): Promise<ApiSchemas['BookkeepingConfiguration']>;
+  listExpenseCategories(outletId: string): Promise<ApiSchemas['ExpenseCategoryList']>;
+  createExpenseCategory(
+    outletId: string,
+    category: ApiSchemas['ExpenseCategoryWrite'],
+  ): Promise<ApiSchemas['ExpenseCategory']>;
+  listExpenses(
+    outletId: string,
+    query?: { from?: string; to?: string; limit?: number },
+  ): Promise<ApiSchemas['ExpensePage']>;
+  createExpense(
+    outletId: string,
+    expense: ApiSchemas['ExpenseWrite'],
+  ): Promise<ApiSchemas['Expense']>;
+  getProfitReport(
+    outletId: string,
+    query: { from: string; to: string },
+  ): Promise<ApiSchemas['ProfitReport']>;
+  getConsolidatedReport(
+    outletId: string,
+    query: { from: string; to: string },
+  ): Promise<ApiSchemas['ConsolidatedReport']>;
+  exportBookkeepingCsv(
+    outletId: string,
+    dataset: 'sales' | 'reversals' | 'payments' | 'accounting',
     query: { from: string; to: string },
   ): Promise<{ filename: string; csv: string }>;
   listPromotions(outletId: string): Promise<ApiSchemas['Promotion'][]>;
@@ -401,6 +433,7 @@ export function createApiClient({
       }),
     signOut: () => request<void>('/v1/auth/logout', { method: 'POST' }),
     getMe: () => request<ApiSchemas['User']>('/v1/auth/me'),
+    listOutlets: () => request<ApiSchemas['OutletList']>('/v1/outlets'),
     getOutlet: (outletId) =>
       request<ApiSchemas['Outlet']>(`/v1/outlets/${encodeURIComponent(outletId)}`),
     getSettings: (outletId) =>
@@ -561,6 +594,49 @@ export function createApiClient({
     exportSalesCsv: async (outletId, query) => {
       const exported = await requestText(
         `/v1/outlets/${encodeURIComponent(outletId)}/reports/sales.csv${toQueryString(query)}`,
+      );
+      return { filename: exported.filename, csv: exported.body };
+    },
+    getBookkeeping: (outletId) =>
+      request<ApiSchemas['BookkeepingConfiguration']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/bookkeeping`,
+      ),
+    updateCostingMethod: (outletId, costingMethod) =>
+      request<ApiSchemas['BookkeepingConfiguration']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/bookkeeping/costing`,
+        { method: 'PUT', body: JSON.stringify({ costingMethod }) },
+      ),
+    listExpenseCategories: (outletId) =>
+      request<ApiSchemas['ExpenseCategoryList']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/bookkeeping/expense-categories`,
+      ),
+    createExpenseCategory: (outletId, category) =>
+      request<ApiSchemas['ExpenseCategory']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/bookkeeping/expense-categories`,
+        { method: 'POST', body: JSON.stringify(category) },
+      ),
+    listExpenses: (outletId, query = {}) =>
+      request<ApiSchemas['ExpensePage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/bookkeeping/expenses${toQueryString(query)}`,
+      ),
+    createExpense: (outletId, expense) =>
+      request<ApiSchemas['Expense']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/bookkeeping/expenses`,
+        { method: 'POST', body: JSON.stringify(expense) },
+      ),
+    getProfitReport: (outletId, query) =>
+      request<ApiSchemas['ProfitReport']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/bookkeeping/profit${toQueryString(query)}`,
+      ),
+    getConsolidatedReport: (outletId, query) =>
+      request<ApiSchemas['ConsolidatedReport']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/bookkeeping/consolidated${toQueryString(query)}`,
+      ),
+    exportBookkeepingCsv: async (outletId, dataset, query) => {
+      const exported = await requestText(
+        `/v1/outlets/${encodeURIComponent(
+          outletId,
+        )}/bookkeeping/exports/${dataset}.csv${toQueryString(query)}`,
       );
       return { filename: exported.filename, csv: exported.body };
     },

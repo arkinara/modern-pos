@@ -23,6 +23,9 @@ export interface CsvSaleRow {
   paymentReference: string | null;
   rowType: 'SALE' | 'REVERSAL' | 'REFUND';
   reversalReason: string | null;
+  reportFrom: string;
+  reportTo: string;
+  generatedAt: string;
 }
 
 export const CSV_COLUMNS = [
@@ -50,6 +53,9 @@ export const CSV_COLUMNS = [
   'paymentReference',
   'rowType',
   'reversalReason',
+  'reportFrom',
+  'reportTo',
+  'generatedAt',
 ] as const;
 
 const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
@@ -104,6 +110,9 @@ export function toCsv(rows: CsvSaleRow[]): string {
       row.paymentReference,
       row.rowType,
       row.reversalReason,
+      row.reportFrom,
+      row.reportTo,
+      row.generatedAt,
     ]
       .map(cell)
       .join(','),

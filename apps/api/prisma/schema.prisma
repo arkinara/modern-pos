@@ -164,6 +164,11 @@ enum PrintJobState {
   UNKNOWN
 }
 
+enum CostingMethod {
+  MOVING_AVERAGE
+  LAST_PURCHASE
+}
+
 enum StationKind {
   KITCHEN
   BAR
@@ -216,6 +221,9 @@ model Business {
   stockCounts      StockCount[]
   stockWastes      StockWaste[]
   outletTransfers  OutletTransfer[]
+  bookkeepingSettings BookkeepingSetting[]
+  expenseCategories ExpenseCategory[]
+  expenses         Expense[]
 
   @@map("businesses")
 }
@@ -269,6 +277,8 @@ model Outlet {
   stockWastes      StockWaste[]
   transfersFrom    OutletTransfer[]    @relation("TransferSourceOutlet")
   transfersTo      OutletTransfer[]    @relation("TransferDestinationOutlet")
+  bookkeepingSetting BookkeepingSetting?
+  expenses         Expense[]
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -307,6 +317,7 @@ model User {
   transfersDispatched   OutletTransfer[]    @relation("TransferDispatchedBy")
   transfersReceived     OutletTransfer[]    @relation("TransferReceivedBy")
   transfersCancelled    OutletTransfer[]    @relation("TransferCancelledBy")
+  expensesCreated       Expense[]           @relation("ExpenseCreatedBy")
 
   @@map("users")
 }
@@ -1440,4 +1451,64 @@ model OperationAudit {
   @@index([outletId, actorId, createdAt])
   @@index([outletId, action, createdAt])
   @@map("operation_audits")
+}
+
+// Bookkeeping is additive: an outlet opts into a costing method before profit
+// or margin is reported. A missing setting means margin is unavailable instead
+// of being silently valued at zero.
+model BookkeepingSetting {
+  id            String        @id @default(uuid()) @db.Uuid
+  businessId    String        @db.Uuid
+  outletId      String        @unique @db.Uuid
+  costingMethod CostingMethod
+  version       Int           @default(1)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@map("bookkeeping_settings")
+}
+
+// Expense categories are explicitly defined before margin is presented. Names
+// are unique per business so a report can label every manual expense.
+model ExpenseCategory {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  name       String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  expenses Expense[]
+
+  @@unique([businessId, name])
+  @@index([businessId, active])
+  @@map("expense_categories")
+}
+
+// Manual operating expense. incurredOn is an outlet-local calendar date stored
+// as a date-only value; money stays in integer currency minor units.
+model Expense {
+  id          String   @id @default(uuid()) @db.Uuid
+  businessId  String   @db.Uuid
+  outletId    String   @db.Uuid
+  categoryId  String   @db.Uuid
+  amountMinor BigInt
+  incurredOn  DateTime @db.Date
+  note        String   @default("")
+  createdById String   @db.Uuid
+  createdAt   DateTime @default(now())
+
+  business  Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet    Outlet          @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  category  ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdBy User            @relation("ExpenseCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([outletId, incurredOn])
+  @@index([businessId, outletId, incurredOn])
+  @@map("expenses")
 }

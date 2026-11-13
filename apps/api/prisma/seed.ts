@@ -9,6 +9,12 @@ const SEED_PASSWORD = process.env.SEED_PASSWORD ?? 'modern-pos-demo-password';
 
 // Fixed IDs keep the seed deterministic and re-runnable.
 const BUSINESS_ID = '00000000-0000-4000-8000-000000000001';
+const EXPENSE_CATEGORY_PAYROLL_ID = '00000000-0000-4000-8000-0000000000d1';
+const EXPENSE_CATEGORY_RENT_ID = '00000000-0000-4000-8000-0000000000d2';
+const EXPENSE_CATEGORY_MARKETING_ID = '00000000-0000-4000-8000-0000000000d3';
+const EXPENSE_CATEGORY_CASH_ADJUSTMENT_ID = '00000000-0000-4000-8000-0000000000d4';
+const EXPENSE_CATEGORY_OTHER_ID = '00000000-0000-4000-8000-0000000000d5';
+
 const OUTLET_MAIN_ID = '00000000-0000-4000-8000-000000000002';
 const OWNER_MAIN_ID = '00000000-0000-4000-8000-000000000003';
 const CASHIER_MAIN_ID = '00000000-0000-4000-8000-000000000004';
@@ -171,6 +177,27 @@ async function main(): Promise<void> {
         name: outlet.name,
         timezone: 'Asia/Jakarta',
         ...outletDefaults,
+      },
+    });
+  }
+
+  const expenseCategories = [
+    { id: EXPENSE_CATEGORY_PAYROLL_ID, name: 'Payroll' },
+    { id: EXPENSE_CATEGORY_RENT_ID, name: 'Rent and utilities' },
+    { id: EXPENSE_CATEGORY_MARKETING_ID, name: 'Marketing' },
+    { id: EXPENSE_CATEGORY_CASH_ADJUSTMENT_ID, name: 'Cash adjustment' },
+    { id: EXPENSE_CATEGORY_OTHER_ID, name: 'Other operating expense' },
+  ];
+
+  for (const category of expenseCategories) {
+    await prisma.expenseCategory.upsert({
+      where: { businessId_name: { businessId: BUSINESS_ID, name: category.name } },
+      update: { active: true },
+      create: {
+        id: category.id,
+        businessId: BUSINESS_ID,
+        name: category.name,
+        active: true,
       },
     });
   }

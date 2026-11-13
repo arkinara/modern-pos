@@ -296,6 +296,7 @@ export class ReportsService {
     const { outlet, sales, reversals } = await this.loadPeriod(outletId, query, user);
 
     const rows: CsvSaleRow[] = [];
+    const generatedAt = new Date().toISOString();
 
     for (const sale of sales) {
       if (!sale.payment) {
@@ -334,6 +335,9 @@ export class ReportsService {
           paymentReference: sale.payment.reference,
           rowType: 'SALE',
           reversalReason: null,
+          reportFrom: query.from,
+          reportTo: query.to,
+          generatedAt,
         });
       }
     }
@@ -372,6 +376,9 @@ export class ReportsService {
           paymentReference: null,
           rowType: 'REFUND',
           reversalReason: reversal.reason,
+          reportFrom: query.from,
+          reportTo: query.to,
+          generatedAt,
         });
         continue;
       }
@@ -402,6 +409,9 @@ export class ReportsService {
           paymentReference: null,
           rowType: 'REVERSAL',
           reversalReason: reversal.reason,
+          reportFrom: query.from,
+          reportTo: query.to,
+          generatedAt,
         });
       }
     }

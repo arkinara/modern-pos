@@ -1459,6 +1459,195 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/outlets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List outlets visible to the caller */
+        get: operations["outlets_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read costing and expense category configuration */
+        get: operations["bookkeeping_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping/costing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set the outlet inventory costing method */
+        put: operations["bookkeeping_costing_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping/expense-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active expense categories */
+        get: operations["expense_categories_list"];
+        put?: never;
+        /** Create an expense category */
+        post: operations["expense_categories_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List manual operating expenses */
+        get: operations["expenses_list"];
+        put?: never;
+        /** Record a manual operating expense */
+        post: operations["expenses_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping/profit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read profit and margin with explicit availability gate */
+        get: operations["bookkeeping_profit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping/consolidated": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read consolidated owner view across all scoped outlets */
+        get: operations["bookkeeping_consolidated"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping/exports/sales.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Completed sale and reversal rows; same query and money rules as the daily report. */
+        get: operations["bookkeeping_export_sales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping/exports/reversals.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One row per reversal in the outlet-local period. */
+        get: operations["bookkeeping_export_reversals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping/exports/payments.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One row per payment on a completed sale in the outlet-local period. */
+        get: operations["bookkeeping_export_payments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/bookkeeping/exports/accounting.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One summary row per outlet and period. Profit fields are blank when unavailable. */
+        get: operations["bookkeeping_export_accounting"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2858,6 +3047,168 @@ export interface components {
             quantity?: number;
         } & {
             [key: string]: unknown;
+        };
+        OutletList: {
+            items: components["schemas"]["Outlet"][];
+        };
+        BookkeepingConfiguration: {
+            /** Format: uuid */
+            outletId: string;
+            /** @enum {string|null} */
+            costingMethod: "MOVING_AVERAGE" | "LAST_PURCHASE" | null;
+            costingMethodDefined: boolean;
+            version: number | null;
+            expenseCategoryCount: number;
+            expenseCategoriesDefined: boolean;
+            expenseCategories: components["schemas"]["ExpenseCategory"][];
+        };
+        ExpenseCategory: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            active: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ExpenseCategoryList: {
+            items: components["schemas"]["ExpenseCategory"][];
+        };
+        ExpenseCategoryWrite: {
+            name: string;
+        };
+        ExpenseWrite: {
+            /** Format: uuid */
+            categoryId: string;
+            /** @description Non-negative integer minor units encoded as a string. */
+            amountMinor: string;
+            /** Format: date */
+            incurredOn: string;
+            note?: string;
+        };
+        Expense: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            outletId: string;
+            /** Format: uuid */
+            categoryId: string;
+            categoryName: string;
+            amountMinor: number;
+            /** Format: date */
+            incurredOn: string;
+            note: string;
+            /** Format: uuid */
+            createdById: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ExpensePage: {
+            items: components["schemas"]["Expense"][];
+        };
+        PaymentBreakdownEntry: {
+            /** @enum {string} */
+            kind: "CASH" | "MANUAL_EXTERNAL" | "ONLINE";
+            receivedMinor: number;
+        };
+        ExpenseBreakdownEntry: {
+            /** Format: uuid */
+            categoryId: string | null;
+            name: string;
+            amountMinor: number;
+            derived: boolean;
+        };
+        ProfitReport: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            timezone: string;
+            currency: string;
+            currencyExponent: number;
+            /** Format: date-time */
+            generatedAt: string;
+            marginAvailable: boolean;
+            unavailableReasons: ("COSTING_METHOD_UNDEFINED" | "EXPENSE_CATEGORIES_UNDEFINED" | "INVENTORY_COST_UNDEFINED")[];
+            /** @enum {string|null} */
+            costingMethod: "MOVING_AVERAGE" | "LAST_PURCHASE" | null;
+            revenue: {
+                grossItemSalesMinor: number;
+                reversalItemValueMinor: number;
+                netItemSalesMinor: number;
+                saleCount: number;
+                reversalCount: number;
+            };
+            cogs: {
+                saleCostMinor: number;
+                reversalRestockCreditMinor: number;
+                netCogsMinor: number;
+            } | null;
+            waste: {
+                costMinor: number;
+            } | null;
+            expenses: {
+                manualMinor: number;
+                wasteMinor: number;
+                totalMinor: number;
+                breakdown: components["schemas"]["ExpenseBreakdownEntry"][];
+            };
+            grossProfitMinor: number | null;
+            netProfitMinor: number | null;
+            netMarginBps: number | null;
+            marginBpsUnavailableReason: string | null;
+        };
+        ConsolidatedOutlet: {
+            /** Format: uuid */
+            outletId: string;
+            outletName: string;
+            timezone: string;
+            currency: string;
+            currencyExponent: number;
+            grossItemSalesMinor: number;
+            reversalItemValueMinor: number;
+            netItemSalesMinor: number;
+            refundMoneyMinor: number;
+            saleCount: number;
+            reversalCount: number;
+            averageBillMinor: number;
+            paymentBreakdown: components["schemas"]["PaymentBreakdownEntry"][];
+            stockValueMinor: number | null;
+            stockValueUnavailableReason: string | null;
+            shiftsOpened: number;
+            shiftsClosed: number;
+            attendanceClockIns: number;
+        };
+        ConsolidatedReport: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            /** Format: date-time */
+            generatedAt: string;
+            outletCount: number;
+            currency: string | null;
+            currencyExponent: number | null;
+            currencyConsistent: boolean;
+            perOutlet: components["schemas"]["ConsolidatedOutlet"][];
+            consolidated: {
+                grossItemSalesMinor: number;
+                reversalItemValueMinor: number;
+                netItemSalesMinor: number;
+                refundMoneyMinor: number;
+                saleCount: number;
+                reversalCount: number;
+                averageBillMinor: number;
+                paymentBreakdown: components["schemas"]["PaymentBreakdownEntry"][];
+                stockValueMinor: number | null;
+                stockValueUnavailableReason: string | null;
+                shiftsOpened: number;
+                shiftsClosed: number;
+                attendanceClockIns: number;
+            };
+        };
+        CostingUpdate: {
+            /** @enum {string} */
+            costingMethod: "MOVING_AVERAGE" | "LAST_PURCHASE";
         };
     };
     responses: never;
@@ -12373,6 +12724,1276 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StationJob"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    outlets_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutletList"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    bookkeeping_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookkeepingConfiguration"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    bookkeeping_costing_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CostingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookkeepingConfiguration"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    expense_categories_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseCategoryList"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    expense_categories_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseCategoryWrite"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseCategory"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    expenses_list: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpensePage"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    expenses_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseWrite"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Expense"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    bookkeeping_profit: {
+        parameters: {
+            query: {
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                from: string;
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                to: string;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success. Unavailable figures are null, never fabricated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfitReport"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    bookkeeping_consolidated: {
+        parameters: {
+            query: {
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                from: string;
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                to: string;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success. Totals equal the arithmetic sum of per-outlet values. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsolidatedReport"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    bookkeeping_export_sales: {
+        parameters: {
+            query: {
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                from: string;
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                to: string;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Completed sale and reversal rows; same query and money rules as the daily report. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    bookkeeping_export_reversals: {
+        parameters: {
+            query: {
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                from: string;
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                to: string;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One row per reversal in the outlet-local period. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    bookkeeping_export_payments: {
+        parameters: {
+            query: {
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                from: string;
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                to: string;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One row per payment on a completed sale in the outlet-local period. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    bookkeeping_export_accounting: {
+        parameters: {
+            query: {
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                from: string;
+                /** @description Inclusive outlet-local date. Maximum 366-day range. */
+                to: string;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One summary row per outlet and period. Profit fields are blank when unavailable. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
                 };
             };
             /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
