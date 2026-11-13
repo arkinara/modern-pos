@@ -6,9 +6,8 @@
 /// tested. See `docs/printer-validation.md`.
 library;
 
-/// Transports the cashier can select. Only [bluetoothClassic] has an adapter in
-/// this build; the others stay visible so the UI can state explicitly that they
-/// are not verified on this project.
+/// Transports the operator can select. Every transport has an adapter in this
+/// build; physical delivery is still pending for each real hardware model.
 enum PrinterTransportType {
   bluetoothClassic('bluetooth_classic', 'Bluetooth Classic (SPP)'),
   network('network', 'Network (LAN)'),
@@ -19,7 +18,11 @@ enum PrinterTransportType {
   final String wireName;
   final String label;
 
-  bool get implemented => this == PrinterTransportType.bluetoothClassic;
+  bool get implemented => true;
+
+  /// Only the Bluetooth Classic transport asks for Android Bluetooth
+  /// permissions. LAN and USB do not use the Bluetooth radio.
+  bool get requiresBluetooth => this == PrinterTransportType.bluetoothClassic;
 
   static PrinterTransportType fromWireName(String? value) {
     return PrinterTransportType.values.firstWhere(
@@ -70,7 +73,8 @@ enum PrinterEncoding {
 }
 
 /// A candidate connection target. [address] is an Android Bluetooth MAC for the
-/// Bluetooth Classic transport; LAN/USB values are reserved for Phase 2.
+/// Bluetooth Classic transport, `host:port` for LAN, and the Android USB device
+/// id for USB.
 class PrinterConnection {
   const PrinterConnection({
     required this.transport,
@@ -207,8 +211,8 @@ class PrinterException implements Exception {
         'The printer rejected the job. Check paper, cover and power, then '
             'retry.',
       PrinterFailureKind.unsupportedTransport =>
-        'This transport is not verified on this project. Only the Bluetooth '
-            'Classic candidate can be tested in this build.',
+        'This transport is not available in this build. Choose an available '
+            'transport and retry.',
       PrinterFailureKind.notConnected =>
         'Connect to the printer before sending a test print.',
       PrinterFailureKind.unknown =>

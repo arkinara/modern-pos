@@ -250,6 +250,47 @@ export interface ApiClient {
     receipt: ApiSchemas['OutletTransferReceiveWrite'],
   ): Promise<ApiSchemas['OutletTransferMutation']>;
   cancelTransfer(outletId: string, transferId: string): Promise<ApiSchemas['OutletTransfer']>;
+  listStations(outletId: string): Promise<ApiSchemas['Station'][]>;
+  createStation(
+    outletId: string,
+    station: ApiSchemas['StationWrite'],
+  ): Promise<ApiSchemas['Station']>;
+  updateStation(
+    outletId: string,
+    stationId: string,
+    station: ApiSchemas['StationUpdate'],
+  ): Promise<ApiSchemas['Station']>;
+  listStationRoutes(outletId: string): Promise<ApiSchemas['StationRoute'][]>;
+  replaceStationRoutes(
+    outletId: string,
+    routing: ApiSchemas['StationRoutingWrite'],
+  ): Promise<ApiSchemas['StationRoute'][]>;
+  createStationJobs(
+    outletId: string,
+    orderId: string,
+    idempotencyKey: string,
+    jobs: ApiSchemas['StationJobWrite'],
+  ): Promise<ApiSchemas['StationJob'][]>;
+  listStationJobs(
+    outletId: string,
+    stationId: string,
+    query?: {
+      state?: ApiSchemas['StationJob']['state'];
+      cursor?: string;
+      limit?: number;
+    },
+  ): Promise<ApiSchemas['StationJobPage']>;
+  updateStationJobState(
+    outletId: string,
+    jobId: string,
+    state: ApiSchemas['StationJobStateWrite'],
+  ): Promise<ApiSchemas['StationJob']>;
+  retryStationJob(outletId: string, jobId: string): Promise<ApiSchemas['StationJob']>;
+  reprintStationJob(
+    outletId: string,
+    jobId: string,
+    idempotencyKey: string,
+  ): Promise<ApiSchemas['StationJob']>;
 }
 
 function toQueryString(query: Record<string, string | number | undefined>): string {
@@ -684,6 +725,63 @@ export function createApiClient({
           transferId,
         )}/cancel`,
         { method: 'POST' },
+      ),
+    listStations: (outletId) =>
+      request<ApiSchemas['Station'][]>(`/v1/outlets/${encodeURIComponent(outletId)}/stations`),
+    createStation: (outletId, station) =>
+      request<ApiSchemas['Station']>(`/v1/outlets/${encodeURIComponent(outletId)}/stations`, {
+        method: 'POST',
+        body: JSON.stringify(station),
+      }),
+    updateStation: (outletId, stationId, station) =>
+      request<ApiSchemas['Station']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stations/${encodeURIComponent(stationId)}`,
+        { method: 'PUT', body: JSON.stringify(station) },
+      ),
+    listStationRoutes: (outletId) =>
+      request<ApiSchemas['StationRoute'][]>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/station-routing`,
+      ),
+    replaceStationRoutes: (outletId, routing) =>
+      request<ApiSchemas['StationRoute'][]>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/station-routing`,
+        { method: 'PUT', body: JSON.stringify(routing) },
+      ),
+    createStationJobs: (outletId, orderId, idempotencyKey, jobs) =>
+      request<ApiSchemas['StationJob'][]>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/orders/${encodeURIComponent(
+          orderId,
+        )}/station-jobs`,
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify(jobs),
+        },
+      ),
+    listStationJobs: (outletId, stationId, query = {}) =>
+      request<ApiSchemas['StationJobPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stations/${encodeURIComponent(
+          stationId,
+        )}/jobs${toQueryString(query)}`,
+      ),
+    updateStationJobState: (outletId, jobId, state) =>
+      request<ApiSchemas['StationJob']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/station-jobs/${encodeURIComponent(jobId)}`,
+        { method: 'PATCH', body: JSON.stringify(state) },
+      ),
+    retryStationJob: (outletId, jobId) =>
+      request<ApiSchemas['StationJob']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/station-jobs/${encodeURIComponent(
+          jobId,
+        )}/retry`,
+        { method: 'POST' },
+      ),
+    reprintStationJob: (outletId, jobId, idempotencyKey) =>
+      request<ApiSchemas['StationJob']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/station-jobs/${encodeURIComponent(
+          jobId,
+        )}/reprints`,
+        { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey } },
       ),
   };
 }

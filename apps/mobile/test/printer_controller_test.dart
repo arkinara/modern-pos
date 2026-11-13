@@ -24,7 +24,9 @@ void main() {
     store = InMemoryPrinterConfigStore();
     container = ProviderContainer(
       overrides: [
-        printerTransportProvider.overrideWithValue(transport),
+        printerTransportFactoryProvider.overrideWithValue(
+          FakePrinterTransportFactory(transport),
+        ),
         printerPermissionServiceProvider.overrideWithValue(permissions),
         printerConfigStoreProvider.overrideWithValue(store),
       ],
@@ -108,26 +110,36 @@ void main() {
     expect(state.failureKind, isNull);
   });
 
-  test('unsupported transport never reports success', () async {
-    await pump();
-    permissions.status = PrinterPermissionStatus.granted;
-    await controller().saveConfig(
-      testPrinterConfig(transport: PrinterTransportType.network),
-    );
-    var state = await current();
-    expect(state.transportSupported, isFalse);
-    expect(state.message, contains('not verified on this project'));
+  test(
+    'LAN transport skips Bluetooth permission and connects via the factory',
+    () async {
+      await pump();
+      permissions.status = PrinterPermissionStatus.denied;
+      await controller().saveConfig(
+        testPrinterConfig(
+          transport: PrinterTransportType.network,
+          address: '127.0.0.1:9100',
+        ),
+      );
+      var state = await current();
+      expect(state.transportSupported, isTrue);
+      expect(state.permissionsGranted, isTrue);
+      expect(permissions.checkCount, 1);
+      expect(state.message, contains('Physical delivery'));
 
-    await controller().connect();
-    state = await current();
-    expect(state.failureKind, PrinterFailureKind.unsupportedTransport);
-    expect(transport.connectCount, 0);
+      await controller().connect();
+      state = await current();
+      expect(state.failureKind, isNull);
+      expect(state.status, PrinterConnectionStatus.connected);
+      expect(transport.connectCount, 1);
+      expect(permissions.checkCount, 1);
 
-    await controller().testPrint();
-    state = await current();
-    expect(state.failureKind, PrinterFailureKind.unsupportedTransport);
-    expect(transport.writeCount, 0);
-  });
+      await controller().testPrint();
+      state = await current();
+      expect(transport.writeCount, 1);
+      expect(state.lastTestPrintAt, isNotNull);
+    },
+  );
 
   test('discovers paired devices and classifies a missing device', () async {
     await pump();

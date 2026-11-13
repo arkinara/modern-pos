@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
-import 'android_printer_transport.dart';
 import 'printer_adapter.dart';
 import 'printer_config_store.dart';
 import 'printer_models.dart';
 import 'printer_permissions.dart';
-import 'printer_transport.dart';
+import 'printer_transport_factory.dart';
 
 enum PrinterConnectionStatus {
   unconfigured,
@@ -90,8 +89,8 @@ final printerPermissionServiceProvider = Provider<PrinterPermissionService>(
   (ref) => const AndroidPrinterPermissionService(),
 );
 
-final printerTransportProvider = Provider<PrinterTransport>(
-  (ref) => AndroidBluetoothPrinterTransport(),
+final printerTransportFactoryProvider = Provider<PrinterTransportFactory>(
+  (ref) => const PlatformPrinterTransportFactory(),
 );
 
 final printerConfigStoreProvider = Provider<PrinterConfigStore>(
@@ -99,7 +98,9 @@ final printerConfigStoreProvider = Provider<PrinterConfigStore>(
 );
 
 final printerAdapterProvider = Provider<PrinterAdapter>(
-  (ref) => EscPosPrinterAdapter(transport: ref.watch(printerTransportProvider)),
+  (ref) => EscPosPrinterAdapter(
+    transports: ref.watch(printerTransportFactoryProvider),
+  ),
 );
 
 final printerControllerProvider =
@@ -119,7 +120,9 @@ class PrinterController extends AsyncNotifier<PrinterState> {
     _permissions = ref.watch(printerPermissionServiceProvider);
 
     final config = await _store.load();
-    final permission = await _permissions.check();
+    final permission = config?.transport.requiresBluetooth ?? true
+        ? await _permissions.check()
+        : PrinterPermissionStatus.granted;
     return PrinterState(
       config: config,
       status: config == null
@@ -141,9 +144,9 @@ class PrinterController extends AsyncNotifier<PrinterState> {
       await _adapter.disconnect();
     }
     await _store.save(config);
-    final permission = config.transport.implemented
+    final permission = config.transport.requiresBluetooth
         ? await _permissions.check()
-        : PrinterPermissionStatus.unsupportedPlatform;
+        : PrinterPermissionStatus.granted;
     _publish(
       _current.copyWith(
         config: config,
@@ -154,10 +157,9 @@ class PrinterController extends AsyncNotifier<PrinterState> {
         discovered: const [],
         clearFailure: true,
         clearLastTest: true,
-        message: config.transport.implemented
-            ? 'Printer saved. Connect to run a test print.'
-            : '${config.transport.label} is not verified on this project. '
-                  'Only Bluetooth Classic is implemented in this build.',
+        message:
+            'Printer saved. Connect to run a test print. Physical delivery '
+            'stays unverified until the exact model is tested.',
       ),
     );
   }
@@ -200,11 +202,7 @@ class PrinterController extends AsyncNotifier<PrinterState> {
       );
       return;
     }
-    if (!config.transport.implemented) {
-      _failTransport();
-      return;
-    }
-    if (!await _permissionsGranted()) {
+    if (config.transport.requiresBluetooth && !await _permissionsGranted()) {
       _failPermission();
       return;
     }
@@ -217,7 +215,10 @@ class PrinterController extends AsyncNotifier<PrinterState> {
       ),
     );
     try {
-      final connections = await _adapterTransportDiscover();
+      final connections = await ref
+          .read(printerTransportFactoryProvider)
+          .create(config.transport)
+          .discover();
       _publish(
         _current.copyWith(
           busy: false,
@@ -243,11 +244,7 @@ class PrinterController extends AsyncNotifier<PrinterState> {
       );
       return;
     }
-    if (!config.transport.implemented) {
-      _failTransport();
-      return;
-    }
-    if (!await _permissionsGranted()) {
+    if (config.transport.requiresBluetooth && !await _permissionsGranted()) {
       _failPermission();
       return;
     }
@@ -283,10 +280,6 @@ class PrinterController extends AsyncNotifier<PrinterState> {
         PrinterFailureKind.notConnected,
         'Save and connect a printer before running a test print.',
       );
-      return;
-    }
-    if (!config.transport.implemented) {
-      _failTransport();
       return;
     }
     if (_current.status != PrinterConnectionStatus.connected ||
@@ -348,11 +341,6 @@ class PrinterController extends AsyncNotifier<PrinterState> {
     );
   }
 
-  Future<List<PrinterConnection>> _adapterTransportDiscover() {
-    final transport = ref.read(printerTransportProvider);
-    return transport.discover();
-  }
-
   Future<bool> _permissionsGranted() async {
     final permission = await _permissions.check();
     final granted = permission == PrinterPermissionStatus.granted;
@@ -369,15 +357,6 @@ class PrinterController extends AsyncNotifier<PrinterState> {
       PrinterFailureKind.permissionDenied,
       'Bluetooth permission is required. Tap Grant Bluetooth permission and '
       'retry.',
-    );
-  }
-
-  void _failTransport() {
-    _fail(
-      PrinterFailureKind.unsupportedTransport,
-      '${_current.config?.transport.label ?? 'This transport'} is not '
-      'verified on this project. Only Bluetooth Classic is implemented in '
-      'this build.',
     );
   }
 

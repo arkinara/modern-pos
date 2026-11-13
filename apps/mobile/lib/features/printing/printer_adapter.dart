@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'esc_pos_receipt.dart';
 import 'printer_models.dart';
 import 'printer_transport.dart';
+import 'printer_transport_factory.dart';
 
 /// Adapter named in ARCHITECTURE.md section 8. The app depends on this
 /// interface; the transport and byte-stream builder are injected behind it.
@@ -24,16 +25,20 @@ abstract interface class PrinterAdapter {
 /// socket. It is not proof of physical output until a real device is tested.
 class EscPosPrinterAdapter implements PrinterAdapter {
   EscPosPrinterAdapter({
-    required this.transport,
+    PrinterTransport? transport,
+    PrinterTransportFactory? transports,
     this.builder = const EscPosReceiptBuilder(),
-  });
+  }) : _fixedTransport = transport,
+       _transports = transports ?? const PlatformPrinterTransportFactory();
 
-  final PrinterTransport transport;
+  final PrinterTransport? _fixedTransport;
+  final PrinterTransportFactory _transports;
   final EscPosReceiptBuilder builder;
+  PrinterTransport? _activeTransport;
   PrinterConfig? _config;
 
   @override
-  bool get isConnected => transport.isConnected;
+  bool get isConnected => _activeTransport?.isConnected ?? false;
 
   @override
   Future<void> connect(PrinterConfig config) async {
@@ -43,7 +48,10 @@ class EscPosPrinterAdapter implements PrinterAdapter {
         'Transport ${config.transport.wireName} has no adapter in this build.',
       );
     }
+    await _activeTransport?.disconnect();
+    final transport = _fixedTransport ?? _transports.create(config.transport);
     await transport.connect(config.connection);
+    _activeTransport = transport;
     _config = config;
   }
 
@@ -61,7 +69,12 @@ class EscPosPrinterAdapter implements PrinterAdapter {
 
   @override
   Future<void> disconnect() async {
-    await transport.disconnect();
+    final transport = _activeTransport;
+    _activeTransport = null;
+    _config = null;
+    if (transport != null) {
+      await transport.disconnect();
+    }
   }
 
   PrinterConfig _requireConfig() {
@@ -72,7 +85,7 @@ class EscPosPrinterAdapter implements PrinterAdapter {
         'No printer is configured for this session.',
       );
     }
-    if (!transport.isConnected) {
+    if (!isConnected) {
       throw const PrinterException(
         PrinterFailureKind.notConnected,
         'The printer connection is closed.',
@@ -82,6 +95,13 @@ class EscPosPrinterAdapter implements PrinterAdapter {
   }
 
   Future<void> _send(Uint8List bytes) async {
+    final transport = _activeTransport;
+    if (transport == null) {
+      throw const PrinterException(
+        PrinterFailureKind.notConnected,
+        'The printer connection is closed.',
+      );
+    }
     await transport.write(bytes);
   }
 }

@@ -164,6 +164,20 @@ enum PrintJobState {
   UNKNOWN
 }
 
+enum StationKind {
+  KITCHEN
+  BAR
+  COLD
+  HOT
+  OTHER
+}
+
+enum StationJobKind {
+  ORIGINAL
+  AMEND
+  CANCEL
+}
+
 model Business {
   id        String   @id @default(uuid()) @db.Uuid
   name      String
@@ -183,6 +197,9 @@ model Business {
   checkoutRequests CheckoutRequest[]
   printers         Printer[]
   printJobs        PrintJob[]
+  stations         Station[]
+  stationRoutes    StationRoute[]
+  stationJobs      StationJob[]
   diningTables     DiningTable[]
   orderAudits      OrderAudit[]
   orderSplits      OrderSplit[]
@@ -233,6 +250,9 @@ model Outlet {
   checkoutRequests CheckoutRequest[]
   printers         Printer[]
   printJobs        PrintJob[]
+  stations         Station[]
+  stationRoutes    StationRoute[]
+  stationJobs      StationJob[]
   diningTables     DiningTable[]
   orderAudits      OrderAudit[]
   orderSplits      OrderSplit[]
@@ -348,6 +368,7 @@ model MenuItem {
   category  Category           @relation(fields: [categoryId, businessId], references: [id, businessId])
   variants  MenuVariant[]
   modifiers MenuItemModifier[]
+  stationRoutes StationRoute[]
 
   @@index([businessId, archivedAt])
   @@index([categoryId])
@@ -369,6 +390,7 @@ model MenuVariant {
   outletMenus    OutletMenu[]
   orderLines     OrderLine[]
   recipeVersions RecipeVersion[]
+  stationJobs    StationJob[]
 
   @@index([menuItemId])
   @@map("menu_variants")
@@ -789,6 +811,7 @@ model Order {
   sale     Sale?
   audits   OrderAudit[]
   splits   OrderSplit[] @relation("OrderSplitParent")
+  stationJobs StationJob[]
 
   @@unique([outletId, deviceId, idempotencyKey])
   @@index([businessId, outletId, state])
@@ -936,6 +959,7 @@ model Sale {
   reversals        SaleReversal[]
   checkoutRequests CheckoutRequest[]
   printJobs        PrintJob[]
+  stationJobs      StationJob[]
 
   @@unique([outletId, reference])
   @@index([businessId, outletId, completedAt])
@@ -1186,6 +1210,8 @@ model Printer {
   business  Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   outlet    Outlet     @relation(fields: [outletId], references: [id], onDelete: Cascade)
   printJobs PrintJob[]
+  stations  Station[]    @relation("StationPrinter")
+  stationJobs StationJob[] @relation("StationJobPrinter")
 
   @@unique([outletId, deviceId, name])
   @@index([outletId, deviceId])
@@ -1218,6 +1244,97 @@ model PrintJob {
   @@index([saleId])
   @@index([outletId, deviceId])
   @@map("print_jobs")
+}
+
+// Kitchen/bar station definitions are owner-managed per outlet. A station may
+// point at a device printer configuration, but an unreachable station printer
+// only blocks that station queue; it never blocks sales or another station.
+model Station {
+  id               String      @id @default(uuid()) @db.Uuid
+  businessId       String      @db.Uuid
+  outletId         String      @db.Uuid
+  name             String
+  kind             StationKind @default(KITCHEN)
+  isDefault        Boolean     @default(false)
+  printerConfigId  String?     @db.Uuid
+  sortOrder        Int         @default(0)
+  revision         Int         @default(1)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  business Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet         @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  printer  Printer?       @relation("StationPrinter", fields: [printerConfigId], references: [id], onDelete: SetNull)
+  routes   StationRoute[]
+  jobs     StationJob[]
+
+  @@unique([outletId, name])
+  @@index([outletId, isDefault])
+  @@map("stations")
+}
+
+// A menu item routes to exactly one station per outlet. Unrouted items fall
+// back to the outlet default station (or the first station by sort order).
+model StationRoute {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  outletId   String   @db.Uuid
+  stationId  String   @db.Uuid
+  menuItemId String   @db.Uuid
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business  Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet    Outlet     @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  station   Station    @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  menuItem  MenuItem   @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([outletId, menuItemId])
+  @@index([stationId])
+  @@map("station_routes")
+}
+
+// Station jobs are station-scoped print instructions. They mirror the receipt
+// PrintJob states but are independent rows: retry, reprint, amendment and
+// cancellation never update sale or stock records.
+model StationJob {
+  id              String          @id @db.Uuid
+  businessId      String          @db.Uuid
+  outletId        String          @db.Uuid
+  stationId       String          @db.Uuid
+  orderId         String          @db.Uuid
+  saleId          String?         @db.Uuid
+  variantId       String          @db.Uuid
+  orderReference  String
+  kind            StationJobKind  @default(ORIGINAL)
+  state           PrintJobState   @default(QUEUED)
+  copy            Boolean         @default(false)
+  reprintOfId     String?         @db.Uuid
+  itemName        String
+  variantName     String
+  quantity        Int
+  modifiers       Json            @default("[]")
+  attempts        Int             @default(0)
+  lastError       String?
+  printerConfigId String?         @db.Uuid
+  idempotencyKey  String          @db.Uuid
+  lineIndex       Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  business Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet       @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  station  Station      @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  order    Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  sale     Sale?        @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  variant  MenuVariant  @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  printer  Printer?     @relation("StationJobPrinter", fields: [printerConfigId], references: [id], onDelete: SetNull)
+
+  @@unique([outletId, idempotencyKey, lineIndex])
+  @@index([stationId, state, createdAt])
+  @@index([orderId])
+  @@index([saleId])
+  @@map("station_jobs")
 }
 
 // A cashier shift owns one drawer from opening float to counted close. Monetary

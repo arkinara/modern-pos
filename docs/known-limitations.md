@@ -35,6 +35,25 @@ in this ticket, so there is no device UI claim to verify. The debug APK still
 builds and the existing app tests remain green.
 
 
+### Kitchen station tickets and LAN/Bluetooth/USB transports
+
+Status: `PENDING - requires printer model + Android device or LAN printer`.
+
+What was verified on this VPS: menu item station routing, original / amendment /
+cancellation station jobs with the same order reference, independent station
+queues, retry and reprint all ran against the live API. Station print operations
+were asserted not to change `sales` or `stock_movements`. LAN raw TCP bytes were
+accepted by a local listener; Bluetooth and USB adapters were exercised with
+fakes and a mocked Android channel.
+
+What was not verified: physical paper from any station printer, model-specific
+command support, Bluetooth pairing on a device, USB host permission and bulk
+transfer. See `docs/printer-hardware.md`.
+
+Boundary: cancelling an item prints a `CANCEL` station job but does not reverse
+the sale or restock ingredients. Money and stock reversal remain the explicit
+sale-reversal path (`#17`).
+
 ### Physical printed receipt
 
 Status: `PENDING - requires printer model + Android device`.
