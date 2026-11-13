@@ -29,7 +29,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          printerTransportProvider.overrideWithValue(transport),
+          printerTransportFactoryProvider.overrideWithValue(
+            FakePrinterTransportFactory(transport),
+          ),
           printerPermissionServiceProvider.overrideWithValue(permissions),
           printerConfigStoreProvider.overrideWithValue(store),
         ],
@@ -75,38 +77,50 @@ void main() {
     expect(find.textContaining('Test print bytes sent'), findsOneWidget);
   });
 
-  testWidgets('shows an explicit warning for an unsupported transport', (
-    tester,
-  ) async {
-    final transport = FakePrinterTransport();
-    final permissions = FakePrinterPermissions(
-      status: PrinterPermissionStatus.granted,
-    );
-    final store = InMemoryPrinterConfigStore(
-      testPrinterConfig(transport: PrinterTransportType.network),
-    );
+  testWidgets(
+    'shows LAN guidance and enables connection without Bluetooth permission',
+    (tester) async {
+      final transport = FakePrinterTransport();
+      final permissions = FakePrinterPermissions(
+        status: PrinterPermissionStatus.denied,
+      );
+      final store = InMemoryPrinterConfigStore(
+        testPrinterConfig(
+          transport: PrinterTransportType.network,
+          address: '127.0.0.1:9100',
+        ),
+      );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          printerTransportProvider.overrideWithValue(transport),
-          printerPermissionServiceProvider.overrideWithValue(permissions),
-          printerConfigStoreProvider.overrideWithValue(store),
-        ],
-        child: MaterialApp(theme: buildAppTheme(), home: const PrinterScreen()),
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            printerTransportFactoryProvider.overrideWithValue(
+              FakePrinterTransportFactory(transport),
+            ),
+            printerPermissionServiceProvider.overrideWithValue(permissions),
+            printerConfigStoreProvider.overrideWithValue(store),
+          ],
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: const PrinterScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    await _reveal(
-      tester,
-      find.textContaining('is not verified on this project'),
-    );
-    expect(
-      find.textContaining('is not verified on this project'),
-      findsWidgets,
-    );
-    expect(find.text('Connect'), findsNothing);
-    expect(find.text('Test print'), findsNothing);
-  });
+      await _reveal(
+        tester,
+        find.textContaining('does not use Android Bluetooth permissions'),
+      );
+      expect(
+        find.textContaining('does not use Android Bluetooth permissions'),
+        findsOneWidget,
+      );
+      await _reveal(tester, find.text('Connect'));
+      expect(find.text('Connect'), findsOneWidget);
+      await _reveal(tester, find.text('Test print'));
+      expect(find.text('Test print'), findsOneWidget);
+      expect(find.text('Grant Bluetooth permission'), findsNothing);
+    },
+  );
 }

@@ -36,12 +36,14 @@ class MainActivity : FlutterActivity() {
 
     private var socket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
+    private var usbPrinterChannel: UsbPrinterChannel? = null
     private var pendingPermissionResult: MethodChannel.Result? = null
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        usbPrinterChannel = UsbPrinterChannel(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -247,6 +249,8 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         closeSocket()
+        usbPrinterChannel?.dispose()
+        usbPrinterChannel = null
         executor.shutdownNow()
         super.onDestroy()
     }

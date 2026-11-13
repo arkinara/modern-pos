@@ -58,20 +58,21 @@ void main() {
     );
   });
 
-  test('rejects transports without an adapter', () async {
-    final adapter = EscPosPrinterAdapter(transport: FakePrinterTransport());
-    await expectLater(
-      adapter.connect(
-        testPrinterConfig(transport: PrinterTransportType.network),
-      ),
-      throwsA(
-        isA<PrinterException>().having(
-          (error) => error.kind,
-          'kind',
-          PrinterFailureKind.unsupportedTransport,
-        ),
+  test('resolves the LAN transport through the platform factory', () async {
+    final transport = FakePrinterTransport();
+    final factory = FakePrinterTransportFactory(transport);
+    final adapter = EscPosPrinterAdapter(transports: factory);
+
+    await adapter.connect(
+      testPrinterConfig(
+        transport: PrinterTransportType.network,
+        address: '127.0.0.1:9100',
       ),
     );
+
+    expect(factory.created, [PrinterTransportType.network]);
+    expect(transport.connectCount, 1);
+    expect(adapter.isConnected, isTrue);
   });
 
   test('propagates a classified connection loss from the transport', () async {

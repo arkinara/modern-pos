@@ -1321,6 +1321,144 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/outlets/{outletId}/stations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List kitchen/bar stations for an outlet */
+        get: operations["stations_list"];
+        put?: never;
+        /** Create an owner-managed station */
+        post: operations["stations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/stations/{stationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a station with optimistic revision */
+        put: operations["stations_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/station-routing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List menu item to station routing */
+        get: operations["station_routing_list"];
+        /** Replace menu item to station routing for an outlet */
+        put: operations["station_routing_replace"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/orders/{orderId}/station-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispatch original, amendment or cancellation station jobs */
+        post: operations["station_jobs_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/stations/{stationId}/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List one station queue independently */
+        get: operations["station_jobs_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/station-jobs/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update station job delivery state */
+        patch: operations["station_jobs_update_state"];
+        trace?: never;
+    };
+    "/outlets/{outletId}/station-jobs/{jobId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Requeue a failed or uncertain station job */
+        post: operations["station_jobs_retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/outlets/{outletId}/station-jobs/{jobId}/reprints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create an independent station job reprint copy */
+        post: operations["station_jobs_reprint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2603,6 +2741,123 @@ export interface components {
             version: number;
             /** Format: uuid */
             tableId: string;
+        };
+        /** @enum {string} */
+        StationKind: "KITCHEN" | "BAR" | "COLD" | "HOT" | "OTHER";
+        /** @enum {string} */
+        StationJobKind: "ORIGINAL" | "AMEND" | "CANCEL";
+        StationWrite: {
+            name: string;
+            kind: components["schemas"]["StationKind"];
+            /** Format: uuid */
+            printerConfigId?: string;
+            isDefault: boolean;
+            sortOrder: number;
+        };
+        StationUpdate: {
+            name: string;
+            kind: components["schemas"]["StationKind"];
+            /** Format: uuid */
+            printerConfigId?: string;
+            isDefault: boolean;
+            sortOrder: number;
+            revision: number;
+        };
+        Station: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["StationKind"];
+            isDefault: boolean;
+            /** Format: uuid */
+            printerConfigId: string | null;
+            printerModel: string | null;
+            sortOrder: number;
+            revision: number;
+            routeCount: number;
+        };
+        StationRouteEntry: {
+            /** Format: uuid */
+            menuItemId: string;
+            /** Format: uuid */
+            stationId: string;
+        };
+        StationRoutingWrite: {
+            routes: components["schemas"]["StationRouteEntry"][];
+        };
+        StationRoute: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            menuItemId: string;
+            menuItemName: string;
+            /** Format: uuid */
+            stationId: string;
+            stationName: string;
+            stationKind: components["schemas"]["StationKind"];
+        };
+        StationJobLine: {
+            /** Format: uuid */
+            variantId: string;
+            quantity: number;
+            /** Format: uuid */
+            saleLineId?: string;
+            modifiers?: components["schemas"]["StationJobModifier"][];
+        };
+        StationJobWrite: {
+            kind: components["schemas"]["StationJobKind"];
+            /** Format: uuid */
+            saleId?: string;
+            lines: components["schemas"]["StationJobLine"][];
+        };
+        StationJobStateWrite: {
+            /** @enum {string} */
+            state: "QUEUED" | "SENDING" | "SENT" | "FAILED" | "UNKNOWN";
+            attempts: number;
+            lastError?: string | null;
+        };
+        StationJob: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            stationId: string;
+            stationName: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            saleId: string | null;
+            orderReference: string;
+            /** Format: uuid */
+            variantId: string;
+            kind: components["schemas"]["StationJobKind"];
+            /** @enum {string} */
+            state: "QUEUED" | "SENDING" | "SENT" | "FAILED" | "UNKNOWN";
+            copy: boolean;
+            /** Format: uuid */
+            reprintOfId: string | null;
+            itemName: string;
+            variantName: string;
+            quantity: number;
+            modifiers: components["schemas"]["StationJobModifier"][];
+            attempts: number;
+            lastError: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        StationJobPage: {
+            items: components["schemas"]["StationJob"][];
+            /** Format: uuid */
+            nextCursor: string | null;
+        };
+        StationJobModifier: {
+            /** Format: uuid */
+            modifierId?: string;
+            name?: string;
+            quantity?: number;
+        } & {
+            [key: string]: unknown;
         };
     };
     responses: never;
@@ -11144,6 +11399,980 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurchaseOrder"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    stations_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Station list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Station"][];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    stations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StationWrite"];
+            };
+        };
+        responses: {
+            /** @description Station created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Station"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    stations_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                stationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Station updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Station"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    station_routing_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Routing list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationRoute"][];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    station_routing_replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StationRoutingWrite"];
+            };
+        };
+        responses: {
+            /** @description Routing replaced */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationRoute"][];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    station_jobs_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                outletId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StationJobWrite"];
+            };
+        };
+        responses: {
+            /** @description Station jobs created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationJob"][];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    station_jobs_list: {
+        parameters: {
+            query?: {
+                state?: "QUEUED" | "SENDING" | "SENT" | "FAILED" | "UNKNOWN";
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+                stationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Station job page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationJobPage"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    station_jobs_update_state: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StationJobStateWrite"];
+            };
+        };
+        responses: {
+            /** @description Station job updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationJob"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    station_jobs_retry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Station job requeued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationJob"];
+                };
+            };
+            /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 401; see ARCHITECTURE.md for stable error codes and recovery. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 403; see ARCHITECTURE.md for stable error codes and recovery. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 404; see ARCHITECTURE.md for stable error codes and recovery. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 409; see ARCHITECTURE.md for stable error codes and recovery. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 422; see ARCHITECTURE.md for stable error codes and recovery. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 429; see ARCHITECTURE.md for stable error codes and recovery. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Error 503; see ARCHITECTURE.md for stable error codes and recovery. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    station_jobs_reprint: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                outletId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Station job reprint created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationJob"];
                 };
             };
             /** @description Error 400; see ARCHITECTURE.md for stable error codes and recovery. */

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
 import { describeApiError } from '@/lib/api-errors';
+import { StationsPanel } from '@/components/stations-panel';
 import { useActiveOutletId } from '@/lib/use-active-outlet';
 
 export function PrintersScreen() {
@@ -139,6 +140,8 @@ export function PrintersScreen() {
               </p>
             </CardContent>
           </Card>
+
+          <StationsPanel outletId={outletId} />
         </>
       )}
     </div>

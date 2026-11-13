@@ -409,6 +409,34 @@ class ApiClient {
           return SplitResult.fromJson(value);
         case 'SplitWrite':
           return SplitWrite.fromJson(value);
+        case 'Station':
+          return Station.fromJson(value);
+        case 'StationJob':
+          return StationJob.fromJson(value);
+        case 'StationJobKind':
+          return StationJobKindTypeTransformer().decode(value);
+        case 'StationJobLine':
+          return StationJobLine.fromJson(value);
+        case 'StationJobModifier':
+          return StationJobModifier.fromJson(value);
+        case 'StationJobPage':
+          return StationJobPage.fromJson(value);
+        case 'StationJobStateWrite':
+          return StationJobStateWrite.fromJson(value);
+        case 'StationJobWrite':
+          return StationJobWrite.fromJson(value);
+        case 'StationKind':
+          return StationKindTypeTransformer().decode(value);
+        case 'StationRoute':
+          return StationRoute.fromJson(value);
+        case 'StationRouteEntry':
+          return StationRouteEntry.fromJson(value);
+        case 'StationRoutingWrite':
+          return StationRoutingWrite.fromJson(value);
+        case 'StationUpdate':
+          return StationUpdate.fromJson(value);
+        case 'StationWrite':
+          return StationWrite.fromJson(value);
         case 'Stock':
           return Stock.fromJson(value);
         case 'StockChange':

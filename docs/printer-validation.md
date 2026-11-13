@@ -1,7 +1,8 @@
 # Receipt printer validation record (#15)
 
 Status: **candidate implementation, hardware acceptance PENDING**. No printer model and no Android
-test device were supplied for this ticket. Nothing in this document claims a transport, code page,
+test device were supplied for this ticket. LAN raw TCP was added in #25 and validated against a
+local TCP listener; Bluetooth/LAN/USB physical output remains PENDING. Nothing in this document claims a transport, code page,
 command or print result was verified on hardware. Every hardware-dependent item is marked
 `PENDING — requires <X>` with a reproduction recipe.
 
@@ -16,7 +17,8 @@ command or print result was verified on hardware. Every hardware-dependent item 
 | Android Bluetooth Classic (RFCOMM/SPP) transport | Implemented as the single candidate transport; **unverified** | `android_printer_transport.dart`, `MainActivity.kt` |
 | Android runtime permission request/re-request | Implemented; on-device behaviour PENDING | `printer_permissions.dart`, `MainActivity.kt`, `AndroidManifest.xml` |
 | Cashier configuration, connect, test print and failure states | Implemented and widget tested | `apps/mobile/lib/features/printing/printer_screen.dart`, `apps/mobile/test/printer_screen_test.dart` |
-| LAN / USB transports | **Not implemented. Not verified on this project.** | UI states this explicitly and disables connect/test |
+| LAN raw TCP transport (#25) | Implemented and validated against a local TCP listener; physical output PENDING | `lan_printer_transport.dart`, `test/lan_printer_transport_test.dart`, `docs/printer-hardware.md` |
+| USB host transport (#25) | Dart transport plus Android `UsbPrinterChannel` bulk-transfer host; framing/state tested with a mocked channel; physical output PENDING | `usb_printer_transport.dart`, `test/usb_printer_transport_test.dart` |
 | Print queue, retry, reprint and receipt layout policy | Implemented and unit/widget tested on this host | `docs/receipt-printing.md`, `apps/mobile/test/print_queue_service_test.dart`, `receipt_document_test.dart` |
 
 The cashier app never reports a physical print success. A "Test print bytes sent" message only
@@ -41,15 +43,16 @@ result until the acceptance checklist below has actually been run.
 | Android version | `PENDING — requires Android test device` | App targets API 36, minimum from the Flutter toolchain. Record the exact device model and Android release. |
 | Runtime permissions | `BLUETOOTH_CONNECT` + `BLUETOOTH_SCAN` on API 31+; `BLUETOOTH`/`BLUETOOTH_ADMIN` install-time and `ACCESS_FINE_LOCATION` for discovery on API 23–30 | Documented source: Android Bluetooth permissions guidance. Manifest comments tie each permission to the printer feature. On-device prompts and denial paths are `PENDING — requires Android device`. |
 
-### Transports explicitly not verified on this project
+### Transports implemented but not physically verified on this project
 
-- Bluetooth Classic (SPP) — adapter exists, **not verified**.
+- Bluetooth Classic (SPP) — adapter exists, **not physically verified**.
 - Bluetooth Low Energy — not implemented.
-- Network / LAN (raw TCP 9100 or vendor protocol) — **not implemented, not verified**.
-- USB host / USB OTG — **not implemented, not verified**.
+- Network / LAN (raw TCP 9100) — adapter exists and accepted bytes on a local listener, **not physically verified**.
+- USB host / USB OTG — adapter and mocked platform channel exist, **not physically verified**.
 
-The cashier UI shows `Network (LAN)` and `USB` with "not verified" labels and keeps Connect and
-Test print disabled for them. Selecting one never produces a silent success.
+All three selectable transports keep the same honest success wording: bytes were accepted by the
+transport, not proof of paper. The detailed per-transport record and recipes are in
+`docs/printer-hardware.md`.
 
 ## Physical acceptance checklist
 

@@ -7,6 +7,7 @@ import 'package:modern_pos_mobile/features/printing/printer_config_store.dart';
 import 'package:modern_pos_mobile/features/printing/printer_models.dart';
 import 'package:modern_pos_mobile/features/printing/printer_permissions.dart';
 import 'package:modern_pos_mobile/features/printing/printer_transport.dart';
+import 'package:modern_pos_mobile/features/printing/printer_transport_factory.dart';
 import 'package:modern_pos_mobile/features/printing/receipt_identity.dart';
 
 class FakePrinterTransport implements PrinterTransport {
@@ -61,6 +62,19 @@ class FakePrinterTransport implements PrinterTransport {
 
   @override
   bool get isConnected => connected;
+}
+
+class FakePrinterTransportFactory implements PrinterTransportFactory {
+  FakePrinterTransportFactory(this.transport);
+
+  final PrinterTransport transport;
+  final List<PrinterTransportType> created = [];
+
+  @override
+  PrinterTransport create(PrinterTransportType type) {
+    created.add(type);
+    return transport;
+  }
 }
 
 class FakePrinterPermissions implements PrinterPermissionService {

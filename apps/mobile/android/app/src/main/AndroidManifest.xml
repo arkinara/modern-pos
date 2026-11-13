@@ -36,6 +36,13 @@
         android:name="android.hardware.bluetooth"
         android:required="false"/>
 
+    <!-- USB host is optional as well. Ticket #25 adds a USB bulk-transfer
+         transport but physical delivery is PENDING until a real printer and
+         Android device are tested. -->
+    <uses-feature
+        android:name="android.hardware.usb.host"
+        android:required="false"/>
+
     <application
         android:label="Modern POS"
         android:name="${applicationName}"

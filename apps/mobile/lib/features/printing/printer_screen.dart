@@ -112,11 +112,7 @@ class _PrinterScreenState extends ConsumerState<PrinterScreen> {
                     .map(
                       (type) => DropdownMenuItem(
                         value: type,
-                        child: Text(
-                          type.implemented
-                              ? '${type.label} - implemented'
-                              : '${type.label} - not verified',
-                        ),
+                        child: Text(type.label),
                       ),
                     )
                     .toList(growable: false),
@@ -140,16 +136,31 @@ class _PrinterScreenState extends ConsumerState<PrinterScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _addressController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Connection address',
-                  hintText: 'AA:BB:CC:DD:EE:FF',
-                  helperText:
+                  hintText: switch (_transport) {
+                    PrinterTransportType.bluetoothClassic =>
+                      'AA:BB:CC:DD:EE:FF',
+                    PrinterTransportType.network => '192.168.1.50:9100',
+                    PrinterTransportType.usb => 'USB device id',
+                  },
+                  helperText: switch (_transport) {
+                    PrinterTransportType.bluetoothClassic =>
                       'Bluetooth Classic: pair the printer in Android settings '
-                      'first.',
-                  border: OutlineInputBorder(),
+                          'first.',
+                    PrinterTransportType.network =>
+                      'LAN: enter host:port. Raw TCP port 9100 is used when the '
+                          'port is omitted.',
+                    PrinterTransportType.usb =>
+                      'USB: grant USB access when Android prompts, then enter the '
+                          'device id or scan devices.',
+                  },
+                  border: const OutlineInputBorder(),
                 ),
                 autocorrect: false,
-                textCapitalization: TextCapitalization.characters,
+                textCapitalization: _transport == PrinterTransportType.network
+                    ? TextCapitalization.none
+                    : TextCapitalization.characters,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Enter the printer address or identifier.';
@@ -228,7 +239,7 @@ class _PrinterScreenState extends ConsumerState<PrinterScreen> {
 
   Widget _buildActions(BuildContext context, PrinterState state) {
     final controller = ref.read(printerControllerProvider.notifier);
-    final unsupported = state.isConfigured && !state.transportSupported;
+    final needsBluetooth = state.config?.transport.requiresBluetooth ?? true;
 
     return Card(
       child: Padding(
@@ -243,36 +254,35 @@ class _PrinterScreenState extends ConsumerState<PrinterScreen> {
                 'Save a configuration first, then connect and run a test print.',
                 style: TextStyle(color: PosColors.muted),
               )
-            else if (unsupported)
-              _InlineWarning(
-                message:
-                    '${state.config!.transport.label} is not verified on this '
-                    'project. Connect and Test print stay disabled. Choose '
-                    'Bluetooth Classic to exercise the implemented adapter.',
-              )
             else ...[
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  if (state.permissionsGranted)
-                    const _PermissionChip(granted: true)
-                  else
-                    FilledButton.tonalIcon(
-                      onPressed: state.busy
-                          ? null
-                          : controller.requestPermissions,
-                      icon: const Icon(Icons.lock_open_outlined),
-                      label: const Text('Grant Bluetooth permission'),
+              if (!needsBluetooth)
+                const Text(
+                  'This transport does not use Android Bluetooth permissions.',
+                  style: TextStyle(color: PosColors.muted, fontSize: 13),
+                ),
+              if (needsBluetooth)
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    if (state.permissionsGranted)
+                      const _PermissionChip(granted: true)
+                    else
+                      FilledButton.tonalIcon(
+                        onPressed: state.busy
+                            ? null
+                            : controller.requestPermissions,
+                        icon: const Icon(Icons.lock_open_outlined),
+                        label: const Text('Grant Bluetooth permission'),
+                      ),
+                    OutlinedButton.icon(
+                      onPressed: state.busy ? null : controller.discover,
+                      icon: const Icon(Icons.bluetooth_searching),
+                      label: const Text('Scan paired devices'),
                     ),
-                  OutlinedButton.icon(
-                    onPressed: state.busy ? null : controller.discover,
-                    icon: const Icon(Icons.bluetooth_searching),
-                    label: const Text('Scan paired devices'),
-                  ),
-                ],
-              ),
-              if (!state.permissionsGranted) ...[
+                  ],
+                ),
+              if (needsBluetooth && !state.permissionsGranted) ...[
                 const SizedBox(height: 8),
                 const Text(
                   'Android asks for Bluetooth connect/scan permission. '
@@ -435,10 +445,11 @@ class _CandidateNotice extends StatelessWidget {
             SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Hardware candidate, not verified. Bluetooth Classic (SPP) is '
-                'the only implemented transport. Network and USB printing are '
-                'not verified on this project. A real printer and Android '
-                'device are required before claiming support.',
+                'Hardware candidate, not verified on this project. Bluetooth '
+                'Classic, LAN and USB adapters exist, but physical printing is '
+                'not verified for any model. LAN framing is validated against a '
+                'local TCP listener; Bluetooth and USB hardware remain PENDING '
+                'until a real printer and Android device are tested.',
                 style: TextStyle(color: PosColors.warning),
               ),
             ),
@@ -466,9 +477,9 @@ class _FirstRunCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             const Text(
-              '1. Pair the Bluetooth printer in Android system settings.\n'
-              '2. Enter its address below (or scan paired devices after '
-              'granting permission).\n'
+              '1. Choose Bluetooth Classic, LAN or USB.\n'
+              '2. Enter the address (pair Bluetooth first, or use host:port for '
+              'LAN / the device id for USB).\n'
               '3. Save, connect, then run Test print.',
               style: TextStyle(color: PosColors.muted),
             ),
@@ -688,36 +699,6 @@ class _PermissionChip extends StatelessWidget {
             style: TextStyle(
               color: granted ? PosColors.success : PosColors.muted,
               fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InlineWarning extends StatelessWidget {
-  const _InlineWarning({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: PosColors.warningSoft,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.warning_amber_outlined, color: PosColors.warning),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(color: PosColors.warning),
             ),
           ),
         ],
