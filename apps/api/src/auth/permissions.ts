@@ -17,6 +17,11 @@ export const PERMISSIONS = {
   ATTENDANCE_READ: 'attendance.read',
   AUDIT_SEARCH: 'audit.search',
   PERMISSION_MATRIX_READ: 'permission.read',
+  SUPPLIER_MANAGE: 'supplier.manage',
+  PURCHASE_ORDER_MANAGE: 'purchase_order.manage',
+  STOCK_COUNT: 'stock.count',
+  STOCK_WASTE: 'stock.waste',
+  STOCK_TRANSFER: 'stock.transfer',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -78,6 +83,31 @@ export const PERMISSION_DEFINITIONS: readonly PermissionDefinition[] = [
     label: 'Read permission matrix',
     description: 'Read the role-to-operation matrix used by the guards.',
   },
+  {
+    key: PERMISSIONS.SUPPLIER_MANAGE,
+    label: 'Manage suppliers',
+    description: 'Create and read supplier records for purchasing.',
+  },
+  {
+    key: PERMISSIONS.PURCHASE_ORDER_MANAGE,
+    label: 'Manage purchase orders',
+    description: 'Create purchase orders and receive ordered stock in supplier or base units.',
+  },
+  {
+    key: PERMISSIONS.STOCK_COUNT,
+    label: 'Record stock count',
+    description: 'Count stock and post counted variances with a reason and actor.',
+  },
+  {
+    key: PERMISSIONS.STOCK_WASTE,
+    label: 'Record waste',
+    description: 'Remove damaged, expired, stolen or spoiled stock with a mandatory reason.',
+  },
+  {
+    key: PERMISSIONS.STOCK_TRANSFER,
+    label: 'Transfer between outlets',
+    description: 'Create, dispatch, receive and cancel outlet transfers. Owners only.',
+  },
 ];
 
 const ALL_PERMISSIONS = PERMISSION_DEFINITIONS.map((definition) => definition.key);
@@ -92,6 +122,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     PERMISSIONS.SHIFT_CLOSE,
     PERMISSIONS.ATTENDANCE_CLOCK,
     PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.STOCK_COUNT,
+    PERMISSIONS.STOCK_WASTE,
   ],
 };
 

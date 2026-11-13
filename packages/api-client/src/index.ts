@@ -77,7 +77,14 @@ export interface ApiClient {
   listStockMovements(
     outletId: string,
     stockItemId: string,
-    query?: { cursor?: string; limit?: number },
+    query?: {
+      cursor?: string;
+      limit?: number;
+      type?: ApiSchemas['Movement']['type'];
+      reason?: string;
+      supplierId?: string;
+      supplierReference?: string;
+    },
   ): Promise<ApiSchemas['MovementPage']>;
   recordOpeningBalance(
     outletId: string,
@@ -187,6 +194,62 @@ export interface ApiClient {
       limit?: number;
     },
   ): Promise<ApiSchemas['OperationAuditPage']>;
+  listSuppliers(
+    outletId: string,
+    query?: { cursor?: string; limit?: number; search?: string },
+  ): Promise<ApiSchemas['SupplierPage']>;
+  createSupplier(
+    outletId: string,
+    supplier: ApiSchemas['SupplierWrite'],
+  ): Promise<ApiSchemas['Supplier']>;
+  listPurchaseOrders(
+    outletId: string,
+    query?: { cursor?: string; limit?: number },
+  ): Promise<ApiSchemas['PurchaseOrderPage']>;
+  createPurchaseOrder(
+    outletId: string,
+    order: ApiSchemas['PurchaseOrderWrite'],
+  ): Promise<ApiSchemas['PurchaseOrder']>;
+  receivePurchaseOrder(
+    outletId: string,
+    purchaseOrderId: string,
+    receipt: ApiSchemas['PurchaseOrderReceiptWrite'],
+  ): Promise<ApiSchemas['PurchaseOrderReceipt']>;
+  cancelPurchaseOrder(
+    outletId: string,
+    purchaseOrderId: string,
+  ): Promise<ApiSchemas['PurchaseOrder']>;
+  listStockCounts(
+    outletId: string,
+    query?: { cursor?: string; limit?: number },
+  ): Promise<ApiSchemas['StockCountPage']>;
+  createStockCount(
+    outletId: string,
+    count: ApiSchemas['StockCountWrite'],
+  ): Promise<ApiSchemas['StockCount']>;
+  listWaste(
+    outletId: string,
+    query?: { cursor?: string; limit?: number },
+  ): Promise<ApiSchemas['WastePage']>;
+  recordWaste(outletId: string, waste: ApiSchemas['WasteWrite']): Promise<ApiSchemas['Waste']>;
+  listTransfers(
+    outletId: string,
+    query?: { state?: ApiSchemas['OutletTransfer']['state']; cursor?: string; limit?: number },
+  ): Promise<ApiSchemas['OutletTransferPage']>;
+  createTransfer(
+    outletId: string,
+    transfer: ApiSchemas['OutletTransferWrite'],
+  ): Promise<ApiSchemas['OutletTransfer']>;
+  dispatchTransfer(
+    outletId: string,
+    transferId: string,
+  ): Promise<ApiSchemas['OutletTransferMutation']>;
+  receiveTransfer(
+    outletId: string,
+    transferId: string,
+    receipt: ApiSchemas['OutletTransferReceiveWrite'],
+  ): Promise<ApiSchemas['OutletTransferMutation']>;
+  cancelTransfer(outletId: string, transferId: string): Promise<ApiSchemas['OutletTransfer']>;
 }
 
 function toQueryString(query: Record<string, string | number | undefined>): string {
@@ -538,6 +601,89 @@ export function createApiClient({
     searchAudit: (outletId, query = {}) =>
       request<ApiSchemas['OperationAuditPage']>(
         `/v1/outlets/${encodeURIComponent(outletId)}/audit${toQueryString(query)}`,
+      ),
+    listSuppliers: (outletId, query = {}) =>
+      request<ApiSchemas['SupplierPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/suppliers${toQueryString(query)}`,
+      ),
+    createSupplier: (outletId, supplier) =>
+      request<ApiSchemas['Supplier']>(`/v1/outlets/${encodeURIComponent(outletId)}/suppliers`, {
+        method: 'POST',
+        body: JSON.stringify(supplier),
+      }),
+    listPurchaseOrders: (outletId, query = {}) =>
+      request<ApiSchemas['PurchaseOrderPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/purchase-orders${toQueryString(query)}`,
+      ),
+    createPurchaseOrder: (outletId, order) =>
+      request<ApiSchemas['PurchaseOrder']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/purchase-orders`,
+        { method: 'POST', body: JSON.stringify(order) },
+      ),
+    receivePurchaseOrder: (outletId, purchaseOrderId, receipt) =>
+      request<ApiSchemas['PurchaseOrderReceipt']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/purchase-orders/${encodeURIComponent(
+          purchaseOrderId,
+        )}/receipts`,
+        { method: 'POST', body: JSON.stringify(receipt) },
+      ),
+    cancelPurchaseOrder: (outletId, purchaseOrderId) =>
+      request<ApiSchemas['PurchaseOrder']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/purchase-orders/${encodeURIComponent(
+          purchaseOrderId,
+        )}/cancel`,
+        { method: 'POST' },
+      ),
+    listStockCounts: (outletId, query = {}) =>
+      request<ApiSchemas['StockCountPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stock-counts${toQueryString(query)}`,
+      ),
+    createStockCount: (outletId, count) =>
+      request<ApiSchemas['StockCount']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stock-counts`,
+        { method: 'POST', body: JSON.stringify(count) },
+      ),
+    listWaste: (outletId, query = {}) =>
+      request<ApiSchemas['WastePage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/stock-wastes${toQueryString(query)}`,
+      ),
+    recordWaste: (outletId, waste) =>
+      request<ApiSchemas['Waste']>(`/v1/outlets/${encodeURIComponent(outletId)}/stock-wastes`, {
+        method: 'POST',
+        body: JSON.stringify(waste),
+      }),
+    listTransfers: (outletId, query = {}) =>
+      request<ApiSchemas['OutletTransferPage']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/transfers${toQueryString(query)}`,
+      ),
+    createTransfer: (outletId, transfer) =>
+      request<ApiSchemas['OutletTransfer']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/transfers`,
+        {
+          method: 'POST',
+          body: JSON.stringify(transfer),
+        },
+      ),
+    dispatchTransfer: (outletId, transferId) =>
+      request<ApiSchemas['OutletTransferMutation']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/transfers/${encodeURIComponent(
+          transferId,
+        )}/dispatch`,
+        { method: 'POST' },
+      ),
+    receiveTransfer: (outletId, transferId, receipt) =>
+      request<ApiSchemas['OutletTransferMutation']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/transfers/${encodeURIComponent(
+          transferId,
+        )}/receive`,
+        { method: 'POST', body: JSON.stringify(receipt) },
+      ),
+    cancelTransfer: (outletId, transferId) =>
+      request<ApiSchemas['OutletTransfer']>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/transfers/${encodeURIComponent(
+          transferId,
+        )}/cancel`,
+        { method: 'POST' },
       ),
   };
 }

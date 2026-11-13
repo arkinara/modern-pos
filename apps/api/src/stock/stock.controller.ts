@@ -20,7 +20,7 @@ import {
 export class StockController {
   constructor(private readonly stock: StockService) {}
 
-  @Roles(Role.OWNER)
+  @Roles(Role.OWNER, Role.CASHIER)
   @Get()
   list(
     @Param('outletId') outletId: string,

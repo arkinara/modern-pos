@@ -14,6 +14,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { PrintingModule } from './printing/printing.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PromotionsModule } from './promotions/promotions.module';
+import { PurchasingModule } from './purchasing/purchasing.module';
 import { RecipeModule } from './recipe/recipe.module';
 import { ReportsModule } from './reports/reports.module';
 import { SalesModule } from './sales/sales.module';
@@ -28,6 +29,7 @@ import { StockModule } from './stock/stock.module';
     SettingsModule,
     CatalogModule,
     StockModule,
+    PurchasingModule,
     RecipeModule,
     SalesModule,
     PromotionsModule,

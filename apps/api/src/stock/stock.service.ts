@@ -34,8 +34,37 @@ export interface MovementResponse {
   reason: string;
   sourceId: string;
   sourceReference: string | null;
+  supplierId: string | null;
+  supplierName: string | null;
+  supplierReference: string | null;
+  purchaseOrderId: string | null;
+  purchaseOrderReference: string | null;
+  transferId: string | null;
+  transferReference: string | null;
+  stockCountId: string | null;
+  stockCountReference: string | null;
+  stockWasteId: string | null;
   actorId: string;
   createdAt: string;
+}
+
+interface MovementReferences {
+  saleReferences: Map<string, string>;
+  supplierNames: Map<string, string>;
+  supplierReferences: Map<string, string | null>;
+  purchaseOrderReferences: Map<string, string>;
+  transferReferences: Map<string, string>;
+  stockCountReferences: Map<string, string>;
+}
+
+interface LedgerMovement {
+  type: StockMovementType;
+  sourceId: string;
+  supplierId?: string | null;
+  purchaseOrderId?: string | null;
+  transferId?: string | null;
+  stockCountId?: string | null;
+  stockWasteId?: string | null;
 }
 
 export interface MovementPageResponse {
@@ -184,7 +213,27 @@ export class StockService {
 
     const limit = query.limit ?? 25;
     const rows = await this.prisma.stockMovement.findMany({
-      where: { outletId, stockItemId },
+      where: {
+        outletId,
+        stockItemId,
+        ...(query.type ? { type: query.type } : {}),
+        ...(query.supplierId ? { supplierId: query.supplierId } : {}),
+        ...(query.supplierReference
+          ? {
+              supplier: {
+                is: {
+                  reference: {
+                    contains: query.supplierReference,
+                    mode: 'insensitive' as const,
+                  },
+                },
+              },
+            }
+          : {}),
+        ...(query.reason
+          ? { reason: { contains: query.reason, mode: 'insensitive' as const } }
+          : {}),
+      },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
@@ -192,30 +241,33 @@ export class StockService {
 
     const hasMore = rows.length > limit;
     const page = hasMore ? rows.slice(0, limit) : rows;
-    const saleReferences = await this.resolveSaleReferences(outletId, user.businessId, page);
+    const references = await this.resolveMovementReferences(outletId, user.businessId, page);
 
     return {
-      items: page.map((row) =>
-        this.toMovement(row, item.quantityScale, saleReferences.get(row.sourceId) ?? null),
-      ),
+      items: page.map((row) => this.toMovement(row, item.quantityScale, references)),
       nextCursor: hasMore ? (page[page.length - 1]?.id ?? null) : null,
     };
   }
 
   /**
-   * Sale and reversal movements store the sale id in sourceId. Resolve it to
-   * the human-readable sale reference in one batched read. Missing or reversed
-   * sales degrade to null so the ledger still renders.
+   * Resolve human-readable ledger references in a fixed number of batched
+   * reads. Missing rows degrade to null so the append-only ledger stays
+   * readable even after an unrelated record is unavailable.
    */
-  private async resolveSaleReferences(
+  private async resolveMovementReferences(
     outletId: string,
     businessId: string,
-    movements: {
-      type: StockMovementType;
-      sourceId: string;
-    }[],
-  ): Promise<Map<string, string>> {
-    const references = new Map<string, string>();
+    movements: LedgerMovement[],
+  ): Promise<MovementReferences> {
+    const references: MovementReferences = {
+      saleReferences: new Map(),
+      supplierNames: new Map(),
+      supplierReferences: new Map(),
+      purchaseOrderReferences: new Map(),
+      transferReferences: new Map(),
+      stockCountReferences: new Map(),
+    };
+
     const saleIds = [
       ...new Set(
         movements
@@ -227,18 +279,67 @@ export class StockService {
           .map((movement) => movement.sourceId),
       ),
     ];
+    const supplierIds = [
+      ...new Set(movements.map((movement) => movement.supplierId).filter(Boolean) as string[]),
+    ];
+    const purchaseOrderIds = [
+      ...new Set(movements.map((movement) => movement.purchaseOrderId).filter(Boolean) as string[]),
+    ];
+    const transferIds = [
+      ...new Set(movements.map((movement) => movement.transferId).filter(Boolean) as string[]),
+    ];
+    const stockCountIds = [
+      ...new Set(movements.map((movement) => movement.stockCountId).filter(Boolean) as string[]),
+    ];
 
-    if (saleIds.length === 0) {
-      return references;
-    }
-
-    const sales = await this.prisma.sale.findMany({
-      where: { id: { in: saleIds }, outletId, businessId },
-      select: { id: true, reference: true },
-    });
+    const [sales, suppliers, purchaseOrders, transfers, stockCounts] = await Promise.all([
+      saleIds.length === 0
+        ? Promise.resolve([])
+        : this.prisma.sale.findMany({
+            where: { id: { in: saleIds }, outletId, businessId },
+            select: { id: true, reference: true },
+          }),
+      supplierIds.length === 0
+        ? Promise.resolve([])
+        : this.prisma.supplier.findMany({
+            where: { id: { in: supplierIds }, businessId },
+            select: { id: true, name: true, reference: true },
+          }),
+      purchaseOrderIds.length === 0
+        ? Promise.resolve([])
+        : this.prisma.purchaseOrder.findMany({
+            where: { id: { in: purchaseOrderIds }, businessId },
+            select: { id: true, reference: true },
+          }),
+      transferIds.length === 0
+        ? Promise.resolve([])
+        : this.prisma.outletTransfer.findMany({
+            where: { id: { in: transferIds }, businessId },
+            select: { id: true, reference: true },
+          }),
+      stockCountIds.length === 0
+        ? Promise.resolve([])
+        : this.prisma.stockCount.findMany({
+            where: { id: { in: stockCountIds }, businessId },
+            select: { id: true, reference: true },
+          }),
+    ]);
 
     for (const sale of sales) {
-      references.set(sale.id, sale.reference);
+      references.saleReferences.set(sale.id, sale.reference);
+    }
+    for (const supplier of suppliers) {
+      references.supplierNames.set(supplier.id, supplier.name);
+      references.supplierReferences.set(supplier.id, supplier.reference);
+    }
+    for (const order of purchaseOrders) {
+      references.purchaseOrderReferences.set(order.id, order.reference);
+    }
+    for (const transfer of transfers) {
+      references.transferReferences.set(transfer.id, transfer.reference);
+    }
+    for (const count of stockCounts) {
+      references.stockCountReferences.set(count.id, count.reference);
     }
 
     return references;
@@ -571,12 +672,22 @@ export class StockService {
       type: StockMovementType;
       reason: string;
       sourceId: string;
+      supplierId?: string | null;
+      purchaseOrderId?: string | null;
+      transferId?: string | null;
+      stockCountId?: string | null;
+      stockWasteId?: string | null;
       actorId: string;
       createdAt: Date;
     },
     quantityScale: number,
-    sourceReference: string | null = null,
+    references?: MovementReferences,
   ): MovementResponse {
+    const supplierId = movement.supplierId ?? null;
+    const purchaseOrderId = movement.purchaseOrderId ?? null;
+    const transferId = movement.transferId ?? null;
+    const stockCountId = movement.stockCountId ?? null;
+
     return {
       id: movement.id,
       outletId: movement.outletId,
@@ -585,7 +696,29 @@ export class StockService {
       type: movement.type,
       reason: movement.reason,
       sourceId: movement.sourceId,
-      sourceReference,
+      sourceReference:
+        references?.saleReferences.get(movement.sourceId) ??
+        (movement.type === StockMovementType.TRANSFER_OUT
+          ? (references?.transferReferences.get(movement.sourceId) ?? null)
+          : null),
+      supplierId,
+      supplierName: supplierId ? (references?.supplierNames.get(supplierId) ?? null) : null,
+      supplierReference: supplierId
+        ? (references?.supplierReferences.get(supplierId) ?? null)
+        : null,
+      purchaseOrderId,
+      purchaseOrderReference: purchaseOrderId
+        ? (references?.purchaseOrderReferences.get(purchaseOrderId) ?? null)
+        : null,
+      transferId,
+      transferReference: transferId
+        ? (references?.transferReferences.get(transferId) ?? null)
+        : null,
+      stockCountId,
+      stockCountReference: stockCountId
+        ? (references?.stockCountReferences.get(stockCountId) ?? null)
+        : null,
+      stockWasteId: movement.stockWasteId ?? null,
       actorId: movement.actorId,
       createdAt: movement.createdAt.toISOString(),
     };
