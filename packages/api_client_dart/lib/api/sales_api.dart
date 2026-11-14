@@ -160,7 +160,10 @@ class SalesApi {
   /// * [DateTime] from:
   ///
   /// * [DateTime] to:
-  Future<Response> salesListWithHttpInfo(String outletId, { String? cursor, int? limit, DateTime? from, DateTime? to, Future<void>? abortTrigger, }) async {
+  ///
+  /// * [String] reference:
+  ///   Full or partial sale reference. A matching from/to date range is required.
+  Future<Response> salesListWithHttpInfo(String outletId, { String? cursor, int? limit, DateTime? from, DateTime? to, String? reference, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/outlets/{outletId}/sales'
       .replaceAll('{outletId}', outletId);
@@ -183,6 +186,9 @@ class SalesApi {
     }
     if (to != null) {
       queryParams.addAll(_queryParams('', 'to', to));
+    }
+    if (reference != null) {
+      queryParams.addAll(_queryParams('', 'reference', reference));
     }
 
     const contentTypes = <String>[];
@@ -213,8 +219,11 @@ class SalesApi {
   /// * [DateTime] from:
   ///
   /// * [DateTime] to:
-  Future<SalePage?> salesList(String outletId, { String? cursor, int? limit, DateTime? from, DateTime? to, Future<void>? abortTrigger, }) async {
-    final response = await salesListWithHttpInfo(outletId, cursor: cursor, limit: limit, from: from, to: to, abortTrigger: abortTrigger,);
+  ///
+  /// * [String] reference:
+  ///   Full or partial sale reference. A matching from/to date range is required.
+  Future<SalePage?> salesList(String outletId, { String? cursor, int? limit, DateTime? from, DateTime? to, String? reference, Future<void>? abortTrigger, }) async {
+    final response = await salesListWithHttpInfo(outletId, cursor: cursor, limit: limit, from: from, to: to, reference: reference, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

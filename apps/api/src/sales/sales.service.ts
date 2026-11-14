@@ -1469,6 +1469,15 @@ export class SalesService {
     const outlet = await this.requireOutlet(this.prisma, outletId, user.businessId);
     const completedAt = localDateRangeUtc(query.from, query.to, outlet.timezone);
     const limit = query.limit ?? 25;
+    const reference = query.reference?.trim();
+
+    if (reference && (!query.from || !query.to)) {
+      throw apiError(
+        400,
+        'VALIDATION_ERROR',
+        'A date range is required when searching by sale reference',
+      );
+    }
 
     const rows = await this.prisma.sale.findMany({
       where: {
@@ -1476,6 +1485,7 @@ export class SalesService {
         outletId,
         ...(user.role === Role.CASHIER ? { cashierId: user.id } : {}),
         ...(completedAt.gte || completedAt.lt ? { completedAt } : {}),
+        ...(reference ? { reference: { contains: reference, mode: 'insensitive' } } : {}),
       },
       orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,

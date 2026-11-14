@@ -135,7 +135,7 @@ Class | Method | HTTP request | Description
 *PermissionsApi* | [**permissionsMatrix**](doc//PermissionsApi.md#permissionsmatrix) | **GET** /outlets/{outletId}/permissions | Read the role-to-operation permission matrix (owner only)
 *PrintingApi* | [**printingCreate**](doc//PrintingApi.md#printingcreate) | **POST** /outlets/{outletId}/printers | Save verified-model printer configuration
 *PrintingApi* | [**printingJob**](doc//PrintingApi.md#printingjob) | **POST** /outlets/{outletId}/print-jobs | Mirror local receipt job metadata
-*PrintingApi* | [**printingList**](doc//PrintingApi.md#printinglist) | **GET** /outlets/{outletId}/printers | Read device-owned printer configuration
+*PrintingApi* | [**printingList**](doc//PrintingApi.md#printinglist) | **GET** /outlets/{outletId}/printers | Read printer configuration; owners may list every outlet printer
 *PrintingApi* | [**printingState**](doc//PrintingApi.md#printingstate) | **PATCH** /outlets/{outletId}/print-jobs/{jobId} | Update owned job delivery status
 *PrintingApi* | [**printingUpdate**](doc//PrintingApi.md#printingupdate) | **PUT** /outlets/{outletId}/printers/{printerId} | Update printer config with revision
 *PrintingApi* | [**stationJobsCreate**](doc//PrintingApi.md#stationjobscreate) | **POST** /outlets/{outletId}/orders/{orderId}/station-jobs | Dispatch original, amendment or cancellation station jobs

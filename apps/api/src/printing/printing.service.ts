@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, type PrintJob as PrintJobRow, type Printer as PrinterRow } from '@prisma/client';
+import {
+  Prisma,
+  Role,
+  type PrintJob as PrintJobRow,
+  type Printer as PrinterRow,
+} from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { apiError } from '../common/api-error';
 import { PrismaService } from '../prisma/prisma.service';
@@ -37,16 +42,27 @@ export class PrintingService {
 
   async listPrinters(
     outletId: string,
-    deviceId: string,
+    deviceId: string | undefined,
     user: AuthenticatedUser,
   ): Promise<PrinterResponse[]> {
-    if (!UUID_PATTERN.test(deviceId ?? '')) {
+    const scopedDeviceId = deviceId?.trim();
+
+    if (scopedDeviceId) {
+      if (!UUID_PATTERN.test(scopedDeviceId)) {
+        throw apiError(400, 'VALIDATION_ERROR', 'A valid deviceId query parameter is required');
+      }
+    } else if (user.role !== Role.OWNER) {
       throw apiError(400, 'VALIDATION_ERROR', 'A valid deviceId query parameter is required');
     }
+
     await this.assertOutlet(outletId, user);
 
     const printers = await this.prisma.printer.findMany({
-      where: { businessId: user.businessId, outletId, deviceId },
+      where: {
+        businessId: user.businessId,
+        outletId,
+        ...(scopedDeviceId ? { deviceId: scopedDeviceId } : {}),
+      },
       orderBy: [{ name: 'asc' }, { createdAt: 'asc' }],
     });
     return printers.map((printer) => this.toPrinterResponse(printer));

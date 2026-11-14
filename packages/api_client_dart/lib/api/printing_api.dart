@@ -148,7 +148,9 @@ class PrintingApi {
     return null;
   }
 
-  /// Read device-owned printer configuration
+  /// Read printer configuration; owners may list every outlet printer
+  ///
+  /// A deviceId scopes the read to that device. An owner may omit deviceId to read every printer configuration in the outlet. Returns non-secret metadata only.
   ///
   /// Note: This method returns the HTTP [Response].
   ///
@@ -156,8 +158,9 @@ class PrintingApi {
   ///
   /// * [String] outletId (required):
   ///
-  /// * [String] deviceId (required):
-  Future<Response> printingListWithHttpInfo(String outletId, String deviceId, { Future<void>? abortTrigger, }) async {
+  /// * [String] deviceId:
+  ///   Device-owned printer scope. Required for cashiers; optional for owners.
+  Future<Response> printingListWithHttpInfo(String outletId, { String? deviceId, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/outlets/{outletId}/printers'
       .replaceAll('{outletId}', outletId);
@@ -169,7 +172,9 @@ class PrintingApi {
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
+    if (deviceId != null) {
       queryParams.addAll(_queryParams('', 'deviceId', deviceId));
+    }
 
     const contentTypes = <String>[];
 
@@ -186,15 +191,18 @@ class PrintingApi {
     );
   }
 
-  /// Read device-owned printer configuration
+  /// Read printer configuration; owners may list every outlet printer
+  ///
+  /// A deviceId scopes the read to that device. An owner may omit deviceId to read every printer configuration in the outlet. Returns non-secret metadata only.
   ///
   /// Parameters:
   ///
   /// * [String] outletId (required):
   ///
-  /// * [String] deviceId (required):
-  Future<List<Printer>?> printingList(String outletId, String deviceId, { Future<void>? abortTrigger, }) async {
-    final response = await printingListWithHttpInfo(outletId, deviceId, abortTrigger: abortTrigger,);
+  /// * [String] deviceId:
+  ///   Device-owned printer scope. Required for cashiers; optional for owners.
+  Future<List<Printer>?> printingList(String outletId, { String? deviceId, Future<void>? abortTrigger, }) async {
+    final response = await printingListWithHttpInfo(outletId, deviceId: deviceId, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

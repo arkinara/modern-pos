@@ -31,6 +31,15 @@ function owner(): AuthenticatedUser {
   };
 }
 
+function cashier(): AuthenticatedUser {
+  return {
+    ...owner(),
+    id: 'user-2',
+    email: 'cashier@example.test',
+    role: Role.CASHIER,
+  };
+}
+
 function printerWrite(overrides: Partial<PrinterWriteDto> = {}): PrinterWriteDto {
   return {
     deviceId: DEVICE_ID,
@@ -85,13 +94,13 @@ function fakePrisma(): { prisma: PrismaService; state: FakeState } {
     },
     printer: {
       findMany: async (args: {
-        where: { businessId: string; outletId: string; deviceId: string };
+        where: { businessId: string; outletId: string; deviceId?: string };
       }) =>
         Object.values(state.printers).filter(
           (row) =>
             row.businessId === args.where.businessId &&
             row.outletId === args.where.outletId &&
-            row.deviceId === args.where.deviceId,
+            (args.where.deviceId === undefined || row.deviceId === args.where.deviceId),
         ),
       findFirst: async (args: { where: Record<string, string> }) =>
         Object.values(state.printers).find((row) =>
@@ -196,6 +205,36 @@ test('lists only device-owned printers inside the authenticated business', async
   const list = await service.listPrinters(OUTLET_ID, DEVICE_ID, owner());
   assert.equal(list.length, 1);
   assert.equal(list[0]?.name, 'Front counter');
+});
+
+test('an owner lists every outlet printer without a device filter', async () => {
+  const { prisma, state } = fakePrisma();
+  const service = new PrintingService(prisma);
+  await service.createPrinter(OUTLET_ID, printerWrite(), owner());
+  state.printers['bar'] = {
+    id: 'bar',
+    businessId: BUSINESS_ID,
+    outletId: OUTLET_ID,
+    deviceId: OTHER_DEVICE_ID,
+    name: 'Bar printer',
+    model: 'TM-T82',
+    transport: 'LAN',
+    paperWidthMm: 80,
+    encoding: 'CP437',
+    revision: 1,
+  };
+
+  const ownerList = await service.listPrinters(OUTLET_ID, undefined, owner());
+  assert.equal(ownerList.length, 2);
+  assert.deepEqual(ownerList.map((printer) => printer.name).sort(), [
+    'Bar printer',
+    'Front counter',
+  ]);
+
+  await assert.rejects(
+    () => service.listPrinters(OUTLET_ID, undefined, cashier()),
+    (error: unknown) => statusOf(error) === 400,
+  );
 });
 
 test('printer update uses optimistic revision and rejects stale writes', async () => {

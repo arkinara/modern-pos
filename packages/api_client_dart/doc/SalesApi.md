@@ -119,7 +119,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **salesList**
-> SalePage salesList(outletId, cursor, limit, from, to)
+> SalePage salesList(outletId, cursor, limit, from, to, reference)
 
 List sales; cashiers see only authorized own sales
 
@@ -139,9 +139,10 @@ final cursor = cursor_example; // String |
 final limit = 56; // int | 
 final from = 2013-10-20; // DateTime | 
 final to = 2013-10-20; // DateTime | 
+final reference = reference_example; // String | Full or partial sale reference. A matching from/to date range is required.
 
 try {
-    final result = api_instance.salesList(outletId, cursor, limit, from, to);
+    final result = api_instance.salesList(outletId, cursor, limit, from, to, reference);
     print(result);
 } catch (e) {
     print('Exception when calling SalesApi->salesList: $e\n');
@@ -157,6 +158,7 @@ Name | Type | Description  | Notes
  **limit** | **int**|  | [optional] [default to 25]
  **from** | **DateTime**|  | [optional] 
  **to** | **DateTime**|  | [optional] 
+ **reference** | **String**| Full or partial sale reference. A matching from/to date range is required. | [optional] 
 
 ### Return type
 

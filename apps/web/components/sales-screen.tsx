@@ -4,7 +4,7 @@ import type { ApiSchemas } from '@modern-pos/api-client';
 import Link from 'next/link';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircleAlert, ReceiptText, RefreshCw, RotateCcw, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -881,6 +881,8 @@ export function SalesScreen() {
   const canReverse = Boolean(user);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  const [reference, setReference] = useState('');
+  const deferredReference = useDeferredValue(reference);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const settingsQuery = useQuery({
@@ -903,13 +905,14 @@ export function SalesScreen() {
   const validRange = Boolean(from && to && from <= to);
 
   const salesQuery = useInfiniteQuery({
-    queryKey: ['sales', outletId, from, to],
+    queryKey: ['sales', outletId, from, to, deferredReference],
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) =>
       api.listSales(outletId as string, {
         from,
         to,
         limit: 25,
+        reference: deferredReference.trim() || undefined,
         ...(pageParam ? { cursor: pageParam } : {}),
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -972,7 +975,34 @@ export function SalesScreen() {
                 onChange={(event) => setTo(event.target.value)}
               />
             </label>
+            <label className="flex flex-col gap-1 text-sm font-medium text-text sm:col-span-2">
+              Sale reference
+              <div className="flex gap-2">
+                <input
+                  type="search"
+                  className={inputClass}
+                  value={reference}
+                  placeholder="SALE-... or part of a reference"
+                  autoComplete="off"
+                  onChange={(event) => setReference(event.target.value)}
+                />
+                {reference ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={() => setReference('')}
+                  >
+                    Clear
+                  </Button>
+                ) : null}
+              </div>
+            </label>
           </div>
+          <p className="text-xs text-muted">
+            Reference search runs on the API inside the selected outlet and date range. Partial
+            references are matched case-insensitively.
+          </p>
           {rangeError ? (
             <p className="text-sm text-danger" role="alert">
               {rangeError}
@@ -1026,8 +1056,9 @@ export function SalesScreen() {
             <div className="rounded-surface border border-dashed border-control bg-surface-tint p-8 text-center">
               <ReceiptText aria-hidden="true" className="mx-auto size-6 text-muted" />
               <p className="mt-3 text-sm text-muted">
-                No sales were recorded in this outlet-local date range. The empty state is not an
-                error; choose another range or refresh.
+                {deferredReference.trim()
+                  ? 'No sales match this reference in the selected outlet-local date range. Clearing the reference restores the normal date-filtered list.'
+                  : 'No sales were recorded in this outlet-local date range. The empty state is not an error; choose another range or refresh.'}
               </p>
             </div>
           ) : (

@@ -464,6 +464,27 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
     return true;
   };
 
+  const matchesSale = (sale: SaleRow, where: Record<string, unknown>): boolean => {
+    return Object.entries(where).every(([key, value]) => {
+      if (key === 'reference' && typeof value === 'object' && value !== null) {
+        const contains = (value as { contains?: unknown }).contains;
+        return (
+          typeof contains === 'string' &&
+          sale.reference.toLowerCase().includes(contains.toLowerCase())
+        );
+      }
+
+      if (key === 'completedAt' && typeof value === 'object' && value !== null) {
+        const range = value as { gte?: Date; lt?: Date };
+        if (range.gte && sale.completedAt.getTime() < range.gte.getTime()) return false;
+        if (range.lt && sale.completedAt.getTime() >= range.lt.getTime()) return false;
+        return true;
+      }
+
+      return (sale as unknown as Record<string, unknown>)[key] === value;
+    });
+  };
+
   const client = {
     outlet: {
       findFirst: async (args: { where: { id: string; businessId: string } }) => {
@@ -994,11 +1015,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
         take: number;
         cursor?: { id: string };
       }) => {
-        let rows = state.sales.filter((row) =>
-          Object.entries(args.where).every(
-            ([key, value]) => (row as unknown as Record<string, unknown>)[key] === value,
-          ),
-        );
+        let rows = state.sales.filter((row) => matchesSale(row, args.where));
         rows = [...rows].sort((a, b) => b.completedAt.getTime() - a.completedAt.getTime());
         if (args.cursor) {
           const index = rows.findIndex((row) => row.id === args.cursor?.id);
@@ -2101,6 +2118,52 @@ test('sales list filters to the cashier own sales while owners see the outlet', 
 
   const owner = await service.listSales(OUTLET_ID, {}, user(Role.OWNER, OWNER_ID));
   assert.equal(owner.items.length, 1);
+});
+
+test('sale reference search is server-side, outlet scoped and date bounded', async () => {
+  const { prisma } = createFakePrisma();
+  const service = new SalesService(prisma, new PromotionsService(prisma));
+  const cashier = user();
+
+  const order = await service.createOrder(
+    OUTLET_ID,
+    KEY_ONE,
+    { deviceId: DEVICE_ID, lines: [{ variantId: VARIANT_A, quantity: 1 }] },
+    cashier,
+  );
+  const quote = await service.createQuote(OUTLET_ID, order.id, { orderVersion: 1 }, cashier);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: { kind: PaymentKind.CASH, amountMinor: 18000, tenderedMinor: 20000 },
+    },
+    cashier,
+  );
+
+  const partial = finalized.sale.reference.slice(4, 14).toLowerCase();
+  const search = await service.listSales(
+    OUTLET_ID,
+    { from: '2026-01-01', to: '2026-12-31', reference: partial },
+    cashier,
+  );
+  assert.equal(search.items.length, 1);
+  assert.equal(search.items[0]?.reference, finalized.sale.reference);
+
+  const miss = await service.listSales(
+    OUTLET_ID,
+    { from: '2026-01-01', to: '2026-12-31', reference: 'NO-SUCH-REFERENCE' },
+    cashier,
+  );
+  assert.equal(miss.items.length, 0);
+
+  await assert.rejects(
+    () => service.listSales(OUTLET_ID, { reference: partial }, cashier),
+    (error: unknown) => statusOf(error) === 400,
+  );
 });
 
 test('manual external payment records the equal amount with no tender or change', async () => {

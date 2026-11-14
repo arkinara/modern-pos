@@ -124,6 +124,30 @@ export function isStockConflict(error: unknown): boolean {
   return error instanceof ApiError && (error.status === 409 || error.status === 422);
 }
 
+export function describeStockHistoryError(error: unknown, fallback: string): string {
+  if (!(error instanceof ApiError)) {
+    return fallback;
+  }
+
+  if (error.status === 401) {
+    return 'Your session expired. Sign in again.';
+  }
+
+  if (error.status === 403) {
+    return 'Only an owner can view stock movement history.';
+  }
+
+  if (error.status === 404) {
+    return 'That stock item could not be found for this outlet. Reload and try again.';
+  }
+
+  if (error.status === 400 || error.status === 422) {
+    return 'The server rejected this movement-history request. Reload and try again.';
+  }
+
+  return `${fallback} (HTTP ${error.status})`;
+}
+
 export function describeReportError(error: unknown, fallback: string): string {
   if (!(error instanceof ApiError)) {
     return fallback;
