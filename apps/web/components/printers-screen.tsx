@@ -8,16 +8,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
 import { describeApiError } from '@/lib/api-errors';
+import { useAuth } from '@/lib/auth';
 import { StationsPanel } from '@/components/stations-panel';
 import { useActiveOutletId } from '@/lib/use-active-outlet';
 
 export function PrintersScreen() {
   const outletId = useActiveOutletId();
+  const { user } = useAuth();
+  const isOwner = user?.role === 'OWNER';
 
   const settingsQuery = useQuery({
     queryKey: ['settings', outletId],
     queryFn: () => api.getSettings(outletId as string),
-    enabled: outletId !== null,
+    enabled: outletId !== null && isOwner,
+    retry: 1,
+  });
+
+  const printersQuery = useQuery({
+    queryKey: ['printers', outletId],
+    queryFn: () => api.listPrinters(outletId as string),
+    enabled: outletId !== null && isOwner,
     retry: 1,
   });
 
@@ -31,7 +41,17 @@ export function PrintersScreen() {
         </p>
       </header>
 
-      {!outletId ? (
+      {!isOwner ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Owner-only printer configuration</CardTitle>
+            <CardDescription role="alert">
+              Printer configuration is visible to owners. Pairing, discovery and physical printing
+              stay on the Android app.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      ) : !outletId ? (
         <Card>
           <CardHeader>
             <CardTitle>No outlet assigned</CardTitle>
@@ -127,17 +147,92 @@ export function PrintersScreen() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Printer status</CardTitle>
+              <CardTitle>Registered printer configuration</CardTitle>
               <CardDescription>
-                This back office displays status only. It does not discover or pair devices.
+                Read-only metadata from the API. A listed printer is not proof that it is online,
+                connected or physically tested. Discovery, pairing and printing stay on the Android
+                app.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-wrap items-center gap-3 rounded-control border border-dashed border-control bg-surface-tint p-6">
-              <Badge tone="neutral">No printer registered</Badge>
-              <p className="text-sm text-muted">
-                Pairing, runtime permissions and physical printing arrive with tickets #15 and #16
-                on Android.
-              </p>
+            <CardContent>
+              {printersQuery.isPending ? (
+                <p className="flex items-center gap-2 text-sm text-muted" role="status">
+                  <span className="size-5 animate-spin rounded-full border-2 border-border border-t-accent" />
+                  Loading printer configuration
+                </p>
+              ) : printersQuery.isError ? (
+                <div className="flex flex-col items-start gap-3" role="alert">
+                  <p className="text-sm text-danger">
+                    {describeApiError(
+                      printersQuery.error,
+                      'Could not load registered printers. Nothing was changed.',
+                    )}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void printersQuery.refetch()}
+                    disabled={printersQuery.isFetching}
+                  >
+                    <RefreshCw aria-hidden="true" className="size-4" />
+                    {printersQuery.isFetching ? 'Retrying' : 'Try again'}
+                  </Button>
+                </div>
+              ) : printersQuery.data.length === 0 ? (
+                <div className="rounded-control border border-dashed border-control bg-surface-tint p-6">
+                  <Badge tone="neutral">No printer configuration registered</Badge>
+                  <p className="mt-3 text-sm text-muted">
+                    This outlet has no registered printer metadata yet. This is an empty state, not
+                    a connection failure. Register a printer through the authenticated API before
+                    pairing it on an Android device.
+                  </p>
+                </div>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {(printersQuery.data ?? []).map((printer) => (
+                    <li
+                      key={printer.id}
+                      className="rounded-control border border-border bg-surface-tint p-4"
+                    >
+                      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="sm:col-span-2">
+                          <dt className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
+                            Name
+                          </dt>
+                          <dd className="mt-1 break-words text-sm font-medium text-text">
+                            {printer.name}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
+                            Model
+                          </dt>
+                          <dd className="mt-1 break-words text-sm text-text">{printer.model}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
+                            Transport
+                          </dt>
+                          <dd className="mt-1 text-sm text-text">{printer.transport}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
+                            Paper width
+                          </dt>
+                          <dd className="mt-1 text-sm text-text">{printer.paperWidthMm} mm</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
+                            Encoding
+                          </dt>
+                          <dd className="mt-1 break-words text-sm text-text">{printer.encoding}</dd>
+                        </div>
+                      </dl>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
 

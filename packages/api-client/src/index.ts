@@ -39,6 +39,7 @@ export interface ApiClient {
   listOutlets(): Promise<ApiSchemas['OutletList']>;
   getOutlet(outletId: string): Promise<ApiSchemas['Outlet']>;
   getSettings(outletId: string): Promise<ApiSchemas['Settings']>;
+  listPrinters(outletId: string, query?: { deviceId?: string }): Promise<ApiSchemas['Printer'][]>;
   updateSettings(
     outletId: string,
     settings: ApiSchemas['SettingsUpdate'],
@@ -104,7 +105,13 @@ export interface ApiClient {
   ): Promise<ApiSchemas['Movement']>;
   listSales(
     outletId: string,
-    query?: { cursor?: string; limit?: number; from?: string; to?: string },
+    query?: {
+      cursor?: string;
+      limit?: number;
+      from?: string;
+      to?: string;
+      reference?: string;
+    },
   ): Promise<ApiSchemas['SalePage']>;
   getSale(outletId: string, saleId: string): Promise<ApiSchemas['Sale']>;
   reverseSale(
@@ -485,6 +492,12 @@ export function createApiClient({
       request<ApiSchemas['Outlet']>(`/v1/outlets/${encodeURIComponent(outletId)}`),
     getSettings: (outletId) =>
       request<ApiSchemas['Settings']>(`/v1/outlets/${encodeURIComponent(outletId)}/settings`),
+    listPrinters: (outletId, query = {}) =>
+      request<ApiSchemas['Printer'][]>(
+        `/v1/outlets/${encodeURIComponent(outletId)}/printers${toQueryString({
+          deviceId: query.deviceId,
+        })}`,
+      ),
     updateSettings: (outletId, settings) =>
       request<ApiSchemas['Settings']>(`/v1/outlets/${encodeURIComponent(outletId)}/settings`, {
         method: 'PATCH',

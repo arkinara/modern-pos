@@ -372,7 +372,7 @@ export function BookkeepingScreen() {
         </Card>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
+          <Card className="min-w-0">
             <CardHeader>
               <CardTitle>Inventory costing</CardTitle>
               <CardDescription>
@@ -405,7 +405,7 @@ export function BookkeepingScreen() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader>
               <CardTitle>Expense categories</CardTitle>
               <CardDescription>

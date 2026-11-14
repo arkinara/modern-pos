@@ -20,6 +20,21 @@ channel or CRM exists on this VPS. The walkthrough collected no customer data an
 used synthetic identities only. Do not treat the synthetic values in
 `docs/operator-feedback.md` as production service levels.
 
+## Usability refinement (#29)
+
+Status: `IMPLEMENTED and verified with synthetic Playwright/API checks; real operator validation PENDING`.
+
+What exists: grouped role-aware primary navigation for all 15 back-office
+modules, an owner-only Reports state with no failed request retry, registered
+printer metadata on the Printers page, no cashier stock-history dead-end and
+server-side sale-reference search. Before/after evidence and the 320/768/1024/1440
+results are in `docs/usability-refinement.md`.
+
+What is unknown: real cashier/owner behaviour and production timing. The
+walkthrough remains synthetic and `PENDING - requires real users`; the recipe is
+in `docs/usability-refinement.md`. Physical printer pairing, connectivity and
+paper output are still `PENDING - requires printer model + Android device`.
+
 ## Pending with reproduction recipes
 
 ### Cash drawer and attendance hardware

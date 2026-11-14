@@ -21,7 +21,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
-import { describeApiError, describeStockError, isStockConflict } from '@/lib/api-errors';
+import {
+  describeApiError,
+  describeStockError,
+  describeStockHistoryError,
+  isStockConflict,
+} from '@/lib/api-errors';
 import { useAuth } from '@/lib/auth';
 import { useActiveOutletId } from '@/lib/use-active-outlet';
 
@@ -269,6 +274,7 @@ export function StockScreen() {
   const outletId = useActiveOutletId();
   const queryClient = useQueryClient();
   const canEdit = user?.role === 'OWNER';
+  const canViewHistory = user?.role === 'OWNER';
 
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
@@ -876,15 +882,17 @@ export function StockScreen() {
                     </div>
 
                     <div className="mt-auto flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setHistoryItem(item)}
-                      >
-                        <History aria-hidden="true" className="size-4" />
-                        History
-                      </Button>
+                      {canViewHistory ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setHistoryItem(item)}
+                        >
+                          <History aria-hidden="true" className="size-4" />
+                          History
+                        </Button>
+                      ) : null}
                       {canEdit ? (
                         <>
                           <Button
@@ -1080,7 +1088,10 @@ export function StockScreen() {
             ) : movementsQuery.isError ? (
               <div>
                 <p role="alert" className="text-sm text-danger">
-                  {describeApiError(movementsQuery.error, 'Could not load the movement history.')}
+                  {describeStockHistoryError(
+                    movementsQuery.error,
+                    'Could not load the movement history.',
+                  )}
                 </p>
                 <Button
                   type="button"

@@ -543,7 +543,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read device-owned printer configuration */
+        /**
+         * Read printer configuration; owners may list every outlet printer
+         * @description A deviceId scopes the read to that device. An owner may omit deviceId to read every printer configuration in the outlet. Returns non-secret metadata only.
+         */
         get: operations["printing_list"];
         put?: never;
         /**
@@ -6802,6 +6805,8 @@ export interface operations {
                 limit?: number;
                 from?: string;
                 to?: string;
+                /** @description Full or partial sale reference. A matching from/to date range is required. */
+                reference?: string;
             };
             header?: never;
             path: {
@@ -7292,8 +7297,9 @@ export interface operations {
     };
     printing_list: {
         parameters: {
-            query: {
-                deviceId: string;
+            query?: {
+                /** @description Device-owned printer scope. Required for cashiers; optional for owners. */
+                deviceId?: string;
             };
             header?: never;
             path: {

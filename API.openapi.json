@@ -4261,6 +4261,15 @@
               "type": "string",
               "format": "date"
             }
+          },
+          {
+            "in": "query",
+            "name": "reference",
+            "description": "Full or partial sale reference. A matching from/to date range is required.",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
           }
         ],
         "responses": {
@@ -4908,7 +4917,8 @@
     "/outlets/{outletId}/printers": {
       "get": {
         "operationId": "printing_list",
-        "summary": "Read device-owned printer configuration",
+        "summary": "Read printer configuration; owners may list every outlet printer",
+        "description": "A deviceId scopes the read to that device. An owner may omit deviceId to read every printer configuration in the outlet. Returns non-secret metadata only.",
         "tags": [
           "printing"
         ],
@@ -4929,7 +4939,7 @@
           {
             "in": "query",
             "name": "deviceId",
-            "required": true,
+            "description": "Device-owned printer scope. Required for cashiers; optional for owners.",
             "schema": {
               "type": "string",
               "format": "uuid"

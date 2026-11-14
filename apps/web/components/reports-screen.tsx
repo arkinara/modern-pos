@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
 import { describeReportError } from '@/lib/api-errors';
+import { useAuth } from '@/lib/auth';
 import { useActiveOutletId } from '@/lib/use-active-outlet';
 import {
   formatDateTimeInZone,
@@ -88,6 +89,8 @@ function MetricCard({
 
 export function ReportsScreen() {
   const outletId = useActiveOutletId();
+  const { user } = useAuth();
+  const isOwner = user?.role === 'OWNER';
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [exporting, setExporting] = useState(false);
@@ -97,7 +100,8 @@ export function ReportsScreen() {
   const settingsQuery = useQuery({
     queryKey: ['settings', outletId],
     queryFn: () => api.getSettings(outletId as string),
-    enabled: Boolean(outletId),
+    enabled: Boolean(outletId) && isOwner,
+    retry: false,
   });
   const timezone = settingsQuery.data?.timezone ?? 'UTC';
 
@@ -116,12 +120,40 @@ export function ReportsScreen() {
   const reportQuery = useQuery({
     queryKey: ['daily-report', outletId, from, to],
     queryFn: () => api.getDailyReport(outletId as string, { from, to }),
-    enabled: Boolean(outletId) && validRange,
+    enabled: Boolean(outletId) && isOwner && validRange,
+    retry: false,
   });
 
   const report: DailyReport | undefined = reportQuery.data;
   const rangeError =
     from && to && from > to ? 'The start date must be on or before the end date.' : null;
+
+  if (!isOwner) {
+    return (
+      <div className="flex w-full flex-col gap-6">
+        <header>
+          <h1 className="text-3xl font-semibold tracking-tight text-text">Reports</h1>
+          <p className="mt-2 max-w-3xl text-sm text-muted">
+            Sales reports are owner-only because they cover every payment and reversal in the
+            outlet.
+          </p>
+        </header>
+        <Card>
+          <CardHeader>
+            <CardTitle>Owner-only reports</CardTitle>
+            <CardDescription role="alert">
+              Reading sales reports requires an owner account. No report request was sent.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted">
+              Ask an owner to share the report or sign in with an owner account.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   async function handleExport(): Promise<void> {
     setExporting(true);

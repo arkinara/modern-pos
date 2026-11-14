@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, IsUUID, Matches, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
 
 export const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -24,4 +24,9 @@ export class SalesListQueryDto {
   @IsString()
   @Matches(DATE_ONLY_PATTERN)
   to?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  reference?: string;
 }

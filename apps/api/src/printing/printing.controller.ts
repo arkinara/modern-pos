@@ -28,7 +28,7 @@ export class PrintingController {
   @Get('printers')
   listPrinters(
     @Param('outletId') outletId: string,
-    @Query('deviceId') deviceId: string,
+    @Query('deviceId') deviceId: string | undefined,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<PrinterResponse[]> {
     return this.printing.listPrinters(outletId, deviceId, user);

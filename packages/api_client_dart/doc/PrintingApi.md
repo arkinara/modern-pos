@@ -11,7 +11,7 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**printingCreate**](PrintingApi.md#printingcreate) | **POST** /outlets/{outletId}/printers | Save verified-model printer configuration
 [**printingJob**](PrintingApi.md#printingjob) | **POST** /outlets/{outletId}/print-jobs | Mirror local receipt job metadata
-[**printingList**](PrintingApi.md#printinglist) | **GET** /outlets/{outletId}/printers | Read device-owned printer configuration
+[**printingList**](PrintingApi.md#printinglist) | **GET** /outlets/{outletId}/printers | Read printer configuration; owners may list every outlet printer
 [**printingState**](PrintingApi.md#printingstate) | **PATCH** /outlets/{outletId}/print-jobs/{jobId} | Update owned job delivery status
 [**printingUpdate**](PrintingApi.md#printingupdate) | **PUT** /outlets/{outletId}/printers/{printerId} | Update printer config with revision
 [**stationJobsCreate**](PrintingApi.md#stationjobscreate) | **POST** /outlets/{outletId}/orders/{orderId}/station-jobs | Dispatch original, amendment or cancellation station jobs
@@ -133,7 +133,9 @@ Name | Type | Description  | Notes
 # **printingList**
 > List<Printer> printingList(outletId, deviceId)
 
-Read device-owned printer configuration
+Read printer configuration; owners may list every outlet printer
+
+A deviceId scopes the read to that device. An owner may omit deviceId to read every printer configuration in the outlet. Returns non-secret metadata only.
 
 ### Example
 ```dart
@@ -147,7 +149,7 @@ import 'package:modern_pos_api_client/api.dart';
 
 final api_instance = PrintingApi();
 final outletId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
-final deviceId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final deviceId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | Device-owned printer scope. Required for cashiers; optional for owners.
 
 try {
     final result = api_instance.printingList(outletId, deviceId);
@@ -162,7 +164,7 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **outletId** | **String**|  | 
- **deviceId** | **String**|  | 
+ **deviceId** | **String**| Device-owned printer scope. Required for cashiers; optional for owners. | [optional] 
 
 ### Return type
 
