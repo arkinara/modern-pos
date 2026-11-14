@@ -42,6 +42,8 @@ enum StockMovementType {
   TRANSFER_CANCEL
   SALE
   REVERSAL
+  CHANNEL_ORDER_ACCEPT
+  CHANNEL_ORDER_CANCEL
 }
 
 enum PurchaseOrderState {
@@ -183,6 +185,42 @@ enum StationJobKind {
   CANCEL
 }
 
+enum OrderChannel {
+  MANUAL
+  PHONE
+  WEB
+  GRABFOOD
+  SHOPEEFOOD
+}
+
+enum ChannelOrderState {
+  RECEIVED
+  ACCEPTED
+  FULFILLED
+  CANCELLED
+}
+
+enum ChannelPaymentMode {
+  CASH_ON_PICKUP
+  PREPAID_PROVIDER
+}
+
+enum ChannelPaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum CustomerConsentSource {
+  WEB_CHECKOUT
+  STAFF_ENTRY
+  IMPORT
+}
+
+enum CustomerContactType {
+  EMAIL
+  PHONE
+}
+
 model Business {
   id        String   @id @default(uuid()) @db.Uuid
   name      String
@@ -224,6 +262,10 @@ model Business {
   bookkeepingSettings BookkeepingSetting[]
   expenseCategories ExpenseCategory[]
   expenses         Expense[]
+  customers        Customer[]
+  customerPolicies CustomerRetentionPolicy[]
+  channelOrders    ChannelOrder[]
+  digitalReceipts  DigitalReceipt[]
 
   @@map("businesses")
 }
@@ -279,6 +321,10 @@ model Outlet {
   transfersTo      OutletTransfer[]    @relation("TransferDestinationOutlet")
   bookkeepingSetting BookkeepingSetting?
   expenses         Expense[]
+  customers        Customer[]
+  customerPolicy   CustomerRetentionPolicy?
+  channelOrders    ChannelOrder[]
+  digitalReceipts  DigitalReceipt[]
 
   @@unique([businessId, name])
   @@map("outlets")
@@ -1511,4 +1557,173 @@ model Expense {
   @@index([outletId, incurredOn])
   @@index([businessId, outletId, incurredOn])
   @@map("expenses")
+}
+
+// Explicit opt-in customer record. Consent is recorded with its source and
+// timestamp at creation; a record can never be created without consent. The
+// contact is normalised per outlet so the same person is one record per outlet.
+model Customer {
+  id               String                @id @default(uuid()) @db.Uuid
+  businessId       String                @db.Uuid
+  outletId         String                @db.Uuid
+  name             String
+  contactType      CustomerContactType
+  contactNormalized String
+  email            String?
+  phone            String?
+  consentAt        DateTime
+  consentSource    CustomerConsentSource
+  anonymizedAt     DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  business      Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet        Outlet         @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  channelOrders ChannelOrder[]
+
+  @@unique([outletId, contactNormalized])
+  @@index([businessId, outletId, createdAt])
+  @@map("customers")
+}
+
+// Per-outlet retention configuration. Defaults are deliberate: customer
+// records expire after 365 days and stored receipt artifacts after 90 days.
+model CustomerRetentionPolicy {
+  id                     String   @id @default(uuid()) @db.Uuid
+  businessId             String   @db.Uuid
+  outletId               String   @unique @db.Uuid
+  customerRetentionDays  Int      @default(365)
+  receiptRetentionDays   Int      @default(90)
+  receiptLinkTtlMinutes  Int      @default(1440)
+  version                Int      @default(1)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@map("customer_retention_policies")
+}
+
+// Incoming order from one channel. The channel reference is the dedupe key:
+// two deliveries with the same business, channel and reference produce exactly
+// one local order. Lines are a price snapshot; catalog edits never rewrite them.
+model ChannelOrder {
+  id                 String              @id @default(uuid()) @db.Uuid
+  businessId         String              @db.Uuid
+  outletId           String              @db.Uuid
+  channel            OrderChannel
+  channelReference   String
+  requestHash        String
+  state              ChannelOrderState   @default(RECEIVED)
+  paymentMode        ChannelPaymentMode  @default(CASH_ON_PICKUP)
+  paymentStatus      ChannelPaymentStatus @default(UNPAID)
+  currency           String              @db.VarChar(3)
+  currencyExponent   Int
+  subtotalMinor      BigInt
+  serviceMinor       BigInt              @default(0)
+  taxMinor           BigInt              @default(0)
+  totalMinor         BigInt
+  note               String              @default("")
+  customerId         String?             @db.Uuid
+  acceptedAt         DateTime?
+  fulfilledAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  version            Int                 @default(1)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  business Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet               @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  customer Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  lines    ChannelOrderLine[]
+  payments ChannelOrderPayment[]
+  events   ChannelOrderEvent[]
+
+  @@unique([businessId, channel, channelReference])
+  @@index([outletId, state, createdAt])
+  @@index([outletId, channel, createdAt])
+  @@index([customerId])
+  @@map("channel_orders")
+}
+
+model ChannelOrderLine {
+  id                String   @id @default(uuid()) @db.Uuid
+  orderId           String   @db.Uuid
+  variantId         String   @db.Uuid
+  name              String
+  variantName       String
+  quantity          Int
+  unitPriceMinor    BigInt
+  lineSubtotalMinor BigInt
+  recipeVersion     Int?
+  createdAt         DateTime @default(now())
+
+  order ChannelOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("channel_order_lines")
+}
+
+// One payment record per order. Cash is collected on pickup; a provider-paid
+// order is a documented future mode and cannot create a second payment row.
+model ChannelOrderPayment {
+  id             String                @id @default(uuid()) @db.Uuid
+  orderId        String                @unique @db.Uuid
+  amountMinor    BigInt
+  status         ChannelPaymentStatus  @default(PAID)
+  method         ChannelPaymentMode
+  reference      String?
+  recordedById   String?               @db.Uuid
+  createdAt      DateTime              @default(now())
+
+  order ChannelOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("channel_order_payments")
+}
+
+model ChannelOrderEvent {
+  id          String            @id @default(uuid()) @db.Uuid
+  orderId     String            @db.Uuid
+  fromState   ChannelOrderState
+  toState     ChannelOrderState
+  actorId     String?           @db.Uuid
+  reason      String            @default("")
+  createdAt   DateTime          @default(now())
+
+  order ChannelOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+  @@map("channel_order_events")
+}
+
+// Rendered receipt artifact. Only a SHA-256 token hash is stored; the one-time
+// token is returned at creation. The public endpoint never enumerates customers
+// and returns 404 for expired, purged or foreign tokens.
+model DigitalReceipt {
+  id             String   @id @default(uuid()) @db.Uuid
+  businessId     String   @db.Uuid
+  outletId       String   @db.Uuid
+  saleId         String?  @db.Uuid
+  channelOrderId String?  @db.Uuid
+  customerId     String?  @db.Uuid
+  receiptNumber  String
+  tokenHash      String   @unique
+  contentHtml    String
+  contentText    String
+  issuedAt       DateTime @default(now())
+  expiresAt      DateTime
+  purgedAt       DateTime?
+  createdAt      DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, receiptNumber])
+  @@index([outletId, createdAt])
+  @@index([outletId, expiresAt])
+  @@index([saleId])
+  @@map("digital_receipts")
 }

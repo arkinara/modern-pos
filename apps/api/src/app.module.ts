@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { BookkeepingModule } from './bookkeeping/bookkeeping.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { CustomersModule } from './customers/customers.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { OutletScopeGuard } from './common/guards/outlet-scope.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -10,6 +11,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestIdMiddleware } from './common/request-id.middleware';
 import { HealthController } from './health/health.controller';
 import { OperationsModule } from './operations/operations.module';
+import { OrderingModule } from './ordering/ordering.module';
 import { OutletsModule } from './outlets/outlets.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrintingModule } from './printing/printing.module';
@@ -17,6 +19,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { PromotionsModule } from './promotions/promotions.module';
 import { PurchasingModule } from './purchasing/purchasing.module';
 import { RecipeModule } from './recipe/recipe.module';
+import { ReceiptsModule } from './receipts/receipts.module';
 import { ReportsModule } from './reports/reports.module';
 import { SalesModule } from './sales/sales.module';
 import { SettingsModule } from './settings/settings.module';
@@ -37,6 +40,9 @@ import { StockModule } from './stock/stock.module';
     PaymentsModule,
     ReportsModule,
     BookkeepingModule,
+    OrderingModule,
+    CustomersModule,
+    ReceiptsModule,
     PrintingModule,
     OperationsModule,
   ],

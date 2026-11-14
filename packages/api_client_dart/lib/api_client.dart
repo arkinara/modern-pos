@@ -213,6 +213,42 @@ class ApiClient {
           return Category.fromJson(value);
         case 'CategoryWrite':
           return CategoryWrite.fromJson(value);
+        case 'ChannelCustomerInput':
+          return ChannelCustomerInput.fromJson(value);
+        case 'ChannelDescriptor':
+          return ChannelDescriptor.fromJson(value);
+        case 'ChannelList':
+          return ChannelList.fromJson(value);
+        case 'ChannelListWebhook':
+          return ChannelListWebhook.fromJson(value);
+        case 'ChannelOrder':
+          return ChannelOrder.fromJson(value);
+        case 'ChannelOrderCancelWrite':
+          return ChannelOrderCancelWrite.fromJson(value);
+        case 'ChannelOrderCreateResult':
+          return ChannelOrderCreateResult.fromJson(value);
+        case 'ChannelOrderEvent':
+          return ChannelOrderEvent.fromJson(value);
+        case 'ChannelOrderFulfillWrite':
+          return ChannelOrderFulfillWrite.fromJson(value);
+        case 'ChannelOrderLine':
+          return ChannelOrderLine.fromJson(value);
+        case 'ChannelOrderLineInput':
+          return ChannelOrderLineInput.fromJson(value);
+        case 'ChannelOrderList':
+          return ChannelOrderList.fromJson(value);
+        case 'ChannelOrderManualWrite':
+          return ChannelOrderManualWrite.fromJson(value);
+        case 'ChannelOrderPayment':
+          return ChannelOrderPayment.fromJson(value);
+        case 'ChannelOrderState':
+          return ChannelOrderStateTypeTransformer().decode(value);
+        case 'ChannelOrderWebhookWrite':
+          return ChannelOrderWebhookWrite.fromJson(value);
+        case 'ChannelPaymentMode':
+          return ChannelPaymentModeTypeTransformer().decode(value);
+        case 'ChannelPaymentStatus':
+          return ChannelPaymentStatusTypeTransformer().decode(value);
         case 'ConsolidatedOutlet':
           return ConsolidatedOutlet.fromJson(value);
         case 'ConsolidatedReport':
@@ -221,6 +257,18 @@ class ApiClient {
           return ConsolidatedReportConsolidated.fromJson(value);
         case 'CostingUpdate':
           return CostingUpdate.fromJson(value);
+        case 'Customer':
+          return Customer.fromJson(value);
+        case 'CustomerList':
+          return CustomerList.fromJson(value);
+        case 'CustomerPurgeResult':
+          return CustomerPurgeResult.fromJson(value);
+        case 'CustomerRetentionPolicy':
+          return CustomerRetentionPolicy.fromJson(value);
+        case 'CustomerRetentionPolicyUpdate':
+          return CustomerRetentionPolicyUpdate.fromJson(value);
+        case 'CustomerWrite':
+          return CustomerWrite.fromJson(value);
         case 'DailyReport':
           return DailyReport.fromJson(value);
         case 'DailyReportPaymentBreakdownInner':
@@ -231,6 +279,10 @@ class ApiClient {
           return Device.fromJson(value);
         case 'DeviceCreateRequest':
           return DeviceCreateRequest.fromJson(value);
+        case 'DigitalReceipt':
+          return DigitalReceipt.fromJson(value);
+        case 'DigitalReceiptPublic':
+          return DigitalReceiptPublic.fromJson(value);
         case 'Error':
           return Error.fromJson(value);
         case 'Expense':
@@ -289,6 +341,8 @@ class ApiClient {
           return Order.fromJson(value);
         case 'OrderCancelRequest':
           return OrderCancelRequest.fromJson(value);
+        case 'OrderChannel':
+          return OrderChannelTypeTransformer().decode(value);
         case 'OrderPage':
           return OrderPage.fromJson(value);
         case 'OrderQuoteRequest':
@@ -383,6 +437,8 @@ class ApiClient {
           return Quote.fromJson(value);
         case 'QuoteLinesInner':
           return QuoteLinesInner.fromJson(value);
+        case 'ReceiptWrite':
+          return ReceiptWrite.fromJson(value);
         case 'Recipe':
           return Recipe.fromJson(value);
         case 'RecipeLine':

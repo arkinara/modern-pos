@@ -296,3 +296,33 @@ operation also needs a later field test.
 
 All data used for this verification is synthetic. Production go-live remains a
 separate, explicit release decision.
+
+
+## Online ordering, customers and digital receipts (#27)
+
+What was verified on this VPS: signed web channel orders, sequential and
+concurrent duplicate delivery producing exactly one local order and one stock
+effect, invalid signature and stale timestamp rejected with no state change,
+acceptance consuming the pinned recipe quantity once, accepted cancellation
+restoring the exact quantity, cash-on-pickup fulfilment recording exactly one
+payment, opt-in customer creation, rejection without consent, retention purge of
+a backdated customer and receipt, public receipt rendering, and expired/foreign
+receipt tokens returning 404. The live transcript and counts are in the pull
+request.
+
+What was not verified or implemented:
+
+- No GrabFood, ShopeeFood or other third-party ordering account exists on this
+  VPS. Those channels return `PENDING_CREDENTIALS`; the reproduction recipe is in
+  `docs/online-ordering.md`.
+- No email or SMS provider exists on this VPS. Receipt artifacts, links, expiry
+  and retention are real; dispatch is `PENDING — requires provider credentials`
+  with a recipe in the same document.
+- Prepaid provider capture for channel orders is not implemented. Only
+  `CASH_ON_PICKUP` is enforced.
+- Channel order lines do not apply modifiers or promotions.
+- Stock is not reserved while an order is in `RECEIVED`; it is taken on
+  acceptance.
+- The retention purge is owner-triggered. Scheduling it on the host is a
+  deployment concern, not a bundled worker.
+
