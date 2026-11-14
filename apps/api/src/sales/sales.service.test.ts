@@ -2953,7 +2953,7 @@ test('concurrent reversal with the same key creates one reversal and one stock m
   assert.equal(state.balances.find((row) => row.stockItemId === STOCK_SHARED_ID)?.quantity, '10');
 });
 
-test('serialization and deadlock retries are bounded at three attempts before a retryable 503', async () => {
+test('serialization and deadlock retries are bounded at six attempts before a retryable 503', async () => {
   const failures: { code: string; meta?: { code: string } }[] = [
     { code: 'P2034' },
     { code: '40001' },
@@ -2999,7 +2999,7 @@ test('serialization and deadlock retries are bounded at three attempts before a 
       },
     );
 
-    assert.equal(attempts, 3);
+    assert.equal(attempts, 6);
   }
 });
 

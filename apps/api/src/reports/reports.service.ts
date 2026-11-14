@@ -449,41 +449,42 @@ export class ReportsService {
 
     const completedAt = localDateRangeUtc(query.from, query.to, outlet.timezone);
 
-    const sales = (await this.prisma.sale.findMany({
-      where: {
-        businessId: user.businessId,
-        outletId,
-        state: SaleState.COMPLETED,
-        completedAt,
-      },
-      orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
-      include: {
-        lines: { orderBy: [{ id: 'asc' }] },
-        payment: true,
-      },
-    })) as ReportSale[];
-
-    const reversals = (await this.prisma.saleReversal.findMany({
-      where: {
-        businessId: user.businessId,
-        outletId,
-        createdAt: completedAt,
-      },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      include: {
-        refundLines: { select: { saleLineId: true, quantity: true } },
-        sale: {
-          select: {
-            reference: true,
-            currency: true,
-            currencyExponent: true,
-            timezone: true,
-            subtotalMinor: true,
-            lines: { orderBy: [{ id: 'asc' }] },
+    const [sales, reversals] = await Promise.all([
+      this.prisma.sale.findMany({
+        where: {
+          businessId: user.businessId,
+          outletId,
+          state: SaleState.COMPLETED,
+          completedAt,
+        },
+        orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
+        include: {
+          lines: { orderBy: [{ id: 'asc' }] },
+          payment: true,
+        },
+      }) as Promise<ReportSale[]>,
+      this.prisma.saleReversal.findMany({
+        where: {
+          businessId: user.businessId,
+          outletId,
+          createdAt: completedAt,
+        },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        include: {
+          refundLines: { select: { saleLineId: true, quantity: true } },
+          sale: {
+            select: {
+              reference: true,
+              currency: true,
+              currencyExponent: true,
+              timezone: true,
+              subtotalMinor: true,
+              lines: { orderBy: [{ id: 'asc' }] },
+            },
           },
         },
-      },
-    })) as ReportReversal[];
+      }) as Promise<ReportReversal[]>,
+    ]);
 
     return { outlet, sales, reversals };
   }

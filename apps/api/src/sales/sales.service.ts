@@ -50,7 +50,7 @@ import { localDateRangeUtc } from './outlet-time';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const QUOTE_TTL_MS = 60_000;
-const MAX_TRANSACTION_ATTEMPTS = 3;
+const MAX_TRANSACTION_ATTEMPTS = 6;
 const ROUNDING_RULE = 'HALF_UP';
 
 export interface OrderLineModifierResponse {
@@ -3614,7 +3614,7 @@ export class SalesService {
           );
         }
 
-        await sleep(20 * attempt + Math.floor(Math.random() * 20));
+        await sleep(Math.min(250, 20 * 2 ** (attempt - 1)) + Math.floor(Math.random() * 25));
       }
     }
 
