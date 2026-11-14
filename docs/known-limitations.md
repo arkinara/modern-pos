@@ -1,7 +1,24 @@
 # Known limitations and pending verification
 
-Status date: 2026-11-12. No device, printer, real payment-provider account or production infrastructure was available
+Status date: 2026-11-14. No device, printer, real payment-provider account or production infrastructure was available
 for this ticket. Nothing below is reported as passed without a reproduction recipe.
+
+## Operator feedback and baselines (#28)
+
+Status: `DISCOVERY COMPLETE on synthetic data; real operator usage PENDING`.
+
+What exists: `docs/operator-feedback.md` records a developer walkthrough of the
+cashier API path and owner back-office UI, six friction entries with source
+locations, measured synthetic baselines for checkout time, error rate and stock
+count variance, and a ranked list of approved implementation tickets (#56-#60).
+
+What is unknown: no real operator has used the system, so checkout timing on a
+physical Android device, real support-incident volume, production error rate and
+real stock-count variance are `PENDING — requires real usage`. The support
+baseline is `0 observed / PENDING — requires real usage` because no support
+channel or CRM exists on this VPS. The walkthrough collected no customer data and
+used synthetic identities only. Do not treat the synthetic values in
+`docs/operator-feedback.md` as production service levels.
 
 ## Pending with reproduction recipes
 
