@@ -35,6 +35,23 @@ walkthrough remains synthetic and `PENDING - requires real users`; the recipe is
 in `docs/usability-refinement.md`. Physical printer pairing, connectivity and
 paper output are still `PENDING - requires printer model + Android device`.
 
+## Performance and operational reliability (#30)
+
+Status: `IMPLEMENTED and verified with bounded synthetic load and a real API kill/restart; real production traffic PENDING`.
+
+What exists: measured local targets, a SERIALIZABLE retry-policy fix that
+removes the seven 503s seen under six concurrent checkouts, parallel reads for
+daily reports and print-job enqueue, a bounded load script and a kill/restart
+recovery script. Before/after numbers, the PostgreSQL serialization evidence and
+the stock, idempotency and report reconciliation proofs are in
+`docs/performance-reliability.md`.
+
+What is unknown: production p95 under real cashier, report and printer load. The
+local run uses one API process, one PostgreSQL container and a small synthetic
+catalog. Production p95 and failure rate are `PENDING — requires real usage`;
+the collection recipe is in `docs/performance-reliability.md`. Database failover
+and multi-instance contention are out of scope.
+
 ## Pending with reproduction recipes
 
 ### Cash drawer and attendance hardware
