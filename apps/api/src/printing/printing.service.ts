@@ -171,25 +171,25 @@ export class PrintingService {
       throw apiError(400, 'VALIDATION_ERROR', 'A UUID Idempotency-Key header is required');
     }
 
-    const sale = await this.prisma.sale.findFirst({
-      where: { id: dto.saleId, businessId: user.businessId, outletId },
-      select: { id: true, deviceId: true },
-    });
+    const [sale, printer, existing] = await Promise.all([
+      this.prisma.sale.findFirst({
+        where: { id: dto.saleId, businessId: user.businessId, outletId },
+        select: { id: true, deviceId: true },
+      }),
+      this.prisma.printer.findFirst({
+        where: { id: dto.printerConfigId, businessId: user.businessId, outletId },
+        select: { id: true, deviceId: true },
+      }),
+      this.prisma.printJob.findFirst({
+        where: { outletId, deviceId: dto.deviceId, idempotencyKey },
+      }),
+    ]);
     if (!sale || sale.deviceId !== dto.deviceId) {
       throw apiError(404, 'SALE_NOT_FOUND', 'Sale not found for this device');
     }
-
-    const printer = await this.prisma.printer.findFirst({
-      where: { id: dto.printerConfigId, businessId: user.businessId, outletId },
-      select: { id: true, deviceId: true },
-    });
     if (!printer || printer.deviceId !== dto.deviceId) {
       throw apiError(404, 'PRINTER_NOT_FOUND', 'Printer configuration not found for this device');
     }
-
-    const existing = await this.prisma.printJob.findFirst({
-      where: { outletId, deviceId: dto.deviceId, idempotencyKey },
-    });
     if (existing) {
       const sameRequest =
         existing.id === dto.id &&
