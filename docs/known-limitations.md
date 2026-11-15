@@ -86,18 +86,24 @@ builds and the existing app tests remain green.
 
 ### Kitchen station tickets and LAN/Bluetooth/USB transports
 
-Status: `PENDING - requires printer model + Android device or LAN printer`.
+Status: `ANDROID DELIVERY IMPLEMENTED and verified with two fake transports; physical paper PENDING - requires printer model + Android device`.
 
 What was verified on this VPS: menu item station routing, original / amendment /
 cancellation station jobs with the same order reference, independent station
-queues, retry and reprint all ran against the live API. Station print operations
-were asserted not to change `sales` or `stock_movements`. LAN raw TCP bytes were
+queues, retry and reprint all ran against the live API. The Android app now
+consumes the station queues, claims one job with a compare-and-set
+`QUEUED -> SENDING`, renders kitchen tickets and writes through the existing
+transport adapter. Automated app tests cover routing to two fake transports,
+amendment, cancellation, mid-write disconnect to `UNKNOWN`, restart recovery,
+concurrent-claim exclusivity and explicit COPY. Station print operations were
+asserted not to change `sales` or `stock_movements`. LAN raw TCP bytes were
 accepted by a local listener; Bluetooth and USB adapters were exercised with
 fakes and a mocked Android channel.
 
 What was not verified: physical paper from any station printer, model-specific
 command support, Bluetooth pairing on a device, USB host permission and bulk
-transfer. See `docs/printer-hardware.md`.
+transfer. The app-to-printer path used fake transports, not paper. See
+`docs/kitchen-delivery.md` and `docs/printer-hardware.md`.
 
 Boundary: cancelling an item prints a `CANCEL` station job but does not reverse
 the sale or restock ingredients. Money and stock reversal remain the explicit

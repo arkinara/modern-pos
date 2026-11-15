@@ -2,8 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:modern_pos_api_client/api.dart';
 
+import '../../core/device_identity.dart';
 import '../../core/providers.dart';
 import '../auth/auth_controller.dart';
+import '../printing/station_job_dispatch.dart';
+import '../printing/station_job_gateway.dart';
 
 class TableOrdersException implements Exception {
   const TableOrdersException({
@@ -52,6 +55,7 @@ abstract interface class TableOrdersGateway {
     required String outletId,
     required String orderId,
     required int version,
+    required List<OrderWriteLinesInner> lines,
   });
 }
 
@@ -176,12 +180,26 @@ class HttpTableOrdersGateway implements TableOrdersGateway {
     required String outletId,
     required String orderId,
     required int version,
+    required List<OrderWriteLinesInner> lines,
   }) async {
     return _guard(() async {
       await _dio.post<dynamic>(
         '${_base(outletId)}/orders/${Uri.encodeComponent(orderId)}/cancel',
         data: OrderCancelRequest(version: version).toJson(),
         options: _options,
+      );
+      await dispatchOrderStationJobs(
+        gateway: HttpStationJobGateway(_dio, _accessToken),
+        outletId: outletId,
+        idempotencyKey: generateUuidV4(),
+        order: Order(
+          id: orderId,
+          deviceId: '',
+          state: OrderStateEnum.CANCELLED,
+          version: version + 1,
+          lines: lines,
+        ),
+        kind: StationJobKind.CANCEL,
       );
     });
   }
