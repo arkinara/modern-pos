@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { HttpException } from '@nestjs/common';
-import { OrderState, PaymentKind, Prisma, Role, SaleState, StockPolicy } from '@prisma/client';
+import {
+  OrderState,
+  PaymentKind,
+  PaymentProvider,
+  Prisma,
+  Role,
+  SaleState,
+  StockPolicy,
+  type RefundIntent,
+} from '@prisma/client';
+import type { PaymentsService } from '../payments/payments.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import type { PrismaService } from '../prisma/prisma.service';
 import { PromotionsService } from '../promotions/promotions.service';
@@ -338,6 +348,7 @@ interface FakeState {
   sales: SaleRow[];
   checkouts: CheckoutRow[];
   reversals: ReversalRow[];
+  refundIntents: RefundIntent[];
   tables: DiningTableRow[];
   orderAudits: OrderAuditRow[];
   orderSplits: OrderSplitRow[];
@@ -416,6 +427,7 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
     modifiers: [],
     promotions: [],
     approvalRules: [],
+    refundIntents: [],
   };
 
   let sequence = 0;
@@ -1181,6 +1193,59 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
           .map((row) => clone(row));
       },
     },
+    refundIntent: {
+      findUnique: async (args: {
+        where: {
+          id?: string;
+          outletId_idempotencyKey?: { outletId: string; idempotencyKey: string };
+        };
+      }) => {
+        const key = args.where.outletId_idempotencyKey;
+        const row = state.refundIntents.find((r) =>
+          args.where.id
+            ? r.id === args.where.id
+            : r.outletId === key?.outletId && r.idempotencyKey === key?.idempotencyKey,
+        );
+        return row ? clone(row) : null;
+      },
+      findUniqueOrThrow: async (args: { where: { id: string } }) =>
+        clone(state.refundIntents.find((r) => r.id === args.where.id)!),
+      findFirst: async (args: { where: { saleId: string; state: { in: string[] } } }) =>
+        clone(
+          state.refundIntents.find(
+            (r) => r.saleId === args.where.saleId && args.where.state.in.includes(r.state),
+          ) ?? null,
+        ),
+      create: async (args: { data: RefundIntent }) => {
+        const row = {
+          ...clone(args.data),
+          id: nextId(),
+          state: 'PENDING' as const,
+          providerRefundRef: null,
+          lastErrorCode: null,
+          createdAt: now,
+          updatedAt: now,
+          lines: (args.data.lines as unknown) === Prisma.JsonNull ? null : clone(args.data.lines),
+        };
+        state.refundIntents.push(row);
+        return clone(row);
+      },
+      updateMany: async (args: {
+        where: { id: string; state: { in: string[] } };
+        data: Partial<RefundIntent>;
+      }) => {
+        const row = state.refundIntents.find(
+          (r) => r.id === args.where.id && args.where.state.in.includes(r.state),
+        );
+        if (row) Object.assign(row, args.data);
+        return { count: row ? 1 : 0 };
+      },
+      update: async (args: { where: { id: string }; data: Partial<RefundIntent> }) => {
+        const row = state.refundIntents.find((r) => r.id === args.where.id)!;
+        Object.assign(row, args.data);
+        return clone(row);
+      },
+    },
     saleReversal: {
       findUnique: async (args: {
         where:
@@ -1291,6 +1356,14 @@ function createFakePrisma(options: { serviceBps?: number; taxBps?: number } = {}
       },
     },
   };
+
+  Object.assign(client.sale, {
+    findFirstOrThrow: async (args: Parameters<typeof client.sale.findFirst>[0]) => {
+      const row = await client.sale.findFirst(args);
+      if (!row) throw new Error('sale missing');
+      return row;
+    },
+  });
 
   const queryRaw = async (strings: TemplateStringsArray, ...values: unknown[]) => {
     const sql = strings.join('?');
@@ -4128,4 +4201,213 @@ test('concurrent partial refunds with the same key create one reversal and one s
   assert.equal(state.reversals.length, 1);
   assert.equal(state.movements.filter((row) => row.type === 'REVERSAL').length, 1);
   assert.equal(state.refundLines.length, 1);
+});
+
+async function onlineRefundHarness() {
+  const { prisma, state } = createFakePrisma();
+  const effects = {
+    calls: [] as string[],
+    refunds: new Map<string, string>(),
+    localFailure: false,
+    providerFailure: undefined as Error | undefined,
+    afterProvider: undefined as (() => void) | undefined,
+    appliedMinor: 0n,
+    inTransaction: false,
+  };
+  const original = prisma.$transaction.bind(prisma);
+  prisma.$transaction = (async (...args: unknown[]) => {
+    effects.inTransaction = true;
+    try {
+      return await (original as (...a: unknown[]) => Promise<unknown>)(...args);
+    } finally {
+      effects.inTransaction = false;
+    }
+  }) as typeof prisma.$transaction;
+  const payments = {
+    prepareReversalRefund: async () => ({
+      provider: PaymentProvider.MOCK,
+      providerRef: 'provider-payment',
+    }),
+    refundReservedIntent: async (intent: RefundIntent) => {
+      assert.equal(effects.inTransaction, false, 'no provider I/O inside database transaction');
+      assert.ok(
+        state.refundIntents.some((r) => r.id === intent.id),
+        'intent persisted before I/O',
+      );
+      effects.calls.push(intent.providerKey);
+      if (effects.providerFailure) throw effects.providerFailure;
+      if (!effects.refunds.has(intent.providerKey))
+        effects.refunds.set(intent.providerKey, 'provider-refund');
+      effects.afterProvider?.();
+      return { performed: true, providerRefundRef: effects.refunds.get(intent.providerKey)! };
+    },
+    applyReversalRefund: async (_tx: unknown, _saleId: string, amount: bigint) => {
+      if (effects.localFailure) throw new Error('injected local failure');
+      effects.appliedMinor += amount;
+    },
+  } as unknown as PaymentsService;
+  const service = new SalesService(prisma, new PromotionsService(prisma), payments);
+  addStockItem(state, STOCK_SHARED_ID, 'Coffee Beans');
+  setBalance(state, STOCK_SHARED_ID, '10');
+  trackVariant(state, VARIANT_A, RECIPE_A_ID, [
+    { stockItemId: STOCK_SHARED_ID, quantityPerSaleUnit: '3' },
+  ]);
+  const { actor, order, quote } = await prepareOrder(service, KEY_ONE, [
+    { variantId: VARIANT_A, quantity: 2 },
+  ]);
+  const finalized = await service.finalize(
+    OUTLET_ID,
+    KEY_TWO,
+    {
+      deviceId: DEVICE_ID,
+      orderId: order.id,
+      quoteId: quote.id,
+      payment: finalizePayment(36000),
+    },
+    actor,
+  );
+  state.sales[0]!.payment!.kind = PaymentKind.ONLINE;
+  const dto = {
+    reason: 'Refund customer',
+    refundMinor: 1000,
+    lines: [{ saleLineId: state.sales[0]!.lines[0]!.id, quantity: 1 }],
+    restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '3' }],
+  };
+  const reverse = (key = KEY_THREE, payload = dto) =>
+    service.reverse(OUTLET_ID, finalized.sale.id, key, payload, user(Role.OWNER, OWNER_ID));
+  const restarted = () => new SalesService(prisma, new PromotionsService(prisma), payments);
+  return { service, prisma, state, effects, dto, reverse, restarted, saleId: finalized.sale.id };
+}
+
+test('online refund validates unknown lines, excess quantities, amounts and restock before any provider call', async () => {
+  const h = await onlineRefundHarness();
+  const cases = [
+    { ...h.dto, lines: [{ saleLineId: KEY_FIVE, quantity: 1 }] },
+    { ...h.dto, lines: [{ saleLineId: h.dto.lines[0]!.saleLineId, quantity: 3 }] },
+    { ...h.dto, refundMinor: 36001 },
+    { ...h.dto, refundMinor: -1 },
+    { ...h.dto, restock: [{ stockItemId: KEY_FIVE, quantity: '1' }] },
+    { ...h.dto, restock: [{ stockItemId: STOCK_SHARED_ID, quantity: '7' }] },
+  ];
+  for (const dto of cases) await assert.rejects(() => h.reverse(KEY_THREE, dto));
+  h.state.sales[0]!.state = 'CANCELLED' as SaleState;
+  await assert.rejects(
+    () => h.reverse(),
+    (e: unknown) => codeOf(e) === 'SALE_NOT_COMPLETED',
+  );
+  assert.equal(h.effects.calls.length, 0);
+  assert.equal(h.state.refundIntents.length, 0);
+  assert.equal(h.state.reversals.length, 0);
+});
+
+test('online refund reserves before I/O, replays once and rejects changed normalized payload', async () => {
+  const h = await onlineRefundHarness();
+  const first = await h.reverse();
+  const second = await h.reverse();
+  assert.deepEqual(second, first);
+  assert.equal(first.externalRefundPerformed, true);
+  assert.equal(h.state.refundIntents[0]!.state, 'COMPLETED');
+  assert.equal(h.effects.calls.length, 1);
+  assert.equal(h.effects.appliedMinor, 1000n);
+  assert.equal(h.state.reversals.length, 1);
+  assert.equal(h.state.movements.filter((r) => r.type === 'REVERSAL').length, 1);
+  await assert.rejects(
+    () => h.reverse(KEY_THREE, { ...h.dto, refundMinor: 999 }),
+    (e: unknown) => codeOf(e) === 'IDEMPOTENCY_CONFLICT',
+  );
+  assert.equal(h.effects.calls.length, 1);
+});
+
+test('provider success followed by local failure recovers on service restart without another provider call', async () => {
+  const h = await onlineRefundHarness();
+  h.effects.localFailure = true;
+  await assert.rejects(() => h.reverse(), /injected local failure/);
+  assert.equal(h.state.refundIntents[0]!.state, 'SUCCEEDED');
+  assert.equal(h.state.reversals.length, 0);
+  await assert.rejects(
+    () => h.reverse(KEY_FOUR),
+    (e: unknown) => codeOf(e) === 'REFUND_IN_PROGRESS',
+  );
+  await assert.rejects(
+    () => h.reverse(KEY_THREE, { ...h.dto, refundMinor: 999 }),
+    (e: unknown) => codeOf(e) === 'IDEMPOTENCY_CONFLICT',
+  );
+  h.effects.localFailure = false;
+  await h.restarted().reverse(OUTLET_ID, h.saleId, KEY_THREE, h.dto, user(Role.OWNER, OWNER_ID));
+  assert.equal(h.effects.calls.length, 1);
+  assert.equal(h.state.reversals.length, 1);
+  assert.equal(h.state.refundIntents[0]!.state, 'COMPLETED');
+});
+
+test('lost provider response stays UNKNOWN and same-key restart deduplicates provider and local effects', async () => {
+  const h = await onlineRefundHarness();
+  h.effects.afterProvider = () => {
+    throw new Error('response lost');
+  };
+  await assert.rejects(() => h.reverse(), /response lost/);
+  assert.equal(h.state.refundIntents[0]!.state, 'UNKNOWN');
+  assert.equal(h.effects.refunds.size, 1);
+  await assert.rejects(
+    () => h.reverse(KEY_FOUR),
+    (e: unknown) => codeOf(e) === 'REFUND_IN_PROGRESS',
+  );
+  h.effects.afterProvider = undefined;
+  await h.restarted().reverse(OUTLET_ID, h.saleId, KEY_THREE, h.dto, user(Role.OWNER, OWNER_ID));
+  assert.equal(h.effects.refunds.size, 1);
+  assert.equal(h.effects.calls[0], h.effects.calls[1]);
+  assert.equal(h.effects.appliedMinor, 1000n);
+  assert.equal(h.state.reversals.length, 1);
+});
+
+test('explicit provider failure is durable and same-key replay makes no additional provider call', async () => {
+  const h = await onlineRefundHarness();
+  h.effects.providerFailure = new HttpException({ code: 'PROVIDER_REFUND_REJECTED' }, 409);
+  await assert.rejects(() => h.reverse());
+  assert.equal(h.state.refundIntents[0]!.state, 'FAILED');
+  assert.equal(h.state.reversals.length, 0);
+  await assert.rejects(
+    () => h.reverse(),
+    (e: unknown) => codeOf(e) === 'REFUND_FAILED',
+  );
+  assert.equal(h.effects.calls.length, 1);
+});
+
+test('online restock-only correction skips provider intent and preserves existing behavior', async () => {
+  const h = await onlineRefundHarness();
+  const reversal = await h.reverse(KEY_THREE, { ...h.dto, refundMinor: 0 });
+  assert.equal(reversal.externalRefundPerformed, false);
+  assert.equal(h.state.refundIntents.length, 0);
+  assert.equal(h.effects.calls.length, 0);
+  assert.equal(h.state.movements.filter((r) => r.type === 'REVERSAL').length, 1);
+});
+
+test('another cashier cannot resume an owner refund intent', async () => {
+  const h = await onlineRefundHarness();
+  h.effects.localFailure = true;
+  await assert.rejects(() => h.reverse());
+  await assert.rejects(
+    () => h.restarted().reverse(OUTLET_ID, h.saleId, KEY_THREE, h.dto, user()),
+    (e: unknown) => codeOf(e) === 'FORBIDDEN',
+  );
+  assert.equal(h.effects.calls.length, 1);
+  assert.equal(h.state.reversals.length, 0);
+});
+
+test('failure persisting provider success keeps the original key recoverable', async () => {
+  const h = await onlineRefundHarness();
+  const original = h.prisma.refundIntent.updateMany.bind(h.prisma.refundIntent);
+  let fail = true;
+  h.prisma.refundIntent.updateMany = (async (args: Parameters<typeof original>[0]) => {
+    if (fail && args.data.state === 'SUCCEEDED') {
+      fail = false;
+      throw new Error('injected success persistence failure');
+    }
+    return original(args);
+  }) as unknown as typeof original;
+  await assert.rejects(() => h.reverse(), /success persistence failure/);
+  assert.equal(h.state.refundIntents[0]!.state, 'UNKNOWN');
+  await h.restarted().reverse(OUTLET_ID, h.saleId, KEY_THREE, h.dto, user(Role.OWNER, OWNER_ID));
+  assert.equal(h.effects.refunds.size, 1);
+  assert.equal(h.effects.calls[0], h.effects.calls[1]);
+  assert.equal(h.state.reversals.length, 1);
 });
