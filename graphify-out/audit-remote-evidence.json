@@ -1,0 +1,466 @@
+[
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "comments": [
+          {
+            "url": "https://github.com/arkinara/modern-pos/issues/15#issuecomment-6745765283",
+            "body": "Merged to main in ed29aa8 via PR #41 after QA_APPROVED (32/32 incl. fabrication audit — no invented hardware claims; all physical fields PENDING with reproduction recipes; 33 new printer tests, CI APK built).",
+            "user": {
+              "login": "arkinara",
+              "name": "arkinara",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/280888748?v=4",
+              "id": 280888748
+            },
+            "id": 6745765283,
+            "pull_request_review_id": null,
+            "in_reply_to_id": null,
+            "created_at": null,
+            "updated_at": null,
+            "review": null,
+            "side": null,
+            "line": null,
+            "start_line": null,
+            "path": null,
+            "body_html": "<p dir=\"auto\">Merged to main in <a class=\"commit-link\" data-hovercard-type=\"commit\" data-hovercard-url=\"https://github.com/arkinara/modern-pos/commit/ed29aa8df0feb30acda420d407e5c79c566d389f/hovercard\" href=\"https://github.com/arkinara/modern-pos/commit/ed29aa8df0feb30acda420d407e5c79c566d389f\"><tt>ed29aa8</tt></a> via PR <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6289908174\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/41\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/arkinara/modern-pos/pull/41/hovercard\" href=\"https://github.com/arkinara/modern-pos/pull/41\">#41</a> after QA_APPROVED (32/32 incl. fabrication audit — no invented hardware claims; all physical fields PENDING with reproduction recipes; 33 new printer tests, CI APK built).</p>"
+          }
+        ],
+        "url": "https://github.com/arkinara/modern-pos/issues/15",
+        "title": "arkinara/modern-pos Issue #15 comments",
+        "display_url": "https://github.com/arkinara/modern-pos/issues/15",
+        "display_title": "arkinara/modern-pos Issue #15 comments"
+      },
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "comments": [
+          {
+            "url": "https://github.com/arkinara/modern-pos/issues/18#issuecomment-6796326682",
+            "body": "Merged to main in dff2167 via PR #46 after QA_APPROVED (44/44 checks: E2E loop re-run by QA, failure battery contention/duplicate/timeout/restart/printer-disconnect/reversal observed with real codes and counts, backup/restore dry-run executed, scope regression clean; 3 hardware/device PENDING items with recipes).",
+            "user": {
+              "login": "arkinara",
+              "name": "arkinara",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/280888748?v=4",
+              "id": 280888748
+            },
+            "id": 6796326682,
+            "pull_request_review_id": null,
+            "in_reply_to_id": null,
+            "created_at": null,
+            "updated_at": null,
+            "review": null,
+            "side": null,
+            "line": null,
+            "start_line": null,
+            "path": null,
+            "body_html": "<p dir=\"auto\">Merged to main in <a class=\"commit-link\" data-hovercard-type=\"commit\" data-hovercard-url=\"https://github.com/arkinara/modern-pos/commit/dff21679bfd7660eb6d74f9dfdf8588b6805f1a9/hovercard\" href=\"https://github.com/arkinara/modern-pos/commit/dff21679bfd7660eb6d74f9dfdf8588b6805f1a9\"><tt>dff2167</tt></a> via PR <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6314099700\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/46\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/arkinara/modern-pos/pull/46/hovercard\" href=\"https://github.com/arkinara/modern-pos/pull/46\">#46</a> after QA_APPROVED (44/44 checks: E2E loop re-run by QA, failure battery contention/duplicate/timeout/restart/printer-disconnect/reversal observed with real codes and counts, backup/restore dry-run executed, scope regression clean; 3 hardware/device PENDING items with recipes).</p>"
+          }
+        ],
+        "url": "https://github.com/arkinara/modern-pos/issues/18",
+        "title": "arkinara/modern-pos Issue #18 comments",
+        "display_url": "https://github.com/arkinara/modern-pos/issues/18",
+        "display_title": "arkinara/modern-pos Issue #18 comments"
+      },
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "comments": [
+          {
+            "url": "https://github.com/arkinara/modern-pos/issues/22#issuecomment-6834484488",
+            "body": "Merged to main in 69180a8 via PR #50 after QA_FAILED 147/150 (3 findings: missing webhook/reconcile/refund/settlement tests + stale externalRefundPerformed docs) -> fix d4e3590 (12 new tests, docs scoped manual vs provider) -> QA re-run QA_APPROVED 25/25. Fabrication audit clean: no real provider account exists; lifecycle verified against in-repo mock sandbox; real QRIS verification PENDING with recipe.",
+            "user": {
+              "login": "arkinara",
+              "name": "arkinara",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/280888748?v=4",
+              "id": 280888748
+            },
+            "id": 6834484488,
+            "pull_request_review_id": null,
+            "in_reply_to_id": null,
+            "created_at": null,
+            "updated_at": null,
+            "review": null,
+            "side": null,
+            "line": null,
+            "start_line": null,
+            "path": null,
+            "body_html": "<p dir=\"auto\">Merged to main in <a class=\"commit-link\" data-hovercard-type=\"commit\" data-hovercard-url=\"https://github.com/arkinara/modern-pos/commit/69180a8bf5f9ac89ace3786b3ce5089c1f77dd21/hovercard\" href=\"https://github.com/arkinara/modern-pos/commit/69180a8bf5f9ac89ace3786b3ce5089c1f77dd21\"><tt>69180a8</tt></a> via PR <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6355965392\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/50\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/arkinara/modern-pos/pull/50/hovercard\" href=\"https://github.com/arkinara/modern-pos/pull/50\">#50</a> after QA_FAILED 147/150 (3 findings: missing webhook/reconcile/refund/settlement tests + stale externalRefundPerformed docs) -&gt; fix <a class=\"commit-link\" data-hovercard-type=\"commit\" data-hovercard-url=\"https://github.com/arkinara/modern-pos/commit/d4e3590bb3732c9bae375f53e871526fec486b54/hovercard\" href=\"https://github.com/arkinara/modern-pos/commit/d4e3590bb3732c9bae375f53e871526fec486b54\"><tt>d4e3590</tt></a> (12 new tests, docs scoped manual vs provider) -&gt; QA re-run QA_APPROVED 25/25. Fabrication audit clean: no real provider account exists; lifecycle verified against in-repo mock sandbox; real QRIS verification PENDING with recipe.</p>"
+          }
+        ],
+        "url": "https://github.com/arkinara/modern-pos/issues/22",
+        "title": "arkinara/modern-pos Issue #22 comments",
+        "display_url": "https://github.com/arkinara/modern-pos/issues/22",
+        "display_title": "arkinara/modern-pos Issue #22 comments"
+      },
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "comments": [
+          {
+            "url": "https://github.com/arkinara/modern-pos/issues/25#issuecomment-6856380576",
+            "body": "Merged to main in 4f78c72 via PR #53 after QA_APPROVED 62/62: live station routing with AMEND/CANCEL sharing the order reference, real LAN proof (448 ESC/POS bytes on loopback, listener kill -> connectionLost), independent station queues, reprint copy=true with sales 53->53 and stock 270->270 unchanged, all hardware rows PENDING with recipes, Playwright 36/36 + station UI 33/33.",
+            "user": {
+              "login": "arkinara",
+              "name": "arkinara",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/280888748?v=4",
+              "id": 280888748
+            },
+            "id": 6856380576,
+            "pull_request_review_id": null,
+            "in_reply_to_id": null,
+            "created_at": null,
+            "updated_at": null,
+            "review": null,
+            "side": null,
+            "line": null,
+            "start_line": null,
+            "path": null,
+            "body_html": "<p dir=\"auto\">Merged to main in <a class=\"commit-link\" data-hovercard-type=\"commit\" data-hovercard-url=\"https://github.com/arkinara/modern-pos/commit/4f78c7243dd2defc95eb0a1534014264790f9396/hovercard\" href=\"https://github.com/arkinara/modern-pos/commit/4f78c7243dd2defc95eb0a1534014264790f9396\"><tt>4f78c72</tt></a> via PR <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6371482847\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/53\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/arkinara/modern-pos/pull/53/hovercard\" href=\"https://github.com/arkinara/modern-pos/pull/53\">#53</a> after QA_APPROVED 62/62: live station routing with AMEND/CANCEL sharing the order reference, real LAN proof (448 ESC/POS bytes on loopback, listener kill -&gt; connectionLost), independent station queues, reprint copy=true with sales 53-&gt;53 and stock 270-&gt;270 unchanged, all hardware rows PENDING with recipes, Playwright 36/36 + station UI 33/33.</p>"
+          }
+        ],
+        "url": "https://github.com/arkinara/modern-pos/issues/25",
+        "title": "arkinara/modern-pos Issue #25 comments",
+        "display_url": "https://github.com/arkinara/modern-pos/issues/25",
+        "display_title": "arkinara/modern-pos Issue #25 comments"
+      },
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "comments": [
+          {
+            "url": "https://github.com/arkinara/modern-pos/issues/28#issuecomment-6877983899",
+            "body": "Merged to main in a7d955f via PR #61 after QA_APPROVED (24 checks: friction log spot-checked against code, baselines re-run and reproduced — checkout 10x min 123ms/0 errors, stock-count SQL 0, support incidents honest PENDING, ranking derivable, issues #56-#60 created and verified). Non-FAIL finding: Dev added #56-#60 to the project board itself (doc said orchestrator would).",
+            "user": {
+              "login": "arkinara",
+              "name": "arkinara",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/280888748?v=4",
+              "id": 280888748
+            },
+            "id": 6877983899,
+            "pull_request_review_id": null,
+            "in_reply_to_id": null,
+            "created_at": null,
+            "updated_at": null,
+            "review": null,
+            "side": null,
+            "line": null,
+            "start_line": null,
+            "path": null,
+            "body_html": "<p dir=\"auto\">Merged to main in <a class=\"commit-link\" data-hovercard-type=\"commit\" data-hovercard-url=\"https://github.com/arkinara/modern-pos/commit/a7d955f6593257fd7213fef7cda68171e1c27271/hovercard\" href=\"https://github.com/arkinara/modern-pos/commit/a7d955f6593257fd7213fef7cda68171e1c27271\"><tt>a7d955f</tt></a> via PR <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6389973141\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/61\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/arkinara/modern-pos/pull/61/hovercard\" href=\"https://github.com/arkinara/modern-pos/pull/61\">#61</a> after QA_APPROVED (24 checks: friction log spot-checked against code, baselines re-run and reproduced — checkout 10x min 123ms/0 errors, stock-count SQL 0, support incidents honest PENDING, ranking derivable, issues <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6389882603\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/56\" data-hovercard-type=\"issue\" data-hovercard-url=\"/arkinara/modern-pos/issues/56/hovercard\" href=\"https://github.com/arkinara/modern-pos/issues/56\">#56</a>-<a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6389885599\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/60\" data-hovercard-type=\"issue\" data-hovercard-url=\"/arkinara/modern-pos/issues/60/hovercard\" href=\"https://github.com/arkinara/modern-pos/issues/60\">#60</a> created and verified). Non-FAIL finding: Dev added <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6389882603\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/56\" data-hovercard-type=\"issue\" data-hovercard-url=\"/arkinara/modern-pos/issues/56/hovercard\" href=\"https://github.com/arkinara/modern-pos/issues/56\">#56</a>-<a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6389885599\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/60\" data-hovercard-type=\"issue\" data-hovercard-url=\"/arkinara/modern-pos/issues/60/hovercard\" href=\"https://github.com/arkinara/modern-pos/issues/60\">#60</a> to the project board itself (doc said orchestrator would).</p>"
+          }
+        ],
+        "url": "https://github.com/arkinara/modern-pos/issues/28",
+        "title": "arkinara/modern-pos Issue #28 comments",
+        "display_url": "https://github.com/arkinara/modern-pos/issues/28",
+        "display_title": "arkinara/modern-pos Issue #28 comments"
+      },
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "comments": [
+          {
+            "url": "https://github.com/arkinara/modern-pos/issues/30#issuecomment-6880865235",
+            "body": "Merged to main in d4b3ac1 via PR #63 after QA_APPROVED (14/14: 4 latency targets each traced to a measured baseline, QA-owned load run 40/40 sales 0 errors, real kill-restart recovery, stock mismatch 0, duplicate keys 0, report reconciliation 1891000 hand-checked, 45->45 tests with only the retry bound justified).",
+            "user": {
+              "login": "arkinara",
+              "name": "arkinara",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/280888748?v=4",
+              "id": 280888748
+            },
+            "id": 6880865235,
+            "pull_request_review_id": null,
+            "in_reply_to_id": null,
+            "created_at": null,
+            "updated_at": null,
+            "review": null,
+            "side": null,
+            "line": null,
+            "start_line": null,
+            "path": null,
+            "body_html": "<p dir=\"auto\">Merged to main in <a class=\"commit-link\" data-hovercard-type=\"commit\" data-hovercard-url=\"https://github.com/arkinara/modern-pos/commit/d4b3ac178ef7fd03078caca70fafd32843abeaca/hovercard\" href=\"https://github.com/arkinara/modern-pos/commit/d4b3ac178ef7fd03078caca70fafd32843abeaca\"><tt>d4b3ac1</tt></a> via PR <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"6392312742\" data-permission-text=\"Title is private\" data-url=\"https://github.com/arkinara/modern-pos/issues/63\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/arkinara/modern-pos/pull/63/hovercard\" href=\"https://github.com/arkinara/modern-pos/pull/63\">#63</a> after QA_APPROVED (14/14: 4 latency targets each traced to a measured baseline, QA-owned load run 40/40 sales 0 errors, real kill-restart recovery, stock mismatch 0, duplicate keys 0, report reconciliation 1891000 hand-checked, 45-&gt;45 tests with only the retry bound justified).</p>"
+          }
+        ],
+        "url": "https://github.com/arkinara/modern-pos/issues/30",
+        "title": "arkinara/modern-pos Issue #30 comments",
+        "display_url": "https://github.com/arkinara/modern-pos/issues/30",
+        "display_title": "arkinara/modern-pos Issue #30 comments"
+      },
+      "isError": false
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "jobs": [
+          {
+            "id": 132513328185,
+            "name": "Format, type, build, contract and Android",
+            "status": "completed",
+            "conclusion": "success",
+            "run_id": 43616735176,
+            "logs_url": null,
+            "steps": [
+              {
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 1
+              },
+              {
+                "name": "Initialize containers",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 2
+              },
+              {
+                "name": "Checkout",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 3
+              },
+              {
+                "name": "Set up pnpm",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 4
+              },
+              {
+                "name": "Set up Node.js",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 5
+              },
+              {
+                "name": "Set up Java",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 6
+              },
+              {
+                "name": "Set up Flutter",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 7
+              },
+              {
+                "name": "Install JavaScript dependencies",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 8
+              },
+              {
+                "name": "Generate Prisma client",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 9
+              },
+              {
+                "name": "Check formatting",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 10
+              },
+              {
+                "name": "Typecheck",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 11
+              },
+              {
+                "name": "API unit tests",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 12
+              },
+              {
+                "name": "API build",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 13
+              },
+              {
+                "name": "Apply Prisma migrations",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 14
+              },
+              {
+                "name": "Seed synthetic data twice",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 15
+              },
+              {
+                "name": "API health check",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 16
+              },
+              {
+                "name": "Next.js build",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 17
+              },
+              {
+                "name": "OpenAPI validation, generation and drift check",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 18
+              },
+              {
+                "name": "Flutter dependencies",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 19
+              },
+              {
+                "name": "Flutter format check",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 20
+              },
+              {
+                "name": "Flutter analyze",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 21
+              },
+              {
+                "name": "Flutter tests",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 22
+              },
+              {
+                "name": "Ensure Android SDK 36 and NDK",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 23
+              },
+              {
+                "name": "Android debug build",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 24
+              },
+              {
+                "name": "Post Set up Flutter",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 43
+              },
+              {
+                "name": "Post Set up Java",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 44
+              },
+              {
+                "name": "Post Set up Node.js",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 45
+              },
+              {
+                "name": "Post Set up pnpm",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 46
+              },
+              {
+                "name": "Post Checkout",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 47
+              },
+              {
+                "name": "Stop containers",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 48
+              },
+              {
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success",
+                "number": 49
+              }
+            ]
+          }
+        ]
+      },
+      "isError": false
+    }
+  }
+]

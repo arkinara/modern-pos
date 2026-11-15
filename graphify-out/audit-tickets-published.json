@@ -1,0 +1,163 @@
+[
+    {
+        "key":  "refund",
+        "number":  66,
+        "title":  "[P1] fix(payments): validate durable refund intents before provider side effects",
+        "url":  "https://github.com/arkinara/modern-pos/issues/66",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5f0U",
+        "status":  "Todo",
+        "dependencies":  [
+
+                         ]
+    },
+    {
+        "key":  "kitchen",
+        "number":  67,
+        "title":  "[P1] fix(printing): connect kitchen station queues to Android delivery",
+        "url":  "https://github.com/arkinara/modern-pos/issues/67",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5f5U",
+        "status":  "Todo",
+        "dependencies":  [
+
+                         ]
+    },
+    {
+        "key":  "offline",
+        "number":  68,
+        "title":  "[P1] fix(mobile): support bounded offline session recovery and refresh retries",
+        "url":  "https://github.com/arkinara/modern-pos/issues/68",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5gAY",
+        "status":  "Todo",
+        "dependencies":  [
+
+                         ]
+    },
+    {
+        "key":  "config",
+        "number":  69,
+        "title":  "[P1] fix(api): reject unsafe production config and disable mock payment endpoints",
+        "url":  "https://github.com/arkinara/modern-pos/issues/69",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5gG8",
+        "status":  "Todo",
+        "dependencies":  [
+
+                         ]
+    },
+    {
+        "key":  "shell",
+        "number":  70,
+        "title":  "[P2] fix(web): repair obsolete back-office shell verification",
+        "url":  "https://github.com/arkinara/modern-pos/issues/70",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5gL8",
+        "status":  "Todo",
+        "dependencies":  [
+
+                         ]
+    },
+    {
+        "key":  "dbci",
+        "number":  71,
+        "title":  "[P2] test(api): enforce PostgreSQL transaction and recovery regressions in CI",
+        "url":  "https://github.com/arkinara/modern-pos/issues/71",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5gRU",
+        "status":  "Todo",
+        "dependencies":  [
+                             "refund"
+                         ]
+    },
+    {
+        "key":  "browserci",
+        "number":  72,
+        "title":  "[P2] test(web): retain and run owner and cashier browser regressions in CI",
+        "url":  "https://github.com/arkinara/modern-pos/issues/72",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5gWI",
+        "status":  "Todo",
+        "dependencies":  [
+                             "shell"
+                         ]
+    },
+    {
+        "key":  "docs",
+        "number":  73,
+        "title":  "[P2] docs: reconcile implementation status and deferred acceptance evidence",
+        "url":  "https://github.com/arkinara/modern-pos/issues/73",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5gcQ",
+        "status":  "Todo",
+        "dependencies":  [
+
+                         ]
+    },
+    {
+        "key":  "hardware",
+        "number":  74,
+        "title":  "[P1] qa(android): verify one real printer and kitchen delivery configuration",
+        "url":  "https://github.com/arkinara/modern-pos/issues/74",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5ghU",
+        "status":  "Todo",
+        "dependencies":  [
+                             "kitchen",
+                             "offline"
+                         ]
+    },
+    {
+        "key":  "provider",
+        "number":  75,
+        "title":  "[P1] qa(payments): integrate and verify a selected real provider sandbox",
+        "url":  "https://github.com/arkinara/modern-pos/issues/75",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5gmY",
+        "status":  "Todo",
+        "dependencies":  [
+                             "refund",
+                             "config",
+                             "dbci"
+                         ]
+    },
+    {
+        "key":  "operators",
+        "number":  76,
+        "title":  "[P2] qa(product): validate cashier and owner workflows with representative operators",
+        "url":  "https://github.com/arkinara/modern-pos/issues/76",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5gsg",
+        "status":  "Todo",
+        "dependencies":  [
+                             "kitchen",
+                             "offline",
+                             "shell",
+                             "browserci"
+                         ]
+    },
+    {
+        "key":  "operations",
+        "number":  77,
+        "title":  "[P1] ops: validate deployment recovery, off-host backups and operational ownership",
+        "url":  "https://github.com/arkinara/modern-pos/issues/77",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5gw8",
+        "status":  "Todo",
+        "dependencies":  [
+                             "config",
+                             "dbci"
+                         ]
+    },
+    {
+        "key":  "release",
+        "number":  78,
+        "title":  "[P1] qa(release): close audit prerequisites and verify final POS acceptance",
+        "url":  "https://github.com/arkinara/modern-pos/issues/78",
+        "itemId":  "PVTI_lAHOEL4FrM4BqkuvzhI5g10",
+        "status":  "Todo",
+        "dependencies":  [
+                             "refund",
+                             "kitchen",
+                             "offline",
+                             "config",
+                             "shell",
+                             "dbci",
+                             "browserci",
+                             "docs",
+                             "hardware",
+                             "provider",
+                             "operators",
+                             "operations"
+                         ]
+    }
+]

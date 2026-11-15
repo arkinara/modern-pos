@@ -1,0 +1,361 @@
+[
+  {
+    "key": "refund",
+    "priority": "P1",
+    "label": "bug",
+    "title": "fix(payments): validate durable refund intents before provider side effects",
+    "related": "#17, #21, #22",
+    "depends": [],
+    "problem": "Online refunds call the provider before validating sale-state, line membership/remaining quantity and restock eligibility. Using unchanged reverse/applyReversal source methods with mocked I/O, a partial refund naming a UUID-shaped line absent from the sale produced: provider refund accepted → database transaction → 422 REFUND_LINE_NOT_FOUND; no reversal inserted. This is a control-flow reproduction, not a live money or PostgreSQL test. Provider success followed by local failure can leave an unrecorded external refund.",
+    "sources": [
+      "apps/api/src/sales/sales.service.ts#L1589",
+      "apps/api/src/sales/sales.service.ts#L1764",
+      "apps/api/src/payments/payments.service.ts#L605"
+    ],
+    "scope": "Validate and durably reserve a refund intent, bound to normalized request/hash and refundable limits, before provider I/O. Use a stable provider key and recover/reconcile ambiguous outcomes.",
+    "criteria": [
+      "Invalid sale state, line, quantity and restock requests make zero provider refund calls.",
+      "Persist an auditable intent before provider effects; record success, failure and unknown outcomes.",
+      "Same-key replay cannot refund twice; a changed payload with the same key is rejected.",
+      "Concurrent distinct-key requests cannot exceed remaining money, line or restock limits.",
+      "Provider success followed by database failure/process restart recovers to exactly one consistent reversal.",
+      "Add regressions for all above, including real PostgreSQL concurrency; preserve cash/manual reversal behaviour."
+    ],
+    "boundaries": "Do not hold a database transaction open across network I/O as the sole fix. Do not claim real-provider verification from mocked tests.",
+    "body": "## Problem and evidence\nOnline refunds call the provider before validating sale-state, line membership/remaining quantity and restock eligibility. Using unchanged reverse/applyReversal source methods with mocked I/O, a partial refund naming a UUID-shaped line absent from the sale produced: provider refund accepted → database transaction → 422 REFUND_LINE_NOT_FOUND; no reversal inserted. This is a control-flow reproduction, not a live money or PostgreSQL test. Provider success followed by local failure can leave an unrecorded external refund.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #17, #21, #22.\n\n- [apps/api/src/sales/sales.service.ts#L1589](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/sales/sales.service.ts#L1589)\n- [apps/api/src/sales/sales.service.ts#L1764](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/sales/sales.service.ts#L1764)\n- [apps/api/src/payments/payments.service.ts#L605](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/payments/payments.service.ts#L605)\n\n## Scope\nValidate and durably reserve a refund intent, bound to normalized request/hash and refundable limits, before provider I/O. Use a stable provider key and recover/reconcile ambiguous outcomes.\n\n## Acceptance criteria\n- [ ] Invalid sale state, line, quantity and restock requests make zero provider refund calls.\n- [ ] Persist an auditable intent before provider effects; record success, failure and unknown outcomes.\n- [ ] Same-key replay cannot refund twice; a changed payload with the same key is rejected.\n- [ ] Concurrent distinct-key requests cannot exceed remaining money, line or restock limits.\n- [ ] Provider success followed by database failure/process restart recovers to exactly one consistent reversal.\n- [ ] Add regressions for all above, including real PostgreSQL concurrency; preserve cash/manual reversal behaviour.\n\n## Boundaries\nDo not hold a database transaction open across network I/O as the sole fix. Do not claim real-provider verification from mocked tests.\n\n## Planning\nPriority: P1. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "kitchen",
+    "priority": "P1",
+    "label": "bug",
+    "title": "fix(printing): connect kitchen station queues to Android delivery",
+    "related": "#25",
+    "depends": [],
+    "problem": "Station routing persists jobs and exposes state/retry endpoints, but no station-job API consumer or kitchen-ticket renderer was found in mobile application source. PrintQueueService processes sale receipts, not station queues. No server worker connects those jobs to printer transport either. API job records and a loopback receipt test do not complete a kitchen delivery flow. This is a source-traced integration gap, separate from physical hardware verification.",
+    "sources": [
+      "apps/api/src/printing/station-routing.service.ts#L272",
+      "apps/api/src/printing/station-routing.service.ts#L417",
+      "apps/mobile/lib/features/printing/print_queue_service.dart",
+      "docs/printer-hardware.md"
+    ],
+    "scope": "Connect order creation/amendment/cancellation to durable station events and implement Android station claiming, rendering, printer selection and delivery state handling.",
+    "criteria": [
+      "An app order routes its items to the configured stations and produces station-specific transport writes.",
+      "AMEND and CANCEL tickets retain the same stable order reference and correct item changes.",
+      "Two concurrent consumers cannot claim/send the same queued job.",
+      "Interrupted delivery stays UNKNOWN and requires an explicit COPY decision; no automatic uncertain resend.",
+      "Retry and COPY remain independent of sale finalization, payment and stock effects.",
+      "Automated app-to-two-fake-transports tests cover routing, amendment, cancellation, disconnect and restart; document the physical acceptance recipe."
+    ],
+    "boundaries": "Keep cashier/physical execution on Android. Do not move checkout into the web app or claim hardware acceptance from fake transports.",
+    "body": "## Problem and evidence\nStation routing persists jobs and exposes state/retry endpoints, but no station-job API consumer or kitchen-ticket renderer was found in mobile application source. PrintQueueService processes sale receipts, not station queues. No server worker connects those jobs to printer transport either. API job records and a loopback receipt test do not complete a kitchen delivery flow. This is a source-traced integration gap, separate from physical hardware verification.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #25.\n\n- [apps/api/src/printing/station-routing.service.ts#L272](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/printing/station-routing.service.ts#L272)\n- [apps/api/src/printing/station-routing.service.ts#L417](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/printing/station-routing.service.ts#L417)\n- [apps/mobile/lib/features/printing/print_queue_service.dart](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/mobile/lib/features/printing/print_queue_service.dart)\n- [docs/printer-hardware.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/printer-hardware.md)\n\n## Scope\nConnect order creation/amendment/cancellation to durable station events and implement Android station claiming, rendering, printer selection and delivery state handling.\n\n## Acceptance criteria\n- [ ] An app order routes its items to the configured stations and produces station-specific transport writes.\n- [ ] AMEND and CANCEL tickets retain the same stable order reference and correct item changes.\n- [ ] Two concurrent consumers cannot claim/send the same queued job.\n- [ ] Interrupted delivery stays UNKNOWN and requires an explicit COPY decision; no automatic uncertain resend.\n- [ ] Retry and COPY remain independent of sale finalization, payment and stock effects.\n- [ ] Automated app-to-two-fake-transports tests cover routing, amendment, cancellation, disconnect and restart; document the physical acceptance recipe.\n\n## Boundaries\nKeep cashier/physical execution on Android. Do not move checkout into the web app or claim hardware acceptance from fake transports.\n\n## Planning\nPriority: P1. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "offline",
+    "priority": "P1",
+    "label": "bug",
+    "title": "fix(mobile): support bounded offline session recovery and refresh retries",
+    "related": "#4, #12, #19",
+    "depends": [],
+    "problem": "AuthController.build restores sessions only through online refresh; any Dio network failure returns null, and ModernPosApp then shows SignInScreen. An outage plus app restart blocks cashier and queue UI even though encrypted queued records survive. No persisted authorized offline profile/catalog was found. Timed refresh also schedules another timer only on success, so a transient non-401 refresh failure loses automatic retries. These findings are source-traced, not physical Android reproductions.",
+    "sources": [
+      "apps/mobile/lib/features/auth/auth_controller.dart#L36",
+      "apps/mobile/lib/features/auth/auth_controller.dart#L118",
+      "apps/mobile/lib/app.dart#L32",
+      "apps/mobile/lib/features/catalog/catalog_repository.dart"
+    ],
+    "scope": "Define the supported offline session lifetime and revocation/reconnect policy, then implement bounded authorized offline restart, scoped catalog/settings snapshots and resilient refresh retries.",
+    "criteria": [
+      "A previously authorized session within the documented offline allowance can restart without network and access its scoped cashier/queue UI.",
+      "Persist scoped catalog/settings needed for offline capture; display snapshot age and offline limitations.",
+      "Expired/missing offline authorization requires sign-in; a new unauthenticated install cannot sell offline.",
+      "Transient refresh failure schedules bounded retries/reconnect recovery; 401/revocation follows the explicit policy.",
+      "Sign-out or account/outlet changes do not expose another user's/outlet's cached data or replay its queue without authorization.",
+      "Tests cover restart while offline, expired authorization, transient refresh outage/reconnect and durable queue preservation."
+    ],
+    "boundaries": "Do not bypass authentication unconditionally or promise server acceptance/stock reservation while offline. If product policy excludes restart-capable sales, record the explicit decision and narrow UI/docs instead of reporting full offline acceptance.",
+    "body": "## Problem and evidence\nAuthController.build restores sessions only through online refresh; any Dio network failure returns null, and ModernPosApp then shows SignInScreen. An outage plus app restart blocks cashier and queue UI even though encrypted queued records survive. No persisted authorized offline profile/catalog was found. Timed refresh also schedules another timer only on success, so a transient non-401 refresh failure loses automatic retries. These findings are source-traced, not physical Android reproductions.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #4, #12, #19.\n\n- [apps/mobile/lib/features/auth/auth_controller.dart#L36](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/mobile/lib/features/auth/auth_controller.dart#L36)\n- [apps/mobile/lib/features/auth/auth_controller.dart#L118](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/mobile/lib/features/auth/auth_controller.dart#L118)\n- [apps/mobile/lib/app.dart#L32](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/mobile/lib/app.dart#L32)\n- [apps/mobile/lib/features/catalog/catalog_repository.dart](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/mobile/lib/features/catalog/catalog_repository.dart)\n\n## Scope\nDefine the supported offline session lifetime and revocation/reconnect policy, then implement bounded authorized offline restart, scoped catalog/settings snapshots and resilient refresh retries.\n\n## Acceptance criteria\n- [ ] A previously authorized session within the documented offline allowance can restart without network and access its scoped cashier/queue UI.\n- [ ] Persist scoped catalog/settings needed for offline capture; display snapshot age and offline limitations.\n- [ ] Expired/missing offline authorization requires sign-in; a new unauthenticated install cannot sell offline.\n- [ ] Transient refresh failure schedules bounded retries/reconnect recovery; 401/revocation follows the explicit policy.\n- [ ] Sign-out or account/outlet changes do not expose another user's/outlet's cached data or replay its queue without authorization.\n- [ ] Tests cover restart while offline, expired authorization, transient refresh outage/reconnect and durable queue preservation.\n\n## Boundaries\nDo not bypass authentication unconditionally or promise server acceptance/stock reservation while offline. If product policy excludes restart-capable sales, record the explicit decision and narrow UI/docs instead of reporting full offline acceptance.\n\n## Planning\nPriority: P1. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "config",
+    "priority": "P1",
+    "label": "bug",
+    "title": "fix(api): reject unsafe production config and disable mock payment endpoints",
+    "related": "#4, #18, #22",
+    "depends": [],
+    "problem": "Auth config defaults to a committed development JWT secret and insecure cookies. Payment config defaults to MOCK; SandboxProviderController exposes public create/read/event routes whenever MOCK is selected, including signed mock events. No production environment gate was found. These are intended development behaviours but lack fail-closed production safeguards. This audit did not observe an exposed production instance or prove arbitrary JWT impersonation; database session validation remains present.",
+    "sources": [
+      "apps/api/src/auth/auth.config.ts#L46",
+      "apps/api/src/payments/payment-config.service.ts#L8",
+      "apps/api/src/payments/sandbox-provider.controller.ts",
+      "apps/api/src/main.ts"
+    ],
+    "scope": "Validate production configuration at startup and make sandbox routes unavailable in production independently of provider selection.",
+    "criteria": [
+      "Production startup rejects missing/placeholder secrets, unsafe cookie settings and missing/invalid explicit allowed origins.",
+      "Production has explicit payment-provider/mode configuration; implicit mock fallback is rejected.",
+      "Sandbox provider routes return unavailable in production even if MOCK is mistakenly selected.",
+      "Local/test sandbox use requires explicit documented opt-in; normal local development remains reproducible.",
+      "Automated startup/controller checks cover safe and unsafe combinations; diagnostics do not reveal secrets.",
+      "Update environment/deployment docs and retain session, CSRF and outlet authorization checks."
+    ],
+    "boundaries": "Do not claim a deployed vulnerability was observed. Do not add real provider credentials or change financial calculations.",
+    "body": "## Problem and evidence\nAuth config defaults to a committed development JWT secret and insecure cookies. Payment config defaults to MOCK; SandboxProviderController exposes public create/read/event routes whenever MOCK is selected, including signed mock events. No production environment gate was found. These are intended development behaviours but lack fail-closed production safeguards. This audit did not observe an exposed production instance or prove arbitrary JWT impersonation; database session validation remains present.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #4, #18, #22.\n\n- [apps/api/src/auth/auth.config.ts#L46](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/auth/auth.config.ts#L46)\n- [apps/api/src/payments/payment-config.service.ts#L8](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/payments/payment-config.service.ts#L8)\n- [apps/api/src/payments/sandbox-provider.controller.ts](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/payments/sandbox-provider.controller.ts)\n- [apps/api/src/main.ts](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/main.ts)\n\n## Scope\nValidate production configuration at startup and make sandbox routes unavailable in production independently of provider selection.\n\n## Acceptance criteria\n- [ ] Production startup rejects missing/placeholder secrets, unsafe cookie settings and missing/invalid explicit allowed origins.\n- [ ] Production has explicit payment-provider/mode configuration; implicit mock fallback is rejected.\n- [ ] Sandbox provider routes return unavailable in production even if MOCK is mistakenly selected.\n- [ ] Local/test sandbox use requires explicit documented opt-in; normal local development remains reproducible.\n- [ ] Automated startup/controller checks cover safe and unsafe combinations; diagnostics do not reveal secrets.\n- [ ] Update environment/deployment docs and retain session, CSRF and outlet authorization checks.\n\n## Boundaries\nDo not claim a deployed vulnerability was observed. Do not add real provider credentials or change financial calculations.\n\n## Planning\nPriority: P1. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "shell",
+    "priority": "P2",
+    "label": "bug",
+    "title": "fix(web): repair obsolete back-office shell verification",
+    "related": "#5, #29, #56",
+    "depends": [],
+    "problem": "node apps/web/scripts/verify-shell.cjs fails at line 21: navigation labels and order changed. The script parses inline SidebarNav labels and expects the old six destinations; navigation now lives in back-office-nav.ts and contains 15 owner destinations. Four current pure web tests pass. The stale assertion is not evidence that the new navigation is broken.",
+    "sources": [
+      "apps/web/scripts/verify-shell.cjs#L19",
+      "apps/web/lib/back-office-nav.ts",
+      "apps/web/components/sidebar-nav.tsx"
+    ],
+    "scope": "Update the documented shell check to verify the current grouped, role-aware shell; audit remaining checks against page wrappers that now delegate to screen components.",
+    "criteria": [
+      "The documented verify:shell command passes against current routes and grouped navigation.",
+      "Check all 15 owner destinations exactly once, cashier-permitted destinations and no cashier-enabled owner-only routes.",
+      "Preserve active-route accessibility, responsive navigation and the web back-office/cashier boundary.",
+      "Remove assumptions about obsolete file locations/inline labels without weakening meaningful checks.",
+      "A deliberate forbidden route or missing destination causes verification failure; existing web tests remain green."
+    ],
+    "boundaries": "Do not revert or remove new navigation to satisfy a stale test. Do not introduce product behaviour unrelated to shell verification.",
+    "body": "## Problem and evidence\nnode apps/web/scripts/verify-shell.cjs fails at line 21: navigation labels and order changed. The script parses inline SidebarNav labels and expects the old six destinations; navigation now lives in back-office-nav.ts and contains 15 owner destinations. Four current pure web tests pass. The stale assertion is not evidence that the new navigation is broken.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #5, #29, #56.\n\n- [apps/web/scripts/verify-shell.cjs#L19](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/web/scripts/verify-shell.cjs#L19)\n- [apps/web/lib/back-office-nav.ts](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/web/lib/back-office-nav.ts)\n- [apps/web/components/sidebar-nav.tsx](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/web/components/sidebar-nav.tsx)\n\n## Scope\nUpdate the documented shell check to verify the current grouped, role-aware shell; audit remaining checks against page wrappers that now delegate to screen components.\n\n## Acceptance criteria\n- [ ] The documented verify:shell command passes against current routes and grouped navigation.\n- [ ] Check all 15 owner destinations exactly once, cashier-permitted destinations and no cashier-enabled owner-only routes.\n- [ ] Preserve active-route accessibility, responsive navigation and the web back-office/cashier boundary.\n- [ ] Remove assumptions about obsolete file locations/inline labels without weakening meaningful checks.\n- [ ] A deliberate forbidden route or missing destination causes verification failure; existing web tests remain green.\n\n## Boundaries\nDo not revert or remove new navigation to satisfy a stale test. Do not introduce product behaviour unrelated to shell verification.\n\n## Planning\nPriority: P2. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "dbci",
+    "priority": "P2",
+    "label": "enhancement",
+    "title": "test(api): enforce PostgreSQL transaction and recovery regressions in CI",
+    "related": "#3, #10, #17, #18, #21, #22, #24, #30",
+    "depends": [
+      "refund"
+    ],
+    "problem": "The exact-revision successful CI runs fake-Prisma service tests, migrations/seed and a live health check, but does not continuously run real PostgreSQL transaction/concurrency regressions. Historical live QA exists, but later changes can regress stock/idempotency/refund boundaries without failing CI.",
+    "sources": [
+      ".github/workflows/ci.yml#L81",
+      "apps/api/src/sales/sales.service.test.ts",
+      "scripts/verify-mvp.sh"
+    ],
+    "scope": "Add a small committed deterministic database integration suite against the isolated CI PostgreSQL service after migrations/seed. Include the repaired refund orchestration.",
+    "criteria": [
+      "Concurrent distinct checkout keys cannot oversell and failed finalize transactions leave no partial sale/stock effects.",
+      "Duplicate keys and timeout/restart recovery resolve to one sale and one stock effect.",
+      "Online refund tests cover invalid payload, concurrent requests and provider-success/local-failure recovery using controlled provider I/O.",
+      "Concurrent transfer receive/replay cannot duplicate stock movements.",
+      "Suite runs as a required CI step against migrated isolated PostgreSQL; failures fail CI.",
+      "Fixtures are synthetic, repeatable and bounded; test output includes useful operation/effect counts."
+    ],
+    "boundaries": "Do not use production databases or substitute fake Prisma for the database assertions. Keep large performance/load runs separate from normal PR checks.",
+    "body": "## Problem and evidence\nThe exact-revision successful CI runs fake-Prisma service tests, migrations/seed and a live health check, but does not continuously run real PostgreSQL transaction/concurrency regressions. Historical live QA exists, but later changes can regress stock/idempotency/refund boundaries without failing CI.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #3, #10, #17, #18, #21, #22, #24, #30.\n\n- [.github/workflows/ci.yml#L81](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/.github/workflows/ci.yml#L81)\n- [apps/api/src/sales/sales.service.test.ts](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/sales/sales.service.test.ts)\n- [scripts/verify-mvp.sh](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/scripts/verify-mvp.sh)\n\n## Scope\nAdd a small committed deterministic database integration suite against the isolated CI PostgreSQL service after migrations/seed. Include the repaired refund orchestration.\n\n## Acceptance criteria\n- [ ] Concurrent distinct checkout keys cannot oversell and failed finalize transactions leave no partial sale/stock effects.\n- [ ] Duplicate keys and timeout/restart recovery resolve to one sale and one stock effect.\n- [ ] Online refund tests cover invalid payload, concurrent requests and provider-success/local-failure recovery using controlled provider I/O.\n- [ ] Concurrent transfer receive/replay cannot duplicate stock movements.\n- [ ] Suite runs as a required CI step against migrated isolated PostgreSQL; failures fail CI.\n- [ ] Fixtures are synthetic, repeatable and bounded; test output includes useful operation/effect counts.\n\n## Boundaries\nDo not use production databases or substitute fake Prisma for the database assertions. Keep large performance/load runs separate from normal PR checks.\n\n## Planning\nPriority: P2. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "browserci",
+    "priority": "P2",
+    "label": "enhancement",
+    "title": "test(web): retain and run owner and cashier browser regressions in CI",
+    "related": "#5, #18, #29, #56, #57, #58, #59, #60",
+    "depends": [
+      "shell"
+    ],
+    "problem": "Usability documentation cites browser verification scripts such as qa29-verify.cjs that are absent from this checkout. Current CI has no browser step and the four web tests cover only navigation definitions/money formatting. Rendered role gating, printer metadata and reference search can drift unnoticed.",
+    "sources": [
+      "docs/usability-refinement.md",
+      ".github/workflows/ci.yml",
+      "apps/web/lib/back-office-nav.test.mts"
+    ],
+    "scope": "Commit and run a small reproducible browser suite for the implemented back-office flows, using synthetic sessions/data and the supported application build.",
+    "criteria": [
+      "Owner sees all 15 grouped destinations; cashier sees only permitted routes; active route is accessible.",
+      "Cashier direct /reports shows the owner-only state with zero report requests; owner report/CSV works.",
+      "Populated/empty/error printer states display real non-secret metadata and never imply physical connectivity.",
+      "Cashier has no guaranteed-403 stock-history action; owner history works and stock-read errors use correct copy.",
+      "Reference search reaches the API and respects date range/outlet; clearing restores results.",
+      "Critical flows and keyboard/overflow checks run at 320px and desktop in required CI; scripts/fixtures are committed."
+    ],
+    "boundaries": "Do not weaken API guards or infer physical print success from browser metadata. Preserve web back-office ownership.",
+    "body": "## Problem and evidence\nUsability documentation cites browser verification scripts such as qa29-verify.cjs that are absent from this checkout. Current CI has no browser step and the four web tests cover only navigation definitions/money formatting. Rendered role gating, printer metadata and reference search can drift unnoticed.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #5, #18, #29, #56, #57, #58, #59, #60.\n\n- [docs/usability-refinement.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/usability-refinement.md)\n- [.github/workflows/ci.yml](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/.github/workflows/ci.yml)\n- [apps/web/lib/back-office-nav.test.mts](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/web/lib/back-office-nav.test.mts)\n\n## Scope\nCommit and run a small reproducible browser suite for the implemented back-office flows, using synthetic sessions/data and the supported application build.\n\n## Acceptance criteria\n- [ ] Owner sees all 15 grouped destinations; cashier sees only permitted routes; active route is accessible.\n- [ ] Cashier direct /reports shows the owner-only state with zero report requests; owner report/CSV works.\n- [ ] Populated/empty/error printer states display real non-secret metadata and never imply physical connectivity.\n- [ ] Cashier has no guaranteed-403 stock-history action; owner history works and stock-read errors use correct copy.\n- [ ] Reference search reaches the API and respects date range/outlet; clearing restores results.\n- [ ] Critical flows and keyboard/overflow checks run at 320px and desktop in required CI; scripts/fixtures are committed.\n\n## Boundaries\nDo not weaken API guards or infer physical print success from browser metadata. Preserve web back-office ownership.\n\n## Planning\nPriority: P2. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "docs",
+    "priority": "P2",
+    "label": "documentation",
+    "title": "docs: reconcile implementation status and deferred acceptance evidence",
+    "related": "#1, #2, #3, #15, #18, #22, #25, #28, #29, #30",
+    "depends": [],
+    "problem": "README still describes a planning-only repository. Many closed issue bodies say implementation has not started and retain unchecked criteria although closure comments contain implementation evidence and explicit deferrals. known-limitations.md says LAN/USB are not implemented despite existing adapters, and assigns production rollout to #20, which is tables/split bills. All 35 board items are Done without open acceptance owners.",
+    "sources": [
+      "README.md",
+      "docs/known-limitations.md",
+      "docs/printer-validation.md",
+      "docs/printer-hardware.md"
+    ],
+    "scope": "Refresh current status documents and reconcile closed-ticket evidence without erasing historical implementation or pending external acceptance.",
+    "criteria": [
+      "README accurately describes implemented apps, current commands and staging-versus-production state.",
+      "Reconcile contradictory transport, refund, rollout and source-layout claims across relevant docs.",
+      "Link affected closed tickets to exact PR/commit/check evidence and explicitly separate implemented, verified, deferred and unsupported criteria.",
+      "Deferred criteria link to open acceptance tickets with prerequisites and required evidence.",
+      "Do not mark pending hardware/provider/operator criteria passed or replace historical evidence with unverified claims."
+    ],
+    "boundaries": "Documentation/evidence maintenance only. Preserve useful closure history and keep production authorization separate from acceptance evidence.",
+    "body": "## Problem and evidence\nREADME still describes a planning-only repository. Many closed issue bodies say implementation has not started and retain unchecked criteria although closure comments contain implementation evidence and explicit deferrals. known-limitations.md says LAN/USB are not implemented despite existing adapters, and assigns production rollout to #20, which is tables/split bills. All 35 board items are Done without open acceptance owners.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #1, #2, #3, #15, #18, #22, #25, #28, #29, #30.\n\n- [README.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/README.md)\n- [docs/known-limitations.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/known-limitations.md)\n- [docs/printer-validation.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/printer-validation.md)\n- [docs/printer-hardware.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/printer-hardware.md)\n\n## Scope\nRefresh current status documents and reconcile closed-ticket evidence without erasing historical implementation or pending external acceptance.\n\n## Acceptance criteria\n- [ ] README accurately describes implemented apps, current commands and staging-versus-production state.\n- [ ] Reconcile contradictory transport, refund, rollout and source-layout claims across relevant docs.\n- [ ] Link affected closed tickets to exact PR/commit/check evidence and explicitly separate implemented, verified, deferred and unsupported criteria.\n- [ ] Deferred criteria link to open acceptance tickets with prerequisites and required evidence.\n- [ ] Do not mark pending hardware/provider/operator criteria passed or replace historical evidence with unverified claims.\n\n## Boundaries\nDocumentation/evidence maintenance only. Preserve useful closure history and keep production authorization separate from acceptance evidence.\n\n## Planning\nPriority: P2. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "hardware",
+    "priority": "P1",
+    "label": "enhancement",
+    "title": "qa(android): verify one real printer and kitchen delivery configuration",
+    "related": "#12, #15, #16, #18, #20, #25",
+    "depends": [
+      "kitchen",
+      "offline"
+    ],
+    "problem": "Printer adapters and synthetic/loopback checks exist, but printer-validation.md and printer-hardware.md list no hardware-supported model. Android checkout recovery, printer disconnect and physical paper output remain pending; implementation closure did not complete this acceptance.",
+    "sources": [
+      "docs/printer-validation.md",
+      "docs/printer-hardware.md",
+      "docs/android-build.md"
+    ],
+    "scope": "Select one exact Android device/version and printer model/firmware/transport for the initial supported configuration and execute the physical acceptance checklist.",
+    "criteria": [
+      "Record device, Android version, printer model/firmware, transport, code page, width and supported commands.",
+      "Verify permission denial/regrant, pairing/connect, test output, receipt totals/layout/encoding and reconnection on real hardware.",
+      "Observe physical kitchen ORIGINAL/AMEND/CANCEL tickets with stable references after the station integration fix.",
+      "Exercise mid-write disconnect/process restart; UNKNOWN never silently resends and COPY is visibly marked.",
+      "Exercise app restart/offline recovery and checkout reconnect; reconcile one sale/payment and exact stock effects.",
+      "Attach dated logs and paper/photo evidence; mark only the tested combination supported and leave other combinations pending."
+    ],
+    "boundaries": "Requires access to selected hardware. Mock channels, APK builds and TCP listeners cannot substitute for paper evidence; do not claim all transports verified.",
+    "body": "## Problem and evidence\nPrinter adapters and synthetic/loopback checks exist, but printer-validation.md and printer-hardware.md list no hardware-supported model. Android checkout recovery, printer disconnect and physical paper output remain pending; implementation closure did not complete this acceptance.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #12, #15, #16, #18, #20, #25.\n\n- [docs/printer-validation.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/printer-validation.md)\n- [docs/printer-hardware.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/printer-hardware.md)\n- [docs/android-build.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/android-build.md)\n\n## Scope\nSelect one exact Android device/version and printer model/firmware/transport for the initial supported configuration and execute the physical acceptance checklist.\n\n## Acceptance criteria\n- [ ] Record device, Android version, printer model/firmware, transport, code page, width and supported commands.\n- [ ] Verify permission denial/regrant, pairing/connect, test output, receipt totals/layout/encoding and reconnection on real hardware.\n- [ ] Observe physical kitchen ORIGINAL/AMEND/CANCEL tickets with stable references after the station integration fix.\n- [ ] Exercise mid-write disconnect/process restart; UNKNOWN never silently resends and COPY is visibly marked.\n- [ ] Exercise app restart/offline recovery and checkout reconnect; reconcile one sale/payment and exact stock effects.\n- [ ] Attach dated logs and paper/photo evidence; mark only the tested combination supported and leave other combinations pending.\n\n## Boundaries\nRequires access to selected hardware. Mock channels, APK builds and TCP listeners cannot substitute for paper evidence; do not claim all transports verified.\n\n## Planning\nPriority: P1. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "provider",
+    "priority": "P1",
+    "label": "enhancement",
+    "title": "qa(payments): integrate and verify a selected real provider sandbox",
+    "related": "#22, #18",
+    "depends": [
+      "refund",
+      "config",
+      "dbci"
+    ],
+    "problem": "Payment lifecycle was verified against the in-repo mock sandbox. The generic QRIS adapter has not been certified against a selected provider's actual contract, credentials, webhook delivery or refund/reconciliation semantics. Closure evidence explicitly marks real-provider verification pending.",
+    "sources": [
+      "docs/payments.md",
+      "apps/api/src/payments/qris-payment-provider.service.ts",
+      "docs/known-limitations.md"
+    ],
+    "scope": "Select a provider, confirm its current official API/signature/idempotency contract, adapt the integration as necessary and run the actual provider sandbox lifecycle.",
+    "criteria": [
+      "Record provider/API version, supported methods/currency and required commercial/sandbox prerequisites without exposing secrets.",
+      "Verify payment creation, genuine signed webhook delivery, duplicate/out-of-order/replay rejection and reconnect recovery.",
+      "Verify provider-success/local-failure refund recovery, same-key deduplication and partial/full refund semantics after the refund fix.",
+      "Reconcile provider settlement totals against local payment/reversal records with explained zero unexplained drift.",
+      "Document credential rotation, timeouts, retry/reconciliation ownership and unsupported cases.",
+      "Attach redacted provider transaction/webhook/refund IDs and dated results; unresolved external prerequisites remain pending."
+    ],
+    "boundaries": "Use sandbox credentials/funds only for acceptance. Do not authorize production charges or infer real-provider success from the mock service.",
+    "body": "## Problem and evidence\nPayment lifecycle was verified against the in-repo mock sandbox. The generic QRIS adapter has not been certified against a selected provider's actual contract, credentials, webhook delivery or refund/reconciliation semantics. Closure evidence explicitly marks real-provider verification pending.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #22, #18.\n\n- [docs/payments.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/payments.md)\n- [apps/api/src/payments/qris-payment-provider.service.ts](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/apps/api/src/payments/qris-payment-provider.service.ts)\n- [docs/known-limitations.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/known-limitations.md)\n\n## Scope\nSelect a provider, confirm its current official API/signature/idempotency contract, adapt the integration as necessary and run the actual provider sandbox lifecycle.\n\n## Acceptance criteria\n- [ ] Record provider/API version, supported methods/currency and required commercial/sandbox prerequisites without exposing secrets.\n- [ ] Verify payment creation, genuine signed webhook delivery, duplicate/out-of-order/replay rejection and reconnect recovery.\n- [ ] Verify provider-success/local-failure refund recovery, same-key deduplication and partial/full refund semantics after the refund fix.\n- [ ] Reconcile provider settlement totals against local payment/reversal records with explained zero unexplained drift.\n- [ ] Document credential rotation, timeouts, retry/reconciliation ownership and unsupported cases.\n- [ ] Attach redacted provider transaction/webhook/refund IDs and dated results; unresolved external prerequisites remain pending.\n\n## Boundaries\nUse sandbox credentials/funds only for acceptance. Do not authorize production charges or infer real-provider success from the mock service.\n\n## Planning\nPriority: P1. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "operators",
+    "priority": "P2",
+    "label": "enhancement",
+    "title": "qa(product): validate cashier and owner workflows with representative operators",
+    "related": "#2, #11, #12, #18, #28, #29, #30",
+    "depends": [
+      "kitchen",
+      "offline",
+      "shell",
+      "browserci"
+    ],
+    "problem": "Feedback, usability and performance records explicitly use developer walkthroughs and synthetic data. No representative cashier/owner field observations or production baselines exist, so completed implementation tickets do not establish operator acceptance.",
+    "sources": [
+      "docs/operator-feedback.md",
+      "docs/usability-refinement.md",
+      "docs/performance-reliability.md"
+    ],
+    "scope": "Run a bounded consented pilot with representative cashier and owner roles; collect usability and reliability evidence on the intended device/screen sizes.",
+    "criteria": [
+      "Record participant roles, task scenarios, devices/viewports and observation dates without unnecessary personal/customer data.",
+      "Observe catalog/cart/checkout, uncertain recovery, offline/reconnect, table/split and owner stock/sales/report tasks.",
+      "Measure task completion, checkout time, mistakes, stock discrepancies and support friction using stated definitions.",
+      "Check keyboard, touch targets, large text and accessible states on supported screens.",
+      "Compare observations to the synthetic baseline without labelling synthetic measurements as production service levels.",
+      "Rank follow-up work by impact/effort and obtain a clear acceptance/defer decision with evidence."
+    ],
+    "boundaries": "No feature expansion before observation. Do not fabricate support incidents, real usage or participant feedback. Physical printing acceptance remains a separate prerequisite for release.",
+    "body": "## Problem and evidence\nFeedback, usability and performance records explicitly use developer walkthroughs and synthetic data. No representative cashier/owner field observations or production baselines exist, so completed implementation tickets do not establish operator acceptance.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #2, #11, #12, #18, #28, #29, #30.\n\n- [docs/operator-feedback.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/operator-feedback.md)\n- [docs/usability-refinement.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/usability-refinement.md)\n- [docs/performance-reliability.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/performance-reliability.md)\n\n## Scope\nRun a bounded consented pilot with representative cashier and owner roles; collect usability and reliability evidence on the intended device/screen sizes.\n\n## Acceptance criteria\n- [ ] Record participant roles, task scenarios, devices/viewports and observation dates without unnecessary personal/customer data.\n- [ ] Observe catalog/cart/checkout, uncertain recovery, offline/reconnect, table/split and owner stock/sales/report tasks.\n- [ ] Measure task completion, checkout time, mistakes, stock discrepancies and support friction using stated definitions.\n- [ ] Check keyboard, touch targets, large text and accessible states on supported screens.\n- [ ] Compare observations to the synthetic baseline without labelling synthetic measurements as production service levels.\n- [ ] Rank follow-up work by impact/effort and obtain a clear acceptance/defer decision with evidence.\n\n## Boundaries\nNo feature expansion before observation. Do not fabricate support incidents, real usage or participant feedback. Physical printing acceptance remains a separate prerequisite for release.\n\n## Planning\nPriority: P2. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "operations",
+    "priority": "P1",
+    "label": "enhancement",
+    "title": "ops: validate deployment recovery, off-host backups and operational ownership",
+    "related": "#18, #30",
+    "depends": [
+      "config",
+      "dbci"
+    ],
+    "problem": "The existing staging dry run does not establish production operations. Known limitations include absent automated off-host backup/retention, monitoring/alerting and production TLS/secret management. Logical restore documentation is useful historical evidence, not a current recovery objective.",
+    "sources": [
+      "docs/staging-setup.md",
+      "docs/backup-restore.md",
+      "docs/known-limitations.md"
+    ],
+    "scope": "Prepare and verify the intended deployment configuration and operational runbook using staging/isolated restore targets before any production authorization.",
+    "criteria": [
+      "Document deployment topology, TLS, secrets, migration/rollback approach and named operational ownership.",
+      "Set explicit recovery objectives, schedule off-host backups with retention, and prove an isolated restore with sale/stock/payment reconciliation.",
+      "Configure health/error monitoring and actionable alerts; exercise a controlled failure and record the notification/recovery.",
+      "Verify least-privilege access and redacted logs, and enforce production config checks.",
+      "Runbook covers provider reconciliation and failure recovery, backup restore and release rollback.",
+      "Attach dated environment/version, restore timing and integrity evidence; leave unresolved infrastructure requirements open."
+    ],
+    "boundaries": "Do not deploy to production, move production data or change external infrastructure without the applicable authorization. This ticket prepares and verifies a reviewable release configuration.",
+    "body": "## Problem and evidence\nThe existing staging dry run does not establish production operations. Known limitations include absent automated off-host backup/retention, monitoring/alerting and production TLS/secret management. Logical restore documentation is useful historical evidence, not a current recovery objective.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #18, #30.\n\n- [docs/staging-setup.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/staging-setup.md)\n- [docs/backup-restore.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/backup-restore.md)\n- [docs/known-limitations.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/known-limitations.md)\n\n## Scope\nPrepare and verify the intended deployment configuration and operational runbook using staging/isolated restore targets before any production authorization.\n\n## Acceptance criteria\n- [ ] Document deployment topology, TLS, secrets, migration/rollback approach and named operational ownership.\n- [ ] Set explicit recovery objectives, schedule off-host backups with retention, and prove an isolated restore with sale/stock/payment reconciliation.\n- [ ] Configure health/error monitoring and actionable alerts; exercise a controlled failure and record the notification/recovery.\n- [ ] Verify least-privilege access and redacted logs, and enforce production config checks.\n- [ ] Runbook covers provider reconciliation and failure recovery, backup restore and release rollback.\n- [ ] Attach dated environment/version, restore timing and integrity evidence; leave unresolved infrastructure requirements open.\n\n## Boundaries\nDo not deploy to production, move production data or change external infrastructure without the applicable authorization. This ticket prepares and verifies a reviewable release configuration.\n\n## Planning\nPriority: P1. Source: Project 19 repository audit (2026-11-15).\n"
+  },
+  {
+    "key": "release",
+    "priority": "P1",
+    "label": "enhancement",
+    "title": "qa(release): close audit prerequisites and verify final POS acceptance",
+    "related": "#18 and the 2026-11-15 repository audit",
+    "depends": [
+      "refund",
+      "kitchen",
+      "offline",
+      "config",
+      "shell",
+      "dbci",
+      "browserci",
+      "docs",
+      "hardware",
+      "provider",
+      "operators",
+      "operations"
+    ],
+    "problem": "All original project items were Done while acknowledged external acceptance remained pending. A final closing gate must follow the integrity fixes and explicit device/provider/operator/operations acceptance rather than treating historical green CI as complete operational proof.",
+    "sources": [
+      "docs/known-limitations.md",
+      ".github/workflows/ci.yml",
+      "docs/owner-guide.md"
+    ],
+    "scope": "Run final acceptance on one pinned release candidate only after the linked prerequisites are closed with evidence. Track any explicit scope exclusions and preserve them in the owner handoff.",
+    "criteria": [
+      "Every dependency has passing evidence or an explicit documented release-scope decision; no silent waiver of required hardware/payment support.",
+      "Pin candidate commit, environment, schema/toolchain versions and supported device/printer/provider configuration.",
+      "CI, PostgreSQL integration, browser and physical/provider acceptance results match the candidate or include a justified delta rerun.",
+      "End-to-end sale/payment/stock/report/receipt reconciliation and refund recovery pass across retry, restart and disconnect scenarios.",
+      "Deployment/restore runbooks, limitations and operational ownership are current and reviewable.",
+      "Record final acceptance decision and unresolved risks; production go-live remains a separate explicit authorization."
+    ],
+    "boundaries": "Do not close this gate merely because implementation or CI passes. Do not expand features here; reopen/link actionable failures to prerequisite tickets.",
+    "body": "## Problem and evidence\nAll original project items were Done while acknowledged external acceptance remained pending. A final closing gate must follow the integrity fixes and explicit device/provider/operator/operations acceptance rather than treating historical green CI as complete operational proof.\n\nAudit date: 2026-11-15. Baseline revision: `d4b3ac178ef7fd03078caca70fafd32843abeaca`.\nRelated: #18 and the 2026-11-15 repository audit.\n\n- [docs/known-limitations.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/known-limitations.md)\n- [.github/workflows/ci.yml](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/.github/workflows/ci.yml)\n- [docs/owner-guide.md](https://github.com/arkinara/modern-pos/blob/d4b3ac178ef7fd03078caca70fafd32843abeaca/docs/owner-guide.md)\n\n## Scope\nRun final acceptance on one pinned release candidate only after the linked prerequisites are closed with evidence. Track any explicit scope exclusions and preserve them in the owner handoff.\n\n## Acceptance criteria\n- [ ] Every dependency has passing evidence or an explicit documented release-scope decision; no silent waiver of required hardware/payment support.\n- [ ] Pin candidate commit, environment, schema/toolchain versions and supported device/printer/provider configuration.\n- [ ] CI, PostgreSQL integration, browser and physical/provider acceptance results match the candidate or include a justified delta rerun.\n- [ ] End-to-end sale/payment/stock/report/receipt reconciliation and refund recovery pass across retry, restart and disconnect scenarios.\n- [ ] Deployment/restore runbooks, limitations and operational ownership are current and reviewable.\n- [ ] Record final acceptance decision and unresolved risks; production go-live remains a separate explicit authorization.\n\n## Boundaries\nDo not close this gate merely because implementation or CI passes. Do not expand features here; reopen/link actionable failures to prerequisite tickets.\n\n## Planning\nPriority: P1. Source: Project 19 repository audit (2026-11-15).\n"
+  }
+]
