@@ -330,7 +330,6 @@ export class StationRoutingService {
     const stationById = new Map(stations.map((station) => [station.id, station]));
     const fallback = stations.find((station) => station.isDefault) ?? stations[0];
 
-    const orderReference = sale?.reference ?? `ORDER-${order.id}`;
     const resolved = dto.lines.map((line, index) => {
       const variant = variantById.get(line.variantId);
       if (!variant) {
@@ -350,6 +349,15 @@ export class StationRoutingService {
     if (existing.length > 0) {
       return this.assertReplay(existing, dto, order.id, resolved);
     }
+
+    // An amendment or cancellation must print the same stable reference as the
+    // original ticket even when the sale reference did not exist yet.
+    const priorJob = await this.prisma.stationJob.findFirst({
+      where: { businessId: user.businessId, outletId, orderId: order.id },
+      orderBy: { createdAt: 'asc' },
+      select: { orderReference: true },
+    });
+    const orderReference = priorJob?.orderReference ?? sale?.reference ?? `ORDER-${order.id}`;
 
     const rows = resolved.map(({ line, variant, station, lineIndex }) => ({
       id: randomUUID(),
@@ -427,14 +435,36 @@ export class StationRoutingService {
     if (!job) {
       throw apiError(404, 'NOT_FOUND', 'Station job not found');
     }
-    await this.prisma.stationJob.update({
-      where: { id: jobId },
+    if (dto.state === 'SENDING' && job.state !== 'QUEUED') {
+      throw apiError(
+        409,
+        'JOB_ALREADY_CLAIMED',
+        'Another consumer already claimed this station job',
+      );
+    }
+    // Compare-and-set on the state observed above. Only one concurrent
+    // consumer can move QUEUED -> SENDING; the loser gets a conflict instead of
+    // sending the same ticket twice.
+    const updated = await this.prisma.stationJob.updateMany({
+      where: {
+        id: jobId,
+        businessId: user.businessId,
+        outletId,
+        state: job.state,
+      },
       data: {
         state: dto.state,
         attempts: dto.attempts,
         lastError: dto.lastError ?? null,
       },
     });
+    if (updated.count !== 1) {
+      throw apiError(
+        409,
+        'JOB_STATE_CONFLICT',
+        'The station job changed before this update; refresh and retry',
+      );
+    }
     return this.requireJob(outletId, jobId, user);
   }
 

@@ -33,6 +33,18 @@ class SettingsScreen extends StatelessWidget {
         ),
         Card(
           child: ListTile(
+            leading: const Icon(Icons.soup_kitchen_outlined),
+            title: const Text('Kitchen delivery'),
+            subtitle: const Text(
+              'Claim station tickets and send them to the configured kitchen '
+              'printer. Uncertain tickets require an explicit COPY.',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/station-queue'),
+          ),
+        ),
+        Card(
+          child: ListTile(
             leading: const Icon(Icons.cloud_sync_outlined),
             title: const Text('Offline sales & sync'),
             subtitle: const Text(

@@ -119,3 +119,9 @@ State: `PENDING - requires USB printer + Android device`.
 - Station print, retry, reprint, amendment and cancellation never update
   `sales`, `sale_lines` or `stock_movements`. Reversing money/stock remains the
   separate sale-reversal path (`#17`).
+- Android claims one station job with a compare-and-set `QUEUED -> SENDING`
+  before writing. The flow, UNKNOWN/COPY policy and physical acceptance recipe
+  are in `docs/kitchen-delivery.md`.
+- The physical station ORIGINAL/AMEND/CANCEL observation remains `PENDING -
+  requires Android device + ESC/POS printer`; fake transports cannot replace
+  paper evidence.

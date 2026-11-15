@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'esc_pos_receipt.dart';
+import 'kitchen_ticket.dart';
 import 'printer_models.dart';
 import 'printer_transport.dart';
 import 'printer_transport_factory.dart';
@@ -13,6 +14,8 @@ abstract interface class PrinterAdapter {
   Future<void> testPrint();
 
   Future<void> printReceipt(ReceiptData data);
+
+  Future<void> printKitchenTicket(KitchenTicket ticket);
 
   Future<void> disconnect();
 
@@ -65,6 +68,16 @@ class EscPosPrinterAdapter implements PrinterAdapter {
   Future<void> printReceipt(ReceiptData data) async {
     final config = _requireConfig();
     await _send(builder.build(data, config));
+  }
+
+  @override
+  Future<void> printKitchenTicket(KitchenTicket ticket) async {
+    final config = _requireConfig();
+    final lines = KitchenTicketDocument.build(
+      ticket,
+      config.paperWidth.columns,
+    );
+    await _send(builder.buildLines(lines, config));
   }
 
   @override

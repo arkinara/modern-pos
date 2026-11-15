@@ -362,6 +362,20 @@ function fakePrisma(): { prisma: PrismaService; state: FakeState } {
         Object.assign(row, args.data);
         return row;
       },
+      updateMany: async (args: {
+        where: Record<string, unknown>;
+        data: Record<string, unknown>;
+      }) => {
+        let count = 0;
+        for (const row of state.jobs) {
+          if (!matches(row, args.where)) {
+            continue;
+          }
+          count += 1;
+          Object.assign(row, args.data);
+        }
+        return { count };
+      },
     },
     $transaction: async <T>(callback: (tx: unknown) => Promise<T>): Promise<T> => callback(prisma),
   };
@@ -715,6 +729,72 @@ test('retry refuses a job that is not failed or uncertain', async () => {
     service.retryJob(OUTLET_ID, jobs[0]!.id, owner()),
     (error: unknown) => statusOf(error) === 409,
   );
+});
+
+test('concurrent consumers cannot both claim the same queued station job', async () => {
+  const { prisma, state } = fakePrisma();
+  const service = new StationRoutingService(prisma);
+  await service.createStation(OUTLET_ID, stationWrite({ isDefault: true }), owner());
+  const [job] = await service.createJobs(OUTLET_ID, ORDER_ID, KEY_ONE, jobWrite(), owner());
+
+  const results = await Promise.allSettled([
+    service.updateJobState(OUTLET_ID, job!.id, { state: 'SENDING', attempts: 1 }, owner()),
+    service.updateJobState(OUTLET_ID, job!.id, { state: 'SENDING', attempts: 1 }, owner()),
+  ]);
+
+  const fulfilled = results.filter((result) => result.status === 'fulfilled');
+  const rejected = results.filter((result) => result.status === 'rejected');
+  assert.equal(fulfilled.length, 1);
+  assert.equal(rejected.length, 1);
+  const failure = (rejected[0] as PromiseRejectedResult).reason as unknown;
+  assert.equal(statusOf(failure), 409);
+  assert.equal(state.jobs.length, 1);
+  assert.equal(state.jobs[0]?.state, 'SENDING');
+  assert.equal(state.saleWrites, 0);
+  assert.equal(state.stockWrites, 0);
+});
+
+test('amend and cancel reuse the first ticket reference after the sale exists', async () => {
+  const { prisma, state } = fakePrisma();
+  const service = new StationRoutingService(prisma);
+  await service.createStation(OUTLET_ID, stationWrite({ isDefault: true }), owner());
+
+  state.sale = null;
+  const original = await service.createJobs(
+    OUTLET_ID,
+    ORDER_ID,
+    KEY_ONE,
+    jobWrite({ saleId: undefined }),
+    owner(),
+  );
+  assert.equal(original[0]?.orderReference, `ORDER-${ORDER_ID}`);
+
+  state.sale = {
+    id: SALE_ID,
+    businessId: BUSINESS_ID,
+    outletId: OUTLET_ID,
+    orderId: ORDER_ID,
+    reference: 'SALE-AFTER-OPEN',
+  };
+  const amend = await service.createJobs(
+    OUTLET_ID,
+    ORDER_ID,
+    KEY_TWO,
+    jobWrite({ kind: 'AMEND', lines: [{ variantId: VARIANT_FOOD_ID, quantity: 3 }] }),
+    owner(),
+  );
+  const cancel = await service.createJobs(
+    OUTLET_ID,
+    ORDER_ID,
+    PRINT_KEY,
+    jobWrite({ kind: 'CANCEL', lines: [{ variantId: VARIANT_FOOD_ID, quantity: 1 }] }),
+    owner(),
+  );
+
+  assert.equal(amend[0]?.orderReference, original[0]?.orderReference);
+  assert.equal(cancel[0]?.orderReference, original[0]?.orderReference);
+  assert.equal(state.saleWrites, 0);
+  assert.equal(state.stockWrites, 0);
 });
 
 test('unknown station jobs are rejected without creating a reprint', async () => {
