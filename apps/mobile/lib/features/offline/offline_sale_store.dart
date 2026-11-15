@@ -54,6 +54,10 @@ abstract interface class OfflineSaleStore {
   Future<void> markFailed(String idempotencyKey, String reason);
 
   Future<void> delete(String idempotencyKey);
+
+  /// Removes every queued sale. Used only when the device changes owner or
+  /// loses authorization for the outlet that owned the queue.
+  Future<void> clearAll();
 }
 
 class DriftOfflineSaleStore implements OfflineSaleStore {
@@ -262,6 +266,9 @@ class DriftOfflineSaleStore implements OfflineSaleStore {
       _database.checkoutIntents,
     )..where((table) => table.idempotencyKey.equals(idempotencyKey))).go();
   }
+
+  @override
+  Future<void> clearAll() => _database.delete(_database.checkoutIntents).go();
 
   Future<void> _transition(
     String idempotencyKey,

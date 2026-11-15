@@ -68,6 +68,10 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
+        if (snapshot.fromCache) ...[
+          _CachedSnapshotCard(snapshot: snapshot),
+          const SizedBox(height: 12),
+        ],
         TextField(
           controller: _searchController,
           onChanged: _onSearchChanged,
@@ -280,6 +284,69 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+class _CachedSnapshotCard extends StatelessWidget {
+  const _CachedSnapshotCard({required this.snapshot});
+
+  final CatalogSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final fetchedAt = snapshot.fetchedAt;
+    final age = fetchedAt == null ? 'an unknown time' : _age(fetchedAt);
+    return Card(
+      color: PosColors.warningSoft,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.history, color: PosColors.warning),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Offline menu snapshot',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: PosColors.warning,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Saved $age. Prices, availability and stock may be stale. '
+                    'The server confirms the total at sync; stock is not '
+                    'reserved offline.',
+                    style: const TextStyle(
+                      color: PosColors.warning,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _age(DateTime fetchedAt) {
+    final elapsed = DateTime.now().difference(fetchedAt);
+    if (elapsed.inMinutes < 1) {
+      return 'just now';
+    }
+    if (elapsed.inHours < 1) {
+      return '${elapsed.inMinutes} minute(s) ago';
+    }
+    if (elapsed.inDays < 1) {
+      return '${elapsed.inHours} hour(s) ago';
+    }
+    return '${elapsed.inDays} day(s) ago';
   }
 }
 

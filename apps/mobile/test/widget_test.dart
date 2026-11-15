@@ -6,11 +6,13 @@ import 'package:modern_pos_mobile/app.dart';
 import 'package:modern_pos_mobile/features/auth/auth_controller.dart';
 import 'package:modern_pos_mobile/features/cart/cart_controller.dart';
 import 'package:modern_pos_mobile/features/catalog/catalog_controller.dart';
+import 'package:modern_pos_mobile/features/catalog/catalog_snapshot_store.dart';
 import 'package:modern_pos_mobile/core/providers.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_repository.dart';
 import 'package:modern_pos_mobile/features/payments/payments_gateway.dart';
 
 import 'support/checkout_fakes.dart';
+import 'support/offline_fakes.dart';
 import 'support/payment_fakes.dart';
 import 'support/fakes.dart';
 
@@ -50,6 +52,9 @@ void main() {
             () => FakeAuthController(testSession()),
           ),
           catalogRepositoryProvider.overrideWithValue(catalog),
+          catalogSnapshotStoreProvider.overrideWithValue(
+            InMemoryCatalogSnapshotStore(),
+          ),
           cartRepositoryProvider.overrideWithValue(InMemoryCartRepository()),
           checkoutRepositoryProvider.overrideWithValue(
             InMemoryCheckoutRepository(),
@@ -111,6 +116,9 @@ void main() {
           ),
           catalogRepositoryProvider.overrideWithValue(
             FakeCatalogRepository(testSnapshot()),
+          ),
+          catalogSnapshotStoreProvider.overrideWithValue(
+            InMemoryCatalogSnapshotStore(),
           ),
           cartRepositoryProvider.overrideWithValue(InMemoryCartRepository()),
           checkoutRepositoryProvider.overrideWithValue(
