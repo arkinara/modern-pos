@@ -13,7 +13,7 @@ restart/disconnect evidence remains `PENDING — requires Android device`.
 | Last online authorization older than 12 hours, or no persisted profile | Require sign-in. No offline sales are possible. |
 | New install with no refresh token | Require sign-in. An unauthenticated install cannot sell offline. |
 | Refresh returns `401` (revoked/expired session) | Clear the refresh token, profile and catalog cache; require sign-in. Never extend authorization silently. |
-| Refresh fails with a transient network/5xx error | Schedule bounded automatic retries with exponential backoff (2 s, 4 s, 8 s, 16 s, 32 s, 64 s; six attempts, 5-minute cap). On success the session becomes online again; a `401` during retries follows the revocation rule. |
+| Refresh fails with a transient network/5xx error | Schedule bounded automatic retries with exponential backoff (2 s, 4 s, 8 s, 16 s, 32 s, 64 s; six scheduled retries after the initial restore attempt, 5-minute cap). When the cap is reached, no further attempt is scheduled and the offline session remains until the 12-hour allowance expires or the cashier taps Reconnect (which resets the budget). On success the session becomes online again; a `401` during retries follows the revocation rule. |
 | Offline allowance elapses while retrying | Require sign-in; the queue stays encrypted on the device. |
 | Sign-out | Clear the refresh token, profile and catalog cache. Keep the encrypted queue and its owner scope so the same user can sign back in; a different user clears the queue, cart and cache. |
 
@@ -108,7 +108,7 @@ Not allowed while offline:
 | --- | --- |
 | `offline_session_test.dart` — restart while offline within allowance | AC1: previously authorized restart reaches the scoped cashier UI, queue preserved. |
 | `offline_session_test.dart` — expired authorization and new install | AC3: expired/missing authorization requires sign-in; a new install cannot sell offline. |
-| `offline_session_test.dart` — transient refresh outage retries and recovers online | AC4: bounded retries and reconnect recovery. |
+| `offline_session_test.dart` — transient refresh outage recovers online; capped outage stops retrying | AC4: with every attempt failing, refresh calls equal `maxRetryAttempts` scheduled retries plus the initial restore attempt, no attempt is scheduled after the cap, the capped-out session stays in offline degradation, and a later success reconnects. |
 | `offline_session_test.dart` — `401` refresh | AC4: revocation follows the sign-in policy, no silent extension. |
 | `offline_session_test.dart` — different account | AC5: no cross-user/outlet queue, cart or snapshot leakage. |
 | `offline_session_test.dart` — offline sync refused | AC5: queue is never replayed without a server token. |

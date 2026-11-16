@@ -261,6 +261,58 @@ void main() {
   });
 
   test(
+    'capped refresh retries stop at maxRetryAttempts and stay offline',
+    () async {
+      const policy = AuthRefreshPolicy(
+        baseRetryDelay: Duration(milliseconds: 5),
+        maxRetryDelay: Duration(milliseconds: 20),
+        maxRetryAttempts: 4,
+      );
+      final h = AuthHarness(policy: policy);
+      h.storage.values['pos_refresh_token'] = 'refresh-1';
+      await h.offlineStore.write(
+        OfflineSessionProfile(
+          user: testMobileSession().user,
+          authorizedAt: DateTime.now().subtract(const Duration(minutes: 1)),
+        ),
+      );
+      h.repository.onRefresh = ({
+        required refreshToken,
+        required deviceId,
+      }) async => throw _networkFailure();
+
+      final restored = await h.restore();
+      expect(restored!.offline, isTrue);
+
+      // One refresh from the restore attempt, then exactly maxRetryAttempts
+      // scheduled retries. Every attempt fails, so the cap is the only stop.
+      final expectedCalls = policy.maxRetryAttempts + 1;
+      await _waitFor(() => h.repository.refreshCalls >= expectedCalls);
+      expect(
+        h.repository.refreshCalls,
+        expectedCalls,
+        reason: 'retries must stop at maxRetryAttempts',
+      );
+
+      // No timer fires again after the cap: hold the clock and re-check.
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      expect(
+        h.repository.refreshCalls,
+        expectedCalls,
+        reason: 'no refresh may be scheduled after the retry cap',
+      );
+
+      // The documented capped-out state is offline degradation, not sign-in.
+      final session = h.session;
+      expect(session, isNotNull);
+      expect(session!.offline, isTrue);
+      expect(session.canSyncOnline, isFalse);
+      expect(h.storage.values['pos_refresh_token'], 'refresh-1');
+      expect(h.offlineStore.profile, isNotNull);
+    },
+  );
+
+  test(
     'a different account cannot read the previous owner queue or cache',
     () async {
       final h = AuthHarness();
