@@ -1,0 +1,614 @@
+{
+  "snapshotDate": "2026-11-16",
+  "mainCommit": "c82c32bfc9510cac9b896a1eba16185070a5fd86",
+  "currentMainChecks": [
+    {
+      "conclusion": "success",
+      "databaseId": 43859251371,
+      "headSha": "c82c32bfc9510cac9b896a1eba16185070a5fd86",
+      "status": "completed",
+      "url": "https://github.com/arkinara/modern-pos/actions/runs/43859251371"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 43859251711,
+      "headSha": "c82c32bfc9510cac9b896a1eba16185070a5fd86",
+      "status": "completed",
+      "url": "https://github.com/arkinara/modern-pos/actions/runs/43859251711"
+    }
+  ],
+  "issues": [
+    {
+      "number": 1,
+      "title": "[Phase 1 · M01] Define architecture, domain model, and API contracts",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/1",
+      "implementationPr": null,
+      "commit": "7ba5af549f11a921aa0dbe2b3c1c06255960ec3c",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/1#issuecomment-6704408376",
+          "body": "## Developer handoff — architecture complete\n\nDelivered directly to `main` in commits [7ba5af5](https://github.com/arkinara/modern-pos/commit/7ba5af549f11a921aa0dbe2b3c1c06255960ec3c) and [c12c418](https://github.com/arkinara/modern-pos/commit/c12c418d7d72fd3d4a8d376d673ee9925956062a).\n\nStart with [HANDOFF.md](https://github.com/arkinara/modern-pos/blob/main/HANDOFF.md), then [ARCHITECTURE.md](https://github.com/arkinara/modern-pos/blob/main/ARCHITECTURE.md) and [API.openapi.json](https://github.com/arkinara/modern-pos/blob/main/API.openapi.json). The contract defines 40 operations / 47 schemas. The baseline covers business/outlet isolation, recipe-based menu consumption, immutable sale snapshots, integer money, decimal stock, atomic stock/sale completion, idempotent recovery, reversals and independent printing.\n\n**Next developer:** pick up #3 (scaffolding), then #4, #6 and #7. Preserve the sale/stock transaction boundary; do not deduct stock through an after-sale webhook. Use the same OpenAPI contract for Flutter and Next.js clients. Run `node verify-foundation.cjs` for the supplied structural/script/contrast checks; full API/database/concurrency tests still belong to implementation.\n\nThe design prototype is available at https://arkinara.github.io/modern-pos/prototype.html. #2 remains In QA for owner style approval; backend scaffolding can proceed. No production app, real payment integration or physical printer support is claimed by this design delivery."
+        }
+      ],
+      "pendingAcceptance": [
+        78
+      ],
+      "delivery": "architecture/design baseline delivered",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 2,
+      "title": "[Phase 1 · M02] Create minimalist design system and core flow prototypes",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/2",
+      "implementationPr": null,
+      "commit": "7ba5af549f11a921aa0dbe2b3c1c06255960ec3c",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/2#issuecomment-6704414296",
+          "body": "## Developer handoff — design package ready for owner review\n\nCommitted directly to `main`: [7ba5af5](https://github.com/arkinara/modern-pos/commit/7ba5af549f11a921aa0dbe2b3c1c06255960ec3c), with verification/touch-target refinements in [c12c418](https://github.com/arkinara/modern-pos/commit/c12c418d7d72fd3d4a8d376d673ee9925956062a).\n\n**Review the interactive prototype:** https://arkinara.github.io/modern-pos/prototype.html\n\nThe proposed style uses warm neutral surfaces, a deep teal accent, restrained borders, clear typography and generous touch targets. Explore Menu editing, Stock adjustments, the Flutter cashier/cart, cash/manual checkout, Reports/date/CSV, and simulated printer setup/failure. Review-only selectors expose loading/empty/error/offline states. All data is synthetic and resets on reload.\n\n[DESIGN_SYSTEM.md](https://github.com/arkinara/modern-pos/blob/main/DESIGN_SYSTEM.md) defines tokens, icons, responsive layouts, components, keyboard/focus and error states. [design-tokens.json](https://github.com/arkinara/modern-pos/blob/main/design-tokens.json) is the machine-readable baseline. [HANDOFF.md](https://github.com/arkinara/modern-pos/blob/main/HANDOFF.md) records the implementation order and verification evidence.\n\nVerified the sale→stock→report path, insufficient cash and negative-stock validation, menu edit with historical receipt snapshots, printer failure/recovery, date filtering/CSV export, Ctrl+K/Escape, and all five screen layouts at 320/1024/1440px without horizontal page overflow. Seven core text-contrast pairs pass. This is not a full accessibility audit or native Flutter/device test.\n\n**Status: In QA, left open for owner visual approval.** Please review palette, spacing/density, type, product tiles, navigation and phone layout. Implementation developers should start #3 from the completed architecture #1; hold style-dependent UI work under #5/#11 until owner feedback is resolved. The prototype is a design reference, not production transaction or printer code."
+        },
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/2#issuecomment-6704577865",
+          "body": "## UI/UX Pro Max refinement ready for review\n\nRefined directly on `main`, starting with [97dc9ca](https://github.com/arkinara/modern-pos/commit/97dc9cad95816d5cd33eff1913eac1d46101ce78) and finalized in /arkinara/modern-pos/commit/ad20928ad03c48e1ff2f2e0d86d8688562815d6a.\n\n**Live review:** https://arkinara.github.io/modern-pos/prototype.html\n\nApplied the skill’s minimal/Swiss operational UI guidance while retaining the warm neutral/deep teal palette. Changes include official locally embedded Lucide icons, clearer 15–16px working typography, stronger totals and field boundaries, less repetitive cart actions, a mobile bottom navigation/order-total dock, accessible 200% text reflow, browser Back support, focus retention after quantity changes, and reduced-motion rules. Review controls are now inside a native disclosure.\n\nVerification: all five screens at 320×812, 375×812, 812×375 landscape, 1024×768 and 1440×1000 have no horizontal page overflow. The phone cashier reflows to one column at 200% text. Focus remains on the quantity action; browser Back preserves the cart; a demo Rp80,000 sale from Rp100,000 cash gives Rp20,000 change and updates Reports. Core text contrast checks pass; field/control boundaries measure 3.62:1 on white.\n\n[UX_REFINEMENT.md](https://github.com/arkinara/modern-pos/blob/main/UX_REFINEMENT.md) documents the skill queries, adopted/rejected recommendations and bounded evidence. [DESIGN_SYSTEM.md](https://github.com/arkinara/modern-pos/blob/main/DESIGN_SYSTEM.md), tokens and [HANDOFF.md](https://github.com/arkinara/modern-pos/blob/main/HANDOFF.md) are updated. Run `node verify-foundation.cjs` for reproducible structural/script/contrast checks.\n\nReturned this ticket to **In QA** and left it open for the owner’s visual approval. Native Flutter accessibility/device testing and a full accessibility audit are still implementation work; this is a light-only browser prototype with synthetic data."
+        }
+      ],
+      "pendingAcceptance": [
+        74,
+        76
+      ],
+      "delivery": "architecture/design baseline delivered",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 3,
+      "title": "[Phase 1 · M03] Scaffold Next.js web, Flutter Android app, NestJS API, and PostgreSQL",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/3",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/31",
+      "commit": "70ebf73d6dbf05ebb8b9d926f05ba3dad27318b1",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/3#issuecomment-6710841846",
+          "body": "Merged to main in 70ebf73 via PR #31 after QA_APPROVED (CI green on fefca94, 23 checks)."
+        }
+      ],
+      "pendingAcceptance": [
+        71,
+        74,
+        77
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 4,
+      "title": "[Phase 1 · M04] Implement authentication, owner/cashier roles, and outlet isolation",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/4",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/32",
+      "commit": "029897f4328d393be31c25632875582787c135e9",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        69,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 5,
+      "title": "[Phase 1 · M05] Build responsive back-office shell and business settings",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/5",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/33",
+      "commit": "f45685e176912928580ad7bbc26c404aef180b18",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        72,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 6,
+      "title": "[Phase 1 · M06] Implement menu categories, products, variants, and availability",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/6",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/34",
+      "commit": "26460920947f3983c2cf44a10c508d1a2824859e",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        71,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 7,
+      "title": "[Phase 1 · M07] Implement stock items, units, opening balances, and stock ledger",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/7",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/35",
+      "commit": "fa5ecc0278c6ba5b8c0d928ece5557f69ff5d8af",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        71,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 8,
+      "title": "[Phase 1 · M08] Connect menu variants to stock through direct links and recipes",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/8",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/37",
+      "commit": "b598834e21f8790a053fa6c588a9bc15bb6be8b5",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        71,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 9,
+      "title": "[Phase 1 · M09] Implement sale calculation and payment recording API",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/9",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/36",
+      "commit": "3ddae0f29f2a911e4eea06dfbfc2761eb750f6aa",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        66,
+        71,
+        75
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 10,
+      "title": "[Phase 1 · M10] Deduct stock atomically and exactly once when a sale completes",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/10",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/38",
+      "commit": "cdb3590011b217e63a0ac06f7f619db6f0ece8d5",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        71
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 11,
+      "title": "[Phase 1 · M11] Build cashier app shell, catalog browsing, and cart",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/11",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/39",
+      "commit": "1078ade4775a02f8a3a4f42a9fa8d1962141c095",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        74,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 12,
+      "title": "[Phase 1 · M12] Connect checkout, completion receipt, and uncertain-outcome recovery",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/12",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/42",
+      "commit": "bd5aafce8776cc3ec7fd975cfbae762099148d02",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        74,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 13,
+      "title": "[Phase 1 · M13] Build stock overview, receiving, adjustments, and low-stock states",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/13",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/40",
+      "commit": "60c556bbaa11a9d478e42acdd7c47861548e770d",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        72,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 14,
+      "title": "[Phase 1 · M14] Build sales history, receipt detail, and basic daily reporting",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/14",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/43",
+      "commit": "597b7db59922495e3cb020055c946492c88293e9",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        72,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 15,
+      "title": "[Phase 1 · M15] Validate printer hardware and implement Android receipt connection",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/15",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/41",
+      "commit": "ed29aa8df0feb30acda420d407e5c79c566d389f",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/15#issuecomment-6745765283",
+          "body": "Merged to main in ed29aa8 via PR #41 after QA_APPROVED (32/32 incl. fabrication audit — no invented hardware claims; all physical fields PENDING with reproduction recipes; 33 new printer tests, CI APK built)."
+        }
+      ],
+      "pendingAcceptance": [
+        74
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 16,
+      "title": "[Phase 1 · M16] Implement receipt layout, print queue, retry, and reprints",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/16",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/44",
+      "commit": "db9e0f2e2dc2bfae459adebfa3fa44f070ffda63",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        74
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 17,
+      "title": "[Phase 1 · M17] Implement controlled sale reversal and stock restoration",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/17",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/45",
+      "commit": "6702bcac221a79184e09703544fe2abff159812e",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        66,
+        71,
+        75
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 18,
+      "title": "[Phase 1 · M18] Verify MVP end-to-end, deploy staging, and document ownership",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/18",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/46",
+      "commit": "dff21679bfd7660eb6d74f9dfdf8588b6805f1a9",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        74,
+        75,
+        76,
+        77,
+        78
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 19,
+      "title": "[Phase 2 · C01] Add offline sales and reliable synchronization",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/19",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/47",
+      "commit": "ec87adbc9f3ca8153baf7197bd45e02243cc7596",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        74,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 20,
+      "title": "[Phase 2 · C02] Add tables, open orders, item transfers, and split bills",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/20",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/48",
+      "commit": "f901e2a73d76ae122250fb8311dc19b907e30c67",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 21,
+      "title": "[Phase 2 · C03] Add promotions, advanced modifiers, partial refunds, and approval rules",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/21",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/49",
+      "commit": "9c23737970d70590e8a2d9a96bbe2d8336a44dfc",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        66,
+        71,
+        75
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 22,
+      "title": "[Phase 2 · C04] Integrate QRIS or selected payment provider and reconciliation",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/22",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/50",
+      "commit": "69180a8bf5f9ac89ace3786b3ce5089c1f77dd21",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/22#issuecomment-6834484488",
+          "body": "Merged to main in 69180a8 via PR #50 after QA_FAILED 147/150 (3 findings: missing webhook/reconcile/refund/settlement tests + stale externalRefundPerformed docs) -> fix d4e3590 (12 new tests, docs scoped manual vs provider) -> QA re-run QA_APPROVED 25/25. Fabrication audit clean: no real provider account exists; lifecycle verified against in-repo mock sandbox; real QRIS verification PENDING with recipe."
+        }
+      ],
+      "pendingAcceptance": [
+        66,
+        69,
+        71,
+        75
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 23,
+      "title": "[Phase 2 · C05] Add shifts, cash reconciliation, attendance, and granular roles",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/23",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/51",
+      "commit": "ebcddf4e909a77520ded8b27c233a13d657ced02",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 24,
+      "title": "[Phase 2 · C06] Add suppliers, purchase orders, stock counts, waste, and transfers",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/24",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/52",
+      "commit": "4581c2cc91b88500135b977381f57334ecc9c8b3",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        71,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 25,
+      "title": "[Phase 2 · C07] Add kitchen routing and additional printer transports",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/25",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/53",
+      "commit": "4f78c7243dd2defc95eb0a1534014264790f9396",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        74
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 26,
+      "title": "[Phase 2 · C08] Add multi-outlet management, bookkeeping, and advanced reporting",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/26",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/54",
+      "commit": "74036de6d618469c5c49c2e187a13d802c873905",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 27,
+      "title": "[Phase 2 · C09] Add online ordering, customer records, and digital receipts",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/27",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/55",
+      "commit": "c1f8eedca7734af448ad42ffecfafd838d355f4c",
+      "closureEvidence": [],
+      "pendingAcceptance": [
+        75,
+        76,
+        77
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 28,
+      "title": "[Phase 3 · I01] Collect operator feedback and prioritize measured improvements",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/28",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/61",
+      "commit": "a7d955f6593257fd7213fef7cda68171e1c27271",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/28#issuecomment-6877983899",
+          "body": "Merged to main in a7d955f via PR #61 after QA_APPROVED (24 checks: friction log spot-checked against code, baselines re-run and reproduced — checkout 10x min 123ms/0 errors, stock-count SQL 0, support incidents honest PENDING, ranking derivable, issues #56-#60 created and verified). Non-FAIL finding: Dev added #56-#60 to the project board itself (doc said orchestrator would)."
+        }
+      ],
+      "pendingAcceptance": [
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 29,
+      "title": "[Phase 3 · I02] Refine cashier speed and back-office usability from feedback",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/29",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/62",
+      "commit": "e73a513fb840280ac8e69f544b254b0eb363f1ff",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/29#issuecomment-6879630154",
+          "body": "Merged to main in e73a513 via PR #62 after QA_APPROVED (475/475: all five backlog items #56-#60 implemented and verified against their issue ACs, contract additive 0 removed ops, Playwright + 82 screen-size/accessibility checks, before/after reproduced vs #28 baselines)."
+        }
+      ],
+      "pendingAcceptance": [
+        72,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 30,
+      "title": "[Phase 3 · I03] Improve performance and operational reliability from production evidence",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/30",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/63",
+      "commit": "d4b3ac178ef7fd03078caca70fafd32843abeaca",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/30#issuecomment-6880865235",
+          "body": "Merged to main in d4b3ac1 via PR #63 after QA_APPROVED (14/14: 4 latency targets each traced to a measured baseline, QA-owned load run 40/40 sales 0 errors, real kill-restart recovery, stock mismatch 0, duplicate keys 0, report reconciliation 1891000 hand-checked, 45->45 tests with only the retry bound justified)."
+        }
+      ],
+      "pendingAcceptance": [
+        76,
+        77
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 56,
+      "title": "feat(web): expose every implemented back-office module in primary navigation",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/56",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/62",
+      "commit": "e73a513fb840280ac8e69f544b254b0eb363f1ff",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/56#issuecomment-6879630750",
+          "body": "Implemented by PR #62 (merged in e73a513) under ticket #29; verified by QA 475/475."
+        }
+      ],
+      "pendingAcceptance": [
+        72,
+        76
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 57,
+      "title": "fix(web): hide owner-only Reports from cashiers and fail fast on 403",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/57",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/62",
+      "commit": "e73a513fb840280ac8e69f544b254b0eb363f1ff",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/57#issuecomment-6879631287",
+          "body": "Implemented by PR #62 (merged in e73a513) under ticket #29; verified by QA 475/475."
+        }
+      ],
+      "pendingAcceptance": [
+        72
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 58,
+      "title": "fix(web): show real printer configuration instead of hard-coded 'No printer registered'",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/58",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/62",
+      "commit": "e73a513fb840280ac8e69f544b254b0eb363f1ff",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/58#issuecomment-6879631912",
+          "body": "Implemented by PR #62 (merged in e73a513) under ticket #29; verified by QA 475/475."
+        }
+      ],
+      "pendingAcceptance": [
+        72,
+        74
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 59,
+      "title": "fix(web): remove cashier dead-end on stock movement history and correct 403 copy",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/59",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/62",
+      "commit": "e73a513fb840280ac8e69f544b254b0eb363f1ff",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/59#issuecomment-6879632398",
+          "body": "Implemented by PR #62 (merged in e73a513) under ticket #29; verified by QA 475/475."
+        }
+      ],
+      "pendingAcceptance": [
+        72
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    },
+    {
+      "number": 60,
+      "title": "feat(web): find a sale by reference within a date range",
+      "state": "closed",
+      "url": "https://github.com/arkinara/modern-pos/issues/60",
+      "implementationPr": "https://github.com/arkinara/modern-pos/pull/62",
+      "commit": "e73a513fb840280ac8e69f544b254b0eb363f1ff",
+      "closureEvidence": [
+        {
+          "url": "https://github.com/arkinara/modern-pos/issues/60#issuecomment-6879633082",
+          "body": "Implemented by PR #62 (merged in e73a513) under ticket #29; verified by QA 475/475."
+        }
+      ],
+      "pendingAcceptance": [
+        72
+      ],
+      "delivery": "implementation merged",
+      "verification": "merge/closure references and current-main CI"
+    }
+  ]
+}

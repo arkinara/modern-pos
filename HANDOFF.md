@@ -1,17 +1,17 @@
 # Developer handoff — M01 and M02
 
-Architecture baseline and design review package. No production backend, Flutter app, database or physical printer integration is delivered here.
+Historical M01/M02 architecture and design handoff. Application implementation has since been delivered under `apps/api`, `apps/web` and `apps/mobile`. Current source, verification and acceptance owners are indexed in `docs/implementation-evidence.md`. The original implementation sequence below is retained as design history.
 
 ## Read in this order
 
 1. [TECH_STACK.md](TECH_STACK.md): selected Flutter, Next.js, NestJS, PostgreSQL/Prisma foundation.
 2. [ARCHITECTURE.md](ARCHITECTURE.md): domain, transaction rules, authorization, recovery, deployment and implementation sequence.
-3. [API.openapi.json](API.openapi.json): 40 API operations and 47 schemas, contract version 0.1.0.
+3. [API.openapi.json](API.openapi.json) contains the current shared API contract. Client generation and drift checks are documented in `DEVELOPMENT.md`.
 4. [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) and [design-tokens.json](design-tokens.json): proposed visual/interaction rules.
 5. [prototype.html](prototype.html): interactive browser prototype; open directly as a local file or serve statically. It needs no package installation, backend, build, or external assets.
 6. [VALIDATION.json](VALIDATION.json): structural/API/script/contrast checks and their limits.
 
-## Start the implementation
+## Original implementation sequence
 
 - Pick up **#3** first: scaffold the selected stack, local database, migration/seed tooling, OpenAPI clients and CI. Keep business rules in NestJS, not Next.js/Flutter.
 - Then **#4**, **#6**, **#7**: auth/outlet isolation, catalog, append-only stock ledger. UI work under **#5/#11** should wait for the owner's style feedback on **#2**; backend scaffolding can proceed.
@@ -24,7 +24,7 @@ Architecture baseline and design review package. No production backend, Flutter 
 
 Open the prototype on Menu. Edit a name or price, then adjust stock with a reason. Reports contains a synthetic mobile sale for receipt detail and CSV export; selecting another date shows the empty state. Printers retains simulated configuration/test controls. Use Screen state and Connection controls, and resize to phone/tablet/desktop widths.
 
-The web prototype has no cashier, cart, tender or checkout. These belong exclusively to Flutter under #11/#12. The separate mobile design and remaining web Sales/settings flows are tracked in #2. The warm neutral/terracotta design remains In QA for owner review; #3 scaffolding can proceed independently.
+The web prototype covers back-office design flows. Cashier/cart/tender/checkout live in Flutter under #11/#12. Issue #2 is closed in the 2026-11-16 board snapshot. Current device and operator acceptance are tracked in #74/#76.
 
 ## Prototype boundaries
 

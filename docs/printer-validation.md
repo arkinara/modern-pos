@@ -124,6 +124,6 @@ host. They do not prove printer behaviour.
   (paper out, cover open, buffer full); that requires a model-specific status query.
 - Cut and cash-drawer commands are built but their support is model dependent.
 - Physical queue delivery remains unverified until the hardware checklist is run. Software-only queue states, restart recovery, retry policy, COPY reprints and audit are covered by #16 tests.
-- LAN and USB transports are Phase 2.
+- LAN and USB adapters were delivered in #25. Exact physical support is tracked in #74 and `printer-hardware.md`.
 - The app does not create or manage `printing_*` server records for this adapter; the OpenAPI
   contract was not changed by this ticket.
