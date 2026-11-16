@@ -152,8 +152,10 @@ credentials exist.
 ## Refunds and settlement
 
 An online refund uses the existing `POST .../reversals` correction path. The
-service calls provider `refundPayment` before recording the reversal, then stores
-`externalRefundPerformed = true` and `providerRefundRef` on the same reversal.
+service validates sale state, approval, remaining money/lines and explicit
+restock eligibility in a serializable transaction, then commits a `refund_intents`
+reservation before provider `refundPayment`. It stores `externalRefundPerformed =
+true` and `providerRefundRef` on the completed reversal.
 Cash and manual reversals keep `externalRefundPerformed = false`.
 
 Rules:
@@ -169,6 +171,74 @@ Rules:
   `docs/promotions-refunds.md`.
 - A provider refund failure is surfaced; no reversal row claims a refund that the
   provider rejected.
+
+### Durable refund recovery (#66)
+
+One unresolved refund reserves the entire sale against competing reversal
+requests. This deliberately serializes refunds per sale, including zero-money
+corrections. A different key receives `409 REFUND_IN_PROGRESS` until the existing
+intent is resolved. Completed partial refunds release the reservation, and the
+next refund is checked against the remaining money, line and restock capacity.
+
+The intent binds the normalized request hash, original actor, provider identity,
+payment reference, amount and a stable provider key containing outlet and request
+IDs. A changed payload under the same key receives `409 IDEMPOTENCY_CONFLICT`.
+No database transaction stays open during provider network I/O.
+
+| Intent state | Meaning and recovery |
+| --- | --- |
+| PENDING | Validated reservation committed; provider may not yet have been called. Retry the original request/key. |
+| UNKNOWN | Provider outcome is ambiguous, or recording its success failed. Keep the reservation and retry the original request/key against the provider's idempotency ledger. |
+| SUCCEEDED | Provider success is durable; retry completes the saved plan without another provider call or a fresh approval/recipe decision. |
+| FAILED | Explicit provider refusal is durable; same-key replay returns `REFUND_FAILED`. Review before submitting a new key. |
+| COMPLETED | Reversal, line quantities, payment totals, explicit restock movements and intent completion committed atomically. Replay returns the original reversal. |
+
+Recovery is request-driven through the existing reversal endpoint; there is no
+background refund reconciliation worker in this change. Operators must retain the
+original payload/key and replay it after reconnect or API restart. Do not clear
+UNKNOWN reservations or issue a new key to work around ambiguity. A pending or
+unrecognized provider response is not a successful refund. Provider timeout/error
+responses retain the reservation unless the adapter reports an explicit refund
+refusal. Actual provider idempotency and reconciliation semantics still require
+the selected provider's sandbox acceptance under #75.
+
+### Migration and rollout
+
+The additive migration `20261115160000_durable_refund_intents` adds a table,
+enum, sale foreign key and unique indexes, including one active intent per sale.
+It does not rewrite historical sales, reversals, payments or stock movements.
+Cash/manual and online zero-money corrections keep their existing atomic path.
+
+1. Pause refund ingress and drain in-flight refunds on **all** old API instances.
+2. Apply migrations and generate the Prisma client before starting the new API.
+3. Replace all refund writers with the fixed version, then resume ingress. Do
+   not allow mixed old/new refund writers: old code ignores intent reservations.
+4. Verify the focused unit suite and the isolated PostgreSQL suite below before
+   deployment acceptance. No production deployment is authorized by this record.
+
+Rollback: pause refund ingress first. Reconcile and complete PENDING, UNKNOWN
+and SUCCEEDED intents using this version and the original keys. Preserve all
+intent rows as audit evidence; do not drop the table/enum to downgrade. A
+previous version with the provider-before-validation defect is not a safe refund
+writer. If the API must be rolled back, keep refund ingress disabled until a
+version that honors durable intents is restored. There is no automatic down
+migration or destructive cleanup.
+
+### Developer regression commands
+
+Run unit checks with `pnpm --filter @modern-pos/api test` and API type/build
+checks with `pnpm --filter @modern-pos/api typecheck` and
+`pnpm --filter @modern-pos/api build`.
+
+For database proof, provision an **isolated disposable PostgreSQL 17.6 database**
+whose name ends in `_refund_test`. Set both `DATABASE_URL` and
+`REFUND_TEST_DATABASE_URL` to that same target, run the API `migrate:deploy` and
+`seed` commands, then run `pnpm --filter @modern-pos/api test:refund:integration`.
+The suite uses synthetic seeded owner/outlet/catalog data and creates test
+sales; it does not truncate arbitrary databases. It covers distinct/same-key
+concurrency, remaining refund limits, full refunds, local-failure rollback and
+ambiguous-outcome recovery with controlled provider I/O. Required CI integration
+and broader checkout/transfer coverage remain #71.
 
 `GET /v1/outlets/{outletId}/online-payments/settlements?from=YYYY-MM-DD&to=YYYY-MM-DD`
 returns daily and per-payment captured/refunded/net totals plus:
