@@ -15,7 +15,7 @@
     "migrate:deploy": "prisma migrate deploy",
     "seed": "prisma db seed",
     "format:check": "prettier --check .",
-    "test:db": "tsx --test --test-concurrency=1 src/sales/transactions.integration.ts src/sales/refund-intents.integration.ts"
+    "test:db": "tsx --test --test-concurrency=1 src/sales/transactions.integration.ts src/sales/refund-intents.integration.ts src/payments/lifecycle.integration.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
