@@ -1,0 +1,11 @@
+[Unit]
+Description=Modern POS hourly off-host backup schedule
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=60
+Persistent=true
+Unit=modern-pos-backup.service
+
+[Install]
+WantedBy=timers.target

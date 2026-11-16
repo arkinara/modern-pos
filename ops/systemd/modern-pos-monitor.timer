@@ -1,0 +1,10 @@
+[Unit]
+Description=Modern POS minute health and backup freshness probe
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=60
+Unit=modern-pos-monitor.service
+
+[Install]
+WantedBy=timers.target

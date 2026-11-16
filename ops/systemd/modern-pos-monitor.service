@@ -1,0 +1,21 @@
+[Unit]
+Description=Modern POS health and verified backup freshness monitor
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=pos-ops
+Group=pos-ops
+WorkingDirectory=/opt/modern-pos/current
+EnvironmentFile=/etc/modern-pos/monitor.env
+ExecStart=/usr/bin/node ops/monitor.mjs
+TimeoutStartSec=30
+UMask=0077
+StateDirectory=modern-pos-ops
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
