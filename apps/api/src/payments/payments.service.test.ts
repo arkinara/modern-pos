@@ -28,12 +28,18 @@ const PROVIDER_REF = 'prov_test_1';
 const WEBHOOK_SECRET = 'unit-test-webhook-secret';
 
 const savedEnv = {
+  PAYMENT_SANDBOX_ENABLED: process.env.PAYMENT_SANDBOX_ENABLED,
+  PAYMENT_MODE: process.env.PAYMENT_MODE,
+  NODE_ENV: process.env.NODE_ENV,
   PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER,
   PAYMENT_WEBHOOK_SECRET: process.env.PAYMENT_WEBHOOK_SECRET,
   PAYMENT_WEBHOOK_REPLAY_SECONDS: process.env.PAYMENT_WEBHOOK_REPLAY_SECONDS,
 };
 
 process.env.PAYMENT_PROVIDER = 'mock';
+process.env.PAYMENT_SANDBOX_ENABLED = 'true';
+process.env.PAYMENT_MODE = 'sandbox';
+process.env.NODE_ENV = 'test';
 process.env.PAYMENT_WEBHOOK_SECRET = WEBHOOK_SECRET;
 delete process.env.PAYMENT_WEBHOOK_REPLAY_SECONDS;
 

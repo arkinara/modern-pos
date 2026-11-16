@@ -47,6 +47,7 @@ export ANDROID_SDK_ROOT=/home/ubuntu/android-sdk
 | --- | --- | --- |
 | `DATABASE_URL` | `apps/api/.env` | `postgresql://pos:pos_local_dev@localhost:5432/modern_pos?schema=public` |
 | `PORT` | API process | `4000` |
+| `NODE_ENV` | API process | `development`; use `test` for tests, `production` for hardened deployments |
 | `WEB_ORIGIN` | API CORS allowlist | `http://localhost:3000,http://localhost:3001` |
 | `NEXT_PUBLIC_API_URL` | `apps/web/.env.local` | `http://localhost:4000` |
 | `API_BASE_URL` | Flutter `--dart-define` | `http://10.0.2.2:4000` on the Android emulator |
@@ -59,6 +60,10 @@ export ANDROID_SDK_ROOT=/home/ubuntu/android-sdk
 | `SEED_PASSWORD` | API seed | synthetic demo password only |
 | `CHANNEL_WEBHOOK_SECRET` | API process | local-only HMAC secret for signed web channel orders |
 | `CHANNEL_WEBHOOK_REPLAY_SECONDS` | API process | `300`; replay window for channel deliveries |
+| `PAYMENT_PROVIDER` | API process | `mock` locally; production requires explicit `qris` |
+| `PAYMENT_MODE` | API process | `sandbox` locally; production requires explicit `sandbox` or `live` |
+| `PAYMENT_SANDBOX_ENABLED` | API process | explicit `true` for local/test MOCK only; always disabled in production |
+| `PAYMENT_WEBHOOK_SECRET` | API process | local-only example; production requires a non-placeholder secret of at least 32 characters |
 
 Copy the examples before running locally:
 
@@ -69,6 +74,13 @@ cp apps/web/.env.example apps/web/.env.local
 
 `.env` and `.env.local` are git-ignored. The committed examples contain local-only values and
 no real credentials.
+
+The local example explicitly opts into mock payments. Starting without that
+opt-in fails with a variable-name-only configuration diagnostic; copy the example
+or explicitly configure a non-mock provider. CI sets `PAYMENT_PROVIDER=mock`,
+`PAYMENT_MODE=sandbox` and `PAYMENT_SANDBOX_ENABLED=true` for synthetic tests.
+For shared staging behind TLS, use `NODE_ENV=production` and the production
+checklist in [staging setup](docs/staging-setup.md#production-configuration-gate-69).
 
 Ports: web `3000` by default (`pnpm dev:web`, or `pnpm --filter @modern-pos/web dev:3001` when
 `3000` is busy), API `4000`, PostgreSQL `5432`.
