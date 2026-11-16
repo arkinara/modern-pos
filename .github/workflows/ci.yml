@@ -23,17 +23,18 @@ jobs:
         env:
           POSTGRES_USER: pos
           POSTGRES_PASSWORD: pos_local_dev
-          POSTGRES_DB: modern_pos
+          POSTGRES_DB: modern_pos_ci_transaction_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U pos -d modern_pos"
+          --health-cmd "pg_isready -U pos -d modern_pos_ci_transaction_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://pos:pos_local_dev@localhost:5432/modern_pos?schema=public
+      DATABASE_URL: postgresql://pos:pos_local_dev@localhost:5432/modern_pos_ci_transaction_test?schema=public
+      TRANSACTION_TEST_DATABASE_URL: postgresql://pos:pos_local_dev@localhost:5432/modern_pos_ci_transaction_test?schema=public
       PORT: '4000'
       WEB_ORIGIN: http://localhost:3000,http://localhost:3001
       NEXT_PUBLIC_API_URL: http://localhost:4000
@@ -91,6 +92,10 @@ jobs:
         run: |
           pnpm --filter @modern-pos/api seed
           pnpm --filter @modern-pos/api seed
+
+      - name: PostgreSQL transaction and recovery regressions
+        timeout-minutes: 3
+        run: pnpm --filter @modern-pos/api test:db
 
       - name: API health check
         run: |

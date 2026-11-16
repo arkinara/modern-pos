@@ -3,8 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { after, test } from 'node:test';
 import { HttpException } from '@nestjs/common';
-import { PaymentKind, Prisma, PrismaClient, Role } from '@prisma/client';
-import type { AuthenticatedUser } from '../auth/auth.types';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { PaymentsService } from '../payments/payments.service';
 import { PaymentConfigService } from '../payments/payment-config.service';
 import type { MockPaymentProviderService } from '../payments/mock-payment-provider.service';
@@ -13,27 +12,30 @@ import type { PaymentProviderAdapter } from '../payments/payment-provider.types'
 import type { PrismaService } from '../prisma/prisma.service';
 import { PromotionsService } from '../promotions/promotions.service';
 import { SalesService } from './sales.service';
+import { integrationDatabaseUrl } from '../test-support/integration-database';
+import {
+  actor,
+  businessId,
+  createTrackedFixture,
+  outletId,
+  prepareCheckout,
+} from '../test-support/transaction-fixture';
 
 // Explicit opt-in to a disposable, migrated and seeded database. This suite
 // never cleans/truncates an arbitrary DATABASE_URL or touches production data.
-const url = process.env.REFUND_TEST_DATABASE_URL;
-if (!url || !new URL(url).pathname.endsWith('_refund_test')) {
-  throw new Error('Set REFUND_TEST_DATABASE_URL to a disposable database ending in _refund_test');
-}
+const url = integrationDatabaseUrl();
 const db = new PrismaClient({ datasources: { db: { url } } });
 const prisma = db as PrismaService;
-after(async () => db.$disconnect());
-const outletId = '00000000-0000-4000-8000-000000000002';
-const businessId = '00000000-0000-4000-8000-000000000001';
-const actor: AuthenticatedUser = {
-  id: '00000000-0000-4000-8000-000000000003',
-  businessId,
-  role: Role.OWNER,
-  email: 'owner@example.test',
-  outletId,
-  outletIds: [outletId],
-  sessionId: 'test',
-};
+const fixtureSales: string[] = [];
+let providerEffects = 0;
+after(async () => {
+  const [reversals, intents] = await Promise.all([
+    db.saleReversal.count({ where: { saleId: { in: fixtureSales } } }),
+    db.refundIntent.count({ where: { saleId: { in: fixtureSales } } }),
+  ]);
+  console.log(`Refund effects ${JSON.stringify({ providerEffects, reversals, intents })}`);
+  await db.$disconnect();
+});
 
 function code(error: unknown) {
   return error instanceof HttpException
@@ -68,8 +70,10 @@ async function harness() {
       assert.equal(intent.refundMinor, input.amountMinor);
       effects.entered?.();
       await effects.release;
-      if (!effects.refunds.has(input.idempotencyKey))
+      if (!effects.refunds.has(input.idempotencyKey)) {
         effects.refunds.set(input.idempotencyKey, randomUUID());
+        providerEffects++;
+      }
       if (effects.loseResponse) throw new Error('injected provider response loss');
       return {
         providerRef: effects.refunds.get(input.idempotencyKey)!,
@@ -90,33 +94,11 @@ async function harness() {
     return apply(...args);
   };
   const service = new SalesService(prisma, new PromotionsService(prisma), payments);
-  const deviceId = randomUUID();
-  const order = await service.createOrder(
-    outletId,
-    randomUUID(),
-    {
-      deviceId,
-      lines: [{ variantId: '00000000-0000-4000-8000-000000000042', quantity: 2 }],
-    },
-    actor,
-  );
-  const quote = await service.createQuote(outletId, order.id, { orderVersion: 1 }, actor);
-  const finalized = await service.finalize(
-    outletId,
-    randomUUID(),
-    {
-      deviceId,
-      orderId: order.id,
-      quoteId: quote.id,
-      payment: {
-        kind: PaymentKind.CASH,
-        amountMinor: quote.totals.totalMinor,
-        tenderedMinor: quote.totals.totalMinor,
-      },
-    },
-    actor,
-  );
+  const fixture = await createTrackedFixture(db);
+  const checkout = await prepareCheckout(service, fixture.variantId);
+  const finalized = await service.finalize(outletId, checkout.key, checkout.dto, actor);
   const saleId = finalized.sale.id;
+  fixtureSales.push(saleId);
   await db.paymentRecord.update({
     where: { saleId },
     data: { kind: 'ONLINE', status: 'SUCCEEDED' },
@@ -129,7 +111,7 @@ async function harness() {
       provider: 'MOCK',
       providerRef: randomUUID(),
       status: 'SUCCEEDED',
-      amountMinor: BigInt(quote.totals.totalMinor),
+      amountMinor: BigInt(checkout.dto.payment.amountMinor),
       currency: 'IDR',
       currencyExponent: 0,
     },
@@ -318,4 +300,28 @@ test('PostgreSQL: a full online refund preserves FULL kind and exhausts refundab
   const payment = await db.onlinePayment.findUniqueOrThrow({ where: { saleId: h.saleId } });
   assert.equal(payment.refundedMinor, payment.amountMinor);
   assert.equal(payment.status, 'REFUNDED');
+});
+
+test('PostgreSQL: invalid refund payloads create no intent, reversal or provider effect', async (t) => {
+  const h = await harness();
+  for (const payload of [
+    { ...h.dto, lines: [{ saleLineId: randomUUID(), quantity: 1 }] },
+    { ...h.dto, lines: [{ ...h.dto.lines[0]!, quantity: 3 }] },
+    { ...h.dto, refundMinor: 1000000 },
+    { ...h.dto, restock: [{ stockItemId: randomUUID(), quantity: '1' }] },
+    { ...h.dto, restock: [{ ...h.dto.restock[0]!, quantity: '7' }] },
+  ])
+    await assert.rejects(() => h.reverse(randomUUID(), payload));
+  const intents = await db.refundIntent.count({ where: { saleId: h.saleId } });
+  const reversals = await db.saleReversal.count({ where: { saleId: h.saleId } });
+  assert.equal(intents, 0);
+  assert.equal(reversals, 0);
+  assert.equal(h.effects.calls, 0);
+  assert.equal(
+    (await db.onlinePayment.findUniqueOrThrow({ where: { saleId: h.saleId } })).refundedMinor,
+    0n,
+  );
+  t.diagnostic(
+    JSON.stringify({ invalidRequests: 5, intents, reversals, providerCalls: h.effects.calls }),
+  );
 });
