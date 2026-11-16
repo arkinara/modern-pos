@@ -1,11 +1,33 @@
-import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
-import { PaymentProvider } from '@prisma/client';
+import {
+  Body,
+  type CanActivate,
+  Controller,
+  Get,
+  HttpCode,
+  Injectable,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { apiError } from '../common/api-error';
 import { Public } from '../common/decorators/public.decorator';
 import { SandboxEventDto, SandboxPaymentCreateDto } from './dto/sandbox-event.dto';
 import { MockPaymentProviderService } from './mock-payment-provider.service';
 import { PaymentConfigService } from './payment-config.service';
 
+@Injectable()
+export class SandboxProviderGuard implements CanActivate {
+  constructor(private readonly config: PaymentConfigService) {}
+
+  canActivate(): boolean {
+    if (!this.config.sandboxEnabled) {
+      throw apiError(404, 'NOT_FOUND', 'Sandbox provider endpoints are disabled');
+    }
+    return true;
+  }
+}
+
+@UseGuards(SandboxProviderGuard)
 @Controller('sandbox/provider')
 export class SandboxProviderController {
   constructor(
@@ -14,7 +36,7 @@ export class SandboxProviderController {
   ) {}
 
   private assertEnabled(): void {
-    if (this.config.provider !== PaymentProvider.MOCK) {
+    if (!this.config.sandboxEnabled) {
       throw apiError(404, 'NOT_FOUND', 'Sandbox provider endpoints are disabled');
     }
   }

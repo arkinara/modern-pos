@@ -4,7 +4,7 @@ import { PaymentConfigService } from './payment-config.service';
 import { PaymentWebhookController, PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { QrisPaymentProviderService } from './qris-payment-provider.service';
-import { SandboxProviderController } from './sandbox-provider.controller';
+import { SandboxProviderController, SandboxProviderGuard } from './sandbox-provider.controller';
 
 @Module({
   controllers: [PaymentsController, PaymentWebhookController, SandboxProviderController],
@@ -13,6 +13,7 @@ import { SandboxProviderController } from './sandbox-provider.controller';
     MockPaymentProviderService,
     QrisPaymentProviderService,
     PaymentsService,
+    SandboxProviderGuard,
   ],
   exports: [PaymentsService, PaymentConfigService],
 })
