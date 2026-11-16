@@ -1,3 +1,6 @@
+import 'package:modern_pos_mobile/features/auth/offline_session_store.dart';
+import 'package:modern_pos_mobile/features/catalog/catalog_models.dart';
+import 'package:modern_pos_mobile/features/catalog/catalog_snapshot_store.dart';
 import 'package:modern_pos_mobile/features/offline/offline_crypto.dart';
 import 'package:modern_pos_mobile/features/offline/offline_sale_models.dart';
 import 'package:modern_pos_mobile/features/offline/offline_sale_store.dart';
@@ -160,6 +163,11 @@ class InMemoryOfflineSaleStore implements OfflineSaleStore {
     rows.remove(idempotencyKey);
   }
 
+  @override
+  Future<void> clearAll() async {
+    rows.clear();
+  }
+
   void _set(
     String idempotencyKey, {
     required OfflineSaleState state,
@@ -182,5 +190,71 @@ class InMemoryOfflineSaleStore implements OfflineSaleStore {
       lastError: clearError ? null : (lastError ?? row.lastError),
       saleReference: saleReference ?? row.saleReference,
     );
+  }
+}
+
+class InMemoryOfflineSessionStore implements OfflineSessionStore {
+  OfflineSessionProfile? profile;
+
+  @override
+  Future<OfflineSessionProfile?> read() async => profile;
+
+  @override
+  Future<void> write(OfflineSessionProfile next) async {
+    profile = next;
+  }
+
+  @override
+  Future<void> clear() async {
+    profile = null;
+  }
+}
+
+class InMemoryOfflineQueueScopeStore implements OfflineQueueScopeStore {
+  OfflineQueueScope? scope;
+
+  @override
+  Future<OfflineQueueScope?> read() async => scope;
+
+  @override
+  Future<void> write(OfflineQueueScope next) async {
+    scope = next;
+  }
+
+  @override
+  Future<void> clear() async {
+    scope = null;
+  }
+}
+
+class InMemoryCatalogSnapshotStore implements CatalogSnapshotStore {
+  final Map<String, CachedCatalogSnapshot> rows = {};
+
+  String _key(String userId, String outletId) => '$userId::$outletId';
+
+  @override
+  Future<CachedCatalogSnapshot?> load({
+    required String userId,
+    required String outletId,
+  }) async {
+    return rows[_key(userId, outletId)];
+  }
+
+  @override
+  Future<void> save({
+    required String userId,
+    required String outletId,
+    required CatalogSnapshot snapshot,
+    DateTime? fetchedAt,
+  }) async {
+    rows[_key(userId, outletId)] = CachedCatalogSnapshot(
+      snapshot: snapshot,
+      fetchedAt: fetchedAt ?? DateTime.now(),
+    );
+  }
+
+  @override
+  Future<void> clear() async {
+    rows.clear();
   }
 }

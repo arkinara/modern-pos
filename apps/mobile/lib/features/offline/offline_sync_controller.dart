@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:modern_pos_api_client/api.dart' hide PrintJob;
 
+import '../auth/auth_controller.dart';
 import '../checkout/checkout_gateway.dart';
 import '../checkout/checkout_models.dart';
 import 'offline_sale_models.dart';
@@ -95,8 +96,31 @@ class OfflineSyncController extends AsyncNotifier<OfflineSyncState> {
     }
   }
 
+  /// The queue may be viewed offline for the same authorized owner, but it is
+  /// only replayed after an online refresh has issued a server access token.
+  Future<bool> _canReplay() async {
+    try {
+      final session = await ref.read(authControllerProvider.future);
+      return session?.canSyncOnline ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> syncAll() async {
     if (_running) {
+      return;
+    }
+    if (!await _canReplay()) {
+      final current = state.value ?? await _load();
+      state = AsyncData(
+        current.copyWith(
+          running: false,
+          message:
+              'Reconnect and sign in to sync. Offline sales stay encrypted '
+              'on this device and are never replayed without authorization.',
+        ),
+      );
       return;
     }
     _running = true;
@@ -194,6 +218,9 @@ class OfflineSyncController extends AsyncNotifier<OfflineSyncState> {
   }
 
   Future<OfflineReconciliation?> reconcile({bool silent = false}) async {
+    if (!await _canReplay()) {
+      return null;
+    }
     try {
       final records = await _store.loadAll();
       final synced = records

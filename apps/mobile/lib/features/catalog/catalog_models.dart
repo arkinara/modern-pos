@@ -9,6 +9,8 @@ class CatalogSnapshot {
     required this.menus,
     required this.currency,
     required this.currencyExponent,
+    this.fetchedAt,
+    this.fromCache = false,
   });
 
   final List<Category> categories;
@@ -16,8 +18,34 @@ class CatalogSnapshot {
   final String currency;
   final int currencyExponent;
 
+  /// When the snapshot was read from the API. `null` means this snapshot was
+  /// never persisted (for example a unit-test fixture).
+  final DateTime? fetchedAt;
+
+  /// True when the snapshot came from the encrypted device cache because the
+  /// API was unreachable.
+  final bool fromCache;
+
   MoneyFormat get money =>
       MoneyFormat(currency: currency, currencyExponent: currencyExponent);
+
+  CatalogSnapshot copyWith({
+    List<Category>? categories,
+    List<Menu>? menus,
+    String? currency,
+    int? currencyExponent,
+    DateTime? fetchedAt,
+    bool? fromCache,
+  }) {
+    return CatalogSnapshot(
+      categories: categories ?? this.categories,
+      menus: menus ?? this.menus,
+      currency: currency ?? this.currency,
+      currencyExponent: currencyExponent ?? this.currencyExponent,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      fromCache: fromCache ?? this.fromCache,
+    );
+  }
 
   Menu? menuById(String menuId) {
     for (final menu in menus) {

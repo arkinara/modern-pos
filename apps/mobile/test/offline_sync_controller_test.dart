@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:modern_pos_mobile/features/auth/auth_controller.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_gateway.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_models.dart';
 import 'package:modern_pos_mobile/features/offline/offline_sale_models.dart';
@@ -9,6 +10,7 @@ import 'package:modern_pos_mobile/features/offline/offline_sale_store.dart';
 import 'package:modern_pos_mobile/features/offline/offline_sync_controller.dart';
 
 import 'support/checkout_fakes.dart';
+import 'support/fakes.dart';
 import 'support/offline_fakes.dart';
 
 OfflineSalePayload salePayload({
@@ -50,6 +52,9 @@ class SyncHarness {
     : gateway = gateway ?? FakeCheckoutGateway() {
     container = ProviderContainer(
       overrides: [
+        authControllerProvider.overrideWith(
+          () => FakeAuthController(testSession()),
+        ),
         offlineSaleStoreProvider.overrideWithValue(store),
         checkoutGatewayProvider.overrideWithValue(this.gateway),
       ],

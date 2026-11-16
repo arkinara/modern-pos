@@ -15,6 +15,10 @@ idempotent operations:
 
 No new sync API, operation or schema was added to `API.openapi.json`.
 
+Session authorization, the bounded offline restart allowance and the
+cross-user/outlet queue scope are defined in `docs/offline-session.md` (#68).
+Queue replay always requires a fresh server access token.
+
 ## Storage and encryption
 
 The encrypted queue lives in the existing Drift `checkout_intents` table. The

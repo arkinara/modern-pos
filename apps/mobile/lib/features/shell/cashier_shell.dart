@@ -22,9 +22,16 @@ class CashierShell extends ConsumerWidget {
     final lines = cart.value?.lineCount ?? 0;
     final offlineActive =
         ref.watch(offlineSyncControllerProvider).value?.summary.active ?? 0;
+    final session = ref.watch(authControllerProvider).value;
 
     return Scaffold(
       appBar: AppBar(
+        bottom: session?.offline == true
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(56),
+                child: _OfflineSessionBanner(session: session!),
+              )
+            : null,
         backgroundColor: PosColors.ink,
         foregroundColor: PosColors.surface,
         title: Text(_titles[navigationShell.currentIndex]),
@@ -90,5 +97,52 @@ class CashierShell extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _OfflineSessionBanner extends ConsumerWidget {
+  const _OfflineSessionBanner({required this.session});
+
+  final AuthSession session;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authorizedAt = session.authorizedAt;
+    return Container(
+      width: double.infinity,
+      color: PosColors.warningSoft,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        children: [
+          const Icon(Icons.cloud_off, size: 20, color: PosColors.warning),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Offline mode. Menu and queued sales are from this device'
+              '${authorizedAt == null ? '' : ' (last authorized ${_clock(authorizedAt)})'}. '
+              'Sales are captured locally; reconnect to sync.',
+              style: const TextStyle(
+                color: PosColors.warning,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+            onPressed: () =>
+                ref.read(authControllerProvider.notifier).retryRefreshNow(),
+            child: const Text('Reconnect'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _clock(DateTime value) {
+    final local = value.toLocal();
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }
