@@ -105,6 +105,13 @@ command support, Bluetooth pairing on a device, USB host permission and bulk
 transfer. The app-to-printer path used fake transports, not paper. See
 `docs/kitchen-delivery.md` and `docs/printer-hardware.md`.
 
+#74 records one proposed combination (Samsung Galaxy Tab A9 `SM-X110`,
+Android 14; Star Micronics TSP143IIIBI; Bluetooth Classic SPP; 80 mm; CP437) as
+`SELECTED, NOT YET VERIFIED`. No printer combination is supported yet. The
+executable six-AC runbook, including the physical kitchen ORIGINAL/AMEND/CANCEL
+and UNKNOWN/COPY steps, is `docs/hardware-acceptance.md`; the selection and
+reasoning are in `docs/hardware-selection.md`.
+
 Boundary: cancelling an item prints a `CANCEL` station job but does not reverse
 the sale or restock ingredients. Money and stock reversal remain the explicit
 sale-reversal path (`#17`).
@@ -240,8 +247,9 @@ cover `FAILED` versus `UNCERTAIN` and no automatic resend.
 
 What was not verified: a physical Bluetooth disconnect during a write.
 
-Reproduction: follow steps 10-11 of the device checklist in `docs/android-build.md`
-and record the visible state and paper result.
+Reproduction: run AC4 of `docs/hardware-acceptance.md` on the selected hardware
+and record the visible state, queue JSON and paper result. Steps 10-11 of
+`docs/android-build.md` remain a shorter alternate recipe.
 
 ## Deferred product scope
 
@@ -259,8 +267,8 @@ and record the visible state and paper result.
 | User management UI and password reset | Not implemented | Users are seeded/provisioned outside the app |
 | Partial or line-level refunds | Implemented (#21) | Partial item refunds with independent money-return and restock. Online refunds now call the configured provider adapter (#22); cash and manual reversals keep `externalRefundPerformed = false`. |
 | Payment-provider refunds/voids | Sandbox-verified, real provider PENDING | Online refunds use the same reversal path and the provider adapter; live QRIS verification requires provider credentials/commercial setup. |
-| LAN and USB printer transports | Not implemented | Bluetooth Classic SPP is the only candidate |
-| Hardware-verified Bluetooth result | PENDING | See `docs/printer-validation.md` |
+| LAN and USB printer transports | Implemented (#25), physical output PENDING | Bluetooth Classic SPP is the only #74 candidate; see `docs/printer-hardware.md` |
+| Hardware-verified printer result | PENDING - no supported combination | #74 selection is `SELECTED, NOT YET VERIFIED`; run `docs/hardware-acceptance.md` on the exact hardware |
 | Automated off-host backups and retention | Not implemented | Procedure and dry run exist in `docs/backup-restore.md` |
 | Point-in-time recovery | Not implemented | Logical dump only |
 | Monitoring, alerting, log shipping | Not implemented | Health endpoint exists |
