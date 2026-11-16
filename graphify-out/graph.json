@@ -5,7 +5,8 @@
     "execution_context": "graphify-out/execution-context.json",
     "ast_note": "built_at_commit identifies the historical AST baseline; ticket_execution nodes are evidence overlays, not a full AST rebuild.",
     "ticket_contexts": [
-      "graphify-out/ticket-69-context.json"
+      "graphify-out/ticket-69-context.json",
+      "graphify-out/ticket-71-context.json"
     ]
   },
   "nodes": [
@@ -103734,7 +103735,7 @@
     },
     {
       "id": "ticket_execution_66",
-      "label": "#66: refund execution evidence",
+      "label": "#66: execution evidence",
       "file_type": "documentation",
       "source_file": "graphify-out/ticket-66-execution.md",
       "_origin": "ticket_execution",
@@ -103908,8 +103909,8 @@
     {
       "id": "ticket_execution_69",
       "label": "#69: Production configuration and sandbox gate",
-      "source_file": "graphify-out/ticket-69-execution.md",
       "file_type": "documentation",
+      "source_file": "graphify-out/ticket-69-execution.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "ticket_execution",
@@ -103965,8 +103966,8 @@
     {
       "id": "execution_file_graphify_out_ticket_69_execution_md",
       "label": "ticket-69-execution.md",
-      "source_file": "graphify-out/ticket-69-execution.md",
       "file_type": "evidence",
+      "source_file": "graphify-out/ticket-69-execution.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -103975,8 +103976,8 @@
     {
       "id": "execution_file_apps_api_src_config_runtime_config_ts",
       "label": "runtime-config.ts",
-      "source_file": "apps/api/src/config/runtime-config.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/config/runtime-config.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -103985,8 +103986,8 @@
     {
       "id": "execution_file_apps_api_src_config_runtime_config_test_ts",
       "label": "runtime-config.test.ts",
-      "source_file": "apps/api/src/config/runtime-config.test.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/config/runtime-config.test.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -103995,8 +103996,8 @@
     {
       "id": "execution_file_apps_api_src_main_ts",
       "label": "main.ts",
-      "source_file": "apps/api/src/main.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/main.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104005,8 +104006,8 @@
     {
       "id": "execution_file_apps_api_src_auth_auth_config_ts",
       "label": "auth.config.ts",
-      "source_file": "apps/api/src/auth/auth.config.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/auth/auth.config.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104015,8 +104016,8 @@
     {
       "id": "execution_file_apps_api_src_payments_payment_config_service_ts",
       "label": "payment-config.service.ts",
-      "source_file": "apps/api/src/payments/payment-config.service.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/payments/payment-config.service.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104025,8 +104026,8 @@
     {
       "id": "execution_file_apps_api_src_payments_payment_config_service_test_ts",
       "label": "payment-config.service.test.ts",
-      "source_file": "apps/api/src/payments/payment-config.service.test.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/payments/payment-config.service.test.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104035,8 +104036,8 @@
     {
       "id": "execution_file_apps_api_src_payments_payments_module_ts",
       "label": "payments.module.ts",
-      "source_file": "apps/api/src/payments/payments.module.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/payments/payments.module.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104045,8 +104046,8 @@
     {
       "id": "execution_file_apps_api_src_payments_sandbox_provider_controller_ts",
       "label": "sandbox-provider.controller.ts",
-      "source_file": "apps/api/src/payments/sandbox-provider.controller.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/payments/sandbox-provider.controller.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104055,8 +104056,8 @@
     {
       "id": "execution_file_apps_api_src_payments_sandbox_provider_controller_test_ts",
       "label": "sandbox-provider.controller.test.ts",
-      "source_file": "apps/api/src/payments/sandbox-provider.controller.test.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/payments/sandbox-provider.controller.test.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104065,8 +104066,8 @@
     {
       "id": "execution_file_apps_api__env_example",
       "label": ".env.example",
-      "source_file": "apps/api/.env.example",
       "file_type": "evidence",
+      "source_file": "apps/api/.env.example",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104075,8 +104076,8 @@
     {
       "id": "execution_file__github_workflows_ci_yml",
       "label": "ci.yml",
-      "source_file": ".github/workflows/ci.yml",
       "file_type": "evidence",
+      "source_file": ".github/workflows/ci.yml",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104085,8 +104086,8 @@
     {
       "id": "execution_file_DEVELOPMENT_md",
       "label": "DEVELOPMENT.md",
-      "source_file": "DEVELOPMENT.md",
       "file_type": "evidence",
+      "source_file": "DEVELOPMENT.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104095,8 +104096,8 @@
     {
       "id": "execution_file_docs_staging_setup_md",
       "label": "staging-setup.md",
-      "source_file": "docs/staging-setup.md",
       "file_type": "evidence",
+      "source_file": "docs/staging-setup.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104105,8 +104106,8 @@
     {
       "id": "execution_file_graphify_out_ticket_69_api_unit_txt",
       "label": "ticket-69-api-unit.txt",
-      "source_file": "graphify-out/ticket-69-api-unit.txt",
       "file_type": "evidence",
+      "source_file": "graphify-out/ticket-69-api-unit.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104115,8 +104116,8 @@
     {
       "id": "execution_file_graphify_out_ticket_69_http_txt",
       "label": "ticket-69-http.txt",
-      "source_file": "graphify-out/ticket-69-http.txt",
       "file_type": "evidence",
+      "source_file": "graphify-out/ticket-69-http.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -104125,8 +104126,158 @@
     {
       "id": "execution_file_graphify_out_verify_ticket_69_http_cjs",
       "label": "verify-ticket-69-http.cjs",
-      "source_file": "graphify-out/verify-ticket-69-http.cjs",
       "file_type": "evidence",
+      "source_file": "graphify-out/verify-ticket-69-http.cjs",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "ticket_execution_71",
+      "label": "#71: PostgreSQL transaction and recovery regressions in CI",
+      "file_type": "documentation",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "ticket_execution",
+        "ticket": 71,
+        "title": "PostgreSQL transaction and recovery regressions in CI",
+        "issueUrl": "https://github.com/arkinara/modern-pos/issues/71",
+        "branch": "test/71-postgres-ci",
+        "baseCommit": "589e5aa4e21f923ec373eb17d7a0e1a83926a0e4",
+        "parentPullRequest": "https://github.com/arkinara/modern-pos/pull/79",
+        "date": "2026-11-16",
+        "qaTarget": "In QA",
+        "evidence": "graphify-out/ticket-71-execution.md",
+        "sources": [
+          ".github/workflows/ci.yml",
+          "apps/api/package.json",
+          "apps/api/src/sales/transactions.integration.ts",
+          "apps/api/src/sales/refund-intents.integration.ts",
+          "apps/api/src/test-support/integration-database.ts",
+          "apps/api/src/test-support/integration-database.test.ts",
+          "apps/api/src/test-support/transaction-fixture.ts",
+          "apps/api/src/test-support/checkout-recovery-worker.ts",
+          "docs/database-regressions.md",
+          "graphify-out/ticket-71-api-unit.txt",
+          "graphify-out/ticket-71-postgres.txt"
+        ],
+        "verification": {
+          "node": "22.23.1",
+          "postgresql": "17.6",
+          "unitTests": {
+            "passed": 290,
+            "failed": 0
+          },
+          "databaseTests": {
+            "passedPerRun": 12,
+            "failed": 0,
+            "runsAgainstSameDatabase": 2
+          },
+          "apiTypecheck": "passed",
+          "apiBuild": "passed",
+          "formatting": "passed with Windows line-ending normalization",
+          "remoteCIAtPublication": "pending; see PR checks and issue QA handoff for the final run"
+        },
+        "handoff": "Stacked on #66 / PR #79. Retarget to main after the parent merges and review the resulting CI run."
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_71_execution_md",
+      "label": "ticket-71-execution.md",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_package_json",
+      "label": "package.json",
+      "file_type": "evidence",
+      "source_file": "apps/api/package.json",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_sales_transactions_integration_ts",
+      "label": "transactions.integration.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/sales/transactions.integration.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_test_support_integration_database_ts",
+      "label": "integration-database.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/test-support/integration-database.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_test_support_integration_database_test_ts",
+      "label": "integration-database.test.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/test-support/integration-database.test.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_test_support_transaction_fixture_ts",
+      "label": "transaction-fixture.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/test-support/transaction-fixture.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_test_support_checkout_recovery_worker_ts",
+      "label": "checkout-recovery-worker.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/test-support/checkout-recovery-worker.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_database_regressions_md",
+      "label": "database-regressions.md",
+      "file_type": "evidence",
+      "source_file": "docs/database-regressions.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_71_api_unit_txt",
+      "label": "ticket-71-api-unit.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-71-api-unit.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_71_postgres_txt",
+      "label": "ticket-71-postgres.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-71-postgres.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -279746,8 +279897,8 @@
       "target": "execution_file_graphify_out_ticket_69_execution_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279755,8 +279906,8 @@
       "target": "execution_file_apps_api_src_config_runtime_config_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279764,8 +279915,8 @@
       "target": "execution_file_apps_api_src_config_runtime_config_test_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279773,8 +279924,8 @@
       "target": "execution_file_apps_api_src_main_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279782,8 +279933,8 @@
       "target": "execution_file_apps_api_src_auth_auth_config_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279791,8 +279942,8 @@
       "target": "execution_file_apps_api_src_payments_payment_config_service_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279800,8 +279951,8 @@
       "target": "execution_file_apps_api_src_payments_payment_config_service_test_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279809,8 +279960,8 @@
       "target": "execution_file_apps_api_src_payments_payments_service_test_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279818,8 +279969,8 @@
       "target": "execution_file_apps_api_src_payments_mock_payment_provider_service_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279827,8 +279978,8 @@
       "target": "execution_file_apps_api_src_payments_payments_module_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279836,8 +279987,8 @@
       "target": "execution_file_apps_api_src_payments_sandbox_provider_controller_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279845,8 +279996,8 @@
       "target": "execution_file_apps_api_src_payments_sandbox_provider_controller_test_ts",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279854,8 +280005,8 @@
       "target": "execution_file_apps_api__env_example",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279863,8 +280014,8 @@
       "target": "execution_file__github_workflows_ci_yml",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279872,8 +280023,8 @@
       "target": "execution_file_DEVELOPMENT_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279881,8 +280032,8 @@
       "target": "execution_file_docs_payments_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279890,8 +280041,8 @@
       "target": "execution_file_docs_staging_setup_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279899,8 +280050,8 @@
       "target": "execution_file_graphify_out_ticket_69_api_unit_txt",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279908,8 +280059,8 @@
       "target": "execution_file_graphify_out_ticket_69_http_txt",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279917,8 +280068,116 @@
       "target": "execution_file_graphify_out_verify_ticket_69_http_cjs",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_graphify_out_ticket_71_execution_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file__github_workflows_ci_yml",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_package_json",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_sales_transactions_integration_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_sales_refund_intents_integration_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_test_support_integration_database_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_test_support_integration_database_test_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_test_support_transaction_fixture_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_test_support_checkout_recovery_worker_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_docs_database_regressions_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_graphify_out_ticket_71_api_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_graphify_out_ticket_71_postgres_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     }
   ],
