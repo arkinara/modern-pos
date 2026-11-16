@@ -1,0 +1,72 @@
+{
+  "owner": {
+    "email": "owner@example.test",
+    "password": "modern-pos-demo-password"
+  },
+  "cashier": {
+    "email": "cashier@example.test",
+    "password": "modern-pos-demo-password"
+  },
+  "outletId": "00000000-0000-4000-8000-000000000002",
+  "saleDate": "2026-01-01",
+  "seedSaleReference": "SALE-SEED-MAIN",
+  "unknownReference": "NO-SUCH-REFERENCE",
+  "csvFilename": "sales-main-outlet-2026-01-01-to-2026-01-01.csv",
+  "ownerLabels": [
+    "Menu",
+    "Stock",
+    "Sales",
+    "Promotions",
+    "Online ordering",
+    "Shifts",
+    "Attendance",
+    "Purchasing",
+    "Printers",
+    "Reports",
+    "Bookkeeping",
+    "Customers",
+    "Audit search",
+    "Permissions",
+    "Settings"
+  ],
+  "cashierLabels": [
+    "Menu",
+    "Stock",
+    "Sales",
+    "Promotions",
+    "Online ordering",
+    "Shifts",
+    "Attendance"
+  ],
+  "navGroups": ["Selling", "Operations", "Insights", "Administration"],
+  "routes": [
+    "/menu",
+    "/stock",
+    "/sales",
+    "/promotions",
+    "/ordering",
+    "/shifts",
+    "/attendance",
+    "/purchasing",
+    "/printers",
+    "/reports",
+    "/bookkeeping",
+    "/customers",
+    "/audit",
+    "/permissions",
+    "/settings"
+  ],
+  "widths": [320, 1024],
+  "printer": {
+    "deviceId": "00000000-0000-4000-8000-000000000091",
+    "name": "Browser suite printer",
+    "model": "TM-T82",
+    "transport": "LAN",
+    "paperWidthMm": 80,
+    "encoding": "CP437",
+    "connectionSettings": {
+      "host": "printer.invalid",
+      "secret": "fixture-do-not-render"
+    }
+  }
+}

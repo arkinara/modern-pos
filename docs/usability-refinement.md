@@ -37,11 +37,11 @@ values were measured on this branch.
 
 | Issue | Before | After | Evidence |
 | --- | --- | --- | --- |
-| #56 | Primary sidebar had 6 links: Menu, Stock, Sales, Reports, Printers, Settings. Nine implemented routes were reachable only from secondary links or a known URL. | Owner primary navigation has 15 grouped links covering every implemented route. Cashier navigation has 7 permitted links and no owner-only destination. Every link has a link role and accessible name; the active route has `aria-current="page"`. | `qa29-verify.cjs`: 15/15 owner labels, 4 group labels, 7 cashier labels, accessible names, active route at 320/768/1024/1440. |
-| #57 | Cashier `/reports` issued four `GET /reports/daily` requests, each 403, and stayed loading for about four seconds. | Cashier `/reports` issues **0** report requests and immediately renders "Owner-only reports" / "requires an owner account". The API owner guard is unchanged. The owner report and CSV export still work. | Playwright intercepted `/reports/daily` requests: 0 for a cashier. Owner CSV and figures remain covered by `qa5-verify.cjs`. Message appeared 690 ms after navigation in the final run; repeated dev runs ranged 683-1064 ms, with the cold run above one second because of Next.js development compilation. There is no retry loop. |
-| #58 | The page always rendered a hard-coded `No printer registered`; an owner could not tell which printer was configured. `GET /printers` without `deviceId` returned 400. | Registered printers are listed with name, model, transport, paper width and encoding; connection settings are not returned. An owner may omit `deviceId` and receives the outlet's non-secret printer metadata (`200`). A cashier still needs a device ID. Empty and error states are explicit and retryable. | API on the synthetic database: before `400 VALIDATION_ERROR` (deviceId required); after `200` with the registered printer. Playwright on staging: `Counter printer`, `TM-T82`, `LAN`, `80 mm`, `CP437`, and no `No printer registered` text. |
-| #59 | A cashier saw a History button on every stock card; the request returned 403 and the UI said "This account is not allowed to change outlet settings." | A cashier sees 0 History actions. An owner still sees 21 actions on the staging page and opens the append-only ledger. A forced 403 displays "Only an owner can view stock movement history." | Playwright cashier count = 0, owner count = 21. A routed 403 response produced the new text and no "change outlet settings" text. |
-| #60 | `reference` was not a valid list query; the API answered `400 VALIDATION_ERROR` (`property reference should not exist`). The UI loaded 25 rows per page with no reference filter. | The API accepts a full or partial reference, case-insensitive, scoped to the outlet, caller role and required date range. The UI sends the filter to the API and shows an explicit no-match state; Clear restores the date-filtered list. | Before: 22 visible rows for the date and a rejected `reference` query. After: partial lower-case reference returned 1 matching sale; an unknown reference returned 0; reference without dates returned 400. Playwright confirmed the browser request contained `reference=...`, the table narrowed to one row, and clearing restored more than one row. |
+| #56 | Primary sidebar had 6 links: Menu, Stock, Sales, Reports, Printers, Settings. Nine implemented routes were reachable only from secondary links or a known URL. | Owner primary navigation has 15 grouped links covering every implemented route. Cashier navigation has 7 permitted links and no owner-only destination. Every link has a link role and accessible name; the active route has `aria-current="page"`. | `apps/web/scripts/browser-regressions.cjs`: 15/15 owner labels, 4 group labels, 7 cashier labels, accessible names, active route at 320/768/1024/1440. |
+| #57 | Cashier `/reports` issued four `GET /reports/daily` requests, each 403, and stayed loading for about four seconds. | Cashier `/reports` issues **0** report requests and immediately renders "Owner-only reports" / "requires an owner account". The API owner guard is unchanged. The owner report and CSV export still work. | Playwright intercepted `/reports/daily` requests: 0 for a cashier. Owner CSV and figures remain covered by the same committed browser suite. Message appeared 690 ms after navigation in the final run; repeated dev runs ranged 683-1064 ms, with the cold run above one second because of Next.js development compilation. There is no retry loop. |
+| #58 | The page always rendered a hard-coded `No printer registered`; an owner could not tell which printer was configured. `GET /printers` without `deviceId` returned 400. | Registered printers are listed with name, model, transport, paper width and encoding; connection settings are not returned. An owner may omit `deviceId` and receives the outlet's non-secret printer metadata (`200`). A cashier still needs a device ID. Empty and error states are explicit and retryable. | API on the synthetic database: before `400 VALIDATION_ERROR` (deviceId required); after `200` with the registered printer. Playwright with synthetic fixtures: populated name, model, transport, paper width and encoding, no `No printer registered` text, and no connectivity claim. |
+| #59 | A cashier saw a History button on every stock card; the request returned 403 and the UI said "This account is not allowed to change outlet settings." | A cashier sees 0 History actions. An owner still sees 21 actions on the staging page and opens the append-only ledger. A forced 403 displays "Only an owner can view stock movement history." | Playwright cashier count = 0, owner actions present. A routed 403 response produced the new text and no "change outlet settings" text. |
+| #60 | `reference` was not a valid list query; the API answered `400 VALIDATION_ERROR` (`property reference should not exist`). The UI loaded 25 rows per page with no reference filter. | The API accepts a full or partial reference, case-insensitive, scoped to the outlet, caller role and required date range. The UI sends the filter to the API and shows an explicit no-match state; Clear restores the date-filtered list. | Before: 22 visible rows for the date and a rejected `reference` query. After: partial lower-case reference returned 1 matching sale; an unknown reference returned 0; reference without dates returned 400. Playwright confirmed the browser request contained `reference=...` with outlet and date scope, the unknown-reference empty state, and the restored date-filtered list after clearing. |
 
 ### Reproduction commands used
 
@@ -67,13 +67,13 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
   -H "authorization: Bearer $CASHIER_TOKEN"
 ```
 
-Browser walkthrough:
+Browser walkthrough (committed, CI-enforced):
 
 ```bash
-cd /tmp/qa5-pw
-node qa29-verify.cjs   # 82 checks, ticket #29 improvements
-node qa5-verify.cjs    # 37 checks, existing back-office regression suite
+pnpm --filter @modern-pos/web test:browser
 ```
+
+See `docs/browser-regressions.md` for the database, build and server steps.
 
 ## Accessibility results
 
@@ -82,21 +82,22 @@ testing with a screen reader is still pending.
 
 | Check | Result |
 | --- | --- |
-| Keyboard reachability | Every primary navigation link is in tab order. Tab reached the navigation at 320, 768, 1024 and 1440 px. |
+| Keyboard reachability | Every primary navigation link is in tab order. Tab reached the navigation at 320 and 1024 px. |
 | Visible focus | Navigation focus and the sales-reference input render a 3 px accent outline with 3 px offset. The shared Button component no longer suppresses the global focus-visible outline, so the new Clear/retry controls are visibly focusable too. |
 | Accessible names and roles | All 15 owner navigation links expose one accessible link role and name. The active route uses `aria-current="page"`. Icon-only decoration is `aria-hidden`. |
 | Contrast, measured from computed colors at 320 px | Active navigation 10.35:1; inactive navigation 8.69:1; body text 13.35:1. All exceed 4.5:1. |
 | Touch target | All 15 navigation targets are at least 44 px tall (the links use 48 px minimum). |
-| Horizontal overflow | All 15 routes were checked at 320, 768, 1024 and 1440 px. Document, body and navigation widths stayed within the viewport. A pre-existing 12 px Bookkeeping card overflow at 320 px was fixed with `min-w-0` on the two affected grid cards because #56 now makes that page a primary destination. |
+| Horizontal overflow | All 15 routes were checked at 320 and 1024 px. Document, body and navigation widths stayed within the viewport. A pre-existing 12 px Bookkeeping card overflow at 320 px was fixed with `min-w-0` on the two affected grid cards because #56 now makes that page a primary destination. |
 | Loading, empty and error states | Reports has an explicit owner-only state; printers has loading, empty, error-with-retry and populated states; sales has loading, no-match, error and cleared-filter states; stock keeps its existing loading/error/movement-history states. |
 
 ## Screen-size results
 
-`qa29-verify.cjs` ran 15 routes at 320, 768, 1024 and 1440 px: 60 route/width
-checks, plus four width-specific navigation focus and target-size checks. All 82
-checks passed, including contrast, accessible names, role visibility, printer
-metadata, sale-reference search and the cashier dead-end checks. The existing
-`qa5-verify.cjs` regression suite also passed 37 checks at the same widths.
+`apps/web/scripts/browser-regressions.cjs` ran the 15 routes at 320 and 1024 px,
+plus navigation focus and target-size checks, contrast, accessible names, role
+visibility, printer metadata states, sale-reference search and the cashier
+dead-end checks: 53 checks. The suite prints each passing check and exits
+non-zero on the first regression. `.github/workflows/ci.yml` runs it on every push and pull
+request after the Next.js production build.
 
 ## Real-user status
 
@@ -123,9 +124,9 @@ support-incident baseline remains `PENDING — requires real usage`.
 
 ## Limits
 
-- Playwright ran against the Next.js development server on port 3001 and the
-  staging API on port 4100. Development compilation explains cold-load variance;
-  production timing needs a separate measurement.
+- Playwright runs against the Next.js production build on port 3001 and the
+  seeded API on port 4000 in CI. The older development-server timing capture is
+  historical; production timing is the CI result.
 - The Android app was not changed. Printer discovery, pairing and physical
   printing remain on the device and are still `PENDING — requires printer model
   + Android device`.
