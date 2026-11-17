@@ -1,0 +1,53 @@
+{
+  "ticket": 78,
+  "title": "Pinned release candidate software acceptance and remaining QA gates",
+  "issueUrl": "https://github.com/arkinara/modern-pos/issues/78",
+  "date": "2026-11-17",
+  "branch": "codex/78-release-acceptance",
+  "baseCommit": "aa052c733105525c3dc904c6ea3d7b7b25d64a65",
+  "candidateApplicationSource": "08184e6c9842da52bcd59655cda12d7a3f8a6944",
+  "qaTarget": "In QA",
+  "evidence": "graphify-out/ticket-78-execution.md",
+  "sources": [
+    "docs/release-acceptance-78.md",
+    "graphify-out/ticket-78-verification.json",
+    "graphify-out/ticket-78-unit.txt",
+    "graphify-out/ticket-78-receipt-regression-before.txt",
+    "graphify-out/ticket-78-restore.txt",
+    "graphify-out/ticket-78-runtime-before.txt",
+    "graphify-out/ticket-78-runtime.txt",
+    "apps/api/src/receipts/receipts.service.ts",
+    "apps/api/src/receipts/receipts.service.test.ts",
+    "apps/api/src/sales/transactions.integration.ts",
+    "apps/api/src/sales/refund-intents.integration.ts",
+    "docs/hardware-acceptance.md",
+    "docs/operator-pilot.md",
+    "docs/operations-qa.md",
+    "docs/payment-acceptance.md"
+  ],
+  "verification": {
+    "apiUnitTestsPassed": 319,
+    "webUnitTestsPassed": 4,
+    "operationsUnitTestsPassed": 6,
+    "postgresTestsPassed": 18,
+    "receiptRegressionBefore": {
+      "passed": 4,
+      "failed": 1
+    },
+    "receiptCorrection": "QRIS / Non-cash on newly generated HTML/text receipts",
+    "liveManualHttp": "passed exact money/stock, actual API process restart and checkout replay, report reconciliation, reversal/restock/restart and public receipt checks",
+    "isolatedRestore": "passed ten fingerprints and financial totals; runtime/backup grants and occupied-target refusal",
+    "requiredCiResult": "Recorded against reviewed PR head in #78 handoff comment before handoff",
+    "fullReleaseAcceptance": "pending physical #74 evidence and recorded owner/deployment decisions"
+  },
+  "ownerScopeDecisions": {
+    "payments": "manual recording; automatic provider integration deferred",
+    "operators": "owner will test later under #76",
+    "operations": "#77 execution deferred until deployment preparation"
+  },
+  "acceptanceOwners": [
+    74,
+    76,
+    77
+  ]
+}

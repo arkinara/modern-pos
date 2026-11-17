@@ -26,6 +26,49 @@ function fakePrisma(overrides: Record<string, unknown>): PrismaService {
   return overrides as unknown as PrismaService;
 }
 
+for (const [kind, label] of [
+  ['MANUAL_EXTERNAL', 'QRIS / Non-cash'],
+  ['CASH', 'CASH'],
+  ['ONLINE', 'ONLINE'],
+]) {
+  test(`digital receipt renders the ${kind} payment label in HTML and text`, async () => {
+    const service = new ReceiptsService(
+      fakePrisma({
+        sale: {
+          findFirst: async () => ({
+            id: SALE_ID,
+            reference: 'SALE-RECEIPT-LABEL',
+            currency: 'IDR',
+            currencyExponent: 0,
+            subtotalMinor: 35000n,
+            discountMinor: 0n,
+            serviceMinor: 0n,
+            taxMinor: 0n,
+            totalMinor: 35000n,
+            completedAt: new Date('2026-11-17T00:00:00.000Z'),
+            lines: [],
+            payment: { kind, status: 'RECORDED', amountMinor: 35000n },
+            outlet: { name: 'Main', receiptHeader: '', receiptFooter: '', receiptAddress: '' },
+          }),
+        },
+        customerRetentionPolicy: { findUnique: async () => null },
+        digitalReceipt: {
+          create: async ({ data }: { data: Record<string, unknown> }) => ({
+            id: 'receipt-1',
+            ...data,
+          }),
+        },
+      }),
+    );
+
+    const receipt = await service.createForSale(OUTLET_ID, SALE_ID, {}, owner());
+    assert.ok(receipt.html.includes(`<td>${label}</td>`));
+    assert.ok(receipt.text.includes(`Payment: ${label} RECORDED IDR 35000`));
+    assert.ok(receipt.text.includes('SALE-RECEIPT-LABEL'));
+    assert.ok(receipt.text.includes('Total: IDR 35000'));
+  });
+}
+
 test('an expired or foreign receipt token returns not found', async () => {
   const service = new ReceiptsService(
     fakePrisma({

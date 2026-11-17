@@ -214,8 +214,10 @@ export class ReceiptsService {
           )}</td><td>${escapeHtml(money(line.lineSubtotalMinor))}</td></tr>`,
       )
       .join('');
+    const paymentLabel =
+      sale.payment?.kind === 'MANUAL_EXTERNAL' ? 'QRIS / Non-cash' : sale.payment?.kind;
     const paymentRows = sale.payment
-      ? `<tr><td>Payment</td><td>${escapeHtml(sale.payment.kind)}</td><td>${escapeHtml(
+      ? `<tr><td>Payment</td><td>${escapeHtml(paymentLabel ?? '')}</td><td>${escapeHtml(
           sale.payment.status,
         )}</td><td>${escapeHtml(money(sale.payment.amountMinor))}</td></tr>`
       : '';
@@ -255,7 +257,7 @@ export class ReceiptsService {
       `Tax: ${money(sale.taxMinor)}`,
       `Total: ${money(sale.totalMinor)}`,
       sale.payment
-        ? `Payment: ${sale.payment.kind} ${sale.payment.status} ${money(sale.payment.amountMinor)}`
+        ? `Payment: ${paymentLabel} ${sale.payment.status} ${money(sale.payment.amountMinor)}`
         : 'Payment: none recorded',
       '',
       sale.outlet.receiptFooter,
