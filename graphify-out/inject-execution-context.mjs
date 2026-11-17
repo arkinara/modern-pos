@@ -33,6 +33,7 @@ for (const entry of context.executions) {
   }
 }
 graph.graph.execution_context = 'graphify-out/execution-context.json';
+graph.graph.ticket_contexts = ticketFiles.map((name) => `graphify-out/${name}`).sort();
 graph.graph.ticket_contexts = ticketFiles.map((name) => `graphify-out/${name}`);
 graph.graph.ast_note = 'built_at_commit identifies the historical AST baseline; ticket_execution nodes are evidence overlays, not a full AST rebuild.';
 // Preserve Graphify's float spelling so evidence injection does not rewrite

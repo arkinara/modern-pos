@@ -26,12 +26,18 @@
     "docs/staging-setup.md",
     "graphify-out/ticket-69-api-unit.txt",
     "graphify-out/ticket-69-http.txt",
-    "graphify-out/verify-ticket-69-http.cjs"
+    "graphify-out/verify-ticket-69-http.cjs",
+    "docs/qa-2026-11-17.md",
+    "graphify-out/qa-2026-11-17-unit.txt",
+    "graphify-out/qa-2026-11-17-http.txt"
   ],
   "verification": {
     "node": "22.23.1",
     "pnpm": "9.12.3",
-    "unitTests": { "passed": 302, "failed": 0 },
+    "unitTests": {
+      "passed": 302,
+      "failed": 0
+    },
     "compiledStartupAndHttp": "5 scenarios passed; 20 endpoint assertions",
     "apiTypecheck": "passed",
     "apiBuild": "passed",
@@ -42,5 +48,10 @@
     "HTTP checks use compiled controllers with synthetic provider I/O and no database.",
     "Real provider acceptance is #75; deployment and operations acceptance is #77.",
     "Independent QA remains pending; stop at In QA."
-  ]
+  ],
+  "qaReview": {
+    "date": "2026-11-17",
+    "report": "docs/qa-2026-11-17.md",
+    "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+  }
 }

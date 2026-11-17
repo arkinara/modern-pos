@@ -87,7 +87,7 @@ export async function backup(env = process.env, commands = { postgres: postgresT
     commands.transfer('ssh', [
       ...sshOptions,
       config.target,
-      `mv -- '${remote}.partial' '${remote}' && find '${config.directory}' -maxdepth 1 -type f -name 'modern-pos-*.dump' -mtime +${config.retentionDays} -delete`,
+      `mv -- '${remote}.partial' '${remote}' && find '${config.directory}' -maxdepth 1 -type f -name 'modern-pos-*.dump' -mmin +${config.retentionDays * 24 * 60} -delete`,
     ]);
     const record = {
       completedAt: new Date().toISOString(),

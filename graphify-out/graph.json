@@ -103762,7 +103762,10 @@
           "apps/api/src/sales/refund-intents.integration.ts",
           "docs/payments.md",
           "graphify-out/ticket-66-api-unit.txt",
-          "graphify-out/ticket-66-postgres.txt"
+          "graphify-out/ticket-66-postgres.txt",
+          "docs/qa-2026-11-17.md",
+          "graphify-out/qa-2026-11-17-unit.txt",
+          "graphify-out/qa-2026-11-17-postgres.txt"
         ],
         "verification": {
           "node": "22.23.1",
@@ -103786,7 +103789,12 @@
           "Recovery is request-driven with original key/payload; no background refund worker.",
           "Do not mix legacy refund writers with durable-intent writers.",
           "Independent QA acceptance and required database CI coverage under #71 remain separate."
-        ]
+        ],
+        "qaReview": {
+          "date": "2026-11-17",
+          "report": "docs/qa-2026-11-17.md",
+          "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+        }
       }
     },
     {
@@ -103910,6 +103918,36 @@
       }
     },
     {
+      "id": "execution_file_docs_qa_2026_11_17_md",
+      "label": "qa-2026-11-17.md",
+      "file_type": "evidence",
+      "source_file": "docs/qa-2026-11-17.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_qa_2026_11_17_unit_txt",
+      "label": "qa-2026-11-17-unit.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/qa-2026-11-17-unit.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_qa_2026_11_17_postgres_txt",
+      "label": "qa-2026-11-17-postgres.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/qa-2026-11-17-postgres.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
       "id": "ticket_execution_69",
       "label": "#69: Production configuration and sandbox gate",
       "file_type": "documentation",
@@ -103944,7 +103982,10 @@
           "docs/staging-setup.md",
           "graphify-out/ticket-69-api-unit.txt",
           "graphify-out/ticket-69-http.txt",
-          "graphify-out/verify-ticket-69-http.cjs"
+          "graphify-out/verify-ticket-69-http.cjs",
+          "docs/qa-2026-11-17.md",
+          "graphify-out/qa-2026-11-17-unit.txt",
+          "graphify-out/qa-2026-11-17-http.txt"
         ],
         "verification": {
           "node": "22.23.1",
@@ -103963,7 +104004,12 @@
           "HTTP checks use compiled controllers with synthetic provider I/O and no database.",
           "Real provider acceptance is #75; deployment and operations acceptance is #77.",
           "Independent QA remains pending; stop at In QA."
-        ]
+        ],
+        "qaReview": {
+          "date": "2026-11-17",
+          "report": "docs/qa-2026-11-17.md",
+          "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+        }
       }
     },
     {
@@ -104137,6 +104183,16 @@
       }
     },
     {
+      "id": "execution_file_graphify_out_qa_2026_11_17_http_txt",
+      "label": "qa-2026-11-17-http.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/qa-2026-11-17-http.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
       "id": "ticket_execution_71",
       "label": "#71: PostgreSQL transaction and recovery regressions in CI",
       "file_type": "documentation",
@@ -104164,7 +104220,10 @@
           "apps/api/src/test-support/checkout-recovery-worker.ts",
           "docs/database-regressions.md",
           "graphify-out/ticket-71-api-unit.txt",
-          "graphify-out/ticket-71-postgres.txt"
+          "graphify-out/ticket-71-postgres.txt",
+          "docs/qa-2026-11-17.md",
+          "graphify-out/qa-2026-11-17-unit.txt",
+          "graphify-out/qa-2026-11-17-postgres.txt"
         ],
         "verification": {
           "node": "22.23.1",
@@ -104183,7 +104242,12 @@
           "formatting": "passed with Windows line-ending normalization",
           "remoteCIAtPublication": "pending; see PR checks and issue QA handoff for the final run"
         },
-        "handoff": "Stacked on #66 / PR #79. Retarget to main after the parent merges and review the resulting CI run."
+        "handoff": "Stacked on #66 / PR #79. Retarget to main after the parent merges and review the resulting CI run.",
+        "qaReview": {
+          "date": "2026-11-17",
+          "report": "docs/qa-2026-11-17.md",
+          "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+        }
       }
     },
     {
@@ -104314,7 +104378,10 @@
           "docs/promotions-refunds.md",
           "scripts/verify-implementation-evidence.cjs",
           "graphify-out/ticket-73-doc-checks.txt",
-          "graphify-out/ticket-73-api-unit.txt"
+          "graphify-out/ticket-73-api-unit.txt",
+          "docs/qa-2026-11-17.md",
+          "graphify-out/qa-2026-11-17-unit.txt",
+          "graphify-out/qa-2026-11-17-docs.txt"
         ],
         "verification": {
           "legacyIssues": 35,
@@ -104331,7 +104398,12 @@
           76,
           77,
           78
-        ]
+        ],
+        "qaReview": {
+          "date": "2026-11-17",
+          "report": "docs/qa-2026-11-17.md",
+          "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+        }
       }
     },
     {
@@ -104465,6 +104537,16 @@
       }
     },
     {
+      "id": "execution_file_graphify_out_qa_2026_11_17_docs_txt",
+      "label": "qa-2026-11-17-docs.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/qa-2026-11-17-docs.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
       "id": "ticket_execution_75",
       "label": "#75: Mock-first payment lifecycle QA preparation",
       "file_type": "documentation",
@@ -104490,7 +104572,10 @@
           ".github/workflows/ci.yml",
           "docs/payment-acceptance.md",
           "graphify-out/ticket-75-api-unit.txt",
-          "graphify-out/ticket-75-postgres.txt"
+          "graphify-out/ticket-75-postgres.txt",
+          "docs/qa-2026-11-17.md",
+          "graphify-out/qa-2026-11-17-unit.txt",
+          "graphify-out/qa-2026-11-17-postgres.txt"
         ],
         "verification": {
           "node": "22.23.1",
@@ -104501,7 +104586,12 @@
           "provider": "existing PostgreSQL-backed MOCK",
           "realProviderAcceptance": "pending provider selection, official contract and sandbox access"
         },
-        "handoff": "Review branch combines prerequisites #66, #69 and #71 without merging main. QA may run the mock workflow now and retains the external acceptance checklist on #75."
+        "handoff": "Review branch combines prerequisites #66, #69 and #71 without merging main. QA may run the mock workflow now and retains the external acceptance checklist on #75.",
+        "qaReview": {
+          "date": "2026-11-17",
+          "report": "docs/qa-2026-11-17.md",
+          "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+        }
       }
     },
     {
@@ -104602,7 +104692,11 @@
           "docs/staging-setup.md",
           "graphify-out/ticket-77-unit.txt",
           "graphify-out/ticket-77-ops-unit.txt",
-          "graphify-out/ticket-77-restore.txt"
+          "graphify-out/ticket-77-restore.txt",
+          "docs/qa-2026-11-17.md",
+          "graphify-out/qa-2026-11-17-unit.txt",
+          "graphify-out/qa-2026-11-17-retention.txt",
+          "graphify-out/qa-2026-11-17-restore.txt"
         ],
         "verification": {
           "node": "22.23.1",
@@ -104617,7 +104711,12 @@
           "alerts": "loopback incident, recovery, failed-delivery retry and stale-backup notification passed",
           "externalAcceptance": "pending selected host, off-host copy/retention, real alert channel, error-log routing, TLS, encrypted storage and named operators"
         },
-        "handoff": "Stacked on #75 and the combined prerequisite QA baseline. Operational defaults are proposed for owner review. Infrastructure and provider acceptance criteria remain open for QA."
+        "handoff": "Stacked on #75 and the combined prerequisite QA baseline. Operational defaults are proposed for owner review. Infrastructure and provider acceptance criteria remain open for QA.",
+        "qaReview": {
+          "date": "2026-11-17",
+          "report": "docs/qa-2026-11-17.md",
+          "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+        }
       }
     },
     {
@@ -104825,6 +104924,26 @@
       "label": "ticket-77-restore.txt",
       "file_type": "evidence",
       "source_file": "graphify-out/ticket-77-restore.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_qa_2026_11_17_retention_txt",
+      "label": "qa-2026-11-17-retention.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/qa-2026-11-17-retention.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_qa_2026_11_17_restore_txt",
+      "label": "qa-2026-11-17-restore.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/qa-2026-11-17-restore.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -280440,6 +280559,33 @@
       "weight": 1.0
     },
     {
+      "source": "ticket_execution_66",
+      "target": "execution_file_docs_qa_2026_11_17_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_graphify_out_qa_2026_11_17_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_graphify_out_qa_2026_11_17_postgres_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
       "source": "ticket_execution_69",
       "target": "execution_file_graphify_out_ticket_69_execution_md",
       "relation": "supported_by",
@@ -280620,6 +280766,33 @@
       "weight": 1.0
     },
     {
+      "source": "ticket_execution_69",
+      "target": "execution_file_docs_qa_2026_11_17_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_graphify_out_qa_2026_11_17_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_graphify_out_qa_2026_11_17_http_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
       "source": "ticket_execution_71",
       "target": "execution_file_graphify_out_ticket_71_execution_md",
       "relation": "supported_by",
@@ -280721,6 +280894,33 @@
     {
       "source": "ticket_execution_71",
       "target": "execution_file_graphify_out_ticket_71_postgres_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_docs_qa_2026_11_17_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_graphify_out_qa_2026_11_17_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_graphify_out_qa_2026_11_17_postgres_txt",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
       "source_file": "graphify-out/ticket-71-execution.md",
@@ -280845,6 +281045,33 @@
       "weight": 1.0
     },
     {
+      "source": "ticket_execution_73",
+      "target": "execution_file_docs_qa_2026_11_17_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_graphify_out_qa_2026_11_17_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_graphify_out_qa_2026_11_17_docs_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
       "source": "ticket_execution_75",
       "target": "execution_file_graphify_out_ticket_75_execution_md",
       "relation": "supported_by",
@@ -280937,6 +281164,33 @@
     {
       "source": "ticket_execution_75",
       "target": "execution_file_graphify_out_ticket_75_postgres_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_docs_qa_2026_11_17_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_graphify_out_qa_2026_11_17_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_graphify_out_qa_2026_11_17_postgres_txt",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
       "source_file": "graphify-out/ticket-75-execution.md",
@@ -281144,6 +281398,42 @@
     {
       "source": "ticket_execution_77",
       "target": "execution_file_graphify_out_ticket_77_restore_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-77-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_77",
+      "target": "execution_file_docs_qa_2026_11_17_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-77-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_77",
+      "target": "execution_file_graphify_out_qa_2026_11_17_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-77-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_77",
+      "target": "execution_file_graphify_out_qa_2026_11_17_retention_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-77-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_77",
+      "target": "execution_file_graphify_out_qa_2026_11_17_restore_txt",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
       "source_file": "graphify-out/ticket-77-execution.md",

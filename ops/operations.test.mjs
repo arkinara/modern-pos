@@ -95,7 +95,7 @@ test('backup publishes success and retention only after remote checksum verifica
     const record = await backup(env, commands);
     assert.equal(record.sha256, digest);
     assert.equal(calls.length, 3);
-    assert.ok(calls.at(-1).args.at(-1).includes('-mtime +14 -delete'));
+    assert.ok(calls.at(-1).args.at(-1).includes('-mmin +20160 -delete'));
     await assert.rejects(() => readFile(local), { code: 'ENOENT' });
     const previous = await readFile(marker, 'utf8');
     checksum = 'bad-checksum';
