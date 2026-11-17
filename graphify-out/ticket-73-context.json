@@ -1,0 +1,20 @@
+{
+  "ticket": 73,
+  "title": "Implementation status and deferred acceptance evidence",
+  "issueUrl": "https://github.com/arkinara/modern-pos/issues/73",
+  "branch": "docs/73-evidence-reconciliation",
+  "baseCommit": "c82c32bfc9510cac9b896a1eba16185070a5fd86",
+  "date": "2026-11-16",
+  "qaTarget": "In QA",
+  "evidence": "graphify-out/ticket-73-execution.md",
+  "sources": [
+    "README.md", "ARCHITECTURE.md", "HANDOFF.md",
+    "docs/implementation-evidence.md", "docs/implementation-evidence.json",
+    "docs/known-limitations.md", "docs/printer-validation.md",
+    "docs/sale-reversal.md", "docs/promotions-refunds.md",
+    "scripts/verify-implementation-evidence.cjs",
+    "graphify-out/ticket-73-doc-checks.txt", "graphify-out/ticket-73-api-unit.txt"
+  ],
+  "verification": { "legacyIssues": 35, "localLinks": 22, "documentationChecks": "passed", "apiUnitTests": { "passed": 282, "failed": 0 } },
+  "acceptanceOwners": [74, 75, 76, 77, 78]
+}

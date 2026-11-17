@@ -197,8 +197,9 @@ decision). A rejected over-threshold request still writes an `APPROVAL` row with
   integer minor units.
 - Promotion deletion is not supported; deactivate a promotion instead so the
   historical snapshot remains meaningful.
-- No external payment-provider refund, no automatic restock, and no multiple
-  concurrent full reversals are supported.
+- Provider-linked refunds were added in #22, with durable orchestration in QA under #66
+  and actual provider acceptance in #75. Restock requires an explicit selection, and
+  the application guards concurrent full reversals.
 
 ## Verification notes
 
