@@ -386,7 +386,7 @@ class EscPosReceiptBuilder {
   Uint8List build(
     ReceiptData data,
     PrinterConfig config, {
-    bool cut = true,
+    bool? cut,
     bool openCashDrawer = false,
   }) {
     final writer = _EscPosWriter(
@@ -406,7 +406,7 @@ class EscPosReceiptBuilder {
     if (openCashDrawer) {
       writer.cashDrawer();
     }
-    if (cut) {
+    if (cut ?? config.automaticCutter) {
       writer.cut();
     }
     return writer.toBytes();
@@ -417,7 +417,7 @@ class EscPosReceiptBuilder {
   Uint8List buildLines(
     List<ReceiptDocumentLine> lines,
     PrinterConfig config, {
-    bool cut = true,
+    bool? cut,
   }) {
     final writer = _EscPosWriter(
       columns: config.paperWidth.columns,
@@ -433,7 +433,7 @@ class EscPosReceiptBuilder {
     writer.alignment(ReceiptLineAlignment.left);
     writer.bold(false);
     writer.feed(2);
-    if (cut) {
+    if (cut ?? config.automaticCutter) {
       writer.cut();
     }
     return writer.toBytes();
@@ -443,7 +443,7 @@ class EscPosReceiptBuilder {
   Uint8List buildTestReceipt(
     PrinterConfig config, {
     String? issuedAtLabel,
-    bool cut = true,
+    bool? cut,
     bool openCashDrawer = false,
   }) {
     return build(

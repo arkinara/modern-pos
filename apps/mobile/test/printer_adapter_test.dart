@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:modern_pos_mobile/features/printing/esc_pos_receipt.dart';
+import 'package:modern_pos_mobile/features/printing/kitchen_ticket.dart';
 import 'package:modern_pos_mobile/features/printing/printer_adapter.dart';
 import 'package:modern_pos_mobile/features/printing/printer_models.dart';
 
@@ -43,6 +44,52 @@ void main() {
     expect(adapter.isConnected, isFalse);
     expect(transport.disconnectCount, 1);
   });
+
+  for (final enabled in [false, true]) {
+    test('all print actions honour automatic cutter set to $enabled', () async {
+      final transport = FakePrinterTransport();
+      final adapter = EscPosPrinterAdapter(transport: transport);
+      await adapter.connect(
+        testPrinterConfig().copyWith(automaticCutter: enabled),
+      );
+      final ending = enabled
+          ? const [0x1D, 0x56, 0x42, 0x00]
+          : const [0x1B, 0x64, 0x02];
+      await adapter.testPrint();
+      expect(
+        transport.lastBytes!.sublist(
+          transport.lastBytes!.length - ending.length,
+        ),
+        ending,
+      );
+      await adapter.printReceipt(data);
+      expect(
+        transport.lastBytes!.sublist(
+          transport.lastBytes!.length - ending.length,
+        ),
+        ending,
+      );
+      await adapter.printKitchenTicket(
+        const KitchenTicket(
+          jobId: 'job-1',
+          stationName: 'Kitchen',
+          orderReference: 'ORDER-1',
+          kind: KitchenTicketKind.original,
+          itemName: 'Tea',
+          variantName: 'Regular',
+          quantity: 1,
+          modifiers: [],
+        ),
+      );
+      expect(
+        transport.lastBytes!.sublist(
+          transport.lastBytes!.length - ending.length,
+        ),
+        ending,
+      );
+      await adapter.disconnect();
+    });
+  }
 
   test('rejects a test print before the connection is open', () async {
     final adapter = EscPosPrinterAdapter(transport: FakePrinterTransport());

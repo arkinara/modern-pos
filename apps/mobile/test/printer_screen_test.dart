@@ -19,6 +19,61 @@ Future<void> _reveal(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
+  testWidgets('automatic cutter defaults off and saves both choices', (
+    tester,
+  ) async {
+    final store = InMemoryPrinterConfigStore();
+    Future<void> mount() async {
+      await tester.pumpWidget(
+        ProviderScope(
+          key: UniqueKey(),
+          overrides: [
+            printerTransportFactoryProvider.overrideWithValue(
+              FakePrinterTransportFactory(FakePrinterTransport()),
+            ),
+            printerPermissionServiceProvider.overrideWithValue(
+              FakePrinterPermissions(),
+            ),
+            printerConfigStoreProvider.overrideWithValue(store),
+          ],
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: const PrinterScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await mount();
+    await tester.enterText(
+      find.byType(TextFormField).last,
+      'AA:BB:CC:DD:EE:FF',
+    );
+    await _reveal(tester, find.text('Automatic cutter'));
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isFalse,
+    );
+    await tester.tap(find.text('Automatic cutter'));
+    await _reveal(tester, find.text('Save configuration'));
+    await tester.tap(find.text('Save configuration'));
+    await tester.pumpAndSettle();
+    expect(store.config!.automaticCutter, isTrue);
+
+    await mount();
+    await _reveal(tester, find.text('Automatic cutter'));
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isTrue,
+    );
+    await tester.tap(find.text('Automatic cutter'));
+    await _reveal(tester, find.text('Save configuration'));
+    await tester.tap(find.text('Save configuration'));
+    await tester.pumpAndSettle();
+    expect(store.config!.automaticCutter, isFalse);
+  });
+
   testWidgets('guides first-run setup, then connects and test prints', (
     tester,
   ) async {

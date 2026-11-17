@@ -25,6 +25,7 @@ class _PrinterScreenState extends ConsumerState<PrinterScreen> {
   PrinterTransportType _transport = PrinterTransportType.bluetoothClassic;
   PaperWidth _paperWidth = PaperWidth.mm58;
   PrinterEncoding _encoding = PrinterEncoding.cp437;
+  bool _automaticCutter = false;
   bool _seeded = false;
 
   @override
@@ -45,6 +46,7 @@ class _PrinterScreenState extends ConsumerState<PrinterScreen> {
     _transport = config.transport;
     _paperWidth = config.paperWidth;
     _encoding = config.encoding;
+    _automaticCutter = config.automaticCutter;
     _deviceNameController.text = config.connection.name;
     _addressController.text = config.connection.address;
   }
@@ -224,6 +226,18 @@ class _PrinterScreenState extends ConsumerState<PrinterScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Automatic cutter'),
+                subtitle: const Text('Enable if this printer can cut paper.'),
+                value: _automaticCutter,
+                onChanged: state.busy
+                    ? null
+                    : (value) {
+                        setState(() => _automaticCutter = value);
+                      },
+              ),
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: state.busy ? null : () => _save(state),
@@ -381,6 +395,7 @@ class _PrinterScreenState extends ConsumerState<PrinterScreen> {
       ),
       paperWidth: _paperWidth,
       encoding: _encoding,
+      automaticCutter: _automaticCutter,
     );
     ref.read(printerControllerProvider.notifier).saveConfig(config);
   }
