@@ -10,1939 +10,1945 @@ TAP version 13
 # Subtest: sign-in returns an access token, refresh token and owner outlet scope
 ok 1 - sign-in returns an access token, refresh token and owner outlet scope
   ---
-  duration_ms: 2.2348
+  duration_ms: 9.185
   type: 'test'
   ...
 # Subtest: wrong password and unknown users fail with the same 401 and count toward the limiter
 ok 2 - wrong password and unknown users fail with the same 401 and count toward the limiter
   ---
-  duration_ms: 1.0563
+  duration_ms: 5.4447
   type: 'test'
   ...
 # Subtest: refresh rotates the session and sign-out revokes the current session
 ok 3 - refresh rotates the session and sign-out revokes the current session
   ---
-  duration_ms: 0.4217
+  duration_ms: 0.5289
   type: 'test'
   ...
 # Subtest: revoking all sessions supports password and role changes
 ok 4 - revoking all sessions supports password and role changes
   ---
-  duration_ms: 0.1683
+  duration_ms: 0.2078
   type: 'test'
   ...
-# [Nest] 45360  - 17/11/2026, 13.05.22    WARN [PasswordService] Rejected malformed password hash: pchstr must contain a $ as first char
+# [Nest] 16176  - 17/11/2026, 13.52.42    WARN [PasswordService] Rejected malformed password hash: pchstr must contain a $ as first char
 # Subtest: passwords use Argon2id and verify only the original value
 ok 5 - passwords use Argon2id and verify only the original value
   ---
-  duration_ms: 182.0682
+  duration_ms: 166.632
   type: 'test'
   ...
 # Subtest: malformed and empty password hashes fail closed
 ok 6 - malformed and empty password hashes fail closed
   ---
-  duration_ms: 57.2803
+  duration_ms: 75.5931
   type: 'test'
   ...
 # Subtest: refresh rotation is single-use and replay revokes the whole family
 ok 7 - refresh rotation is single-use and replay revokes the whole family
   ---
-  duration_ms: 2.8442
+  duration_ms: 2.2127
   type: 'test'
   ...
 # Subtest: expired refresh sessions are rejected and revoked
 ok 8 - expired refresh sessions are rejected and revoked
   ---
-  duration_ms: 0.6026
+  duration_ms: 0.3467
   type: 'test'
   ...
 # Subtest: web refresh requires the matching CSRF token
 ok 9 - web refresh requires the matching CSRF token
   ---
-  duration_ms: 0.5735
+  duration_ms: 0.3777
   type: 'test'
   ...
 # Subtest: mobile refresh sessions are bound to their device
 ok 10 - mobile refresh sessions are bound to their device
   ---
-  duration_ms: 0.3131
+  duration_ms: 0.2165
   type: 'test'
   ...
 # Subtest: password or role changes can revoke every user session
 ok 11 - password or role changes can revoke every user session
   ---
-  duration_ms: 0.476
+  duration_ms: 0.3496
   type: 'test'
   ...
 # Subtest: sign-in rate limiter blocks after the configured number of failures
 ok 12 - sign-in rate limiter blocks after the configured number of failures
   ---
-  duration_ms: 1.1397
+  duration_ms: 1.2283
   type: 'test'
   ...
 # Subtest: a successful sign-in resets the limiter
 ok 13 - a successful sign-in resets the limiter
   ---
-  duration_ms: 0.2061
+  duration_ms: 0.2584
   type: 'test'
   ...
 # Subtest: opaque tokens are random and hashed deterministically
 ok 14 - opaque tokens are random and hashed deterministically
   ---
-  duration_ms: 2.1505
+  duration_ms: 1.3632
   type: 'test'
   ...
 # Subtest: session ids are UUID v4 values
 ok 15 - session ids are UUID v4 values
   ---
-  duration_ms: 0.6193
+  duration_ms: 0.5025
   type: 'test'
   ...
 # Subtest: profit stays unavailable until costing and expense categories are defined
 ok 16 - profit stays unavailable until costing and expense categories are defined
   ---
-  duration_ms: 8.451
+  duration_ms: 3.938
   type: 'test'
   ...
 # Subtest: moving average COGS and margin reconcile to the documented formula
 ok 17 - moving average COGS and margin reconcile to the documented formula
   ---
-  duration_ms: 4.8712
+  duration_ms: 3.4841
   type: 'test'
   ...
 # Subtest: changing the costing method changes COGS predictably
 ok 18 - changing the costing method changes COGS predictably
   ---
-  duration_ms: 3.5532
+  duration_ms: 1.3848
   type: 'test'
   ...
 # Subtest: consolidated totals equal the sum of per-outlet reports
 ok 19 - consolidated totals equal the sum of per-outlet reports
   ---
-  duration_ms: 3.5668
+  duration_ms: 4.066
   type: 'test'
   ...
 # Subtest: consolidated with no outlets returns zeroes instead of dividing by zero
 ok 20 - consolidated with no outlets returns zeroes instead of dividing by zero
   ---
-  duration_ms: 1.0646
+  duration_ms: 0.4752
   type: 'test'
   ...
 # Subtest: a cashier-scoped outlet lookup is rejected before reading bookkeeping rows
 ok 21 - a cashier-scoped outlet lookup is rejected before reading bookkeeping rows
   ---
-  duration_ms: 1.1153
+  duration_ms: 0.9006
   type: 'test'
   ...
 # Subtest: CSV builder quotes commas, quotes, newlines and formula prefixes
 ok 22 - CSV builder quotes commas, quotes, newlines and formula prefixes
   ---
-  duration_ms: 0.4343
+  duration_ms: 0.4054
   type: 'test'
   ...
 # Subtest: receipt value converts supplier packs to base units without floats
 ok 23 - receipt value converts supplier packs to base units without floats
   ---
-  duration_ms: 1.7736
+  duration_ms: 1.4743
   type: 'test'
   ...
 # Subtest: moving average weights receipt values by quantity
 ok 24 - moving average weights receipt values by quantity
   ---
-  duration_ms: 0.4691
+  duration_ms: 0.3795
   type: 'test'
   ...
 # Subtest: last purchase changes the unit cost predictably
 ok 25 - last purchase changes the unit cost predictably
   ---
-  duration_ms: 0.2787
+  duration_ms: 0.2355
   type: 'test'
   ...
 # Subtest: cost and margin use integer half-up arithmetic
 ok 26 - cost and margin use integer half-up arithmetic
   ---
-  duration_ms: 0.1889
+  duration_ms: 0.1541
   type: 'test'
   ...
 # Subtest: catalog reads are cashier-allowed and writes are owner-only
 ok 27 - catalog reads are cashier-allowed and writes are owner-only
   ---
-  duration_ms: 1.3899
+  duration_ms: 1.4806
   type: 'test'
   ...
 # Subtest: cross-tenant outlet access returns 404 before any catalog read
 ok 28 - cross-tenant outlet access returns 404 before any catalog read
   ---
-  duration_ms: 0.803
+  duration_ms: 0.8465
   type: 'test'
   ...
 # Subtest: category creation is business-scoped and reports the contract shape
 ok 29 - category creation is business-scoped and reports the contract shape
   ---
-  duration_ms: 0.2434
+  duration_ms: 0.6042
   type: 'test'
   ...
 # Subtest: owner menu listing includes archived records; cashier listing stays saleable
 ok 30 - owner menu listing includes archived records; cashier listing stays saleable
   ---
-  duration_ms: 0.5115
+  duration_ms: 0.716
   type: 'test'
   ...
 # Subtest: empty menu search returns an empty page rather than an error
 ok 31 - empty menu search returns an empty page rather than an error
   ---
-  duration_ms: 0.31
+  duration_ms: 0.4257
   type: 'test'
   ...
 # Subtest: create menu rejects an unknown category before writing
 ok 32 - create menu rejects an unknown category before writing
   ---
-  duration_ms: 0.3728
+  duration_ms: 0.5652
   type: 'test'
   ...
 # Subtest: create menu writes variants and outlet menu links then returns the record
 ok 33 - create menu writes variants and outlet menu links then returns the record
   ---
-  duration_ms: 0.5074
+  duration_ms: 0.6908
   type: 'test'
   ...
 # Subtest: update menu rejects a stale revision without writing
 ok 34 - update menu rejects a stale revision without writing
   ---
-  duration_ms: 0.3394
+  duration_ms: 0.4806
   type: 'test'
   ...
 # Subtest: update menu increments revision and returns the refreshed record
 ok 35 - update menu increments revision and returns the refreshed record
   ---
-  duration_ms: 0.4565
+  duration_ms: 0.634
   type: 'test'
   ...
 # Subtest: archive rejects a stale revision without writing
 ok 36 - archive rejects a stale revision without writing
   ---
-  duration_ms: 0.6225
+  duration_ms: 0.9769
   type: 'test'
   ...
 # Subtest: archive is a soft write that preserves the row
 ok 37 - archive is a soft write that preserves the row
   ---
-  duration_ms: 0.2905
+  duration_ms: 0.4709
   type: 'test'
   ...
 # Subtest: variant update rejects a stale revision without writing
 ok 38 - variant update rejects a stale revision without writing
   ---
-  duration_ms: 0.3703
+  duration_ms: 0.7116
   type: 'test'
   ...
 # Subtest: variant update keeps a stable id and maps enabled, policy and price
 ok 39 - variant update keeps a stable id and maps enabled, policy and price
   ---
-  duration_ms: 0.3024
+  duration_ms: 0.322
   type: 'test'
   ...
 # Subtest: variant update requires the variant to be linked to the requested outlet
 ok 40 - variant update requires the variant to be linked to the requested outlet
   ---
-  duration_ms: 0.176
+  duration_ms: 0.2013
   type: 'test'
   ...
 # Subtest: category names are trimmed by the DTO layer and validated by the controller
 ok 41 - category names are trimmed by the DTO layer and validated by the controller
   ---
-  duration_ms: 0.0534
+  duration_ms: 0.0588
   type: 'test'
   ...
 # Subtest: tracked menu availability is the floor of each ingredient balance per sale unit
 ok 42 - tracked menu availability is the floor of each ingredient balance per sale unit
   ---
-  duration_ms: 0.887
+  duration_ms: 1.1974
   type: 'test'
   ...
 # Subtest: tracked menu availability uses the latest recipe version and never floats
 ok 43 - tracked menu availability uses the latest recipe version and never floats
   ---
-  duration_ms: 0.2755
+  duration_ms: 0.405
   type: 'test'
   ...
 # Subtest: a tracked variant with no published recipe reports zero availability
 ok 44 - a tracked variant with no published recipe reports zero availability
   ---
-  duration_ms: 0.1594
+  duration_ms: 0.2229
   type: 'test'
   ...
 # Subtest: production unexpected-error logs omit secrets, raw exceptions and untrusted request identifiers
 ok 45 - production unexpected-error logs omit secrets, raw exceptions and untrusted request identifiers
   ---
-  duration_ms: 2.148
+  duration_ms: 2.2545
   type: 'test'
   ...
 # Subtest: cashier cannot cross into another outlet
 ok 46 - cashier cannot cross into another outlet
   ---
-  duration_ms: 1.4753
+  duration_ms: 1.6142
   type: 'test'
   ...
 # Subtest: owner is limited to outlets in its business and cross-tenant IDs leak nothing
 ok 47 - owner is limited to outlets in its business and cross-tenant IDs leak nothing
   ---
-  duration_ms: 0.2744
+  duration_ms: 0.5654
   type: 'test'
   ...
 # Subtest: routes without an outlet parameter are unaffected
 ok 48 - routes without an outlet parameter are unaffected
   ---
-  duration_ms: 0.1535
+  duration_ms: 0.2147
   type: 'test'
   ...
 # Subtest: permission matrix is the single source for owner and cashier access
 ok 49 - permission matrix is the single source for owner and cashier access
   ---
-  duration_ms: 0.8931
+  duration_ms: 1.0926
   type: 'test'
   ...
 # Subtest: cashier is denied an owner-only permission with a stable code
 ok 50 - cashier is denied an owner-only permission with a stable code
   ---
-  duration_ms: 0.9792
+  duration_ms: 0.7999
   type: 'test'
   ...
 # Subtest: owner passes and unmarked routes are unaffected
 ok 51 - owner passes and unmarked routes are unaffected
   ---
-  duration_ms: 0.2696
+  duration_ms: 0.1884
   type: 'test'
   ...
 # Subtest: all listed permissions must be held
 ok 52 - all listed permissions must be held
   ---
-  duration_ms: 0.3696
+  duration_ms: 0.2296
   type: 'test'
   ...
 # Subtest: cashier is denied on an owner-only route
 ok 53 - cashier is denied on an owner-only route
   ---
-  duration_ms: 1.3926
+  duration_ms: 1.1865
   type: 'test'
   ...
 # Subtest: owner and role-free routes are allowed
 ok 54 - owner and role-free routes are allowed
   ---
-  duration_ms: 0.3193
+  duration_ms: 0.2058
   type: 'test'
   ...
 # Modern POS API listening on http://localhost:4000
 # Subtest: production accepts explicit HTTPS origins, secure cookies and non-mock payment mode
 ok 55 - production accepts explicit HTTPS origins, secure cookies and non-mock payment mode
   ---
-  duration_ms: 2.3956
+  duration_ms: 4.1012
   type: 'test'
   ...
 # Subtest: manual recording production starts without provider credentials and retains auth safeguards
 ok 56 - manual recording production starts without provider credentials and retains auth safeguards
   ---
-  duration_ms: 0.5284
+  duration_ms: 0.5122
   type: 'test'
   ...
 # Subtest: production rejects missing JWT_SECRET before constructing Nest or opening a listener
 ok 57 - production rejects missing JWT_SECRET before constructing Nest or opening a listener
   ---
-  duration_ms: 0.6435
+  duration_ms: 0.6332
   type: 'test'
   ...
 # Subtest: production rejects missing COOKIE_SECURE before constructing Nest or opening a listener
 ok 58 - production rejects missing COOKIE_SECURE before constructing Nest or opening a listener
   ---
-  duration_ms: 0.4531
+  duration_ms: 0.465
   type: 'test'
   ...
 # Subtest: production rejects missing WEB_ORIGIN before constructing Nest or opening a listener
 ok 59 - production rejects missing WEB_ORIGIN before constructing Nest or opening a listener
   ---
-  duration_ms: 0.5467
+  duration_ms: 0.5253
   type: 'test'
   ...
 # Subtest: production rejects missing PAYMENT_PROVIDER before constructing Nest or opening a listener
 ok 60 - production rejects missing PAYMENT_PROVIDER before constructing Nest or opening a listener
   ---
-  duration_ms: 0.441
+  duration_ms: 0.4267
   type: 'test'
   ...
 # Subtest: production rejects missing PAYMENT_MODE before constructing Nest or opening a listener
 ok 61 - production rejects missing PAYMENT_MODE before constructing Nest or opening a listener
   ---
-  duration_ms: 0.4091
+  duration_ms: 0.4212
   type: 'test'
   ...
 # Subtest: production rejects missing PAYMENT_PROVIDER_BASE_URL before constructing Nest or opening a listener
 ok 62 - production rejects missing PAYMENT_PROVIDER_BASE_URL before constructing Nest or opening a listener
   ---
-  duration_ms: 0.6176
+  duration_ms: 0.4332
   type: 'test'
   ...
 # Subtest: production rejects missing PAYMENT_PROVIDER_API_KEY before constructing Nest or opening a listener
 ok 63 - production rejects missing PAYMENT_PROVIDER_API_KEY before constructing Nest or opening a listener
   ---
-  duration_ms: 0.4419
+  duration_ms: 0.4138
   type: 'test'
   ...
 # Subtest: production rejects missing PAYMENT_WEBHOOK_SECRET before constructing Nest or opening a listener
 ok 64 - production rejects missing PAYMENT_WEBHOOK_SECRET before constructing Nest or opening a listener
   ---
-  duration_ms: 0.4898
+  duration_ms: 0.5014
   type: 'test'
   ...
 # Subtest: production rejects placeholder secrets, insecure cookies and malformed origins without reflecting their values
 ok 65 - production rejects placeholder secrets, insecure cookies and malformed origins without reflecting their values
   ---
-  duration_ms: 0.8246
+  duration_ms: 0.7507
   type: 'test'
   ...
 # Subtest: a local mock provider requires opt-in and a sandbox mode; unknown runtime names fail closed
 ok 66 - a local mock provider requires opt-in and a sandbox mode; unknown runtime names fail closed
   ---
-  duration_ms: 2.2534
+  duration_ms: 0.2367
   type: 'test'
   ...
 # Subtest: safe bootstrap configures the exact credentialed origin allowlist and retains request validation
 ok 67 - safe bootstrap configures the exact credentialed origin allowlist and retains request validation
   ---
-  duration_ms: 37.5504
+  duration_ms: 35.1861
   type: 'test'
   ...
 # Subtest: auth config also rejects unsafe production values when loaded outside bootstrap
 ok 68 - auth config also rejects unsafe production values when loaded outside bootstrap
   ---
-  duration_ms: 0.4564
+  duration_ms: 0.5123
   type: 'test'
   ...
 # Subtest: committed environment example enables reproducible local development without production credentials
 ok 69 - committed environment example enables reproducible local development without production credentials
   ---
-  duration_ms: 12.3944
+  duration_ms: 2.1132
   type: 'test'
   ...
 # Subtest: a customer without consent is rejected before any write
 ok 70 - a customer without consent is rejected before any write
   ---
-  duration_ms: 1.2475
+  duration_ms: 1.7567
   type: 'test'
   ...
 # Subtest: an expired customer is anonymised and expired receipts removed
 ok 71 - an expired customer is anonymised and expired receipts removed
   ---
-  duration_ms: 0.5834
+  duration_ms: 0.755
   type: 'test'
   ...
 # Subtest: health returns ok when the database responds
 ok 72 - health returns ok when the database responds
   ---
-  duration_ms: 0.6745
+  duration_ms: 0.6852
   type: 'test'
   ...
 # Subtest: health fails closed when the database is unreachable
 ok 73 - health fails closed when the database is unreachable
   ---
-  duration_ms: 0.7747
+  duration_ms: 0.61
   type: 'test'
   ...
 # Subtest: clock-in and clock-out record the actor without touching a shift
 ok 74 - clock-in and clock-out record the actor without touching a shift
   ---
-  duration_ms: 5.7881
+  duration_ms: 2.1776
   type: 'test'
   ...
 # Subtest: duplicate clock-in and clock-out without an open record return 409
 ok 75 - duplicate clock-in and clock-out without an open record return 409
   ---
-  duration_ms: 2.0505
+  duration_ms: 0.9959
   type: 'test'
   ...
 # Subtest: owners list every record while staff only see their own
 ok 76 - owners list every record while staff only see their own
   ---
-  duration_ms: 0.9788
+  duration_ms: 0.5262
   type: 'test'
   ...
 # Subtest: audit search filters by actor, action and time range
 ok 77 - audit search filters by actor, action and time range
   ---
-  duration_ms: 2.4757
+  duration_ms: 2.4173
   type: 'test'
   ...
 # Subtest: cursor pagination is stable and does not repeat rows
 ok 78 - cursor pagination is stable and does not repeat rows
   ---
-  duration_ms: 0.8455
+  duration_ms: 0.7311
   type: 'test'
   ...
 # Subtest: bad cursor and inverted range return 400; cross-outlet returns 404
 ok 79 - bad cursor and inverted range return 400; cross-outlet returns 404
   ---
-  duration_ms: 1.3243
+  duration_ms: 1.4632
   type: 'test'
   ...
 # Subtest: cursor encoding keeps the sort key
 ok 80 - cursor encoding keeps the sort key
   ---
-  duration_ms: 0.1949
+  duration_ms: 0.5754
   type: 'test'
   ...
 # Subtest: expected cash arithmetic is opening + cash sales + paid-in - paid-out
 ok 81 - expected cash arithmetic is opening + cash sales + paid-in - paid-out
   ---
-  duration_ms: 0.8516
+  duration_ms: 0.7887
   type: 'test'
   ...
 # Subtest: expected cash is negative when paid-outs exceed float, cash sales and paid-ins
 ok 82 - expected cash is negative when paid-outs exceed float, cash sales and paid-ins
   ---
-  duration_ms: 0.1854
+  duration_ms: 0.1313
   type: 'test'
   ...
 # Subtest: discrepancy is signed: positive over, negative short, zero matched
 ok 83 - discrepancy is signed: positive over, negative short, zero matched
   ---
-  duration_ms: 0.1328
+  duration_ms: 0.1162
   type: 'test'
   ...
 # Subtest: cash sales come only from recorded cash tender rows
 ok 84 - cash sales come only from recorded cash tender rows
   ---
-  duration_ms: 0.1757
+  duration_ms: 0.1472
   type: 'test'
   ...
 # Subtest: online tenders settle only on success or refund states
 ok 85 - online tenders settle only on success or refund states
   ---
-  duration_ms: 1.5268
+  duration_ms: 0.1889
   type: 'test'
   ...
 # Subtest: cursor round-trips and rejects malformed values
 ok 86 - cursor round-trips and rejects malformed values
   ---
-  duration_ms: 1.898
+  duration_ms: 0.882
   type: 'test'
   ...
 # Subtest: opening a shift stores the float and writes an actor audit event
 ok 87 - opening a shift stores the float and writes an actor audit event
   ---
-  duration_ms: 1.9224
+  duration_ms: 1.6967
   type: 'test'
   ...
 # Subtest: a second open shift for the same staff member returns 409
 ok 88 - a second open shift for the same staff member returns 409
   ---
-  duration_ms: 0.8999
+  duration_ms: 0.8947
   type: 'test'
   ...
 # Subtest: paid-in and owner paid-out update shift totals and audit actors
 ok 89 - paid-in and owner paid-out update shift totals and audit actors
   ---
-  duration_ms: 0.8098
+  duration_ms: 1.3603
   type: 'test'
   ...
 # Subtest: cashier paid-out above the approval threshold is denied with APPROVAL_REQUIRED
 ok 90 - cashier paid-out above the approval threshold is denied with APPROVAL_REQUIRED
   ---
-  duration_ms: 0.4898
+  duration_ms: 0.7342
   type: 'test'
   ...
 # Subtest: another staff member cannot change or close the shift
 ok 91 - another staff member cannot change or close the shift
   ---
-  duration_ms: 1.2259
+  duration_ms: 0.9812
   type: 'test'
   ...
 # Subtest: closing reconciles expected cash from tenders and records a signed discrepancy
 ok 92 - closing reconciles expected cash from tenders and records a signed discrepancy
   ---
-  duration_ms: 1.0856
+  duration_ms: 1.1891
   type: 'test'
   ...
 # Subtest: closing with paid-outs above expected cash returns signed negative expected cash, not a 500
 ok 93 - closing with paid-outs above expected cash returns signed negative expected cash, not a 500
   ---
-  duration_ms: 0.4131
+  duration_ms: 0.5316
   type: 'test'
   ...
 # Subtest: a stored negative expected cash row serializes in list, get and report
 ok 94 - a stored negative expected cash row serializes in list, get and report
   ---
-  duration_ms: 0.8302
+  duration_ms: 0.892
   type: 'test'
   ...
 # Subtest: closing twice returns 409 and concurrent closes produce one winner
 ok 95 - closing twice returns 409 and concurrent closes produce one winner
   ---
-  duration_ms: 1.0395
+  duration_ms: 1.3184
   type: 'test'
   ...
 # Subtest: cross-outlet reads return 404
 ok 96 - cross-outlet reads return 404
   ---
-  duration_ms: 0.5889
+  duration_ms: 0.6244
   type: 'test'
   ...
 # Subtest: shift report is owner-only and lists every payment kind
 ok 97 - shift report is owner-only and lists every payment kind
   ---
-  duration_ms: 0.4752
+  duration_ms: 0.5096
   type: 'test'
   ...
 # Subtest: web channel is available only when a webhook secret exists
 ok 98 - web channel is available only when a webhook secret exists
   ---
-  duration_ms: 1.3245
+  duration_ms: 1.0856
   type: 'test'
   ...
 # Subtest: third-party channels are documented as pending credentials
 ok 99 - third-party channels are documented as pending credentials
   ---
-  duration_ms: 1.4879
+  duration_ms: 0.7423
   type: 'test'
   ...
 # Subtest: manual and phone channels never expose an inbound webhook
 ok 100 - manual and phone channels never expose an inbound webhook
   ---
-  duration_ms: 0.3665
+  duration_ms: 0.2528
   type: 'test'
   ...
 # Subtest: AC1 accept consumes the pinned recipe once and moves RECEIVED -> ACCEPTED (docs/online-ordering.md:68,114)
 ok 101 - AC1 accept consumes the pinned recipe once and moves RECEIVED -> ACCEPTED (docs/online-ordering.md:68,114)
   ---
-  duration_ms: 7.8353
+  duration_ms: 8.1889
   type: 'test'
   ...
 # Subtest: AC1 cancel from RECEIVED cancels with no stock or payment effect (docs/online-ordering.md:54,69)
 ok 102 - AC1 cancel from RECEIVED cancels with no stock or payment effect (docs/online-ordering.md:54,69)
   ---
-  duration_ms: 1.2599
+  duration_ms: 1.2097
   type: 'test'
   ...
 # Subtest: AC1 cancel from ACCEPTED restores exact accepted quantities once (docs/online-ordering.md:71,117)
 ok 103 - AC1 cancel from ACCEPTED restores exact accepted quantities once (docs/online-ordering.md:71,117)
   ---
-  duration_ms: 1.793
+  duration_ms: 3.4447
   type: 'test'
   ...
 # Subtest: AC1 fulfil records exactly one cash payment, no stock movement, and terminal FULFILLED (docs/online-ordering.md:70,84)
 ok 104 - AC1 fulfil records exactly one cash payment, no stock movement, and terminal FULFILLED (docs/online-ordering.md:70,84)
   ---
-  duration_ms: 1.8261
+  duration_ms: 2.9067
   type: 'test'
   ...
 # Subtest: AC1 unpaid orders stay unpaid through acceptance and a mismatched collection records nothing (docs/online-ordering.md:79,82)
 ok 105 - AC1 unpaid orders stay unpaid through acceptance and a mismatched collection records nothing (docs/online-ordering.md:79,82)
   ---
-  duration_ms: 1.8375
+  duration_ms: 2.8045
   type: 'test'
   ...
 # Subtest: AC1 a second fulfil and accept after terminal state return 409 and write nothing (docs/online-ordering.md:73,85)
 ok 106 - AC1 a second fulfil and accept after terminal state return 409 and write nothing (docs/online-ordering.md:73,85)
   ---
-  duration_ms: 1.4312
+  duration_ms: 2.0185
   type: 'test'
   ...
 # Subtest: AC1 invalid transitions return documented 409 ORDER_STATE_INVALID (docs/online-ordering.md:73)
 ok 107 - AC1 invalid transitions return documented 409 ORDER_STATE_INVALID (docs/online-ordering.md:73)
   ---
-  duration_ms: 1.2816
+  duration_ms: 4.1786
   type: 'test'
   ...
 # Subtest: AC1 PREPAID_PROVIDER is rejected with 422 and creates no order (docs/online-ordering.md:88)
 ok 108 - AC1 PREPAID_PROVIDER is rejected with 422 and creates no order (docs/online-ordering.md:88)
   ---
-  duration_ms: 0.3241
+  duration_ms: 1.6577
   type: 'test'
   ...
 # Subtest: AC1 concurrent accept applies stock once and rejects the loser (docs/online-ordering.md:114,120)
 ok 109 - AC1 concurrent accept applies stock once and rejects the loser (docs/online-ordering.md:114,120)
   ---
-  duration_ms: 1.9682
+  duration_ms: 2.5356
   type: 'test'
   ...
 # Subtest: AC1 a serialization failure is retried and commits exactly once (docs/online-ordering.md:120)
 ok 110 - AC1 a serialization failure is retried and commits exactly once (docs/online-ordering.md:120)
   ---
-  duration_ms: 62.4062
+  duration_ms: 55.4941
   type: 'test'
   ...
 # Subtest: AC1 ordering rejects a customer without consent before writing an order (docs/online-ordering.md:143)
 ok 111 - AC1 ordering rejects a customer without consent before writing an order (docs/online-ordering.md:143)
   ---
-  duration_ms: 1.1539
+  duration_ms: 2.8723
   type: 'test'
   ...
 # Subtest: AC1 ordering links a consented customer and rejects an anonymised contact (docs/online-ordering.md:152,158)
 ok 112 - AC1 ordering links a consented customer and rejects an anonymised contact (docs/online-ordering.md:152,158)
   ---
-  duration_ms: 2.6489
+  duration_ms: 4.0005
   type: 'test'
   ...
 # Subtest: AC2 a sequential duplicate delivery returns the same order with one intake event (docs/online-ordering.md:133)
 ok 113 - AC2 a sequential duplicate delivery returns the same order with one intake event (docs/online-ordering.md:133)
   ---
-  duration_ms: 0.5773
+  duration_ms: 0.6755
   type: 'test'
   ...
 # Subtest: AC2 a concurrent duplicate delivery resolves losers to the same order (docs/online-ordering.md:135)
 ok 114 - AC2 a concurrent duplicate delivery resolves losers to the same order (docs/online-ordering.md:135)
   ---
-  duration_ms: 3.993
+  duration_ms: 1.3326
   type: 'test'
   ...
 # Subtest: AC2 the same reference with a different payload is a 409 conflict that changes nothing (docs/online-ordering.md:137)
 ok 115 - AC2 the same reference with a different payload is a 409 conflict that changes nothing (docs/online-ordering.md:137)
   ---
-  duration_ms: 0.6182
+  duration_ms: 0.8183
   type: 'test'
   ...
 # Subtest: AC2 the channel reference is stored, returned and searchable (docs/online-ordering.md:130)
 ok 116 - AC2 the channel reference is stored, returned and searchable (docs/online-ordering.md:130)
   ---
-  duration_ms: 0.9422
+  duration_ms: 0.8321
   type: 'test'
   ...
 # Subtest: AC2 an invalid signature is rejected before any row is written (docs/online-ordering.md:139)
 ok 117 - AC2 an invalid signature is rejected before any row is written (docs/online-ordering.md:139)
   ---
-  duration_ms: 1.6226
+  duration_ms: 2.3315
   type: 'test'
   ...
 # Subtest: AC2 a replayed stale timestamp is rejected before any row is written (docs/online-ordering.md:139)
 ok 118 - AC2 a replayed stale timestamp is rejected before any row is written (docs/online-ordering.md:139)
   ---
-  duration_ms: 0.7347
+  duration_ms: 1.3127
   type: 'test'
   ...
 # Subtest: AC2 a signed webhook is accepted once and a replay returns duplicate true (docs/online-ordering.md:133,139)
 ok 119 - AC2 a signed webhook is accepted once and a replay returns duplicate true (docs/online-ordering.md:133,139)
   ---
-  duration_ms: 0.7875
+  duration_ms: 1.5366
   type: 'test'
   ...
 # Subtest: outlet update rejects an unknown timezone before writing
 ok 120 - outlet update rejects an unknown timezone before writing
   ---
-  duration_ms: 2.2635
+  duration_ms: 2.0016
   type: 'test'
   ...
 # Subtest: outlet update accepts a valid timezone and increments the version
 ok 121 - outlet update accepts a valid timezone and increments the version
   ---
-  duration_ms: 1.0601
+  duration_ms: 0.9606
   type: 'test'
   ...
 # Subtest: outlet DTO rejects an invalid IANA timezone with a validation issue
 ok 122 - outlet DTO rejects an invalid IANA timezone with a validation issue
   ---
-  duration_ms: 4.4323
+  duration_ms: 4.0329
   type: 'test'
   ...
 # Subtest: both update paths accept the same overlapping values
 ok 123 - both update paths accept the same overlapping values
   ---
-  duration_ms: 3.2825
+  duration_ms: 1.0676
   type: 'test'
   ...
 # Subtest: local mock provider requires explicit opt-in and no live credentials
 ok 124 - local mock provider requires explicit opt-in and no live credentials
   ---
-  duration_ms: 1.3243
+  duration_ms: 1.6439
   type: 'test'
   ...
 # Subtest: manual-only recording disables automatic provider selection, webhooks and refunds
 ok 125 - manual-only recording disables automatic provider selection, webhooks and refunds
   ---
-  duration_ms: 1.0462
+  duration_ms: 1.4024
   type: 'test'
   ...
 # Subtest: mock selection without opt-in fails closed and production cannot select MOCK
 ok 126 - mock selection without opt-in fails closed and production cannot select MOCK
   ---
-  duration_ms: 0.5938
+  duration_ms: 0.7646
   type: 'test'
   ...
 # Subtest: qris is selected only with complete configuration
 ok 127 - qris is selected only with complete configuration
   ---
-  duration_ms: 0.3627
+  duration_ms: 0.5066
   type: 'test'
   ...
 # Subtest: missing qris credentials fail closed
 ok 128 - missing qris credentials fail closed
   ---
-  duration_ms: 0.5562
+  duration_ms: 0.7055
   type: 'test'
   ...
 # Subtest: configuration dumps never contain secret values
 ok 129 - configuration dumps never contain secret values
   ---
-  duration_ms: 1.3912
+  duration_ms: 0.6222
   type: 'test'
   ...
 # Subtest: an unknown provider is rejected instead of silently falling back
 ok 130 - an unknown provider is rejected instead of silently falling back
   ---
-  duration_ms: 0.4638
+  duration_ms: 0.4725
+  type: 'test'
+  ...
+# Subtest: manual mode rejects automatic mutations before touching legacy online payment rows
+ok 131 - manual mode rejects automatic mutations before touching legacy online payment rows
+  ---
+  duration_ms: 3.0661
   type: 'test'
   ...
 # Subtest: handleWebhook duplicate delivery applies one transition and one record update
-ok 131 - handleWebhook duplicate delivery applies one transition and one record update
+ok 132 - handleWebhook duplicate delivery applies one transition and one record update
   ---
-  duration_ms: 5.3076
+  duration_ms: 3.1413
   type: 'test'
   ...
 # Subtest: handleWebhook concurrent duplicates produce one winner and one effect
-ok 132 - handleWebhook concurrent duplicates produce one winner and one effect
+ok 133 - handleWebhook concurrent duplicates produce one winner and one effect
   ---
-  duration_ms: 1.7404
+  duration_ms: 1.2917
   type: 'test'
   ...
 # Subtest: handleWebhook out-of-order succeeded before pending keeps the settled state
-ok 133 - handleWebhook out-of-order succeeded before pending keeps the settled state
+ok 134 - handleWebhook out-of-order succeeded before pending keeps the settled state
   ---
-  duration_ms: 2.8846
+  duration_ms: 0.7149
   type: 'test'
   ...
 # Subtest: handleWebhook rejects an invalid signature without changing the payment row
-ok 134 - handleWebhook rejects an invalid signature without changing the payment row
+ok 135 - handleWebhook rejects an invalid signature without changing the payment row
   ---
-  duration_ms: 1.3291
+  duration_ms: 0.3639
   type: 'test'
   ...
 # Subtest: handleWebhook rejects a replayed timestamp without changing the payment row
-ok 135 - handleWebhook rejects a replayed timestamp without changing the payment row
+ok 136 - handleWebhook rejects a replayed timestamp without changing the payment row
   ---
-  duration_ms: 0.5921
+  duration_ms: 0.5819
   type: 'test'
   ...
 # Subtest: handleWebhook failure then retry reaches one terminal charge with no duplicate row
-ok 136 - handleWebhook failure then retry reaches one terminal charge with no duplicate row
+ok 137 - handleWebhook failure then retry reaches one terminal charge with no duplicate row
   ---
-  duration_ms: 0.9907
+  duration_ms: 0.746
   type: 'test'
   ...
 # Subtest: reconcile settles one stuck pending payment without creating a second charge
-ok 137 - reconcile settles one stuck pending payment without creating a second charge
+ok 138 - reconcile settles one stuck pending payment without creating a second charge
   ---
-  duration_ms: 1.2858
+  duration_ms: 0.8395
   type: 'test'
   ...
 # Subtest: reconcile leaves a consistent pending provider state unchanged
-ok 138 - reconcile leaves a consistent pending provider state unchanged
+ok 139 - reconcile leaves a consistent pending provider state unchanged
   ---
-  duration_ms: 0.3718
+  duration_ms: 0.6373
   type: 'test'
   ...
 # Subtest: reserved refund snapshots the provider before I/O and applies one local payment correction
-ok 139 - reserved refund snapshots the provider before I/O and applies one local payment correction
+ok 140 - reserved refund snapshots the provider before I/O and applies one local payment correction
   ---
-  duration_ms: 0.8905
+  duration_ms: 0.8382
   type: 'test'
   ...
 # Subtest: refund preparation rejects unsettled, nonpositive and excessive refunds without provider I/O
-ok 140 - refund preparation rejects unsettled, nonpositive and excessive refunds without provider I/O
+ok 141 - refund preparation rejects unsettled, nonpositive and excessive refunds without provider I/O
   ---
-  duration_ms: 0.8946
+  duration_ms: 0.5349
   type: 'test'
   ...
 # Subtest: settlementReport totals reconcile against hand-computable payment fixtures
-ok 141 - settlementReport totals reconcile against hand-computable payment fixtures
+ok 142 - settlementReport totals reconcile against hand-computable payment fixtures
   ---
-  duration_ms: 6.2797
+  duration_ms: 4.0837
   type: 'test'
   ...
 # Subtest: sandbox guard rejects production before request-body validation and allows opted-in local requests
-ok 142 - sandbox guard rejects production before request-body validation and allows opted-in local requests
+ok 143 - sandbox guard rejects production before request-body validation and allows opted-in local requests
   ---
-  duration_ms: 2.0026
+  duration_ms: 1.9964
   type: 'test'
   ...
 # Subtest: all public sandbox endpoints return 404 in production even with MOCK and opt-in forced on
-ok 143 - all public sandbox endpoints return 404 in production even with MOCK and opt-in forced on
+ok 144 - all public sandbox endpoints return 404 in production even with MOCK and opt-in forced on
   ---
-  duration_ms: 1.0002
+  duration_ms: 0.9716
   type: 'test'
   ...
 # Subtest: sandbox endpoints also stay unavailable without opt-in or with a real provider/live mode
-ok 144 - sandbox endpoints also stay unavailable without opt-in or with a real provider/live mode
+ok 145 - sandbox endpoints also stay unavailable without opt-in or with a real provider/live mode
   ---
-  duration_ms: 0.8687
+  duration_ms: 0.9368
   type: 'test'
   ...
 # Subtest: explicit local sandbox opt-in retains create/read/event behavior and serialization
-ok 145 - explicit local sandbox opt-in retains create/read/event behavior and serialization
+ok 146 - explicit local sandbox opt-in retains create/read/event behavior and serialization
   ---
-  duration_ms: 1.2289
+  duration_ms: 1.25
   type: 'test'
   ...
 # Subtest: direct mock-provider access cannot bypass the production controller gate
-ok 146 - direct mock-provider access cannot bypass the production controller gate
+ok 147 - direct mock-provider access cannot bypass the production controller gate
   ---
-  duration_ms: 1.4935
+  duration_ms: 1.621
   type: 'test'
   ...
 # Subtest: a correctly signed fresh payload is accepted
-ok 147 - a correctly signed fresh payload is accepted
+ok 148 - a correctly signed fresh payload is accepted
+  ---
+  duration_ms: 1.0954
+  type: 'test'
+  ...
+# Subtest: a wrong signature is rejected without throwing
+ok 149 - a wrong signature is rejected without throwing
+  ---
+  duration_ms: 0.2226
+  type: 'test'
+  ...
+# Subtest: a replayed old timestamp is rejected even with a valid HMAC
+ok 150 - a replayed old timestamp is rejected even with a valid HMAC
+  ---
+  duration_ms: 0.1712
+  type: 'test'
+  ...
+# Subtest: missing and malformed signature headers are rejected
+ok 151 - missing and malformed signature headers are rejected
+  ---
+  duration_ms: 0.1025
+  type: 'test'
+  ...
+# Subtest: the body is covered by the signature
+ok 152 - the body is covered by the signature
+  ---
+  duration_ms: 0.1831
+  type: 'test'
+  ...
+# Subtest: lists only device-owned printers inside the authenticated business
+ok 153 - lists only device-owned printers inside the authenticated business
+  ---
+  duration_ms: 1.9015
+  type: 'test'
+  ...
+# Subtest: an owner lists every outlet printer without a device filter
+ok 154 - an owner lists every outlet printer without a device filter
+  ---
+  duration_ms: 2.4812
+  type: 'test'
+  ...
+# Subtest: printer update uses optimistic revision and rejects stale writes
+ok 155 - printer update uses optimistic revision and rejects stale writes
+  ---
+  duration_ms: 0.8104
+  type: 'test'
+  ...
+# Subtest: job creation is idempotent for the same payload and rejects a conflicting key
+ok 156 - job creation is idempotent for the same payload and rejects a conflicting key
+  ---
+  duration_ms: 1.2709
+  type: 'test'
+  ...
+# Subtest: another device cannot update a print job and receives 404
+ok 157 - another device cannot update a print job and receives 404
+  ---
+  duration_ms: 0.6587
+  type: 'test'
+  ...
+# Subtest: owned job state is persisted and returned for read-back
+ok 158 - owned job state is persisted and returned for read-back
+  ---
+  duration_ms: 0.3924
+  type: 'test'
+  ...
+# Subtest: job creation rejects a sale that belongs to another device
+ok 159 - job creation rejects a sale that belongs to another device
+  ---
+  duration_ms: 2.9826
+  type: 'test'
+  ...
+# Subtest: stations are owner-managed, isolated by outlet and keep one default
+ok 160 - stations are owner-managed, isolated by outlet and keep one default
+  ---
+  duration_ms: 2.5907
+  type: 'test'
+  ...
+# Subtest: cross-outlet station update and printer reference are rejected with 404
+ok 161 - cross-outlet station update and printer reference are rejected with 404
+  ---
+  duration_ms: 1.0953
+  type: 'test'
+  ...
+# Subtest: routing is owner-managed and rejects stations from another outlet
+ok 162 - routing is owner-managed and rejects stations from another outlet
+  ---
+  duration_ms: 2.1487
+  type: 'test'
+  ...
+# Subtest: routed lines target their station, unrouted lines use the default fallback
+ok 163 - routed lines target their station, unrouted lines use the default fallback
+  ---
+  duration_ms: 2.5228
+  type: 'test'
+  ...
+# Subtest: unknown order references and variants create no station job
+ok 164 - unknown order references and variants create no station job
+  ---
+  duration_ms: 0.7952
+  type: 'test'
+  ...
+# Subtest: batch creation is idempotent and rejects a conflicting replay
+ok 165 - batch creation is idempotent and rejects a conflicting replay
+  ---
+  duration_ms: 0.8265
+  type: 'test'
+  ...
+# Subtest: amend and cancel jobs keep the original order reference and never touch sales or stock
+ok 166 - amend and cancel jobs keep the original order reference and never touch sales or stock
+  ---
+  duration_ms: 1.3135
+  type: 'test'
+  ...
+# Subtest: retry and reprint change only station jobs and keep station queues independent
+ok 167 - retry and reprint change only station jobs and keep station queues independent
+  ---
+  duration_ms: 2.0164
+  type: 'test'
+  ...
+# Subtest: retry refuses a job that is not failed or uncertain
+ok 168 - retry refuses a job that is not failed or uncertain
+  ---
+  duration_ms: 2.119
+  type: 'test'
+  ...
+# Subtest: concurrent consumers cannot both claim the same queued station job
+ok 169 - concurrent consumers cannot both claim the same queued station job
   ---
   duration_ms: 1.1514
   type: 'test'
   ...
-# Subtest: a wrong signature is rejected without throwing
-ok 148 - a wrong signature is rejected without throwing
-  ---
-  duration_ms: 0.3803
-  type: 'test'
-  ...
-# Subtest: a replayed old timestamp is rejected even with a valid HMAC
-ok 149 - a replayed old timestamp is rejected even with a valid HMAC
-  ---
-  duration_ms: 0.2198
-  type: 'test'
-  ...
-# Subtest: missing and malformed signature headers are rejected
-ok 150 - missing and malformed signature headers are rejected
-  ---
-  duration_ms: 0.1181
-  type: 'test'
-  ...
-# Subtest: the body is covered by the signature
-ok 151 - the body is covered by the signature
-  ---
-  duration_ms: 0.2264
-  type: 'test'
-  ...
-# Subtest: lists only device-owned printers inside the authenticated business
-ok 152 - lists only device-owned printers inside the authenticated business
-  ---
-  duration_ms: 1.3477
-  type: 'test'
-  ...
-# Subtest: an owner lists every outlet printer without a device filter
-ok 153 - an owner lists every outlet printer without a device filter
-  ---
-  duration_ms: 1.192
-  type: 'test'
-  ...
-# Subtest: printer update uses optimistic revision and rejects stale writes
-ok 154 - printer update uses optimistic revision and rejects stale writes
-  ---
-  duration_ms: 0.5104
-  type: 'test'
-  ...
-# Subtest: job creation is idempotent for the same payload and rejects a conflicting key
-ok 155 - job creation is idempotent for the same payload and rejects a conflicting key
-  ---
-  duration_ms: 0.684
-  type: 'test'
-  ...
-# Subtest: another device cannot update a print job and receives 404
-ok 156 - another device cannot update a print job and receives 404
-  ---
-  duration_ms: 0.5072
-  type: 'test'
-  ...
-# Subtest: owned job state is persisted and returned for read-back
-ok 157 - owned job state is persisted and returned for read-back
-  ---
-  duration_ms: 0.3739
-  type: 'test'
-  ...
-# Subtest: job creation rejects a sale that belongs to another device
-ok 158 - job creation rejects a sale that belongs to another device
-  ---
-  duration_ms: 0.3304
-  type: 'test'
-  ...
-# Subtest: stations are owner-managed, isolated by outlet and keep one default
-ok 159 - stations are owner-managed, isolated by outlet and keep one default
-  ---
-  duration_ms: 2.7652
-  type: 'test'
-  ...
-# Subtest: cross-outlet station update and printer reference are rejected with 404
-ok 160 - cross-outlet station update and printer reference are rejected with 404
-  ---
-  duration_ms: 1.149
-  type: 'test'
-  ...
-# Subtest: routing is owner-managed and rejects stations from another outlet
-ok 161 - routing is owner-managed and rejects stations from another outlet
-  ---
-  duration_ms: 1.3768
-  type: 'test'
-  ...
-# Subtest: routed lines target their station, unrouted lines use the default fallback
-ok 162 - routed lines target their station, unrouted lines use the default fallback
-  ---
-  duration_ms: 4.5025
-  type: 'test'
-  ...
-# Subtest: unknown order references and variants create no station job
-ok 163 - unknown order references and variants create no station job
-  ---
-  duration_ms: 1.5407
-  type: 'test'
-  ...
-# Subtest: batch creation is idempotent and rejects a conflicting replay
-ok 164 - batch creation is idempotent and rejects a conflicting replay
-  ---
-  duration_ms: 5.1327
-  type: 'test'
-  ...
-# Subtest: amend and cancel jobs keep the original order reference and never touch sales or stock
-ok 165 - amend and cancel jobs keep the original order reference and never touch sales or stock
-  ---
-  duration_ms: 1.8973
-  type: 'test'
-  ...
-# Subtest: retry and reprint change only station jobs and keep station queues independent
-ok 166 - retry and reprint change only station jobs and keep station queues independent
-  ---
-  duration_ms: 2.2756
-  type: 'test'
-  ...
-# Subtest: retry refuses a job that is not failed or uncertain
-ok 167 - retry refuses a job that is not failed or uncertain
-  ---
-  duration_ms: 0.9734
-  type: 'test'
-  ...
-# Subtest: concurrent consumers cannot both claim the same queued station job
-ok 168 - concurrent consumers cannot both claim the same queued station job
-  ---
-  duration_ms: 1.4528
-  type: 'test'
-  ...
 # Subtest: amend and cancel reuse the first ticket reference after the sale exists
-ok 169 - amend and cancel reuse the first ticket reference after the sale exists
+ok 170 - amend and cancel reuse the first ticket reference after the sale exists
   ---
-  duration_ms: 2.337
+  duration_ms: 0.7411
   type: 'test'
   ...
 # Subtest: unknown station jobs are rejected without creating a reprint
-ok 170 - unknown station jobs are rejected without creating a reprint
+ok 171 - unknown station jobs are rejected without creating a reprint
   ---
-  duration_ms: 0.409
+  duration_ms: 0.3332
   type: 'test'
   ...
 # Subtest: percentage promotion rounds half-up at exactly half a minor unit
-ok 171 - percentage promotion rounds half-up at exactly half a minor unit
+ok 172 - percentage promotion rounds half-up at exactly half a minor unit
   ---
-  duration_ms: 1.4438
+  duration_ms: 1.8593
   type: 'test'
   ...
 # Subtest: fixed promotion larger than the basket is capped and never negative
-ok 172 - fixed promotion larger than the basket is capped and never negative
+ok 173 - fixed promotion larger than the basket is capped and never negative
   ---
-  duration_ms: 0.5255
+  duration_ms: 0.2808
   type: 'test'
   ...
 # Subtest: date window boundaries are inclusive and one millisecond outside is rejected
-ok 173 - date window boundaries are inclusive and one millisecond outside is rejected
+ok 174 - date window boundaries are inclusive and one millisecond outside is rejected
   ---
-  duration_ms: 1.6933
+  duration_ms: 0.7976
   type: 'test'
   ...
 # Subtest: eligibility checks outlet, item, variant, customer and minimum basket
-ok 174 - eligibility checks outlet, item, variant, customer and minimum basket
+ok 175 - eligibility checks outlet, item, variant, customer and minimum basket
   ---
-  duration_ms: 1.7132
+  duration_ms: 0.5046
   type: 'test'
   ...
 # Subtest: stacking allows only compatible promotions and rejects duplicate ids
-ok 175 - stacking allows only compatible promotions and rejects duplicate ids
+ok 176 - stacking allows only compatible promotions and rejects duplicate ids
   ---
-  duration_ms: 1.5067
+  duration_ms: 1.5533
   type: 'test'
   ...
 # Subtest: an inactive promotion is rejected
-ok 176 - an inactive promotion is rejected
+ok 177 - an inactive promotion is rejected
   ---
-  duration_ms: 0.3721
+  duration_ms: 0.3825
   type: 'test'
   ...
 # Subtest: partial purchase receipts accumulate, close the order and keep one ledger row each
-ok 177 - partial purchase receipts accumulate, close the order and keep one ledger row each
+ok 178 - partial purchase receipts accumulate, close the order and keep one ledger row each
   ---
-  duration_ms: 6.3275
+  duration_ms: 5.6272
   type: 'test'
   ...
 # Subtest: supplier units convert into base units end to end in the receipt ledger
-ok 178 - supplier units convert into base units end to end in the receipt ledger
+ok 179 - supplier units convert into base units end to end in the receipt ledger
   ---
-  duration_ms: 0.6672
+  duration_ms: 0.6949
   type: 'test'
   ...
 # Subtest: over-receipt is rejected with OVER_RECEIPT and leaves the balance and ledger unchanged
-ok 179 - over-receipt is rejected with OVER_RECEIPT and leaves the balance and ledger unchanged
+ok 180 - over-receipt is rejected with OVER_RECEIPT and leaves the balance and ledger unchanged
   ---
-  duration_ms: 1.1431
+  duration_ms: 1.267
   type: 'test'
   ...
 # Subtest: receipt against a cancelled purchase order returns PURCHASE_ORDER_CANCELLED without a ledger row
-ok 180 - receipt against a cancelled purchase order returns PURCHASE_ORDER_CANCELLED without a ledger row
+ok 181 - receipt against a cancelled purchase order returns PURCHASE_ORDER_CANCELLED without a ledger row
   ---
-  duration_ms: 1.0016
+  duration_ms: 0.5256
   type: 'test'
   ...
 # Subtest: receipt against a fully received purchase order is rejected without a second ledger row
-ok 181 - receipt against a fully received purchase order is rejected without a second ledger row
+ok 182 - receipt against a fully received purchase order is rejected without a second ledger row
   ---
-  duration_ms: 0.9416
+  duration_ms: 0.568
   type: 'test'
   ...
 # Subtest: concurrent receipts on the same line: one wins and the stale writer gets RECEIPT_CONFLICT
-ok 182 - concurrent receipts on the same line: one wins and the stale writer gets RECEIPT_CONFLICT
+ok 183 - concurrent receipts on the same line: one wins and the stale writer gets RECEIPT_CONFLICT
   ---
-  duration_ms: 0.9014
+  duration_ms: 0.5663
   type: 'test'
   ...
 # Subtest: stock count variance posts a COUNT row with reason and actor and adjusts the balance
-ok 183 - stock count variance posts a COUNT row with reason and actor and adjusts the balance
+ok 184 - stock count variance posts a COUNT row with reason and actor and adjusts the balance
   ---
-  duration_ms: 1.484
+  duration_ms: 0.8649
   type: 'test'
   ...
 # Subtest: stock count without a reason fails DTO validation with a 400 field error
-ok 184 - stock count without a reason fails DTO validation with a 400 field error
+ok 185 - stock count without a reason fails DTO validation with a 400 field error
   ---
-  duration_ms: 4.7739
+  duration_ms: 3.3208
   type: 'test'
   ...
 # Subtest: waste posts a WASTE row with reason and actor, reduces the balance and keeps quantity positive
-ok 185 - waste posts a WASTE row with reason and actor, reduces the balance and keeps quantity positive
+ok 186 - waste posts a WASTE row with reason and actor, reduces the balance and keeps quantity positive
   ---
-  duration_ms: 1.2284
+  duration_ms: 0.6947
   type: 'test'
   ...
 # Subtest: zero and negative waste quantities are rejected before any ledger or balance write
-ok 186 - zero and negative waste quantities are rejected before any ledger or balance write
+ok 187 - zero and negative waste quantities are rejected before any ledger or balance write
+  ---
+  duration_ms: 0.4925
+  type: 'test'
+  ...
+# Subtest: waste beyond the available balance is rejected with INSUFFICIENT_STOCK
+ok 188 - waste beyond the available balance is rejected with INSUFFICIENT_STOCK
+  ---
+  duration_ms: 0.2711
+  type: 'test'
+  ...
+# Subtest: cashiers may count and record waste while owner-only transfer writes return 403
+ok 189 - cashiers may count and record waste while owner-only transfer writes return 403
+  ---
+  duration_ms: 0.7674
+  type: 'test'
+  ...
+# Subtest: dispatch moves stock out of the source and exposes the gap as in-transit only
+ok 190 - dispatch moves stock out of the source and exposes the gap as in-transit only
+  ---
+  duration_ms: 1.2169
+  type: 'test'
+  ...
+# Subtest: receive adds the dispatched amount to the destination, zeroes in-transit and preserves grand total
+ok 191 - receive adds the dispatched amount to the destination, zeroes in-transit and preserves grand total
+  ---
+  duration_ms: 1.0094
+  type: 'test'
+  ...
+# Subtest: double receive returns 409 and does not write a second TRANSFER_IN row
+ok 192 - double receive returns 409 and does not write a second TRANSFER_IN row
+  ---
+  duration_ms: 0.7246
+  type: 'test'
+  ...
+# Subtest: over-receive is rejected and leaves the destination and in-transit state untouched
+ok 193 - over-receive is rejected and leaves the destination and in-transit state untouched
+  ---
+  duration_ms: 0.5559
+  type: 'test'
+  ...
+# Subtest: cancelling an un-received dispatched transfer restores the source balance
+ok 194 - cancelling an un-received dispatched transfer restores the source balance
+  ---
+  duration_ms: 0.8346
+  type: 'test'
+  ...
+# Subtest: concurrent receives on the same transfer: one wins and the stale writer gets RECEIVE_CONFLICT
+ok 195 - concurrent receives on the same transfer: one wins and the stale writer gets RECEIVE_CONFLICT
+  ---
+  duration_ms: 0.8356
+  type: 'test'
+  ...
+# Subtest: supplier units convert exactly into base units
+ok 196 - supplier units convert exactly into base units
+  ---
+  duration_ms: 2.7461
+  type: 'test'
+  ...
+# Subtest: base units convert exactly back into supplier units
+ok 197 - base units convert exactly back into supplier units
+  ---
+  duration_ms: 1.3423
+  type: 'test'
+  ...
+# Subtest: base quantity that does not divide into supplier packs is rejected, never rounded
+ok 198 - base quantity that does not divide into supplier packs is rejected, never rounded
+  ---
+  duration_ms: 1.4763
+  type: 'test'
+  ...
+# Subtest: supplier quantity whose base result exceeds item precision is rejected
+ok 199 - supplier quantity whose base result exceeds item precision is rejected
+  ---
+  duration_ms: 0.4513
+  type: 'test'
+  ...
+# Subtest: conversion overflow is rejected before any ledger write
+ok 200 - conversion overflow is rejected before any ledger write
+  ---
+  duration_ms: 0.5275
+  type: 'test'
+  ...
+# Subtest: zero and negative receipt quantities are rejected with 400
+ok 201 - zero and negative receipt quantities are rejected with 400
+  ---
+  duration_ms: 0.2829
+  type: 'test'
+  ...
+# Subtest: quantity precision guard rejects non-representable values
+ok 202 - quantity precision guard rejects non-representable values
+  ---
+  duration_ms: 0.4599
+  type: 'test'
+  ...
+# Subtest: purchase order state only closes when every line is fully received
+ok 203 - purchase order state only closes when every line is fully received
+  ---
+  duration_ms: 0.2553
+  type: 'test'
+  ...
+# Subtest: in-transit quantity is dispatched minus received and returns to zero after full receive
+ok 204 - in-transit quantity is dispatched minus received and returns to zero after full receive
+  ---
+  duration_ms: 1.8809
+  type: 'test'
+  ...
+# Subtest: count variance is counted minus the system snapshot
+ok 205 - count variance is counted minus the system snapshot
+  ---
+  duration_ms: 1.1425
+  type: 'test'
+  ...
+# Subtest: cashier can record counts and waste but cannot manage transfer or purchasing records
+ok 206 - cashier can record counts and waste but cannot manage transfer or purchasing records
+  ---
+  duration_ms: 0.5383
+  type: 'test'
+  ...
+# Subtest: owner holds every purchasing and stock-control permission
+ok 207 - owner holds every purchasing and stock-control permission
+  ---
+  duration_ms: 0.1691
+  type: 'test'
+  ...
+# Subtest: an expired or foreign receipt token returns not found
+ok 208 - an expired or foreign receipt token returns not found
+  ---
+  duration_ms: 2.0575
+  type: 'test'
+  ...
+# Subtest: a receipt for an anonymised customer is rejected without leaking data
+ok 209 - a receipt for an anonymised customer is rejected without leaking data
+  ---
+  duration_ms: 0.7008
+  type: 'test'
+  ...
+# Subtest: publishing version 2 keeps version 1 immutable and stale expectedVersion returns 409
+ok 210 - publishing version 2 keeps version 1 immutable and stale expectedVersion returns 409
+  ---
+  duration_ms: 4.4949
+  type: 'test'
+  ...
+# Subtest: recipe validation rejects zero, extra precision, duplicates and foreign stock items
+ok 211 - recipe validation rejects zero, extra precision, duplicates and foreign stock items
+  ---
+  duration_ms: 0.9187
+  type: 'test'
+  ...
+# Subtest: reads return 404 before a recipe is published and for another business
+ok 212 - reads return 404 before a recipe is published and for another business
+  ---
+  duration_ms: 0.476
+  type: 'test'
+  ...
+# Subtest: daily report aggregates completed sales, payment kinds and menu quantities
+ok 213 - daily report aggregates completed sales, payment kinds and menu quantities
+  ---
+  duration_ms: 4.527
+  type: 'test'
+  ...
+# Subtest: empty range returns a zeroed report instead of an error
+ok 214 - empty range returns a zeroed report instead of an error
+  ---
+  duration_ms: 0.8617
+  type: 'test'
+  ...
+# Subtest: reversed sales are excluded by the explicit completed-state filter
+ok 215 - reversed sales are excluded by the explicit completed-state filter
+  ---
+  duration_ms: 0.8259
+  type: 'test'
+  ...
+# Subtest: reversals reduce net item sales without changing sale count or gross
+ok 216 - reversals reduce net item sales without changing sale count or gross
+  ---
+  duration_ms: 6.581
+  type: 'test'
+  ...
+# Subtest: a 23:30 local sale belongs to its local day, not the following UTC day
+ok 217 - a 23:30 local sale belongs to its local day, not the following UTC day
+  ---
+  duration_ms: 1.8928
+  type: 'test'
+  ...
+# Subtest: average bill uses half-up integer division
+ok 218 - average bill uses half-up integer division
+  ---
+  duration_ms: 0.1729
+  type: 'test'
+  ...
+# Subtest: local timestamp is labelled in the outlet timezone
+ok 219 - local timestamp is labelled in the outlet timezone
+  ---
+  duration_ms: 0.3715
+  type: 'test'
+  ...
+# Subtest: csv export preserves commas, quotes and newlines in item names
+ok 220 - csv export preserves commas, quotes and newlines in item names
+  ---
+  duration_ms: 1.7315
+  type: 'test'
+  ...
+# Subtest: csv text that starts like a spreadsheet formula is neutralised
+ok 221 - csv text that starts like a spreadsheet formula is neutralised
+  ---
+  duration_ms: 1.4485
+  type: 'test'
+  ...
+# Subtest: cross-business outlet IDs return 404 and oversized ranges return 400
+ok 222 - cross-business outlet IDs return 404 and oversized ranges return 400
+  ---
+  duration_ms: 1.3129
+  type: 'test'
+  ...
+# Subtest: configured service and tax are half-up and tax applies to subtotal plus service
+ok 223 - configured service and tax are half-up and tax applies to subtotal plus service
+  ---
+  duration_ms: 1.0884
+  type: 'test'
+  ...
+# Subtest: half-up rounds exact .5 up and below .5 down
+ok 224 - half-up rounds exact .5 up and below .5 down
+  ---
+  duration_ms: 0.2261
+  type: 'test'
+  ...
+# Subtest: tax is calculated on subtotal plus service
+ok 225 - tax is calculated on subtotal plus service
+  ---
+  duration_ms: 0.1248
+  type: 'test'
+  ...
+# Subtest: money beyond JavaScript safe integer is rejected
+ok 226 - money beyond JavaScript safe integer is rejected
+  ---
+  duration_ms: 0.8143
+  type: 'test'
+  ...
+# Subtest: cash payment requires exact amount, sufficient tender and records change
+ok 227 - cash payment requires exact amount, sufficient tender and records change
+  ---
+  duration_ms: 0.3353
+  type: 'test'
+  ...
+# Subtest: cash below total is rejected
+ok 228 - cash below total is rejected
+  ---
+  duration_ms: 0.1952
+  type: 'test'
+  ...
+# Subtest: cash amount must equal the quoted total
+ok 229 - cash amount must equal the quoted total
+  ---
+  duration_ms: 0.2254
+  type: 'test'
+  ...
+# Subtest: manual external payment equals total and omits tender and change
+ok 230 - manual external payment equals total and omits tender and change
+  ---
+  duration_ms: 0.1669
+  type: 'test'
+  ...
+# Subtest: online payment equals total and never records cash tender or change
+ok 231 - online payment equals total and never records cash tender or change
+  ---
+  duration_ms: 1.6725
+  type: 'test'
+  ...
+# Subtest: outlet-local midnight converts to UTC for the configured timezone
+ok 232 - outlet-local midnight converts to UTC for the configured timezone
+  ---
+  duration_ms: 1.9328
+  type: 'test'
+  ...
+# Subtest: date ranges are half-open in outlet-local time
+ok 233 - date ranges are half-open in outlet-local time
+  ---
+  duration_ms: 0.6766
+  type: 'test'
+  ...
+# Subtest: DST transitions use the offset at local midnight
+ok 234 - DST transitions use the offset at local midnight
+  ---
+  duration_ms: 0.6025
+  type: 'test'
+  ...
+# Subtest: addDays crosses month and year boundaries
+ok 235 - addDays crosses month and year boundaries
+  ---
+  duration_ms: 0.8945
+  type: 'test'
+  ...
+# Subtest: invalid dates are rejected
+ok 236 - invalid dates are rejected
+  ---
+  duration_ms: 1.2622
+  type: 'test'
+  ...
+# Subtest: order creation is idempotent and rejects a changed payload
+ok 237 - order creation is idempotent and rejects a changed payload
+  ---
+  duration_ms: 3.5422
+  type: 'test'
+  ...
+# Subtest: quote uses shared settings, snapshots names and expires in 60 seconds
+ok 238 - quote uses shared settings, snapshots names and expires in 60 seconds
+  ---
+  duration_ms: 1.958
+  type: 'test'
+  ...
+# Subtest: cash finalize records totals, payment and change; replay returns the same sale
+ok 239 - cash finalize records totals, payment and change; replay returns the same sale
+  ---
+  duration_ms: 2.8021
+  type: 'test'
+  ...
+# Subtest: sale lines preserve the historical price after a catalog price change
+ok 240 - sale lines preserve the historical price after a catalog price change
+  ---
+  duration_ms: 0.9678
+  type: 'test'
+  ...
+# Subtest: finalize pins the recipe version at sale time; later versions never rewrite it
+ok 241 - finalize pins the recipe version at sale time; later versions never rewrite it
+  ---
+  duration_ms: 1.057
+  type: 'test'
+  ...
+# Subtest: finalize pins each variant recipe version independently by variantId
+ok 242 - finalize pins each variant recipe version independently by variantId
+  ---
+  duration_ms: 0.9556
+  type: 'test'
+  ...
+# Subtest: quote line matching is order-independent by variantId
+ok 243 - quote line matching is order-independent by variantId
+  ---
+  duration_ms: 1.0537
+  type: 'test'
+  ...
+# Subtest: tracked variants without a published recipe are rejected at sale time
+ok 244 - tracked variants without a published recipe are rejected at sale time
+  ---
+  duration_ms: 0.5223
+  type: 'test'
+  ...
+# Subtest: completed sale snapshots calculation rules after a settings change
+ok 245 - completed sale snapshots calculation rules after a settings change
+  ---
+  duration_ms: 1.5186
+  type: 'test'
+  ...
+# Subtest: a cashier cannot access another cashier draft order
+ok 246 - a cashier cannot access another cashier draft order
+  ---
+  duration_ms: 0.9738
+  type: 'test'
+  ...
+# Subtest: a changed order or settings version makes the quote stale without creating a sale
+ok 247 - a changed order or settings version makes the quote stale without creating a sale
+  ---
+  duration_ms: 1.0619
+  type: 'test'
+  ...
+# Subtest: expired quotes are rejected before any payment is recorded
+ok 248 - expired quotes are rejected before any payment is recorded
+  ---
+  duration_ms: 0.7314
+  type: 'test'
+  ...
+# Subtest: insufficient cash and manual external tender are rejected with nothing written
+ok 249 - insufficient cash and manual external tender are rejected with nothing written
+  ---
+  duration_ms: 1.5393
+  type: 'test'
+  ...
+# Subtest: a different key for a completed order returns ORDER_ALREADY_COMPLETED with the sale id
+ok 250 - a different key for a completed order returns ORDER_ALREADY_COMPLETED with the sale id
+  ---
+  duration_ms: 1.2529
+  type: 'test'
+  ...
+# Subtest: stale order versions and cancelling a completed order are rejected
+ok 251 - stale order versions and cancelling a completed order are rejected
+  ---
+  duration_ms: 1.2226
+  type: 'test'
+  ...
+# Subtest: sales list filters to the cashier own sales while owners see the outlet
+ok 252 - sales list filters to the cashier own sales while owners see the outlet
+  ---
+  duration_ms: 0.9814
+  type: 'test'
+  ...
+# Subtest: sale reference search is server-side, outlet scoped and date bounded
+ok 253 - sale reference search is server-side, outlet scoped and date bounded
+  ---
+  duration_ms: 2.5817
+  type: 'test'
+  ...
+# Subtest: manual external payment records the equal amount with no tender or change
+ok 254 - manual external payment records the equal amount with no tender or change
+  ---
+  duration_ms: 0.6115
+  type: 'test'
+  ...
+# Subtest: an outlet settings change after the quote makes it stale
+ok 255 - an outlet settings change after the quote makes it stale
+  ---
+  duration_ms: 0.48
+  type: 'test'
+  ...
+# Subtest: selling two tracked products consuming three units each deducts exactly six once
+ok 256 - selling two tracked products consuming three units each deducts exactly six once
+  ---
+  duration_ms: 1.9292
+  type: 'test'
+  ...
+# Subtest: a shared ingredient across two sale lines consumes the sum, not one line
+ok 257 - a shared ingredient across two sale lines consumes the sum, not one line
+  ---
+  duration_ms: 0.9195
+  type: 'test'
+  ...
+# Subtest: insufficient stock rejects the sale with item-specific shortages and no writes
+ok 258 - insufficient stock rejects the sale with item-specific shortages and no writes
+  ---
+  duration_ms: 1.6905
+  type: 'test'
+  ...
+# Subtest: cancelled orders never deduct stock when finalization is attempted
+ok 259 - cancelled orders never deduct stock when finalization is attempted
+  ---
+  duration_ms: 0.819
+  type: 'test'
+  ...
+# Subtest: simultaneous finalizations cannot oversell; only one sale and movement commit
+ok 260 - simultaneous finalizations cannot oversell; only one sale and movement commit
+  ---
+  duration_ms: 1.5046
+  type: 'test'
+  ...
+# Subtest: owner reversal validates reason, keeps the sale immutable, and links the reversal
+ok 261 - owner reversal validates reason, keeps the sale immutable, and links the reversal
+  ---
+  duration_ms: 3.0287
+  type: 'test'
+  ...
+# Subtest: a sale that is not completed cannot be reversed
+ok 262 - a sale that is not completed cannot be reversed
+  ---
+  duration_ms: 0.985
+  type: 'test'
+  ...
+# Subtest: reversal restocks only explicitly selected sold items and rejects invalid selections
+ok 263 - reversal restocks only explicitly selected sold items and rejects invalid selections
+  ---
+  duration_ms: 2.231
+  type: 'test'
+  ...
+# Subtest: reversal idempotency replays the same response and rejects a second key
+ok 264 - reversal idempotency replays the same response and rejects a second key
+  ---
+  duration_ms: 1.9879
+  type: 'test'
+  ...
+# Subtest: concurrent reversal with the same key creates one reversal and one stock movement set
+ok 265 - concurrent reversal with the same key creates one reversal and one stock movement set
+  ---
+  duration_ms: 1.2249
+  type: 'test'
+  ...
+# Subtest: serialization and deadlock retries are bounded at six attempts before a retryable 503
+ok 266 - serialization and deadlock retries are bounded at six attempts before a retryable 503
+  ---
+  duration_ms: 3281.4081
+  type: 'test'
+  ...
+# Subtest: table orders open, transfer with an owner-only audit trail, and reject stale versions
+ok 267 - table orders open, transfer with an owner-only audit trail, and reject stale versions
+  ---
+  duration_ms: 4.7662
+  type: 'test'
+  ...
+# Subtest: split bills partition items exactly, settle once each, and survive replay
+ok 268 - split bills partition items exactly, settle once each, and survive replay
+  ---
+  duration_ms: 6.0805
+  type: 'test'
+  ...
+# Subtest: split rejects overlapping, missing, unknown quantities and stale versions without writes
+ok 269 - split rejects overlapping, missing, unknown quantities and stale versions without writes
+  ---
+  duration_ms: 2.0933
+  type: 'test'
+  ...
+# Subtest: concurrent splits on the same revision create one set of bills and one audit row
+ok 270 - concurrent splits on the same revision create one set of bills and one audit row
+  ---
+  duration_ms: 2.7859
+  type: 'test'
+  ...
+# Subtest: cancelling an unpaid table order consumes no stock, writes audit, and cannot be settled
+ok 271 - cancelling an unpaid table order consumes no stock, writes audit, and cannot be settled
+  ---
+  duration_ms: 1.7867
+  type: 'test'
+  ...
+# Subtest: finalize records an audit row and split parents cannot be settled twice
+ok 272 - finalize records an audit row and split parents cannot be settled twice
+  ---
+  duration_ms: 3.4401
+  type: 'test'
+  ...
+# Subtest: a percentage promotion prices the quote, snapshots the sale, and writes a promotion audit
+ok 273 - a percentage promotion prices the quote, snapshots the sale, and writes a promotion audit
+  ---
+  duration_ms: 2.5474
+  type: 'test'
+  ...
+# Subtest: a fixed promotion larger than the basket is capped at the basket subtotal
+ok 274 - a fixed promotion larger than the basket is capped at the basket subtotal
+  ---
+  duration_ms: 0.8356
+  type: 'test'
+  ...
+# Subtest: incompatible promotion stacking is rejected server-side at quote time
+ok 275 - incompatible promotion stacking is rejected server-side at quote time
   ---
   duration_ms: 0.8911
   type: 'test'
   ...
-# Subtest: waste beyond the available balance is rejected with INSUFFICIENT_STOCK
-ok 187 - waste beyond the available balance is rejected with INSUFFICIENT_STOCK
-  ---
-  duration_ms: 0.4314
-  type: 'test'
-  ...
-# Subtest: cashiers may count and record waste while owner-only transfer writes return 403
-ok 188 - cashiers may count and record waste while owner-only transfer writes return 403
-  ---
-  duration_ms: 1.4253
-  type: 'test'
-  ...
-# Subtest: dispatch moves stock out of the source and exposes the gap as in-transit only
-ok 189 - dispatch moves stock out of the source and exposes the gap as in-transit only
-  ---
-  duration_ms: 1.563
-  type: 'test'
-  ...
-# Subtest: receive adds the dispatched amount to the destination, zeroes in-transit and preserves grand total
-ok 190 - receive adds the dispatched amount to the destination, zeroes in-transit and preserves grand total
-  ---
-  duration_ms: 1.4539
-  type: 'test'
-  ...
-# Subtest: double receive returns 409 and does not write a second TRANSFER_IN row
-ok 191 - double receive returns 409 and does not write a second TRANSFER_IN row
-  ---
-  duration_ms: 1.2137
-  type: 'test'
-  ...
-# Subtest: over-receive is rejected and leaves the destination and in-transit state untouched
-ok 192 - over-receive is rejected and leaves the destination and in-transit state untouched
-  ---
-  duration_ms: 0.7505
-  type: 'test'
-  ...
-# Subtest: cancelling an un-received dispatched transfer restores the source balance
-ok 193 - cancelling an un-received dispatched transfer restores the source balance
-  ---
-  duration_ms: 0.7134
-  type: 'test'
-  ...
-# Subtest: concurrent receives on the same transfer: one wins and the stale writer gets RECEIVE_CONFLICT
-ok 194 - concurrent receives on the same transfer: one wins and the stale writer gets RECEIVE_CONFLICT
-  ---
-  duration_ms: 1.4347
-  type: 'test'
-  ...
-# Subtest: supplier units convert exactly into base units
-ok 195 - supplier units convert exactly into base units
-  ---
-  duration_ms: 2.942
-  type: 'test'
-  ...
-# Subtest: base units convert exactly back into supplier units
-ok 196 - base units convert exactly back into supplier units
-  ---
-  duration_ms: 1.428
-  type: 'test'
-  ...
-# Subtest: base quantity that does not divide into supplier packs is rejected, never rounded
-ok 197 - base quantity that does not divide into supplier packs is rejected, never rounded
-  ---
-  duration_ms: 1.2394
-  type: 'test'
-  ...
-# Subtest: supplier quantity whose base result exceeds item precision is rejected
-ok 198 - supplier quantity whose base result exceeds item precision is rejected
-  ---
-  duration_ms: 0.8236
-  type: 'test'
-  ...
-# Subtest: conversion overflow is rejected before any ledger write
-ok 199 - conversion overflow is rejected before any ledger write
-  ---
-  duration_ms: 0.4303
-  type: 'test'
-  ...
-# Subtest: zero and negative receipt quantities are rejected with 400
-ok 200 - zero and negative receipt quantities are rejected with 400
-  ---
-  duration_ms: 0.3206
-  type: 'test'
-  ...
-# Subtest: quantity precision guard rejects non-representable values
-ok 201 - quantity precision guard rejects non-representable values
-  ---
-  duration_ms: 0.6757
-  type: 'test'
-  ...
-# Subtest: purchase order state only closes when every line is fully received
-ok 202 - purchase order state only closes when every line is fully received
-  ---
-  duration_ms: 0.4007
-  type: 'test'
-  ...
-# Subtest: in-transit quantity is dispatched minus received and returns to zero after full receive
-ok 203 - in-transit quantity is dispatched minus received and returns to zero after full receive
-  ---
-  duration_ms: 0.8506
-  type: 'test'
-  ...
-# Subtest: count variance is counted minus the system snapshot
-ok 204 - count variance is counted minus the system snapshot
-  ---
-  duration_ms: 0.574
-  type: 'test'
-  ...
-# Subtest: cashier can record counts and waste but cannot manage transfer or purchasing records
-ok 205 - cashier can record counts and waste but cannot manage transfer or purchasing records
-  ---
-  duration_ms: 0.3253
-  type: 'test'
-  ...
-# Subtest: owner holds every purchasing and stock-control permission
-ok 206 - owner holds every purchasing and stock-control permission
-  ---
-  duration_ms: 0.1592
-  type: 'test'
-  ...
-# Subtest: an expired or foreign receipt token returns not found
-ok 207 - an expired or foreign receipt token returns not found
-  ---
-  duration_ms: 1.1645
-  type: 'test'
-  ...
-# Subtest: a receipt for an anonymised customer is rejected without leaking data
-ok 208 - a receipt for an anonymised customer is rejected without leaking data
-  ---
-  duration_ms: 0.4519
-  type: 'test'
-  ...
-# Subtest: publishing version 2 keeps version 1 immutable and stale expectedVersion returns 409
-ok 209 - publishing version 2 keeps version 1 immutable and stale expectedVersion returns 409
-  ---
-  duration_ms: 4.7521
-  type: 'test'
-  ...
-# Subtest: recipe validation rejects zero, extra precision, duplicates and foreign stock items
-ok 210 - recipe validation rejects zero, extra precision, duplicates and foreign stock items
-  ---
-  duration_ms: 1.8722
-  type: 'test'
-  ...
-# Subtest: reads return 404 before a recipe is published and for another business
-ok 211 - reads return 404 before a recipe is published and for another business
-  ---
-  duration_ms: 0.9476
-  type: 'test'
-  ...
-# Subtest: daily report aggregates completed sales, payment kinds and menu quantities
-ok 212 - daily report aggregates completed sales, payment kinds and menu quantities
-  ---
-  duration_ms: 4.7765
-  type: 'test'
-  ...
-# Subtest: empty range returns a zeroed report instead of an error
-ok 213 - empty range returns a zeroed report instead of an error
-  ---
-  duration_ms: 1.1414
-  type: 'test'
-  ...
-# Subtest: reversed sales are excluded by the explicit completed-state filter
-ok 214 - reversed sales are excluded by the explicit completed-state filter
-  ---
-  duration_ms: 0.9855
-  type: 'test'
-  ...
-# Subtest: reversals reduce net item sales without changing sale count or gross
-ok 215 - reversals reduce net item sales without changing sale count or gross
-  ---
-  duration_ms: 2.8026
-  type: 'test'
-  ...
-# Subtest: a 23:30 local sale belongs to its local day, not the following UTC day
-ok 216 - a 23:30 local sale belongs to its local day, not the following UTC day
-  ---
-  duration_ms: 1.7047
-  type: 'test'
-  ...
-# Subtest: average bill uses half-up integer division
-ok 217 - average bill uses half-up integer division
-  ---
-  duration_ms: 0.2359
-  type: 'test'
-  ...
-# Subtest: local timestamp is labelled in the outlet timezone
-ok 218 - local timestamp is labelled in the outlet timezone
-  ---
-  duration_ms: 0.434
-  type: 'test'
-  ...
-# Subtest: csv export preserves commas, quotes and newlines in item names
-ok 219 - csv export preserves commas, quotes and newlines in item names
-  ---
-  duration_ms: 1.0729
-  type: 'test'
-  ...
-# Subtest: csv text that starts like a spreadsheet formula is neutralised
-ok 220 - csv text that starts like a spreadsheet formula is neutralised
-  ---
-  duration_ms: 1.3263
-  type: 'test'
-  ...
-# Subtest: cross-business outlet IDs return 404 and oversized ranges return 400
-ok 221 - cross-business outlet IDs return 404 and oversized ranges return 400
-  ---
-  duration_ms: 1.3179
-  type: 'test'
-  ...
-# Subtest: configured service and tax are half-up and tax applies to subtotal plus service
-ok 222 - configured service and tax are half-up and tax applies to subtotal plus service
-  ---
-  duration_ms: 1.1443
-  type: 'test'
-  ...
-# Subtest: half-up rounds exact .5 up and below .5 down
-ok 223 - half-up rounds exact .5 up and below .5 down
-  ---
-  duration_ms: 0.3472
-  type: 'test'
-  ...
-# Subtest: tax is calculated on subtotal plus service
-ok 224 - tax is calculated on subtotal plus service
-  ---
-  duration_ms: 0.1649
-  type: 'test'
-  ...
-# Subtest: money beyond JavaScript safe integer is rejected
-ok 225 - money beyond JavaScript safe integer is rejected
-  ---
-  duration_ms: 0.82
-  type: 'test'
-  ...
-# Subtest: cash payment requires exact amount, sufficient tender and records change
-ok 226 - cash payment requires exact amount, sufficient tender and records change
-  ---
-  duration_ms: 0.4011
-  type: 'test'
-  ...
-# Subtest: cash below total is rejected
-ok 227 - cash below total is rejected
-  ---
-  duration_ms: 0.2222
-  type: 'test'
-  ...
-# Subtest: cash amount must equal the quoted total
-ok 228 - cash amount must equal the quoted total
-  ---
-  duration_ms: 0.4652
-  type: 'test'
-  ...
-# Subtest: manual external payment equals total and omits tender and change
-ok 229 - manual external payment equals total and omits tender and change
-  ---
-  duration_ms: 0.2352
-  type: 'test'
-  ...
-# Subtest: online payment equals total and never records cash tender or change
-ok 230 - online payment equals total and never records cash tender or change
-  ---
-  duration_ms: 0.3854
-  type: 'test'
-  ...
-# Subtest: outlet-local midnight converts to UTC for the configured timezone
-ok 231 - outlet-local midnight converts to UTC for the configured timezone
-  ---
-  duration_ms: 1.9119
-  type: 'test'
-  ...
-# Subtest: date ranges are half-open in outlet-local time
-ok 232 - date ranges are half-open in outlet-local time
-  ---
-  duration_ms: 0.7583
-  type: 'test'
-  ...
-# Subtest: DST transitions use the offset at local midnight
-ok 233 - DST transitions use the offset at local midnight
-  ---
-  duration_ms: 0.5748
-  type: 'test'
-  ...
-# Subtest: addDays crosses month and year boundaries
-ok 234 - addDays crosses month and year boundaries
-  ---
-  duration_ms: 0.6639
-  type: 'test'
-  ...
-# Subtest: invalid dates are rejected
-ok 235 - invalid dates are rejected
-  ---
-  duration_ms: 0.9522
-  type: 'test'
-  ...
-# Subtest: order creation is idempotent and rejects a changed payload
-ok 236 - order creation is idempotent and rejects a changed payload
-  ---
-  duration_ms: 4.1642
-  type: 'test'
-  ...
-# Subtest: quote uses shared settings, snapshots names and expires in 60 seconds
-ok 237 - quote uses shared settings, snapshots names and expires in 60 seconds
-  ---
-  duration_ms: 2.0715
-  type: 'test'
-  ...
-# Subtest: cash finalize records totals, payment and change; replay returns the same sale
-ok 238 - cash finalize records totals, payment and change; replay returns the same sale
-  ---
-  duration_ms: 3.1686
-  type: 'test'
-  ...
-# Subtest: sale lines preserve the historical price after a catalog price change
-ok 239 - sale lines preserve the historical price after a catalog price change
-  ---
-  duration_ms: 1.0399
-  type: 'test'
-  ...
-# Subtest: finalize pins the recipe version at sale time; later versions never rewrite it
-ok 240 - finalize pins the recipe version at sale time; later versions never rewrite it
-  ---
-  duration_ms: 1.0534
-  type: 'test'
-  ...
-# Subtest: finalize pins each variant recipe version independently by variantId
-ok 241 - finalize pins each variant recipe version independently by variantId
-  ---
-  duration_ms: 1.1181
-  type: 'test'
-  ...
-# Subtest: quote line matching is order-independent by variantId
-ok 242 - quote line matching is order-independent by variantId
-  ---
-  duration_ms: 1.6367
-  type: 'test'
-  ...
-# Subtest: tracked variants without a published recipe are rejected at sale time
-ok 243 - tracked variants without a published recipe are rejected at sale time
-  ---
-  duration_ms: 0.5773
-  type: 'test'
-  ...
-# Subtest: completed sale snapshots calculation rules after a settings change
-ok 244 - completed sale snapshots calculation rules after a settings change
-  ---
-  duration_ms: 1.6344
-  type: 'test'
-  ...
-# Subtest: a cashier cannot access another cashier draft order
-ok 245 - a cashier cannot access another cashier draft order
-  ---
-  duration_ms: 1.2126
-  type: 'test'
-  ...
-# Subtest: a changed order or settings version makes the quote stale without creating a sale
-ok 246 - a changed order or settings version makes the quote stale without creating a sale
-  ---
-  duration_ms: 1.2789
-  type: 'test'
-  ...
-# Subtest: expired quotes are rejected before any payment is recorded
-ok 247 - expired quotes are rejected before any payment is recorded
-  ---
-  duration_ms: 0.7358
-  type: 'test'
-  ...
-# Subtest: insufficient cash and manual external tender are rejected with nothing written
-ok 248 - insufficient cash and manual external tender are rejected with nothing written
-  ---
-  duration_ms: 1.3303
-  type: 'test'
-  ...
-# Subtest: a different key for a completed order returns ORDER_ALREADY_COMPLETED with the sale id
-ok 249 - a different key for a completed order returns ORDER_ALREADY_COMPLETED with the sale id
-  ---
-  duration_ms: 1.2988
-  type: 'test'
-  ...
-# Subtest: stale order versions and cancelling a completed order are rejected
-ok 250 - stale order versions and cancelling a completed order are rejected
-  ---
-  duration_ms: 0.9645
-  type: 'test'
-  ...
-# Subtest: sales list filters to the cashier own sales while owners see the outlet
-ok 251 - sales list filters to the cashier own sales while owners see the outlet
-  ---
-  duration_ms: 0.8468
-  type: 'test'
-  ...
-# Subtest: sale reference search is server-side, outlet scoped and date bounded
-ok 252 - sale reference search is server-side, outlet scoped and date bounded
-  ---
-  duration_ms: 2.8854
-  type: 'test'
-  ...
-# Subtest: manual external payment records the equal amount with no tender or change
-ok 253 - manual external payment records the equal amount with no tender or change
-  ---
-  duration_ms: 0.7075
-  type: 'test'
-  ...
-# Subtest: an outlet settings change after the quote makes it stale
-ok 254 - an outlet settings change after the quote makes it stale
-  ---
-  duration_ms: 0.5428
-  type: 'test'
-  ...
-# Subtest: selling two tracked products consuming three units each deducts exactly six once
-ok 255 - selling two tracked products consuming three units each deducts exactly six once
-  ---
-  duration_ms: 2.212
-  type: 'test'
-  ...
-# Subtest: a shared ingredient across two sale lines consumes the sum, not one line
-ok 256 - a shared ingredient across two sale lines consumes the sum, not one line
-  ---
-  duration_ms: 1.0911
-  type: 'test'
-  ...
-# Subtest: insufficient stock rejects the sale with item-specific shortages and no writes
-ok 257 - insufficient stock rejects the sale with item-specific shortages and no writes
-  ---
-  duration_ms: 2.4159
-  type: 'test'
-  ...
-# Subtest: cancelled orders never deduct stock when finalization is attempted
-ok 258 - cancelled orders never deduct stock when finalization is attempted
-  ---
-  duration_ms: 0.9735
-  type: 'test'
-  ...
-# Subtest: simultaneous finalizations cannot oversell; only one sale and movement commit
-ok 259 - simultaneous finalizations cannot oversell; only one sale and movement commit
-  ---
-  duration_ms: 1.8028
-  type: 'test'
-  ...
-# Subtest: owner reversal validates reason, keeps the sale immutable, and links the reversal
-ok 260 - owner reversal validates reason, keeps the sale immutable, and links the reversal
-  ---
-  duration_ms: 3.2408
-  type: 'test'
-  ...
-# Subtest: a sale that is not completed cannot be reversed
-ok 261 - a sale that is not completed cannot be reversed
-  ---
-  duration_ms: 1.0444
-  type: 'test'
-  ...
-# Subtest: reversal restocks only explicitly selected sold items and rejects invalid selections
-ok 262 - reversal restocks only explicitly selected sold items and rejects invalid selections
-  ---
-  duration_ms: 2.8203
-  type: 'test'
-  ...
-# Subtest: reversal idempotency replays the same response and rejects a second key
-ok 263 - reversal idempotency replays the same response and rejects a second key
-  ---
-  duration_ms: 2.027
-  type: 'test'
-  ...
-# Subtest: concurrent reversal with the same key creates one reversal and one stock movement set
-ok 264 - concurrent reversal with the same key creates one reversal and one stock movement set
-  ---
-  duration_ms: 1.3052
-  type: 'test'
-  ...
-# Subtest: serialization and deadlock retries are bounded at six attempts before a retryable 503
-ok 265 - serialization and deadlock retries are bounded at six attempts before a retryable 503
-  ---
-  duration_ms: 3252.9636
-  type: 'test'
-  ...
-# Subtest: table orders open, transfer with an owner-only audit trail, and reject stale versions
-ok 266 - table orders open, transfer with an owner-only audit trail, and reject stale versions
-  ---
-  duration_ms: 2.4528
-  type: 'test'
-  ...
-# Subtest: split bills partition items exactly, settle once each, and survive replay
-ok 267 - split bills partition items exactly, settle once each, and survive replay
-  ---
-  duration_ms: 4.2139
-  type: 'test'
-  ...
-# Subtest: split rejects overlapping, missing, unknown quantities and stale versions without writes
-ok 268 - split rejects overlapping, missing, unknown quantities and stale versions without writes
-  ---
-  duration_ms: 0.8877
-  type: 'test'
-  ...
-# Subtest: concurrent splits on the same revision create one set of bills and one audit row
-ok 269 - concurrent splits on the same revision create one set of bills and one audit row
-  ---
-  duration_ms: 0.6983
-  type: 'test'
-  ...
-# Subtest: cancelling an unpaid table order consumes no stock, writes audit, and cannot be settled
-ok 270 - cancelling an unpaid table order consumes no stock, writes audit, and cannot be settled
-  ---
-  duration_ms: 0.8014
-  type: 'test'
-  ...
-# Subtest: finalize records an audit row and split parents cannot be settled twice
-ok 271 - finalize records an audit row and split parents cannot be settled twice
-  ---
-  duration_ms: 1.6276
-  type: 'test'
-  ...
-# Subtest: a percentage promotion prices the quote, snapshots the sale, and writes a promotion audit
-ok 272 - a percentage promotion prices the quote, snapshots the sale, and writes a promotion audit
-  ---
-  duration_ms: 1.8401
-  type: 'test'
-  ...
-# Subtest: a fixed promotion larger than the basket is capped at the basket subtotal
-ok 273 - a fixed promotion larger than the basket is capped at the basket subtotal
-  ---
-  duration_ms: 0.5468
-  type: 'test'
-  ...
-# Subtest: incompatible promotion stacking is rejected server-side at quote time
-ok 274 - incompatible promotion stacking is rejected server-side at quote time
-  ---
-  duration_ms: 0.5929
-  type: 'test'
-  ...
 # Subtest: item modifiers change the price, persist on the sale line, and consume stock once
-ok 275 - item modifiers change the price, persist on the sale line, and consume stock once
+ok 276 - item modifiers change the price, persist on the sale line, and consume stock once
   ---
-  duration_ms: 1.8201
+  duration_ms: 2.3257
   type: 'test'
   ...
 # Subtest: partial refunds keep money and restock independent across multiple refunds
-ok 276 - partial refunds keep money and restock independent across multiple refunds
+ok 277 - partial refunds keep money and restock independent across multiple refunds
   ---
-  duration_ms: 2.1125
+  duration_ms: 4.1929
   type: 'test'
   ...
 # Subtest: partial refund with both money and restock moves stock once and rejects unknown restock
-ok 277 - partial refund with both money and restock moves stock once and rejects unknown restock
+ok 278 - partial refund with both money and restock moves stock once and rejects unknown restock
   ---
-  duration_ms: 1.4735
+  duration_ms: 2.545
   type: 'test'
   ...
 # Subtest: refund approval allows a cashier below threshold and refuses above it until owner acts
-ok 278 - refund approval allows a cashier below threshold and refuses above it until owner acts
+ok 279 - refund approval allows a cashier below threshold and refuses above it until owner acts
   ---
-  duration_ms: 2.4973
+  duration_ms: 3.1163
   type: 'test'
   ...
 # Subtest: discount approval blocks a cashier above the configured threshold and audits both decisions
-ok 279 - discount approval blocks a cashier above the configured threshold and audits both decisions
+ok 280 - discount approval blocks a cashier above the configured threshold and audits both decisions
   ---
-  duration_ms: 1.2146
+  duration_ms: 1.3749
   type: 'test'
   ...
 # Subtest: concurrent partial refunds with the same key create one reversal and one stock movement
-ok 280 - concurrent partial refunds with the same key create one reversal and one stock movement
+ok 281 - concurrent partial refunds with the same key create one reversal and one stock movement
   ---
-  duration_ms: 1.5828
+  duration_ms: 1.8922
   type: 'test'
   ...
 # Subtest: online refund validates unknown lines, excess quantities, amounts and restock before any provider call
-ok 281 - online refund validates unknown lines, excess quantities, amounts and restock before any provider call
+ok 282 - online refund validates unknown lines, excess quantities, amounts and restock before any provider call
   ---
-  duration_ms: 2.715
+  duration_ms: 2.9737
   type: 'test'
   ...
 # Subtest: online refund reserves before I/O, replays once and rejects changed normalized payload
-ok 282 - online refund reserves before I/O, replays once and rejects changed normalized payload
+ok 283 - online refund reserves before I/O, replays once and rejects changed normalized payload
   ---
-  duration_ms: 2.3009
+  duration_ms: 3.7641
   type: 'test'
   ...
 # Subtest: provider success followed by local failure recovers on service restart without another provider call
-ok 283 - provider success followed by local failure recovers on service restart without another provider call
+ok 284 - provider success followed by local failure recovers on service restart without another provider call
   ---
-  duration_ms: 2.3567
+  duration_ms: 3.6534
   type: 'test'
   ...
 # Subtest: lost provider response stays UNKNOWN and same-key restart deduplicates provider and local effects
-ok 284 - lost provider response stays UNKNOWN and same-key restart deduplicates provider and local effects
+ok 285 - lost provider response stays UNKNOWN and same-key restart deduplicates provider and local effects
   ---
-  duration_ms: 2.0439
+  duration_ms: 3.2671
   type: 'test'
   ...
 # Subtest: explicit provider failure is durable and same-key replay makes no additional provider call
-ok 285 - explicit provider failure is durable and same-key replay makes no additional provider call
+ok 286 - explicit provider failure is durable and same-key replay makes no additional provider call
   ---
-  duration_ms: 1.3799
+  duration_ms: 1.8715
   type: 'test'
   ...
 # Subtest: online restock-only correction skips provider intent and preserves existing behavior
-ok 286 - online restock-only correction skips provider intent and preserves existing behavior
+ok 287 - online restock-only correction skips provider intent and preserves existing behavior
   ---
-  duration_ms: 1.1699
+  duration_ms: 1.4948
   type: 'test'
   ...
 # Subtest: another cashier cannot resume an owner refund intent
-ok 287 - another cashier cannot resume an owner refund intent
+ok 288 - another cashier cannot resume an owner refund intent
   ---
-  duration_ms: 2.0707
+  duration_ms: 1.7877
   type: 'test'
   ...
 # Subtest: failure persisting provider success keeps the original key recoverable
-ok 288 - failure persisting provider success keeps the original key recoverable
+ok 289 - failure persisting provider success keeps the original key recoverable
   ---
-  duration_ms: 1.9104
+  duration_ms: 2.4923
   type: 'test'
   ...
 # Subtest: settings read is scoped to the authenticated business
-ok 289 - settings read is scoped to the authenticated business
+ok 290 - settings read is scoped to the authenticated business
   ---
-  duration_ms: 0.7739
+  duration_ms: 0.8158
   type: 'test'
   ...
 # Subtest: settings read returns 404 for another business
-ok 290 - settings read returns 404 for another business
+ok 291 - settings read returns 404 for another business
   ---
-  duration_ms: 0.5014
+  duration_ms: 0.5288
   type: 'test'
   ...
 # Subtest: settings update rejects an unknown timezone before writing
-ok 291 - settings update rejects an unknown timezone before writing
+ok 292 - settings update rejects an unknown timezone before writing
   ---
-  duration_ms: 0.6576
+  duration_ms: 0.7112
   type: 'test'
   ...
 # Subtest: settings update rejects a stale version with a conflict
-ok 292 - settings update rejects a stale version with a conflict
+ok 293 - settings update rejects a stale version with a conflict
   ---
-  duration_ms: 0.6226
+  duration_ms: 0.6345
   type: 'test'
   ...
 # Subtest: settings update writes business name and outlet settings then returns the record
-ok 293 - settings update writes business name and outlet settings then returns the record
+ok 294 - settings update writes business name and outlet settings then returns the record
   ---
-  duration_ms: 0.8184
+  duration_ms: 0.3243
   type: 'test'
   ...
 # Subtest: settings mutation is owner-only
-ok 294 - settings mutation is owner-only
+ok 295 - settings mutation is owner-only
   ---
-  duration_ms: 1.0718
+  duration_ms: 0.4514
   type: 'test'
   ...
 # Subtest: currency exponents and timezone validation are server-owned
-ok 295 - currency exponents and timezone validation are server-owned
+ok 296 - currency exponents and timezone validation are server-owned
   ---
-  duration_ms: 0.7155
+  duration_ms: 0.2045
   type: 'test'
   ...
 # Subtest: stock writes stay owner-only while cashiers can read outlet stock for counts
-ok 296 - stock writes stay owner-only while cashiers can read outlet stock for counts
+ok 297 - stock writes stay owner-only while cashiers can read outlet stock for counts
   ---
-  duration_ms: 1.0548
+  duration_ms: 0.9731
   type: 'test'
   ...
 # Subtest: cross-tenant outlet access returns 404 before any stock read
-ok 297 - cross-tenant outlet access returns 404 before any stock read
+ok 298 - cross-tenant outlet access returns 404 before any stock read
   ---
-  duration_ms: 0.8538
+  duration_ms: 0.7236
   type: 'test'
   ...
 # Subtest: creating an item rejects precision beyond quantityScale
-ok 298 - creating an item rejects precision beyond quantityScale
+ok 299 - creating an item rejects precision beyond quantityScale
   ---
-  duration_ms: 0.2946
+  duration_ms: 0.2322
   type: 'test'
   ...
 # Subtest: opening balance creates one movement and balance equals the movement sum
-ok 299 - opening balance creates one movement and balance equals the movement sum
+ok 300 - opening balance creates one movement and balance equals the movement sum
   ---
-  duration_ms: 1.5411
+  duration_ms: 1.4386
   type: 'test'
   ...
 # Subtest: a second opening balance for the same item and outlet is rejected
-ok 300 - a second opening balance for the same item and outlet is rejected
+ok 301 - a second opening balance for the same item and outlet is rejected
   ---
-  duration_ms: 0.5671
+  duration_ms: 0.5693
   type: 'test'
   ...
 # Subtest: replaying an idempotency key returns the original result and one movement
-ok 301 - replaying an idempotency key returns the original result and one movement
+ok 302 - replaying an idempotency key returns the original result and one movement
   ---
-  duration_ms: 0.274
+  duration_ms: 0.276
   type: 'test'
   ...
 # Subtest: the same idempotency key with a different payload is a conflict
-ok 302 - the same idempotency key with a different payload is a conflict
+ok 303 - the same idempotency key with a different payload is a conflict
   ---
-  duration_ms: 0.3939
+  duration_ms: 0.3707
   type: 'test'
   ...
 # Subtest: a negative receipt quantity is rejected without a movement
-ok 303 - a negative receipt quantity is rejected without a movement
+ok 304 - a negative receipt quantity is rejected without a movement
   ---
-  duration_ms: 0.1855
+  duration_ms: 0.1691
   type: 'test'
   ...
 # Subtest: an adjustment with more decimals than quantityScale is rejected
-ok 304 - an adjustment with more decimals than quantityScale is rejected
+ok 305 - an adjustment with more decimals than quantityScale is rejected
   ---
-  duration_ms: 0.5929
+  duration_ms: 0.5143
   type: 'test'
   ...
 # Subtest: a stale expectedBalanceVersion returns 409 and writes nothing
-ok 305 - a stale expectedBalanceVersion returns 409 and writes nothing
+ok 306 - a stale expectedBalanceVersion returns 409 and writes nothing
   ---
-  duration_ms: 0.7347
+  duration_ms: 0.881
   type: 'test'
   ...
 # Subtest: an adjustment below zero is rejected with the balance unchanged
-ok 306 - an adjustment below zero is rejected with the balance unchanged
+ok 307 - an adjustment below zero is rejected with the balance unchanged
   ---
-  duration_ms: 0.7477
+  duration_ms: 0.6357
   type: 'test'
   ...
 # Subtest: receipt and negative adjustment keep balance equal to the movement sum
-ok 307 - receipt and negative adjustment keep balance equal to the movement sum
+ok 308 - receipt and negative adjustment keep balance equal to the movement sum
   ---
-  duration_ms: 0.6707
+  duration_ms: 0.6973
   type: 'test'
   ...
 # Subtest: unknown stock item ids return 404 and write nothing
-ok 308 - unknown stock item ids return 404 and write nothing
+ok 309 - unknown stock item ids return 404 and write nothing
   ---
-  duration_ms: 0.2702
+  duration_ms: 0.2807
   type: 'test'
   ...
 # Subtest: movements are listed newest first for an owned item
-ok 309 - movements are listed newest first for an owned item
+ok 310 - movements are listed newest first for an owned item
   ---
-  duration_ms: 0.6189
+  duration_ms: 0.8304
   type: 'test'
   ...
 # Subtest: listing returns quantity and version from the outlet balance
-ok 310 - listing returns quantity and version from the outlet balance
+ok 311 - listing returns quantity and version from the outlet balance
   ---
-  duration_ms: 0.894
+  duration_ms: 0.9686
   type: 'test'
   ...
 # Subtest: movement history resolves sale references and degrades when a sale is missing
-ok 311 - movement history resolves sale references and degrades when a sale is missing
+ok 312 - movement history resolves sale references and degrades when a sale is missing
   ---
-  duration_ms: 0.2689
+  duration_ms: 0.362
   type: 'test'
   ...
 # Subtest: stock write responses expose a null sourceReference
-ok 312 - stock write responses expose a null sourceReference
+ok 313 - stock write responses expose a null sourceReference
   ---
-  duration_ms: 0.1745
+  duration_ms: 0.1662
   type: 'test'
   ...
 # Subtest: integration target requires explicit opt-in and a PostgreSQL test database name
-ok 313 - integration target requires explicit opt-in and a PostgreSQL test database name
+ok 314 - integration target requires explicit opt-in and a PostgreSQL test database name
   ---
-  duration_ms: 0.9564
+  duration_ms: 1.505
   type: 'test'
   ...
 # Subtest: integration target rejects production mode and migration/test target mismatches without leaking credentials
-ok 314 - integration target rejects production mode and migration/test target mismatches without leaking credentials
+ok 315 - integration target rejects production mode and migration/test target mismatches without leaking credentials
   ---
-  duration_ms: 0.8377
+  duration_ms: 0.5747
   type: 'test'
   ...
 # Subtest: standalone refund suite retains its explicit test URL entry point
-ok 315 - standalone refund suite retains its explicit test URL entry point
+ok 316 - standalone refund suite retains its explicit test URL entry point
   ---
-  duration_ms: 0.1707
+  duration_ms: 0.1376
   type: 'test'
   ...
-1..315
-# tests 315
+1..316
+# tests 316
 # suites 0
-# pass 315
+# pass 316
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 6262.959
+# duration_ms 6068.6022
 
 > @modern-pos/web@0.1.0 test C:\devai\modern-pos\apps\web
 > node --test lib/*.test.mts
 
 TAP version 13
-# (node:7340) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/devai/modern-pos/apps/web/lib/back-office-nav.ts is not specified and it doesn't parse as CommonJS.
+# (node:48316) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/devai/modern-pos/apps/web/lib/back-office-nav.ts is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to C:\\devai\\modern-pos\\apps\\web\\package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: owners see every implemented module exactly once
 ok 1 - owners see every implemented module exactly once
   ---
-  duration_ms: 0.939
+  duration_ms: 1.5757
   type: 'test'
   ...
 # Subtest: cashiers see only permitted modules and no owner-only destination
 ok 2 - cashiers see only permitted modules and no owner-only destination
   ---
-  duration_ms: 0.1168
+  duration_ms: 0.1944
   type: 'test'
   ...
 # Subtest: unknown roles receive no navigation instead of every destination
 ok 3 - unknown roles receive no navigation instead of every destination
   ---
-  duration_ms: 0.0705
+  duration_ms: 0.1517
   type: 'test'
   ...
-# (node:8536) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/devai/modern-pos/apps/web/lib/reporting.ts is not specified and it doesn't parse as CommonJS.
+# (node:45268) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/devai/modern-pos/apps/web/lib/reporting.ts is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to C:\\devai\\modern-pos\\apps\\web\\package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: back-office money rendering keeps negative expected cash signed
 ok 4 - back-office money rendering keeps negative expected cash signed
   ---
-  duration_ms: 10.7761
+  duration_ms: 17.349
   type: 'test'
   ...
 1..4
@@ -1953,7 +1959,7 @@ ok 4 - back-office money rendering keeps negative expected cash signed
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 100.3607
+# duration_ms 170.6676
 
 > modern-pos@0.1.0 test:ops C:\devai\modern-pos
 > node --test ops/operations.test.mjs
@@ -1962,38 +1968,38 @@ TAP version 13
 # Subtest: backup validates dedicated remote paths and retention before running commands
 ok 1 - backup validates dedicated remote paths and retention before running commands
   ---
-  duration_ms: 1.4351
+  duration_ms: 0.7651
   type: 'test'
   ...
 # Subtest: database credentials stay in child environment and diagnostics are redacted
 ok 2 - database credentials stay in child environment and diagnostics are redacted
   ---
-  duration_ms: 73.4908
+  duration_ms: 47.333
   type: 'test'
   ...
 # Subtest: backup publishes success and retention only after remote checksum verification
 ok 3 - backup publishes success and retention only after remote checksum verification
   ---
-  duration_ms: 27.4105
+  duration_ms: 15.9584
   type: 'test'
   ...
 # Subtest: restore drill rejects production and targets outside its synthetic namespace
 ok 4 - restore drill rejects production and targets outside its synthetic namespace
   ---
-  duration_ms: 0.3955
+  duration_ms: 0.2452
   type: 'test'
   ...
 # Subtest: monitor requires HTTPS and explicit loopback opt-in
 ok 5 - monitor requires HTTPS and explicit loopback opt-in
   ---
-  duration_ms: 0.2207
+  duration_ms: 0.1435
   type: 'test'
   ...
 # {"scenario":"loopback-notification-drill","events":["incident","recovered","incident"],"alertFailureRetry":"passed","redaction":"passed"}
 # Subtest: controlled health failure sends redacted incident/recovery alerts and retries rejected delivery
 ok 6 - controlled health failure sends redacted incident/recovery alerts and retries rejected delivery
   ---
-  duration_ms: 176.8857
+  duration_ms: 132.2774
   type: 'test'
   ...
 1..6
@@ -2004,4 +2010,4 @@ ok 6 - controlled health failure sends redacted incident/recovery alerts and ret
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 426.3932
+# duration_ms 275.5468

@@ -4,7 +4,7 @@ Node v22.23.1; PostgreSQL 17.6; isolated synthetic database
 > prisma migrate deploy
 
 Prisma schema loaded from prisma\schema.prisma
-Datasource "db": PostgreSQL database "pos_1794895639575_transaction_test", schema "public" at "127.0.0.1:55466"
+Datasource "db": PostgreSQL database "pos_1794898378965_transaction_test", schema "public" at "127.0.0.1:55466"
 
 22 migrations found in prisma/migrations
 
@@ -110,78 +110,78 @@ For more information, see: https://pris.ly/prisma-config
 > tsx --test --test-concurrency=1 src/sales/transactions.integration.ts src/sales/refund-intents.integration.ts src/payments/lifecycle.integration.ts
 
 TAP version 13
-# {"scenario":"signed-mock-webhook","saleId":"bb009446-3d07-4495-88e7-5d0557280618","providerRef":"mock_edd54854-0164-4a36-89ec-c1a78dd35322","eventId":"evt_b776c7c9-6db7-4770-8fc5-e672dee4b74a","outcome":"passed"}
+# {"scenario":"signed-mock-webhook","saleId":"8a95bdc7-aba7-4e20-a4cb-3f9f52b8f0bc","providerRef":"mock_14c41328-f815-4e08-9f30-76263505fc23","eventId":"evt_352763a4-3861-4fdc-bc8a-bc1d51695e59","outcome":"passed"}
 # Subtest: mock lifecycle: raw-body HTTP signatures, concurrent duplicate delivery and terminal ordering
 ok 1 - mock lifecycle: raw-body HTTP signatures, concurrent duplicate delivery and terminal ordering
   ---
-  duration_ms: 729.7043
+  duration_ms: 737.4904
   type: 'test'
   ...
 # Subtest: mock lifecycle: lost webhook reconciles after fresh service instances
 ok 2 - mock lifecycle: lost webhook reconciles after fresh service instances
   ---
-  duration_ms: 97.204
+  duration_ms: 99.7265
   type: 'test'
   ...
 # Subtest: mock lifecycle: failed payment retry gets a new provider reference and old events stay harmless
 ok 3 - mock lifecycle: failed payment retry gets a new provider reference and old events stay harmless
   ---
-  duration_ms: 70.8335
+  duration_ms: 65.1444
   type: 'test'
   ...
 # Subtest: mock lifecycle: lost refund response replays the persisted provider key after restart
 ok 4 - mock lifecycle: lost refund response replays the persisted provider key after restart
   ---
-  duration_ms: 78.2477
+  duration_ms: 76.0241
   type: 'test'
   ...
-# {"scenario":"mock-refund-reconciliation","saleId":"a6122012-92b0-41f4-9b9b-ceec59f9ad05","providerRef":"mock_33353cca-9411-405f-a768-34038f8653b9","capturedMinor":"2000","refundedMinor":"2000","unexplainedDriftMinor":"0","outcome":"passed"}
+# {"scenario":"mock-refund-reconciliation","saleId":"2afb5dfb-2cdb-4d58-9946-af4b58f86110","providerRef":"mock_bf2e594d-5014-4db8-832c-2b4de90bca07","capturedMinor":"2000","refundedMinor":"2000","unexplainedDriftMinor":"0","outcome":"passed"}
 # Subtest: mock lifecycle: real provider ledger survives local refund failure, partial/full refunds reconcile
 ok 5 - mock lifecycle: real provider ledger survives local refund failure, partial/full refunds reconcile
   ---
-  duration_ms: 103.6419
+  duration_ms: 103.2552
   type: 'test'
   ...
 # Subtest: PostgreSQL: distinct-key requests cannot reserve overlapping money, line or restock capacity
 ok 6 - PostgreSQL: distinct-key requests cannot reserve overlapping money, line or restock capacity
   ---
-  duration_ms: 353.8669
+  duration_ms: 301.5035
   type: 'test'
   ...
 # Subtest: PostgreSQL: concurrent same-key requests create one reversal, payment correction and restock set
 ok 7 - PostgreSQL: concurrent same-key requests create one reversal, payment correction and restock set
   ---
-  duration_ms: 191.3556
+  duration_ms: 211.5503
   type: 'test'
   ...
 # Subtest: PostgreSQL: provider success/local failure rolls back every local effect and restart completes once
 ok 8 - PostgreSQL: provider success/local failure rolls back every local effect and restart completes once
   ---
-  duration_ms: 94.9101
+  duration_ms: 103.8354
   type: 'test'
   ...
 # Subtest: PostgreSQL: ambiguous provider outcome survives restart; payload changes are refused
 ok 9 - PostgreSQL: ambiguous provider outcome survives restart; payload changes are refused
   ---
-  duration_ms: 71.4334
+  duration_ms: 100.1837
   type: 'test'
   ...
 # Subtest: PostgreSQL: completed partial refunds enforce remaining money, lines and restock before further I/O
 ok 10 - PostgreSQL: completed partial refunds enforce remaining money, lines and restock before further I/O
   ---
-  duration_ms: 103.7661
+  duration_ms: 162.6106
   type: 'test'
   ...
 # Subtest: PostgreSQL: a full online refund preserves FULL kind and exhausts refundable capacity
 ok 11 - PostgreSQL: a full online refund preserves FULL kind and exhausts refundable capacity
   ---
-  duration_ms: 59.8032
+  duration_ms: 89.8817
   type: 'test'
   ...
 # Subtest: PostgreSQL: invalid refund payloads create no intent, reversal or provider effect
 ok 12 - PostgreSQL: invalid refund payloads create no intent, reversal or provider effect
   ---
-  duration_ms: 68.9725
+  duration_ms: 111.5664
   type: 'test'
   ...
 # {"invalidRequests":5,"intents":0,"reversals":0,"providerCalls":0}
@@ -189,41 +189,41 @@ ok 12 - PostgreSQL: invalid refund payloads create no intent, reversal or provid
 # Subtest: manual QRIS/non-cash records payment and reversal once without a provider or online intent
 ok 13 - manual QRIS/non-cash records payment and reversal once without a provider or online intent
   ---
-  duration_ms: 196.8549
+  duration_ms: 247.5879
   type: 'test'
   ...
 # Subtest: PostgreSQL checkout: concurrent distinct keys cannot oversell
 ok 14 - PostgreSQL checkout: concurrent distinct keys cannot oversell
   ---
-  duration_ms: 237.7082
+  duration_ms: 304.8088
   type: 'test'
   ...
 # {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0"}
 # Subtest: PostgreSQL checkout: a late database failure rolls back sale, payment, stock and reservation
 ok 15 - PostgreSQL checkout: a late database failure rolls back sale, payment, stock and reservation
   ---
-  duration_ms: 156.5678
+  duration_ms: 181.2433
   type: 'test'
   ...
 # {"saleCount":0,"paymentCount":0,"reservationCount":0,"saleMovements":0,"consumed":0,"balance":"6"}
 # Subtest: PostgreSQL checkout: concurrent duplicate keys commit exactly one sale and stock effect
 ok 16 - PostgreSQL checkout: concurrent duplicate keys commit exactly one sale and stock effect
   ---
-  duration_ms: 72.8311
+  duration_ms: 154.6232
   type: 'test'
   ...
 # {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0"}
 # Subtest: PostgreSQL checkout: a lost response recovers in a fresh process without another effect
 ok 17 - PostgreSQL checkout: a lost response recovers in a fresh process without another effect
   ---
-  duration_ms: 1108.7286
+  duration_ms: 1059.3957
   type: 'test'
   ...
 # {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0","recoveryProcess":"fresh"}
 # Subtest: PostgreSQL transfer: concurrent receive and later replay create one destination movement
 ok 18 - PostgreSQL transfer: concurrent receive and later replay create one destination movement
   ---
-  duration_ms: 91.4132
+  duration_ms: 76.5595
   type: 'test'
   ...
 # {"attempts":5,"sourceMovements":1,"destinationMovements":1,"sourceBalance":6,"destinationBalance":4}
@@ -235,7 +235,7 @@ ok 18 - PostgreSQL transfer: concurrent receive and later replay create one dest
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 6267.1204
+# duration_ms 6793.3944
 
 Repeated suite against the same database
 
@@ -243,78 +243,78 @@ Repeated suite against the same database
 > tsx --test --test-concurrency=1 src/sales/transactions.integration.ts src/sales/refund-intents.integration.ts src/payments/lifecycle.integration.ts
 
 TAP version 13
-# {"scenario":"signed-mock-webhook","saleId":"7594dce1-d747-42f2-a06c-1714438c84a7","providerRef":"mock_b814b60f-38d6-43a4-b705-88cf41ed373c","eventId":"evt_42f7996b-5e9c-4750-81ed-b569603e0e69","outcome":"passed"}
+# {"scenario":"signed-mock-webhook","saleId":"052bdf1a-bcb3-43d5-ad5d-98fb9b2237ed","providerRef":"mock_30d57a7d-2649-40e7-8d7e-935a7cabdb1f","eventId":"evt_6aaacd16-3db3-402e-8550-df0fdf5dd9a1","outcome":"passed"}
 # Subtest: mock lifecycle: raw-body HTTP signatures, concurrent duplicate delivery and terminal ordering
 ok 1 - mock lifecycle: raw-body HTTP signatures, concurrent duplicate delivery and terminal ordering
   ---
-  duration_ms: 1040.8478
+  duration_ms: 699.3395
   type: 'test'
   ...
 # Subtest: mock lifecycle: lost webhook reconciles after fresh service instances
 ok 2 - mock lifecycle: lost webhook reconciles after fresh service instances
   ---
-  duration_ms: 149.8203
+  duration_ms: 109.2882
   type: 'test'
   ...
 # Subtest: mock lifecycle: failed payment retry gets a new provider reference and old events stay harmless
 ok 3 - mock lifecycle: failed payment retry gets a new provider reference and old events stay harmless
   ---
-  duration_ms: 107.4387
+  duration_ms: 89.4124
   type: 'test'
   ...
 # Subtest: mock lifecycle: lost refund response replays the persisted provider key after restart
 ok 4 - mock lifecycle: lost refund response replays the persisted provider key after restart
   ---
-  duration_ms: 126.1482
+  duration_ms: 117.1455
   type: 'test'
   ...
-# {"scenario":"mock-refund-reconciliation","saleId":"201328b0-4295-474e-a1bb-d32d121f7608","providerRef":"mock_b1ff16d8-962a-4a6f-8952-718b1502a7a9","capturedMinor":"2000","refundedMinor":"2000","unexplainedDriftMinor":"0","outcome":"passed"}
+# {"scenario":"mock-refund-reconciliation","saleId":"fee20c28-ae3b-4e35-831e-4a7e88e827f0","providerRef":"mock_6540db49-6042-4a65-973e-02cc3f166e8e","capturedMinor":"2000","refundedMinor":"2000","unexplainedDriftMinor":"0","outcome":"passed"}
 # Subtest: mock lifecycle: real provider ledger survives local refund failure, partial/full refunds reconcile
 ok 5 - mock lifecycle: real provider ledger survives local refund failure, partial/full refunds reconcile
   ---
-  duration_ms: 171.1435
+  duration_ms: 155.0297
   type: 'test'
   ...
 # Subtest: PostgreSQL: distinct-key requests cannot reserve overlapping money, line or restock capacity
 ok 6 - PostgreSQL: distinct-key requests cannot reserve overlapping money, line or restock capacity
   ---
-  duration_ms: 411.3787
+  duration_ms: 545.9852
   type: 'test'
   ...
 # Subtest: PostgreSQL: concurrent same-key requests create one reversal, payment correction and restock set
 ok 7 - PostgreSQL: concurrent same-key requests create one reversal, payment correction and restock set
   ---
-  duration_ms: 282.7198
+  duration_ms: 294.9739
   type: 'test'
   ...
 # Subtest: PostgreSQL: provider success/local failure rolls back every local effect and restart completes once
 ok 8 - PostgreSQL: provider success/local failure rolls back every local effect and restart completes once
   ---
-  duration_ms: 154.2507
+  duration_ms: 161.1119
   type: 'test'
   ...
 # Subtest: PostgreSQL: ambiguous provider outcome survives restart; payload changes are refused
 ok 9 - PostgreSQL: ambiguous provider outcome survives restart; payload changes are refused
   ---
-  duration_ms: 105.3324
+  duration_ms: 107.6912
   type: 'test'
   ...
 # Subtest: PostgreSQL: completed partial refunds enforce remaining money, lines and restock before further I/O
 ok 10 - PostgreSQL: completed partial refunds enforce remaining money, lines and restock before further I/O
   ---
-  duration_ms: 166.9791
+  duration_ms: 168.847
   type: 'test'
   ...
 # Subtest: PostgreSQL: a full online refund preserves FULL kind and exhausts refundable capacity
 ok 11 - PostgreSQL: a full online refund preserves FULL kind and exhausts refundable capacity
   ---
-  duration_ms: 96.5563
+  duration_ms: 94.4681
   type: 'test'
   ...
 # Subtest: PostgreSQL: invalid refund payloads create no intent, reversal or provider effect
 ok 12 - PostgreSQL: invalid refund payloads create no intent, reversal or provider effect
   ---
-  duration_ms: 117.1899
+  duration_ms: 116.0585
   type: 'test'
   ...
 # {"invalidRequests":5,"intents":0,"reversals":0,"providerCalls":0}
@@ -322,41 +322,41 @@ ok 12 - PostgreSQL: invalid refund payloads create no intent, reversal or provid
 # Subtest: manual QRIS/non-cash records payment and reversal once without a provider or online intent
 ok 13 - manual QRIS/non-cash records payment and reversal once without a provider or online intent
   ---
-  duration_ms: 392.2822
+  duration_ms: 191.3224
   type: 'test'
   ...
 # Subtest: PostgreSQL checkout: concurrent distinct keys cannot oversell
 ok 14 - PostgreSQL checkout: concurrent distinct keys cannot oversell
   ---
-  duration_ms: 335.6974
+  duration_ms: 263.8099
   type: 'test'
   ...
 # {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0"}
 # Subtest: PostgreSQL checkout: a late database failure rolls back sale, payment, stock and reservation
 ok 15 - PostgreSQL checkout: a late database failure rolls back sale, payment, stock and reservation
   ---
-  duration_ms: 234.9027
+  duration_ms: 229.9429
   type: 'test'
   ...
 # {"saleCount":0,"paymentCount":0,"reservationCount":0,"saleMovements":0,"consumed":0,"balance":"6"}
 # Subtest: PostgreSQL checkout: concurrent duplicate keys commit exactly one sale and stock effect
 ok 16 - PostgreSQL checkout: concurrent duplicate keys commit exactly one sale and stock effect
   ---
-  duration_ms: 84.103
+  duration_ms: 82.1215
   type: 'test'
   ...
 # {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0"}
 # Subtest: PostgreSQL checkout: a lost response recovers in a fresh process without another effect
 ok 17 - PostgreSQL checkout: a lost response recovers in a fresh process without another effect
   ---
-  duration_ms: 1395.4866
+  duration_ms: 994.7333
   type: 'test'
   ...
 # {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0","recoveryProcess":"fresh"}
 # Subtest: PostgreSQL transfer: concurrent receive and later replay create one destination movement
 ok 18 - PostgreSQL transfer: concurrent receive and later replay create one destination movement
   ---
-  duration_ms: 83.0787
+  duration_ms: 109.8767
   type: 'test'
   ...
 # {"attempts":5,"sourceMovements":1,"destinationMovements":1,"sourceBalance":6,"destinationBalance":4}
@@ -368,4 +368,4 @@ ok 18 - PostgreSQL transfer: concurrent receive and later replay create one dest
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 8469.3142
+# duration_ms 7144.5696

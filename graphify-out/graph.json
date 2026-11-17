@@ -104621,13 +104621,15 @@
           "graphify-out/ticket-75-manual-http.txt",
           "graphify-out/ticket-75-manual-production.txt",
           "graphify-out/ticket-75-manual-flutter.txt",
-          "docs/operations-qa.md"
+          "docs/operations-qa.md",
+          "apps/api/src/payments/payments.service.test.ts",
+          "graphify-out/ticket-75-manual-guard-before.txt"
         ],
         "verification": {
           "scope": "Manual transaction recording; automated provider integration deferred",
           "node": "22.23.1",
           "postgresql": "17.6",
-          "apiUnitTestsPassed": 315,
+          "apiUnitTestsPassed": 316,
           "webUnitTestsPassed": 4,
           "operationsUnitTestsPassed": 6,
           "databaseTestsPassedPerRun": 18,
@@ -104635,8 +104637,9 @@
           "compiledProductionStartup": "passed without provider credentials; health 200, sandbox 404, online webhook disabled",
           "compiledHttpAssertions": 25,
           "localFlutter": "Unavailable: installed Dart 3.12.2, required 3.13.0",
-          "remoteCI": "Passed on tested product head bbf87f8b53606f83c403e90ca0018244af0dcfee; https://github.com/arkinara/modern-pos/actions/runs/44029913921",
-          "integratedMainCommit": "cd3fa919b6e92b1dd8871a8e11d6de66a1664280"
+          "integratedMainCommit": "cd3fa919b6e92b1dd8871a8e11d6de66a1664280",
+          "pinnedClientCI": "Passed on tested product head bbf87f8b53606f83c403e90ca0018244af0dcfee; https://github.com/arkinara/modern-pos/actions/runs/44029913921",
+          "manualGuardRegression": "Passed: legacy FAILED state preserved; automatic creation, refresh, reconcile and refund denied before database/provider access; final main CI linked on #75"
         },
         "handoff": "Owner-selected manual scope uses bank merchant app confirmation and static QRIS. Provider sandbox acceptance is deferred future scope. Operator UAT remains in release gate #78.",
         "qaReview": {
@@ -104875,6 +104878,16 @@
       "label": "operations-qa.md",
       "file_type": "evidence",
       "source_file": "docs/operations-qa.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_75_manual_guard_before_txt",
+      "label": "ticket-75-manual-guard-before.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-75-manual-guard-before.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -281641,6 +281654,24 @@
     {
       "source": "ticket_execution_75",
       "target": "execution_file_docs_operations_qa_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-manual-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_apps_api_src_payments_payments_service_test_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-manual-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_graphify_out_ticket_75_manual_guard_before_txt",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
       "source_file": "graphify-out/ticket-75-manual-execution.md",

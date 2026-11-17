@@ -1,0 +1,37 @@
+TAP version 13
+# Subtest: manual mode rejects automatic mutations before touching legacy online payment rows
+not ok 1 - manual mode rejects automatic mutations before touching legacy online payment rows
+  ---
+  duration_ms: 3.1269
+  type: 'test'
+  location: 'C:\\devai\\modern-pos\\apps\\api\\src\\payments\\payments.service.test.ts:617:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'PENDING'
+    - 'FAILED'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'FAILED'
+  actual: 'PENDING'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\devai\modern-pos\apps\api\src\payments\payments.service.test.ts:627:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 592.6985
+undefined
+C:\devai\modern-pos\apps\api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx --test --test-name-pattern manual mode rejects automatic src/payments/payments.service.test.ts

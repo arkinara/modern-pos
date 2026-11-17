@@ -614,6 +614,66 @@ function createHarness(options: { seed?: boolean; fetchStatus?: ProviderPaymentS
   return { service, prisma: prisma as unknown as PrismaService, state, adapter };
 }
 
+test('manual mode rejects automatic mutations before touching legacy online payment rows', async () => {
+  const previous = process.env.PAYMENT_PROVIDER;
+  process.env.PAYMENT_PROVIDER = 'manual';
+  try {
+    const h = createHarness({ seed: true });
+    h.state.onlinePayments[0]!.status = PaymentStatus.FAILED;
+    h.state.paymentRecords[0]!.status = PaymentStatus.FAILED;
+    const disabled = (error: unknown) =>
+      error instanceof HttpException &&
+      (error.getResponse() as { code: string }).code === 'ONLINE_PAYMENTS_DISABLED';
+    await assert.rejects(() => h.service.createForSale(OUTLET_ID, SALE_ID, user()), disabled);
+    assert.equal(h.state.onlinePayments[0]!.status, PaymentStatus.FAILED);
+    assert.equal(h.state.paymentRecords[0]!.status, PaymentStatus.FAILED);
+    let databaseAccesses = 0;
+    let providerAccesses = 0;
+    const database = new Proxy(
+      {},
+      {
+        get: () => {
+          databaseAccesses++;
+          throw new Error('Unexpected database access');
+        },
+      },
+    );
+    const provider = new Proxy(
+      {},
+      {
+        get: () => {
+          providerAccesses++;
+          throw new Error('Unexpected provider access');
+        },
+      },
+    );
+    const service = new PaymentsService(
+      database as PrismaService,
+      new PaymentConfigService(),
+      provider as MockPaymentProviderService,
+      provider as QrisPaymentProviderService,
+    );
+    for (const operation of [
+      () => service.createForSale(OUTLET_ID, SALE_ID, user()),
+      () => service.refresh(OUTLET_ID, SALE_ID, user()),
+      () => service.reconcile(OUTLET_ID, user()),
+      () =>
+        service.refundReservedIntent({
+          provider: PaymentProvider.MOCK,
+          providerPaymentRef: PROVIDER_REF,
+          providerKey: 'manual-mode-regression',
+          refundMinor: 1000n,
+        }),
+    ])
+      await assert.rejects(operation, disabled);
+    assert.equal(databaseAccesses, 0);
+    assert.equal(providerAccesses, 0);
+  } finally {
+    if (previous === undefined) delete process.env.PAYMENT_PROVIDER;
+    else process.env.PAYMENT_PROVIDER = previous;
+  }
+});
+
 function webhook(
   eventId: string,
   type: string,

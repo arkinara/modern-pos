@@ -19,7 +19,7 @@ provider selection, webhook verification and provider refund preparation reject
 manual mode. Existing automatic MOCK/QRIS opt-in modes retain their regression
 coverage. The local environment example now selects manual recording by default.
 
-All 315 API, 4 web and 6 operations unit tests passed. The complete PostgreSQL
+All 316 API, 4 web and 6 operations unit tests passed. The complete PostgreSQL
 suite passed 18 tests twice against the same isolated synthetic database. The new
 case records and replays a manual QRIS/non-cash sale and reversal, retains the
 merchant reference, observes no online payment/refund intent, counts zero provider
@@ -37,6 +37,16 @@ could not resolve packages. The pinned CI Flutter 3.47.0 toolchain must pass bef
 the PR is merged, including the label/wire-contract test, existing cashier flows,
 browser regressions and Android build. Final CI evidence is recorded on the PR
 and issue handoff.
+
+PR #91 passed the pinned client pipeline and was merged. A subsequent guard
+review reproduced a legacy FAILED online payment becoming PENDING before manual
+mode rejected its retry. Early guards now reject automatic creation, refresh,
+reconciliation and provider refund execution before accessing payment storage
+or provider adapters. The regression preserves legacy FAILED status and asserts
+zero database/provider accesses for all four operations. See
+`ticket-75-manual-guard-before.txt` for the failing reproduction and
+`ticket-75-manual-unit.txt` for the passing full suite. The real PostgreSQL suite
+was repeated twice after this guard fix. Final main CI is linked on #75.
 
 Ticket #75 and release gate #78 preserve the previous provider scope as deferred
 history and record the explicit recording-only scope decision. Operator UAT of

@@ -216,6 +216,7 @@ export class PaymentsService {
     saleId: string,
     user: AuthenticatedUser,
   ): Promise<OnlinePaymentResponse> {
+    this.config.assertOnlineEnabled();
     const sale = await this.loadSale(outletId, saleId, user);
     let payment = sale.onlinePayment;
 
@@ -354,6 +355,7 @@ export class PaymentsService {
     saleId: string,
     user: AuthenticatedUser,
   ): Promise<OnlinePaymentResponse> {
+    this.config.assertOnlineEnabled();
     const sale = await this.loadSale(outletId, saleId, user);
 
     if (!sale.onlinePayment) {
@@ -374,6 +376,7 @@ export class PaymentsService {
     user: AuthenticatedUser,
     query?: SettlementQueryDto,
   ): Promise<ReconciliationSummary> {
+    this.config.assertOnlineEnabled();
     const outlet = await this.prisma.outlet.findFirst({
       where: { id: outletId, businessId: user.businessId },
       select: { timezone: true },
@@ -667,6 +670,7 @@ export class PaymentsService {
     providerKey: string;
     refundMinor: bigint;
   }): Promise<ProviderRefundResult> {
+    this.config.assertOnlineEnabled();
     // The immutable provider/reference/key come from a committed reservation.
     const adapter =
       intent.provider === PaymentProvider.MOCK ? this.mockProvider : this.qrisProvider;
