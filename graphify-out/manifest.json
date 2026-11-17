@@ -15,7 +15,7 @@
     "semantic_hash": "3f2904c6cb9808223c92d41b4626ad95"
   },
   "VALIDATION.json": {
-    "mtime": 1794746102.302104,
+    "mtime": 1794906547.014677,
     "ast_hash": "65b8c9466aa941c0c9f8ade3124e63c1",
     "semantic_hash": "65b8c9466aa941c0c9f8ade3124e63c1"
   },
@@ -1280,9 +1280,9 @@
     "semantic_hash": "486da02fcbe342da1fe8849259139db3"
   },
   "apps/mobile/lib/features/printing/esc_pos_receipt.dart": {
-    "mtime": 1794889029.1767175,
-    "ast_hash": "634da5422a2202135bde3ea8419aef06",
-    "semantic_hash": "634da5422a2202135bde3ea8419aef06"
+    "mtime": 1794910251.827029,
+    "ast_hash": "c0ce6beed9943fef59be90888a45dd8f",
+    "semantic_hash": "c0ce6beed9943fef59be90888a45dd8f"
   },
   "apps/mobile/lib/features/printing/lan_printer_transport.dart": {
     "mtime": 1794745134.4491127,
@@ -1340,9 +1340,9 @@
     "semantic_hash": "ec70e591ecb252409645bd005ba250fd"
   },
   "apps/mobile/lib/features/printing/printer_models.dart": {
-    "mtime": 1794745134.4511154,
-    "ast_hash": "8912a06e942ab9ed9a9e0f0777ed1aa8",
-    "semantic_hash": "8912a06e942ab9ed9a9e0f0777ed1aa8"
+    "mtime": 1794910251.675347,
+    "ast_hash": "ab92838353fe0000fccdd58b96e227d1",
+    "semantic_hash": "ab92838353fe0000fccdd58b96e227d1"
   },
   "apps/mobile/lib/features/printing/printer_permissions.dart": {
     "mtime": 1794745134.4511154,
@@ -1350,9 +1350,9 @@
     "semantic_hash": "f8d29e501ab7378340280d486a0ab30b"
   },
   "apps/mobile/lib/features/printing/printer_screen.dart": {
-    "mtime": 1794745134.4511154,
-    "ast_hash": "89863256c27e795974c0818522440bbf",
-    "semantic_hash": "89863256c27e795974c0818522440bbf"
+    "mtime": 1794910251.989312,
+    "ast_hash": "9a8ce5f49ac2e0f961e116a27e8dfd78",
+    "semantic_hash": "9a8ce5f49ac2e0f961e116a27e8dfd78"
   },
   "apps/mobile/lib/features/printing/printer_transport.dart": {
     "mtime": 1794745134.4511154,
@@ -1455,9 +1455,9 @@
     "semantic_hash": "8568fc0cd76bda51a89b4ddb80477724"
   },
   "apps/mobile/test/esc_pos_receipt_test.dart": {
-    "mtime": 1794745134.457132,
-    "ast_hash": "5a7f7e8dbe6b19f63a07b517a1adde1a",
-    "semantic_hash": "5a7f7e8dbe6b19f63a07b517a1adde1a"
+    "mtime": 1794910312.731526,
+    "ast_hash": "7d89532a03c75eaea2f618f54146a7d2",
+    "semantic_hash": "7d89532a03c75eaea2f618f54146a7d2"
   },
   "apps/mobile/test/lan_printer_transport_test.dart": {
     "mtime": 1794745134.4591353,
@@ -1500,9 +1500,9 @@
     "semantic_hash": "6c2c6e6fdf10ca99b5e4d3fd70f4c725"
   },
   "apps/mobile/test/printer_adapter_test.dart": {
-    "mtime": 1794745134.460882,
-    "ast_hash": "96da0e601352b7733f926fe4bf0ca34f",
-    "semantic_hash": "96da0e601352b7733f926fe4bf0ca34f"
+    "mtime": 1794910312.733538,
+    "ast_hash": "5c6bdbec58de89d8d779497a53257ba4",
+    "semantic_hash": "5c6bdbec58de89d8d779497a53257ba4"
   },
   "apps/mobile/test/printer_controller_test.dart": {
     "mtime": 1794745134.460882,
@@ -1515,9 +1515,9 @@
     "semantic_hash": "b249afd9ac55a61f7dd20834d86bc365"
   },
   "apps/mobile/test/printer_screen_test.dart": {
-    "mtime": 1794745134.460882,
-    "ast_hash": "60df8f6f7b84b380f69115a54225f4ed",
-    "semantic_hash": "60df8f6f7b84b380f69115a54225f4ed"
+    "mtime": 1794910312.7471683,
+    "ast_hash": "79af9e22d1ec602d37f9d525195d8e92",
+    "semantic_hash": "79af9e22d1ec602d37f9d525195d8e92"
   },
   "apps/mobile/test/receipt_document_test.dart": {
     "mtime": 1794745134.460882,
@@ -4468,5 +4468,10 @@
     "mtime": 1794889029.2708566,
     "ast_hash": "77c6e0d05c47933aa90be1d16536f1d3",
     "semantic_hash": "77c6e0d05c47933aa90be1d16536f1d3"
+  },
+  "apps/mobile/test/printer_models_test.dart": {
+    "mtime": 1794910312.7300022,
+    "ast_hash": "ef456f9168cb3a48f1c216131bc374f0",
+    "semantic_hash": "ef456f9168cb3a48f1c216131bc374f0"
   }
 }

@@ -12,7 +12,16 @@
     "docs/printer-hardware.md",
     "apps/mobile/test/station_delivery_service_test.dart",
     "apps/mobile/test/print_queue_service_test.dart",
-    "graphify-out/board-validation-2026-11-17.json"
+    "graphify-out/board-validation-2026-11-17.json",
+    "graphify-out/ticket-74-cutter-execution.md",
+    "graphify-out/ticket-74-cutter-local.txt",
+    "apps/mobile/lib/features/printing/printer_models.dart",
+    "apps/mobile/lib/features/printing/printer_screen.dart",
+    "apps/mobile/lib/features/printing/esc_pos_receipt.dart",
+    "apps/mobile/test/printer_models_test.dart",
+    "apps/mobile/test/printer_screen_test.dart",
+    "apps/mobile/test/printer_adapter_test.dart",
+    "apps/mobile/test/esc_pos_receipt_test.dart"
   ],
   "verification": {
     "protocolPr": "https://github.com/arkinara/modern-pos/pull/89",
@@ -21,5 +30,22 @@
     "physicalAcceptance": "pending exact configuration, permission/pairing, real paper and kitchen tickets, disconnect/restart, offline reconciliation and dated evidence",
     "auditCorrection": "reopened and returned from Done to In QA",
     "auditComment": "https://github.com/arkinara/modern-pos/issues/74#issuecomment-6943624891"
+  },
+  "cutterExecution": {
+    "date": "2026-11-17",
+    "sourceCommit": "b1d22caa6b0ed1d4a56c6c6faf6d60156f5c62c6",
+    "branch": "codex/74-automatic-cutter",
+    "evidence": "graphify-out/ticket-74-cutter-execution.md",
+    "defaultAutomaticCutter": false,
+    "legacyConfigurationDefault": false,
+    "localSmokeAssertionsPassed": 15,
+    "regressions": [
+      "configuration defaults/round trips/copy",
+      "Drift queued snapshot persistence",
+      "receipt/test/kitchen adapter bytes",
+      "settings switch default, save and reload"
+    ],
+    "flutterVerification": "Pinned Flutter 3.47.0 CI; pipeline result recorded in PR and #74 before handoff",
+    "physicalAcceptance": "pending"
   }
 }

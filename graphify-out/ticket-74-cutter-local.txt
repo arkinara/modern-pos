@@ -1,0 +1,15 @@
+PASS new printer defaults cutter off
+PASS legacy config defaults cutter off
+PASS JSON round-trip cutter false
+PASS copy preserves cutter false
+PASS copy switches cutter false
+PASS receipt/test/kitchen builder follows cutter false
+PASS receipt/test/kitchen builder follows cutter false
+PASS receipt/test/kitchen builder follows cutter false
+PASS JSON round-trip cutter true
+PASS copy preserves cutter true
+PASS copy switches cutter true
+PASS receipt/test/kitchen builder follows cutter true
+PASS receipt/test/kitchen builder follows cutter true
+PASS receipt/test/kitchen builder follows cutter true
+PASS explicit cut override remains supported
