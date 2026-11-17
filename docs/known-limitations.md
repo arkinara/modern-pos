@@ -1,8 +1,12 @@
 # Known limitations and pending verification
 
-Current reconciliation date is 2026-11-16. Historical verification sections retain their original dated VPS observations. The current implementation and acceptance owners are indexed in `implementation-evidence.md`. Physical device/printer, actual provider, operator and deployment evidence remain assigned to #74–#77.
+The 2026-11-17 QA and merge results are recorded in [the QA review](qa-2026-11-17.md).
+This round uses mock external services and local/synthetic test infrastructure.
+Another testing round using real services is required before release acceptance.
 
-## Active integrity follow-ups
+The reconciliation snapshot below is dated 2026-11-16. Historical verification sections retain their original dated VPS observations. The implementation and acceptance owners at that snapshot are indexed in `implementation-evidence.md`. Physical device/printer, actual provider, operator and deployment evidence remain assigned to #74–#78.
+
+## Integrity follow-ups at the 2026-11-16 snapshot
 
 | Work | Current evidence | Acceptance owner |
 | --- | --- | --- |
