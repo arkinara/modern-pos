@@ -46,7 +46,13 @@
     "graphify-out/ticket-75-manual-flutter.txt",
     "docs/operations-qa.md",
     "apps/api/src/payments/payments.service.test.ts",
-    "graphify-out/ticket-75-manual-guard-before.txt"
+    "graphify-out/ticket-75-manual-guard-before.txt",
+    "apps/api/src/receipts/receipts.service.ts",
+    "apps/api/src/receipts/receipts.service.test.ts",
+    "graphify-out/ticket-78-execution.md",
+    "graphify-out/ticket-78-receipt-regression-before.txt",
+    "graphify-out/ticket-78-runtime-before.txt",
+    "graphify-out/ticket-78-runtime.txt"
   ],
   "verification": {
     "scope": "Manual transaction recording; automated provider integration deferred",
@@ -83,5 +89,14 @@
       "realProviderAcceptance": "pending provider selection, official contract and sandbox access"
     },
     "handoff": "Review branch combines prerequisites #66, #69 and #71 without merging main. QA may run the mock workflow now and retains the external acceptance checklist on #75."
+  },
+  "release78Correction": {
+    "date": "2026-11-17",
+    "sourceCommit": "08184e6c9842da52bcd59655cda12d7a3f8a6944",
+    "issueReopenedFor": "Customer digital receipt used MANUAL_EXTERNAL display text",
+    "fix": "QRIS / Non-cash label for newly issued manual receipts",
+    "unitRegression": "manual case fails before correction; manual/cash/online cases pass after correction",
+    "apiUnitTestsPassed": 319,
+    "evidence": "graphify-out/ticket-78-execution.md"
   }
 }

@@ -1,0 +1,173 @@
+{
+  "date": "2026-11-17",
+  "applicationSource": "08184e6c9842da52bcd59655cda12d7a3f8a6944",
+  "baseMain": "aa052c733105525c3dc904c6ea3d7b7b25d64a65",
+  "initialMainCi": {
+    "url": "https://github.com/arkinara/modern-pos/actions/runs/44065621422",
+    "headSha": "aa052c733105525c3dc904c6ea3d7b7b25d64a65",
+    "conclusion": "success"
+  },
+  "environment": {
+    "node": "22.23.1",
+    "pnpm": "9.12.3",
+    "postgresqlClientAndServer": "17.6",
+    "flutterCI": "3.47.0",
+    "dartRequired": "3.13",
+    "prismaMigrations": 22,
+    "lastMigration": "20261115160000_durable_refund_intents",
+    "driftSchema": 6,
+    "paymentProvider": "manual"
+  },
+  "verification": {
+    "apiUnitTestsPassed": 319,
+    "webUnitTestsPassed": 4,
+    "operationsUnitTestsPassed": 6,
+    "postgresTestsPassed": 18,
+    "receiptRegressionBefore": {
+      "passed": 4,
+      "failed": 1
+    },
+    "receiptCorrection": "QRIS / Non-cash on newly generated HTML/text receipts",
+    "liveManualHttp": "passed exact money/stock, actual API process restart and checkout replay, report reconciliation, reversal/restock/restart and public receipt checks",
+    "isolatedRestore": "passed ten fingerprints and financial totals; runtime/backup grants and occupied-target refusal",
+    "requiredCiResult": "Recorded against reviewed PR head in #78 handoff comment before handoff",
+    "fullReleaseAcceptance": "pending physical #74 evidence and recorded owner/deployment decisions"
+  },
+  "localRestore": {
+    "event": "restore_drill_passed",
+    "at": "2026-11-17T11:11:57.576Z",
+    "restoreSeconds": 0.6643083000000006,
+    "totalSeconds": 3.167562900000001,
+    "sha256": "a54eeb6a241a8b8afccdef85e0d0c7e899883c30ecf4eb7489361ab1a014b033",
+    "verified": {
+      "sales": {
+        "rows": 19,
+        "digest": "004166eb51e8d66f76c57a774dacb660"
+      },
+      "sale_lines": {
+        "rows": 21,
+        "digest": "84e548f96934c365c8f910736f95f0dc"
+      },
+      "payment_records": {
+        "rows": 19,
+        "digest": "5096f8f08b2755a1a871f87e96d158df"
+      },
+      "online_payments": {
+        "rows": 12,
+        "digest": "8053c39eb6cc9492f7a44d39331f0225"
+      },
+      "sale_reversals": {
+        "rows": 11,
+        "digest": "6699740dad4f98b7f5c2385718245254"
+      },
+      "sale_refund_lines": {
+        "rows": 9,
+        "digest": "cb0de94de0a2bc47316182539f4b195d"
+      },
+      "refund_intents": {
+        "rows": 10,
+        "digest": "27488abe7debfd468715b5a61b50744c"
+      },
+      "stock_balances": {
+        "rows": 25,
+        "digest": "2a82c5c7a867084d57de6b4e788ae187"
+      },
+      "stock_movements": {
+        "rows": 51,
+        "digest": "bd5415d78a75a8477b6a1c11265a9115"
+      },
+      "sandbox_provider_payments": {
+        "rows": 6,
+        "digest": "18d90d95d28b5d0effa8ce4785abec03"
+      },
+      "financialTotals": {
+        "saleTotalMinor": "176000",
+        "paymentTotalMinor": "176000",
+        "refundTotalMinor": "13000",
+        "providerRefundedMinor": "11000"
+      }
+    }
+  },
+  "liveRuntime": {
+    "passed": true,
+    "records": [
+      {
+        "scenario": "production-manual-startup",
+        "synthetic": true,
+        "health": 200,
+        "providerCredentials": "absent",
+        "transport": "loopback HTTP; deployed TLS pending"
+      },
+      {
+        "scenario": "authorization",
+        "synthetic": true,
+        "cashierOwnerReport": 403,
+        "crossOutletStock": 404
+      },
+      {
+        "scenario": "amount-validation",
+        "synthetic": true,
+        "underpayment": 422,
+        "partialSaleEffects": 0
+      },
+      {
+        "scenario": "manual-payment-ledger",
+        "synthetic": true,
+        "saleId": "fc759f52-d7af-4bd5-bf42-5d41ff71a3da",
+        "totalMinor": 35000,
+        "paymentReference": "synthetic-78-bank-confirmation",
+        "sales": 1,
+        "payments": 1,
+        "movements": 3,
+        "online": 0,
+        "refundIntents": 0,
+        "stockDeltaMatchesLedger": true
+      },
+      {
+        "scenario": "actual-api-process-restart",
+        "synthetic": true,
+        "recoveredSameSale": true,
+        "replayedSameSale": true,
+        "changedPayload": 409,
+        "duplicateEffects": 0
+      },
+      {
+        "scenario": "cash-manual-report-reconciliation",
+        "synthetic": true,
+        "newSales": 2,
+        "grossDeltaMinor": 70000,
+        "paymentBreakdownMatches": true
+      },
+      {
+        "scenario": "manual-reversal-restart",
+        "synthetic": true,
+        "oneReversal": true,
+        "oneRestockPerItem": true,
+        "refundMoneyMinor": 35000,
+        "externalRefundPerformed": false,
+        "onlineRefundIntents": 0
+      },
+      {
+        "scenario": "manual-production-online-gates",
+        "synthetic": true,
+        "automaticCreation": 503,
+        "webhook": 503,
+        "sandbox": 404
+      },
+      {
+        "scenario": "digital-receipt-content",
+        "synthetic": true,
+        "referenceAndAmountMatch": true,
+        "paymentText": "Payment: QRIS / Non-cash RECORDED IDR 35000"
+      }
+    ]
+  },
+  "requiredCandidateCiEvidence": "https://github.com/arkinara/modern-pos/issues/78",
+  "pending": [
+    "#74 physical Android/printer/paper acceptance",
+    "#76 owner-deferred representative operator testing",
+    "#77 owner-deferred intended deployment acceptance",
+    "three opt-in Dart live entry points skipped by ordinary CI"
+  ],
+  "targetStatus": "In QA; final release decision pending"
+}

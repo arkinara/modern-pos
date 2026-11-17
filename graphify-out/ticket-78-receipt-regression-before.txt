@@ -1,0 +1,56 @@
+TAP version 13
+# Subtest: digital receipt renders the MANUAL_EXTERNAL payment label in HTML and text
+not ok 1 - digital receipt renders the MANUAL_EXTERNAL payment label in HTML and text
+  ---
+  duration_ms: 5.0034
+  type: 'test'
+  location: 'C:\\devai\\modern-pos\\apps\\api\\src\\receipts\\receipts.service.test.ts:34:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+
+      assert.ok(receipt.html.includes(`<td>${label}</td>`))
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (C:\devai\modern-pos\apps\api\src\receipts\receipts.service.test.ts:65:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: digital receipt renders the CASH payment label in HTML and text
+ok 2 - digital receipt renders the CASH payment label in HTML and text
+  ---
+  duration_ms: 0.2396
+  type: 'test'
+  ...
+# Subtest: digital receipt renders the ONLINE payment label in HTML and text
+ok 3 - digital receipt renders the ONLINE payment label in HTML and text
+  ---
+  duration_ms: 0.1258
+  type: 'test'
+  ...
+# Subtest: an expired or foreign receipt token returns not found
+ok 4 - an expired or foreign receipt token returns not found
+  ---
+  duration_ms: 0.4799
+  type: 'test'
+  ...
+# Subtest: a receipt for an anonymised customer is rejected without leaking data
+ok 5 - a receipt for an anonymised customer is rejected without leaking data
+  ---
+  duration_ms: 0.2327
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 621.4632
