@@ -856,12 +856,12 @@ function SaleDetail({
                       </p>
                     ) : null}
                   </div>
-                ) : (
+                ) : sale.payment.kind === 'MANUAL_EXTERNAL' ? (
                   <p className="text-xs text-muted">
                     QRIS / Non-cash records an externally confirmed payment. Confirm any bank refund
                     in the merchant app before recording the POS reversal.
                   </p>
-                )}
+                ) : null}
               </dl>
             </div>
 
