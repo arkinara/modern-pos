@@ -14,10 +14,17 @@ Automated payment-provider integration and the sandbox worksheet below are
 deferred future scope. Provider sandbox access is unnecessary for current
 transaction-recording acceptance.
 
+The recording-only implementation is merged in PR #91 and passed the pinned
+Flutter/browser/Android CI pipeline. Dated manual-mode results are in
+[the execution evidence](../graphify-out/ticket-75-manual-execution.md).
+
+## Previous automated-provider QA preparation
+
 The repository owner chose mock-first execution on 2026-11-16. This developer
 handoff uses the existing PostgreSQL-backed `MockPaymentProviderService` with
 IDR, currency exponent 0, and synthetic funds. Provider selection and genuine
-provider sandbox acceptance remain pending on #75.
+sandbox acceptance were pending under that earlier scope. The provider-specific
+worksheet below is retained for the deferred automated integration.
 
 ## Repeatable developer checks
 

@@ -37,7 +37,7 @@ only the synthetic database drill and cannot establish the deployment RTO.
 | Release approval | Repository owner arkinara |
 | Release operator and rollback decision contact | Named person pending |
 | Database/backup operator and incident responder | Named people and escalation coverage pending |
-| Provider reconciliation and credential custodian | Named people pending, coordinated with #75 |
+| Merchant reconciliation owner and bank-app access custodian | Named people pending |
 | Actual deployment/DB topology and TLS domains | Pending owner selection |
 | Secret store, SSH host-key fingerprint and encrypted backup storage | Pending infrastructure selection |
 | Alert receiver and escalation routing | Pending actual notification test |
@@ -110,11 +110,12 @@ memberships and restore credentials again in staging.
 
 Use `NODE_ENV=production` when checking the intended production-like configuration.
 The existing startup validator runs before the DB connection and listener.
-Provide exact HTTPS origins, secure cookies, strong unique JWT/webhook secrets,
-explicit QRIS provider/mode and actual credentials. Disable sandbox routes.
-The API unit tests include the production configuration failure cases. Keep
-real provider acceptance pending until #75 is completed. Store secrets outside
-the release tree. Configure proxy access logs to omit authorization headers,
+For current recording-only scope, provide exact HTTPS origins, secure cookies,
+a strong unique JWT secret, `PAYMENT_PROVIDER=manual` and disabled sandbox access.
+Provider keys, payment webhook secrets and PAYMENT_MODE are optional in manual
+mode. An automated integration would require its own provider credentials and
+sandbox acceptance when that future scope is selected. The API unit tests cover
+both configurations. Store secrets outside the release tree. Configure proxy access logs to omit authorization headers,
 cookies, sensitive query strings and request/response bodies. Verify selected
 proxy/provider/collector redaction with synthetic markers during staging QA.
 

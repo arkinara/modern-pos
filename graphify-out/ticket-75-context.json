@@ -5,7 +5,7 @@
   "branch": "codex/75-manual-noncash-recording",
   "baseCommit": "2c84ee3f946bd7f5f30218b3ade067d63369b828",
   "date": "2026-11-16",
-  "qaTarget": "In QA",
+  "qaTarget": "Done",
   "evidence": "graphify-out/ticket-75-manual-execution.md",
   "sources": [
     "apps/api/src/payments/lifecycle.integration.ts",
@@ -43,7 +43,8 @@
     "graphify-out/ticket-75-manual-postgres.txt",
     "graphify-out/ticket-75-manual-http.txt",
     "graphify-out/ticket-75-manual-production.txt",
-    "graphify-out/ticket-75-manual-flutter.txt"
+    "graphify-out/ticket-75-manual-flutter.txt",
+    "docs/operations-qa.md"
   ],
   "verification": {
     "scope": "Manual transaction recording; automated provider integration deferred",
@@ -57,7 +58,8 @@
     "compiledProductionStartup": "passed without provider credentials; health 200, sandbox 404, online webhook disabled",
     "compiledHttpAssertions": 25,
     "localFlutter": "Unavailable: installed Dart 3.12.2, required 3.13.0",
-    "remoteCI": "Pending pinned Flutter/browser/Android checks; final result in PR/issue"
+    "remoteCI": "Passed on tested product head bbf87f8b53606f83c403e90ca0018244af0dcfee; https://github.com/arkinara/modern-pos/actions/runs/44029913921",
+    "integratedMainCommit": "cd3fa919b6e92b1dd8871a8e11d6de66a1664280"
   },
   "handoff": "Owner-selected manual scope uses bank merchant app confirmation and static QRIS. Provider sandbox acceptance is deferred future scope. Operator UAT remains in release gate #78.",
   "qaReview": {
