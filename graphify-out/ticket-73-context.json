@@ -5,7 +5,7 @@
   "branch": "docs/73-evidence-reconciliation",
   "baseCommit": "c82c32bfc9510cac9b896a1eba16185070a5fd86",
   "date": "2026-11-16",
-  "qaTarget": "In QA",
+  "qaTarget": "Done",
   "evidence": "graphify-out/ticket-73-execution.md",
   "sources": [
     "README.md",
@@ -22,7 +22,11 @@
     "graphify-out/ticket-73-api-unit.txt",
     "docs/qa-2026-11-17.md",
     "graphify-out/qa-2026-11-17-unit.txt",
-    "graphify-out/qa-2026-11-17-docs.txt"
+    "graphify-out/qa-2026-11-17-docs.txt",
+    "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+    "graphify-out/board-validation-2026-11-17.json",
+    "graphify-out/pre78-local-restore.txt",
+    "graphify-out/pre78-synthetic-pilot.txt"
   ],
   "verification": {
     "legacyIssues": 35,
@@ -44,5 +48,22 @@
     "date": "2026-11-17",
     "report": "docs/qa-2026-11-17.md",
     "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+  },
+  "pre78Audit": {
+    "date": "2026-11-17",
+    "report": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+    "pendingAcceptance": [
+      74,
+      76,
+      77
+    ],
+    "ticket78": "Todo",
+    "reachablePredecessorDeliveries": 47,
+    "statusCorrections": [
+      74,
+      76
+    ],
+    "boardItems": 48,
+    "mainCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c"
   }
 }

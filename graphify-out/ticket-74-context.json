@@ -1,0 +1,25 @@
+{
+  "ticket": 74,
+  "title": "Physical hardware acceptance pending after protocol delivery",
+  "issueUrl": "https://github.com/arkinara/modern-pos/issues/74",
+  "baseCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c",
+  "date": "2026-11-17",
+  "qaTarget": "In QA",
+  "evidence": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+  "sources": [
+    "docs/hardware-acceptance.md",
+    "docs/printer-validation.md",
+    "docs/printer-hardware.md",
+    "apps/mobile/test/station_delivery_service_test.dart",
+    "apps/mobile/test/print_queue_service_test.dart",
+    "graphify-out/board-validation-2026-11-17.json"
+  ],
+  "verification": {
+    "protocolPr": "https://github.com/arkinara/modern-pos/pull/89",
+    "protocolMerge": "ae68fe55d22ff2a0d48fd7e4eb5a08ad1381a14e",
+    "softwareCi": "https://github.com/arkinara/modern-pos/actions/runs/44041053470",
+    "physicalAcceptance": "pending exact configuration, permission/pairing, real paper and kitchen tickets, disconnect/restart, offline reconciliation and dated evidence",
+    "auditCorrection": "reopened and returned from Done to In QA",
+    "auditComment": "https://github.com/arkinara/modern-pos/issues/74#issuecomment-6943624891"
+  }
+}

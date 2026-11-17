@@ -7,7 +7,9 @@
       "graphify-out/ticket-69-context.json",
       "graphify-out/ticket-71-context.json",
       "graphify-out/ticket-73-context.json",
+      "graphify-out/ticket-74-context.json",
       "graphify-out/ticket-75-context.json",
+      "graphify-out/ticket-76-context.json",
       "graphify-out/ticket-77-context.json"
     ],
     "ast_note": "built_at_commit records the source revision used for AST extraction. Ticket execution nodes add dated evidence and context.",
@@ -22,11 +24,29 @@
       "source_nodes": 10076,
       "source_edges": 16447,
       "source_communities": 577,
-      "final_nodes": 10186,
-      "final_edges": 16585,
-      "ticket_contexts": 6,
-      "evidence_links": 138,
+      "final_nodes": 10200,
+      "final_edges": 16604,
+      "ticket_contexts": 8,
+      "evidence_links": 157,
       "verification": "Unique node IDs, valid endpoints, existing evidence paths, current manual-payment/kitchen/refund symbols, HTML counts, ticket search/details and zero browser errors passed. Repeat injection is idempotent."
+    },
+    "board_audit": {
+      "date": "2026-11-17",
+      "main_commit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c",
+      "report": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "inventory": "graphify-out/board-validation-2026-11-17.json",
+      "total_items": 48,
+      "predecessor_delivery_ancestry_passed": 47,
+      "done": 44,
+      "in_qa": [
+        74,
+        76,
+        77
+      ],
+      "todo": [
+        78
+      ],
+      "source_delta": "Evidence artifacts only; source AST baseline remains a0d1393c4f5a9e1dabbf7340a581c161eabd0ac0"
     }
   },
   "nodes": [
@@ -111564,7 +111584,7 @@
         "branch": "docs/73-evidence-reconciliation",
         "baseCommit": "c82c32bfc9510cac9b896a1eba16185070a5fd86",
         "date": "2026-11-16",
-        "qaTarget": "In QA",
+        "qaTarget": "Done",
         "evidence": "graphify-out/ticket-73-execution.md",
         "sources": [
           "README.md",
@@ -111581,7 +111601,11 @@
           "graphify-out/ticket-73-api-unit.txt",
           "docs/qa-2026-11-17.md",
           "graphify-out/qa-2026-11-17-unit.txt",
-          "graphify-out/qa-2026-11-17-docs.txt"
+          "graphify-out/qa-2026-11-17-docs.txt",
+          "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+          "graphify-out/board-validation-2026-11-17.json",
+          "graphify-out/pre78-local-restore.txt",
+          "graphify-out/pre78-synthetic-pilot.txt"
         ],
         "verification": {
           "legacyIssues": 35,
@@ -111603,6 +111627,23 @@
           "date": "2026-11-17",
           "report": "docs/qa-2026-11-17.md",
           "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+        },
+        "pre78Audit": {
+          "date": "2026-11-17",
+          "report": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+          "pendingAcceptance": [
+            74,
+            76,
+            77
+          ],
+          "ticket78": "Todo",
+          "reachablePredecessorDeliveries": 47,
+          "statusCorrections": [
+            74,
+            76
+          ],
+          "boardItems": 48,
+          "mainCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c"
         }
       }
     },
@@ -111741,6 +111782,119 @@
       "label": "qa-2026-11-17-docs.txt",
       "file_type": "evidence",
       "source_file": "graphify-out/qa-2026-11-17-docs.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_BOARD_VALIDATION_2026_11_17_md",
+      "label": "BOARD_VALIDATION_2026-11-17.md",
+      "file_type": "evidence",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_board_validation_2026_11_17_json",
+      "label": "board-validation-2026-11-17.json",
+      "file_type": "evidence",
+      "source_file": "graphify-out/board-validation-2026-11-17.json",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_pre78_local_restore_txt",
+      "label": "pre78-local-restore.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/pre78-local-restore.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_pre78_synthetic_pilot_txt",
+      "label": "pre78-synthetic-pilot.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/pre78-synthetic-pilot.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "ticket_execution_74",
+      "label": "#74: Physical hardware acceptance pending after protocol delivery",
+      "file_type": "documentation",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "ticket_execution",
+        "ticket": 74,
+        "title": "Physical hardware acceptance pending after protocol delivery",
+        "issueUrl": "https://github.com/arkinara/modern-pos/issues/74",
+        "baseCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c",
+        "date": "2026-11-17",
+        "qaTarget": "In QA",
+        "evidence": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+        "sources": [
+          "docs/hardware-acceptance.md",
+          "docs/printer-validation.md",
+          "docs/printer-hardware.md",
+          "apps/mobile/test/station_delivery_service_test.dart",
+          "apps/mobile/test/print_queue_service_test.dart",
+          "graphify-out/board-validation-2026-11-17.json"
+        ],
+        "verification": {
+          "protocolPr": "https://github.com/arkinara/modern-pos/pull/89",
+          "protocolMerge": "ae68fe55d22ff2a0d48fd7e4eb5a08ad1381a14e",
+          "softwareCi": "https://github.com/arkinara/modern-pos/actions/runs/44041053470",
+          "physicalAcceptance": "pending exact configuration, permission/pairing, real paper and kitchen tickets, disconnect/restart, offline reconciliation and dated evidence",
+          "auditCorrection": "reopened and returned from Done to In QA",
+          "auditComment": "https://github.com/arkinara/modern-pos/issues/74#issuecomment-6943624891"
+        }
+      }
+    },
+    {
+      "id": "execution_file_docs_hardware_acceptance_md",
+      "label": "hardware-acceptance.md",
+      "file_type": "evidence",
+      "source_file": "docs/hardware-acceptance.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_printer_hardware_md",
+      "label": "printer-hardware.md",
+      "file_type": "evidence",
+      "source_file": "docs/printer-hardware.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_mobile_test_station_delivery_service_test_dart",
+      "label": "station_delivery_service_test.dart",
+      "file_type": "evidence",
+      "source_file": "apps/mobile/test/station_delivery_service_test.dart",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_mobile_test_print_queue_service_test_dart",
+      "label": "print_queue_service_test.dart",
+      "file_type": "evidence",
+      "source_file": "apps/mobile/test/print_queue_service_test.dart",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -112072,6 +112226,80 @@
       }
     },
     {
+      "id": "ticket_execution_76",
+      "label": "#76: Representative operator acceptance pending after synthetic pilot",
+      "file_type": "documentation",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "ticket_execution",
+        "ticket": 76,
+        "title": "Representative operator acceptance pending after synthetic pilot",
+        "issueUrl": "https://github.com/arkinara/modern-pos/issues/76",
+        "baseCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c",
+        "date": "2026-11-17",
+        "qaTarget": "In QA",
+        "evidence": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+        "sources": [
+          "docs/operator-pilot.md",
+          "docs/operator-feedback.md",
+          "docs/usability-refinement.md",
+          "scripts/operator-pilot-synthetic.mjs",
+          "graphify-out/pre78-synthetic-pilot.txt",
+          "graphify-out/board-validation-2026-11-17.json"
+        ],
+        "verification": {
+          "protocolPr": "https://github.com/arkinara/modern-pos/pull/90",
+          "protocolMerge": "5ab0a069e045e585ac6da81e6b16d4a41197b87f",
+          "syntheticWalkthrough": "passed fresh local manual-mode API, 10 checkouts without errors, same-sale recovery/replay, split totals equal, zero exact-count variance and 14 matching sales/report rows",
+          "humanParticipants": "pending",
+          "operatorAcceptance": "pending representative observations, measurements, accessibility and dated accept/defer decision",
+          "auditCorrection": "reopened and returned from Done to In QA",
+          "auditComment": "https://github.com/arkinara/modern-pos/issues/76#issuecomment-6943626454"
+        }
+      }
+    },
+    {
+      "id": "execution_file_docs_operator_pilot_md",
+      "label": "operator-pilot.md",
+      "file_type": "evidence",
+      "source_file": "docs/operator-pilot.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_operator_feedback_md",
+      "label": "operator-feedback.md",
+      "file_type": "evidence",
+      "source_file": "docs/operator-feedback.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_usability_refinement_md",
+      "label": "usability-refinement.md",
+      "file_type": "evidence",
+      "source_file": "docs/usability-refinement.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_scripts_operator_pilot_synthetic_mjs",
+      "label": "operator-pilot-synthetic.mjs",
+      "file_type": "evidence",
+      "source_file": "scripts/operator-pilot-synthetic.mjs",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
       "id": "ticket_execution_77",
       "label": "#77: Operations tooling, isolated restore and monitoring QA",
       "file_type": "documentation",
@@ -112113,7 +112341,8 @@
           "docs/qa-2026-11-17.md",
           "graphify-out/qa-2026-11-17-unit.txt",
           "graphify-out/qa-2026-11-17-retention.txt",
-          "graphify-out/qa-2026-11-17-restore.txt"
+          "graphify-out/qa-2026-11-17-restore.txt",
+          "graphify-out/pre78-local-restore.txt"
         ],
         "verification": {
           "node": "22.23.1",
@@ -112133,6 +112362,20 @@
           "date": "2026-11-17",
           "report": "docs/qa-2026-11-17.md",
           "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+        },
+        "pre78Audit": {
+          "occupiedTargetRefusal": "passed",
+          "saleAndPaymentTotalMinor": 176000,
+          "privileges": "passed",
+          "stockMovements": 51,
+          "restoreSeconds": 0.7828643,
+          "paymentRecords": 19,
+          "date": "2026-11-17",
+          "comparedTableFingerprints": 10,
+          "sales": 19,
+          "reversals": 11,
+          "externalAcceptance": "pending; owner deferred until deployment preparation",
+          "postgresTestsPassed": 18
         }
       }
     },
@@ -300977,6 +301220,105 @@
       "weight": 1.0
     },
     {
+      "source": "ticket_execution_73",
+      "target": "execution_file_graphify_out_BOARD_VALIDATION_2026_11_17_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_graphify_out_board_validation_2026_11_17_json",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_graphify_out_pre78_local_restore_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_graphify_out_pre78_synthetic_pilot_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_74",
+      "target": "execution_file_graphify_out_BOARD_VALIDATION_2026_11_17_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_74",
+      "target": "execution_file_docs_hardware_acceptance_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_74",
+      "target": "execution_file_docs_printer_validation_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_74",
+      "target": "execution_file_docs_printer_hardware_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_74",
+      "target": "execution_file_apps_mobile_test_station_delivery_service_test_dart",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_74",
+      "target": "execution_file_apps_mobile_test_print_queue_service_test_dart",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_74",
+      "target": "execution_file_graphify_out_board_validation_2026_11_17_json",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
       "source": "ticket_execution_75",
       "target": "execution_file_graphify_out_ticket_75_manual_execution_md",
       "relation": "supported_by",
@@ -301337,6 +301679,69 @@
       "weight": 1.0
     },
     {
+      "source": "ticket_execution_76",
+      "target": "execution_file_graphify_out_BOARD_VALIDATION_2026_11_17_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_76",
+      "target": "execution_file_docs_operator_pilot_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_76",
+      "target": "execution_file_docs_operator_feedback_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_76",
+      "target": "execution_file_docs_usability_refinement_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_76",
+      "target": "execution_file_scripts_operator_pilot_synthetic_mjs",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_76",
+      "target": "execution_file_graphify_out_pre78_synthetic_pilot_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_76",
+      "target": "execution_file_graphify_out_board_validation_2026_11_17_json",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
       "source": "ticket_execution_77",
       "target": "execution_file_graphify_out_ticket_77_execution_md",
       "relation": "supported_by",
@@ -301573,6 +301978,15 @@
     {
       "source": "ticket_execution_77",
       "target": "execution_file_graphify_out_qa_2026_11_17_restore_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-77-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_77",
+      "target": "execution_file_graphify_out_pre78_local_restore_txt",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
       "source_file": "graphify-out/ticket-77-execution.md",

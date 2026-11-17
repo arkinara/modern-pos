@@ -18,11 +18,17 @@
 
 - Source revision `a0d1393c4f5a9e1dabbf7340a581c161eabd0ac0`.
 - Graphify 0.9.29 scanned 894 code inputs in code-only mode. All 23 SQL files are represented after loading tree-sitter-sql 0.3.13 from isolated workspace tooling.
-- Source clustering produced 10,076 nodes, 16,447 edges and 577 communities. The final enriched graph contains 10,186 nodes and 16,585 edges, including six ticket execution roots and 138 evidence relationships.
+- Source clustering produced 10,076 nodes, 16,447 edges and 577 communities. After the pre-#78 board audit, the enriched graph contains 10,200 nodes and 16,604 edges, including eight ticket execution roots and 157 evidence relationships.
 - Unique node identifiers, edge endpoints, evidence-file paths and representative manual-payment, kitchen-delivery and durable-refund symbols passed verification.
 - A real Chromium load matched the HTML datasets to graph.json, found ticket #75 through search, opened its evidence details and reported zero page errors. Displayed counts match the enriched graph. Repeated evidence injection leaves JSON and HTML unchanged.
 - The injector now includes evidence nodes/edges in the HTML search data and updates displayed counts after enrichment.
 - Code-only scope skipped 283 documents and five images. Graphify reported six JSON/config inputs with zero AST nodes, 32 unclassified inputs and two sensitivity-filtered inputs. Ticket evidence is attached explicitly. Extraction and clustering used no LLM calls.
+
+## Board audit evidence on 2026-11-17
+
+The [pre-#78 audit](BOARD_VALIDATION_2026-11-17.md) checks all 48 Project 19 items and verifies 47 predecessor delivery commits against `c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c`. Current-main CI, fresh local PostgreSQL restore/privilege tests and a synthetic manual-mode cashier/owner walkthrough are recorded in [the inventory](board-validation-2026-11-17.json). Ticket contexts #73/#77 include the new results, and new #74/#76 roots retain their pending physical/operator criteria and status corrections. The verified board contains 44 Done, three In QA and one Todo. Ticket #78 remains Todo.
+
+The audit changes evidence artifacts only. The source AST baseline remains `a0d1393c4f5a9e1dabbf7340a581c161eabd0ac0`.
 
 ### Rebuild commands
 

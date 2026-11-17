@@ -1,0 +1,26 @@
+{
+  "ticket": 76,
+  "title": "Representative operator acceptance pending after synthetic pilot",
+  "issueUrl": "https://github.com/arkinara/modern-pos/issues/76",
+  "baseCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c",
+  "date": "2026-11-17",
+  "qaTarget": "In QA",
+  "evidence": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+  "sources": [
+    "docs/operator-pilot.md",
+    "docs/operator-feedback.md",
+    "docs/usability-refinement.md",
+    "scripts/operator-pilot-synthetic.mjs",
+    "graphify-out/pre78-synthetic-pilot.txt",
+    "graphify-out/board-validation-2026-11-17.json"
+  ],
+  "verification": {
+    "protocolPr": "https://github.com/arkinara/modern-pos/pull/90",
+    "protocolMerge": "5ab0a069e045e585ac6da81e6b16d4a41197b87f",
+    "syntheticWalkthrough": "passed fresh local manual-mode API, 10 checkouts without errors, same-sale recovery/replay, split totals equal, zero exact-count variance and 14 matching sales/report rows",
+    "humanParticipants": "pending",
+    "operatorAcceptance": "pending representative observations, measurements, accessibility and dated accept/defer decision",
+    "auditCorrection": "reopened and returned from Done to In QA",
+    "auditComment": "https://github.com/arkinara/modern-pos/issues/76#issuecomment-6943626454"
+  }
+}
