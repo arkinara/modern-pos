@@ -6,6 +6,7 @@ import 'package:modern_pos_mobile/features/checkout/checkout_gateway.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_models.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_repository.dart';
 import 'package:modern_pos_mobile/features/printing/esc_pos_receipt.dart';
+import 'package:modern_pos_mobile/features/printing/kitchen_ticket.dart';
 import 'package:modern_pos_mobile/features/printing/printer_adapter.dart';
 import 'package:modern_pos_mobile/features/printing/printer_models.dart';
 
@@ -203,7 +204,9 @@ class FakeReceiptPrinter implements PrinterAdapter {
   bool connected;
   bool throwOnPrint;
   int printCount = 0;
+  int kitchenPrintCount = 0;
   ReceiptData? lastData;
+  KitchenTicket? lastKitchenTicket;
 
   @override
   bool get isConnected => connected;
@@ -222,6 +225,18 @@ class FakeReceiptPrinter implements PrinterAdapter {
   Future<void> printReceipt(ReceiptData data) async {
     printCount++;
     lastData = data;
+    if (throwOnPrint) {
+      throw const PrinterException(
+        PrinterFailureKind.connectionLost,
+        'Simulated printer failure',
+      );
+    }
+  }
+
+  @override
+  Future<void> printKitchenTicket(KitchenTicket ticket) async {
+    kitchenPrintCount++;
+    lastKitchenTicket = ticket;
     if (throwOnPrint) {
       throw const PrinterException(
         PrinterFailureKind.connectionLost,

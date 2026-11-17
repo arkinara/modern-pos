@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/formatting/money.dart';
 import '../../theme/app_theme.dart';
+import '../auth/auth_controller.dart';
 import '../checkout/checkout_models.dart';
 import 'offline_sale_models.dart';
 import 'offline_sync_controller.dart';
@@ -63,6 +64,7 @@ class _Body extends ConsumerWidget {
     final controller = ref.read(offlineSyncControllerProvider.notifier);
     final summary = state.summary;
     final active = state.active;
+    final offline = ref.watch(authControllerProvider).value?.offline ?? false;
 
     if (state.loadFailed) {
       return _ErrorPanel(
@@ -155,6 +157,17 @@ class _Body extends ConsumerWidget {
                     ),
                   ),
                 ],
+                if (offline) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Offline session. Reconnect and sign in to sync; queued '
+                    'sales are never replayed without a server access token.',
+                    style: TextStyle(
+                      color: PosColors.warning,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
@@ -164,7 +177,7 @@ class _Body extends ConsumerWidget {
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(48, 48),
                       ),
-                      onPressed: state.running
+                      onPressed: state.running || offline
                           ? null
                           : () => ref
                                 .read(offlineSyncControllerProvider.notifier)
@@ -176,7 +189,7 @@ class _Body extends ConsumerWidget {
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(48, 48),
                       ),
-                      onPressed: state.running
+                      onPressed: state.running || offline
                           ? null
                           : () => ref
                                 .read(offlineSyncControllerProvider.notifier)
@@ -208,7 +221,7 @@ class _Body extends ConsumerWidget {
           for (final record in active)
             _RecordCard(
               record: record,
-              onRetry: state.running
+              onRetry: state.running || offline
                   ? null
                   : () => controller.retry(record.idempotencyKey),
               onDiscard: state.running

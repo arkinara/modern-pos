@@ -2111,6 +2111,588 @@ class CheckoutIntentsCompanion extends UpdateCompanion<CheckoutIntent> {
   }
 }
 
+class $OfflineCatalogSnapshotsTable extends OfflineCatalogSnapshots
+    with TableInfo<$OfflineCatalogSnapshotsTable, OfflineCatalogSnapshot> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OfflineCatalogSnapshotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _outletIdMeta = const VerificationMeta(
+    'outletId',
+  );
+  @override
+  late final GeneratedColumn<String> outletId = GeneratedColumn<String>(
+    'outlet_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadCipherMeta = const VerificationMeta(
+    'payloadCipher',
+  );
+  @override
+  late final GeneratedColumn<String> payloadCipher = GeneratedColumn<String>(
+    'payload_cipher',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadNonceMeta = const VerificationMeta(
+    'payloadNonce',
+  );
+  @override
+  late final GeneratedColumn<String> payloadNonce = GeneratedColumn<String>(
+    'payload_nonce',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMacMeta = const VerificationMeta(
+    'payloadMac',
+  );
+  @override
+  late final GeneratedColumn<String> payloadMac = GeneratedColumn<String>(
+    'payload_mac',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _keyVersionMeta = const VerificationMeta(
+    'keyVersion',
+  );
+  @override
+  late final GeneratedColumn<String> keyVersion = GeneratedColumn<String>(
+    'key_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('v1'),
+  );
+  static const VerificationMeta _payloadDigestMeta = const VerificationMeta(
+    'payloadDigest',
+  );
+  @override
+  late final GeneratedColumn<String> payloadDigest = GeneratedColumn<String>(
+    'payload_digest',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+    'fetched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    userId,
+    outletId,
+    payloadCipher,
+    payloadNonce,
+    payloadMac,
+    keyVersion,
+    payloadDigest,
+    fetchedAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'offline_catalog_snapshots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OfflineCatalogSnapshot> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('outlet_id')) {
+      context.handle(
+        _outletIdMeta,
+        outletId.isAcceptableOrUnknown(data['outlet_id']!, _outletIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_outletIdMeta);
+    }
+    if (data.containsKey('payload_cipher')) {
+      context.handle(
+        _payloadCipherMeta,
+        payloadCipher.isAcceptableOrUnknown(
+          data['payload_cipher']!,
+          _payloadCipherMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadCipherMeta);
+    }
+    if (data.containsKey('payload_nonce')) {
+      context.handle(
+        _payloadNonceMeta,
+        payloadNonce.isAcceptableOrUnknown(
+          data['payload_nonce']!,
+          _payloadNonceMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadNonceMeta);
+    }
+    if (data.containsKey('payload_mac')) {
+      context.handle(
+        _payloadMacMeta,
+        payloadMac.isAcceptableOrUnknown(data['payload_mac']!, _payloadMacMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMacMeta);
+    }
+    if (data.containsKey('key_version')) {
+      context.handle(
+        _keyVersionMeta,
+        keyVersion.isAcceptableOrUnknown(data['key_version']!, _keyVersionMeta),
+      );
+    }
+    if (data.containsKey('payload_digest')) {
+      context.handle(
+        _payloadDigestMeta,
+        payloadDigest.isAcceptableOrUnknown(
+          data['payload_digest']!,
+          _payloadDigestMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadDigestMeta);
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fetchedAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId, outletId};
+  @override
+  OfflineCatalogSnapshot map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OfflineCatalogSnapshot(
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      outletId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}outlet_id'],
+      )!,
+      payloadCipher: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_cipher'],
+      )!,
+      payloadNonce: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_nonce'],
+      )!,
+      payloadMac: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_mac'],
+      )!,
+      keyVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key_version'],
+      )!,
+      payloadDigest: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_digest'],
+      )!,
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $OfflineCatalogSnapshotsTable createAlias(String alias) {
+    return $OfflineCatalogSnapshotsTable(attachedDatabase, alias);
+  }
+}
+
+class OfflineCatalogSnapshot extends DataClass
+    implements Insertable<OfflineCatalogSnapshot> {
+  final String userId;
+  final String outletId;
+  final String payloadCipher;
+  final String payloadNonce;
+  final String payloadMac;
+  final String keyVersion;
+  final String payloadDigest;
+  final DateTime fetchedAt;
+  final DateTime updatedAt;
+  const OfflineCatalogSnapshot({
+    required this.userId,
+    required this.outletId,
+    required this.payloadCipher,
+    required this.payloadNonce,
+    required this.payloadMac,
+    required this.keyVersion,
+    required this.payloadDigest,
+    required this.fetchedAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
+    map['outlet_id'] = Variable<String>(outletId);
+    map['payload_cipher'] = Variable<String>(payloadCipher);
+    map['payload_nonce'] = Variable<String>(payloadNonce);
+    map['payload_mac'] = Variable<String>(payloadMac);
+    map['key_version'] = Variable<String>(keyVersion);
+    map['payload_digest'] = Variable<String>(payloadDigest);
+    map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  OfflineCatalogSnapshotsCompanion toCompanion(bool nullToAbsent) {
+    return OfflineCatalogSnapshotsCompanion(
+      userId: Value(userId),
+      outletId: Value(outletId),
+      payloadCipher: Value(payloadCipher),
+      payloadNonce: Value(payloadNonce),
+      payloadMac: Value(payloadMac),
+      keyVersion: Value(keyVersion),
+      payloadDigest: Value(payloadDigest),
+      fetchedAt: Value(fetchedAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory OfflineCatalogSnapshot.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OfflineCatalogSnapshot(
+      userId: serializer.fromJson<String>(json['userId']),
+      outletId: serializer.fromJson<String>(json['outletId']),
+      payloadCipher: serializer.fromJson<String>(json['payloadCipher']),
+      payloadNonce: serializer.fromJson<String>(json['payloadNonce']),
+      payloadMac: serializer.fromJson<String>(json['payloadMac']),
+      keyVersion: serializer.fromJson<String>(json['keyVersion']),
+      payloadDigest: serializer.fromJson<String>(json['payloadDigest']),
+      fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
+      'outletId': serializer.toJson<String>(outletId),
+      'payloadCipher': serializer.toJson<String>(payloadCipher),
+      'payloadNonce': serializer.toJson<String>(payloadNonce),
+      'payloadMac': serializer.toJson<String>(payloadMac),
+      'keyVersion': serializer.toJson<String>(keyVersion),
+      'payloadDigest': serializer.toJson<String>(payloadDigest),
+      'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  OfflineCatalogSnapshot copyWith({
+    String? userId,
+    String? outletId,
+    String? payloadCipher,
+    String? payloadNonce,
+    String? payloadMac,
+    String? keyVersion,
+    String? payloadDigest,
+    DateTime? fetchedAt,
+    DateTime? updatedAt,
+  }) => OfflineCatalogSnapshot(
+    userId: userId ?? this.userId,
+    outletId: outletId ?? this.outletId,
+    payloadCipher: payloadCipher ?? this.payloadCipher,
+    payloadNonce: payloadNonce ?? this.payloadNonce,
+    payloadMac: payloadMac ?? this.payloadMac,
+    keyVersion: keyVersion ?? this.keyVersion,
+    payloadDigest: payloadDigest ?? this.payloadDigest,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  OfflineCatalogSnapshot copyWithCompanion(
+    OfflineCatalogSnapshotsCompanion data,
+  ) {
+    return OfflineCatalogSnapshot(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      outletId: data.outletId.present ? data.outletId.value : this.outletId,
+      payloadCipher: data.payloadCipher.present
+          ? data.payloadCipher.value
+          : this.payloadCipher,
+      payloadNonce: data.payloadNonce.present
+          ? data.payloadNonce.value
+          : this.payloadNonce,
+      payloadMac: data.payloadMac.present
+          ? data.payloadMac.value
+          : this.payloadMac,
+      keyVersion: data.keyVersion.present
+          ? data.keyVersion.value
+          : this.keyVersion,
+      payloadDigest: data.payloadDigest.present
+          ? data.payloadDigest.value
+          : this.payloadDigest,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OfflineCatalogSnapshot(')
+          ..write('userId: $userId, ')
+          ..write('outletId: $outletId, ')
+          ..write('payloadCipher: $payloadCipher, ')
+          ..write('payloadNonce: $payloadNonce, ')
+          ..write('payloadMac: $payloadMac, ')
+          ..write('keyVersion: $keyVersion, ')
+          ..write('payloadDigest: $payloadDigest, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    userId,
+    outletId,
+    payloadCipher,
+    payloadNonce,
+    payloadMac,
+    keyVersion,
+    payloadDigest,
+    fetchedAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OfflineCatalogSnapshot &&
+          other.userId == this.userId &&
+          other.outletId == this.outletId &&
+          other.payloadCipher == this.payloadCipher &&
+          other.payloadNonce == this.payloadNonce &&
+          other.payloadMac == this.payloadMac &&
+          other.keyVersion == this.keyVersion &&
+          other.payloadDigest == this.payloadDigest &&
+          other.fetchedAt == this.fetchedAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class OfflineCatalogSnapshotsCompanion
+    extends UpdateCompanion<OfflineCatalogSnapshot> {
+  final Value<String> userId;
+  final Value<String> outletId;
+  final Value<String> payloadCipher;
+  final Value<String> payloadNonce;
+  final Value<String> payloadMac;
+  final Value<String> keyVersion;
+  final Value<String> payloadDigest;
+  final Value<DateTime> fetchedAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const OfflineCatalogSnapshotsCompanion({
+    this.userId = const Value.absent(),
+    this.outletId = const Value.absent(),
+    this.payloadCipher = const Value.absent(),
+    this.payloadNonce = const Value.absent(),
+    this.payloadMac = const Value.absent(),
+    this.keyVersion = const Value.absent(),
+    this.payloadDigest = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OfflineCatalogSnapshotsCompanion.insert({
+    required String userId,
+    required String outletId,
+    required String payloadCipher,
+    required String payloadNonce,
+    required String payloadMac,
+    this.keyVersion = const Value.absent(),
+    required String payloadDigest,
+    required DateTime fetchedAt,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId),
+       outletId = Value(outletId),
+       payloadCipher = Value(payloadCipher),
+       payloadNonce = Value(payloadNonce),
+       payloadMac = Value(payloadMac),
+       payloadDigest = Value(payloadDigest),
+       fetchedAt = Value(fetchedAt);
+  static Insertable<OfflineCatalogSnapshot> custom({
+    Expression<String>? userId,
+    Expression<String>? outletId,
+    Expression<String>? payloadCipher,
+    Expression<String>? payloadNonce,
+    Expression<String>? payloadMac,
+    Expression<String>? keyVersion,
+    Expression<String>? payloadDigest,
+    Expression<DateTime>? fetchedAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (outletId != null) 'outlet_id': outletId,
+      if (payloadCipher != null) 'payload_cipher': payloadCipher,
+      if (payloadNonce != null) 'payload_nonce': payloadNonce,
+      if (payloadMac != null) 'payload_mac': payloadMac,
+      if (keyVersion != null) 'key_version': keyVersion,
+      if (payloadDigest != null) 'payload_digest': payloadDigest,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OfflineCatalogSnapshotsCompanion copyWith({
+    Value<String>? userId,
+    Value<String>? outletId,
+    Value<String>? payloadCipher,
+    Value<String>? payloadNonce,
+    Value<String>? payloadMac,
+    Value<String>? keyVersion,
+    Value<String>? payloadDigest,
+    Value<DateTime>? fetchedAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return OfflineCatalogSnapshotsCompanion(
+      userId: userId ?? this.userId,
+      outletId: outletId ?? this.outletId,
+      payloadCipher: payloadCipher ?? this.payloadCipher,
+      payloadNonce: payloadNonce ?? this.payloadNonce,
+      payloadMac: payloadMac ?? this.payloadMac,
+      keyVersion: keyVersion ?? this.keyVersion,
+      payloadDigest: payloadDigest ?? this.payloadDigest,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (outletId.present) {
+      map['outlet_id'] = Variable<String>(outletId.value);
+    }
+    if (payloadCipher.present) {
+      map['payload_cipher'] = Variable<String>(payloadCipher.value);
+    }
+    if (payloadNonce.present) {
+      map['payload_nonce'] = Variable<String>(payloadNonce.value);
+    }
+    if (payloadMac.present) {
+      map['payload_mac'] = Variable<String>(payloadMac.value);
+    }
+    if (keyVersion.present) {
+      map['key_version'] = Variable<String>(keyVersion.value);
+    }
+    if (payloadDigest.present) {
+      map['payload_digest'] = Variable<String>(payloadDigest.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OfflineCatalogSnapshotsCompanion(')
+          ..write('userId: $userId, ')
+          ..write('outletId: $outletId, ')
+          ..write('payloadCipher: $payloadCipher, ')
+          ..write('payloadNonce: $payloadNonce, ')
+          ..write('payloadMac: $payloadMac, ')
+          ..write('keyVersion: $keyVersion, ')
+          ..write('payloadDigest: $payloadDigest, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $PrintQueueJobsTable extends PrintQueueJobs
     with TableInfo<$PrintQueueJobsTable, PrintQueueJob> {
   @override
@@ -3533,6 +4115,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CheckoutIntentsTable checkoutIntents = $CheckoutIntentsTable(
     this,
   );
+  late final $OfflineCatalogSnapshotsTable offlineCatalogSnapshots =
+      $OfflineCatalogSnapshotsTable(this);
   late final $PrintQueueJobsTable printQueueJobs = $PrintQueueJobsTable(this);
   late final $PrintQueueAuditsTable printQueueAudits = $PrintQueueAuditsTable(
     this,
@@ -3545,6 +4129,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     recoveryJobs,
     cartEntries,
     checkoutIntents,
+    offlineCatalogSnapshots,
     printQueueJobs,
     printQueueAudits,
   ];
@@ -4582,6 +5167,323 @@ typedef $$CheckoutIntentsTableProcessedTableManager =
       CheckoutIntent,
       PrefetchHooks Function()
     >;
+typedef $$OfflineCatalogSnapshotsTableCreateCompanionBuilder =
+    OfflineCatalogSnapshotsCompanion Function({
+      required String userId,
+      required String outletId,
+      required String payloadCipher,
+      required String payloadNonce,
+      required String payloadMac,
+      Value<String> keyVersion,
+      required String payloadDigest,
+      required DateTime fetchedAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$OfflineCatalogSnapshotsTableUpdateCompanionBuilder =
+    OfflineCatalogSnapshotsCompanion Function({
+      Value<String> userId,
+      Value<String> outletId,
+      Value<String> payloadCipher,
+      Value<String> payloadNonce,
+      Value<String> payloadMac,
+      Value<String> keyVersion,
+      Value<String> payloadDigest,
+      Value<DateTime> fetchedAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$OfflineCatalogSnapshotsTableFilterComposer
+    extends Composer<_$AppDatabase, $OfflineCatalogSnapshotsTable> {
+  $$OfflineCatalogSnapshotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get outletId => $composableBuilder(
+    column: $table.outletId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadCipher => $composableBuilder(
+    column: $table.payloadCipher,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadNonce => $composableBuilder(
+    column: $table.payloadNonce,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadMac => $composableBuilder(
+    column: $table.payloadMac,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get keyVersion => $composableBuilder(
+    column: $table.keyVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadDigest => $composableBuilder(
+    column: $table.payloadDigest,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OfflineCatalogSnapshotsTableOrderingComposer
+    extends Composer<_$AppDatabase, $OfflineCatalogSnapshotsTable> {
+  $$OfflineCatalogSnapshotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get outletId => $composableBuilder(
+    column: $table.outletId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadCipher => $composableBuilder(
+    column: $table.payloadCipher,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadNonce => $composableBuilder(
+    column: $table.payloadNonce,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadMac => $composableBuilder(
+    column: $table.payloadMac,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get keyVersion => $composableBuilder(
+    column: $table.keyVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadDigest => $composableBuilder(
+    column: $table.payloadDigest,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OfflineCatalogSnapshotsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OfflineCatalogSnapshotsTable> {
+  $$OfflineCatalogSnapshotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get outletId =>
+      $composableBuilder(column: $table.outletId, builder: (column) => column);
+
+  GeneratedColumn<String> get payloadCipher => $composableBuilder(
+    column: $table.payloadCipher,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadNonce => $composableBuilder(
+    column: $table.payloadNonce,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadMac => $composableBuilder(
+    column: $table.payloadMac,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get keyVersion => $composableBuilder(
+    column: $table.keyVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadDigest => $composableBuilder(
+    column: $table.payloadDigest,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$OfflineCatalogSnapshotsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OfflineCatalogSnapshotsTable,
+          OfflineCatalogSnapshot,
+          $$OfflineCatalogSnapshotsTableFilterComposer,
+          $$OfflineCatalogSnapshotsTableOrderingComposer,
+          $$OfflineCatalogSnapshotsTableAnnotationComposer,
+          $$OfflineCatalogSnapshotsTableCreateCompanionBuilder,
+          $$OfflineCatalogSnapshotsTableUpdateCompanionBuilder,
+          (
+            OfflineCatalogSnapshot,
+            BaseReferences<
+              _$AppDatabase,
+              $OfflineCatalogSnapshotsTable,
+              OfflineCatalogSnapshot
+            >,
+          ),
+          OfflineCatalogSnapshot,
+          PrefetchHooks Function()
+        > {
+  $$OfflineCatalogSnapshotsTableTableManager(
+    _$AppDatabase db,
+    $OfflineCatalogSnapshotsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OfflineCatalogSnapshotsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$OfflineCatalogSnapshotsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$OfflineCatalogSnapshotsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> userId = const Value.absent(),
+                Value<String> outletId = const Value.absent(),
+                Value<String> payloadCipher = const Value.absent(),
+                Value<String> payloadNonce = const Value.absent(),
+                Value<String> payloadMac = const Value.absent(),
+                Value<String> keyVersion = const Value.absent(),
+                Value<String> payloadDigest = const Value.absent(),
+                Value<DateTime> fetchedAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OfflineCatalogSnapshotsCompanion(
+                userId: userId,
+                outletId: outletId,
+                payloadCipher: payloadCipher,
+                payloadNonce: payloadNonce,
+                payloadMac: payloadMac,
+                keyVersion: keyVersion,
+                payloadDigest: payloadDigest,
+                fetchedAt: fetchedAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String userId,
+                required String outletId,
+                required String payloadCipher,
+                required String payloadNonce,
+                required String payloadMac,
+                Value<String> keyVersion = const Value.absent(),
+                required String payloadDigest,
+                required DateTime fetchedAt,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OfflineCatalogSnapshotsCompanion.insert(
+                userId: userId,
+                outletId: outletId,
+                payloadCipher: payloadCipher,
+                payloadNonce: payloadNonce,
+                payloadMac: payloadMac,
+                keyVersion: keyVersion,
+                payloadDigest: payloadDigest,
+                fetchedAt: fetchedAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $OfflineCatalogSnapshotsTable,
+                    OfflineCatalogSnapshot
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $OfflineCatalogSnapshotsTable,
+                    OfflineCatalogSnapshot
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OfflineCatalogSnapshotsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OfflineCatalogSnapshotsTable,
+      OfflineCatalogSnapshot,
+      $$OfflineCatalogSnapshotsTableFilterComposer,
+      $$OfflineCatalogSnapshotsTableOrderingComposer,
+      $$OfflineCatalogSnapshotsTableAnnotationComposer,
+      $$OfflineCatalogSnapshotsTableCreateCompanionBuilder,
+      $$OfflineCatalogSnapshotsTableUpdateCompanionBuilder,
+      (
+        OfflineCatalogSnapshot,
+        BaseReferences<
+          _$AppDatabase,
+          $OfflineCatalogSnapshotsTable,
+          OfflineCatalogSnapshot
+        >,
+      ),
+      OfflineCatalogSnapshot,
+      PrefetchHooks Function()
+    >;
 typedef $$PrintQueueJobsTableCreateCompanionBuilder =
     PrintQueueJobsCompanion Function({
       required String id,
@@ -5290,6 +6192,11 @@ class $AppDatabaseManager {
       $$CartEntriesTableTableManager(_db, _db.cartEntries);
   $$CheckoutIntentsTableTableManager get checkoutIntents =>
       $$CheckoutIntentsTableTableManager(_db, _db.checkoutIntents);
+  $$OfflineCatalogSnapshotsTableTableManager get offlineCatalogSnapshots =>
+      $$OfflineCatalogSnapshotsTableTableManager(
+        _db,
+        _db.offlineCatalogSnapshots,
+      );
   $$PrintQueueJobsTableTableManager get printQueueJobs =>
       $$PrintQueueJobsTableTableManager(_db, _db.printQueueJobs);
   $$PrintQueueAuditsTableTableManager get printQueueAudits =>

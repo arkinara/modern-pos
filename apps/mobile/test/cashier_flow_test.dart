@@ -7,14 +7,17 @@ import 'package:modern_pos_mobile/features/auth/auth_controller.dart';
 import 'package:modern_pos_mobile/features/cart/cart_controller.dart';
 import 'package:modern_pos_mobile/features/catalog/catalog_controller.dart';
 import 'package:modern_pos_mobile/features/catalog/catalog_models.dart';
+import 'package:modern_pos_mobile/features/catalog/catalog_snapshot_store.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_repository.dart';
 
 import 'support/checkout_fakes.dart';
 import 'support/fakes.dart';
+import 'support/offline_fakes.dart';
 
 void main() {
   late FakeCatalogRepository catalog;
   late InMemoryCartRepository cartRepository;
+  late InMemoryCatalogSnapshotStore snapshotStore;
   late FakeAuthController auth;
   late ProviderContainer container;
 
@@ -66,11 +69,13 @@ void main() {
   Future<void> pumpApp(WidgetTester tester) async {
     catalog = FakeCatalogRepository(fixture());
     cartRepository = InMemoryCartRepository();
+    snapshotStore = InMemoryCatalogSnapshotStore();
     auth = FakeAuthController(testSession());
     container = ProviderContainer(
       overrides: [
         authControllerProvider.overrideWith(() => auth),
         catalogRepositoryProvider.overrideWithValue(catalog),
+        catalogSnapshotStoreProvider.overrideWithValue(snapshotStore),
         cartRepositoryProvider.overrideWithValue(cartRepository),
         checkoutRepositoryProvider.overrideWithValue(
           InMemoryCheckoutRepository(),
@@ -279,6 +284,7 @@ void main() {
 
   testWidgets('offline catalog shows retry and recovers', (tester) async {
     await pumpApp(tester);
+    snapshotStore.rows.clear();
 
     catalog.failure = DioException.connectionError(
       requestOptions: RequestOptions(path: '/v1/outlets/outlet-1/menu'),

@@ -4,6 +4,8 @@ import 'package:modern_pos_api_client/api.dart';
 
 import '../../core/providers.dart';
 import '../auth/auth_controller.dart';
+import '../printing/station_job_dispatch.dart';
+import '../printing/station_job_gateway.dart';
 import 'checkout_models.dart';
 
 /// Boundary around the sales contract used by checkout. Widget and controller
@@ -134,6 +136,12 @@ class HttpCheckoutGateway implements CheckoutGateway {
       if (finalized == null) {
         throw const FormatException('Invalid finalize response');
       }
+      await dispatchSaleStationJobs(
+        gateway: HttpStationJobGateway(_dio, _accessToken),
+        outletId: outletId,
+        idempotencyKey: idempotencyKey,
+        sale: finalized.sale,
+      );
       return finalized;
     });
   }

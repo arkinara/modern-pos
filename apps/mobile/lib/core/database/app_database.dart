@@ -66,6 +66,24 @@ class CheckoutIntents extends Table {
   Set<Column> get primaryKey => {idempotencyKey};
 }
 
+/// Encrypted, scoped catalog and outlet-settings snapshot used when a
+/// previously authorized cashier session restarts without network. A row is
+/// keyed by the owning user and outlet so another account cannot read it.
+class OfflineCatalogSnapshots extends Table {
+  TextColumn get userId => text()();
+  TextColumn get outletId => text()();
+  TextColumn get payloadCipher => text()();
+  TextColumn get payloadNonce => text()();
+  TextColumn get payloadMac => text()();
+  TextColumn get keyVersion => text().withDefault(const Constant('v1'))();
+  TextColumn get payloadDigest => text()();
+  DateTimeColumn get fetchedAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {userId, outletId};
+}
+
 /// Durable receipt print queue. The row is written before any bytes are sent so
 /// a crash or disconnect cannot lose the sale's print request. `state` uses
 /// `PrintJobState` wire names.
@@ -110,6 +128,7 @@ class PrintQueueAudits extends Table {
     RecoveryJobs,
     CartEntries,
     CheckoutIntents,
+    OfflineCatalogSnapshots,
     PrintQueueJobs,
     PrintQueueAudits,
   ],
@@ -120,13 +139,16 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       onCreate: (m) async => m.createAll(),
       onUpgrade: (m, from, to) async {
+        if (from < 6) {
+          await m.createTable(offlineCatalogSnapshots);
+        }
         if (from < 2) {
           await m.createTable(cartEntries);
         }
