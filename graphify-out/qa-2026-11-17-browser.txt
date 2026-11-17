@@ -1,0 +1,55 @@
+PASS owner signs in and reaches the back office
+PASS owner navigation exposes all 15 grouped destinations
+PASS owner navigation is grouped into Selling, Operations, Insights and Administration
+PASS all 15 navigation links expose one accessible link role and name
+PASS Menu (/menu) @ 320px: accessible active route with no horizontal overflow
+PASS Stock (/stock) @ 320px: accessible active route with no horizontal overflow
+PASS Sales (/sales) @ 320px: accessible active route with no horizontal overflow
+PASS Promotions (/promotions) @ 320px: accessible active route with no horizontal overflow
+PASS Online ordering (/ordering) @ 320px: accessible active route with no horizontal overflow
+PASS Shifts (/shifts) @ 320px: accessible active route with no horizontal overflow
+PASS Attendance (/attendance) @ 320px: accessible active route with no horizontal overflow
+PASS Purchasing (/purchasing) @ 320px: accessible active route with no horizontal overflow
+PASS Printers (/printers) @ 320px: accessible active route with no horizontal overflow
+PASS Reports (/reports) @ 320px: accessible active route with no horizontal overflow
+PASS Bookkeeping (/bookkeeping) @ 320px: accessible active route with no horizontal overflow
+PASS Customers (/customers) @ 320px: accessible active route with no horizontal overflow
+PASS Audit search (/audit) @ 320px: accessible active route with no horizontal overflow
+PASS Permissions (/permissions) @ 320px: accessible active route with no horizontal overflow
+PASS Settings (/settings) @ 320px: accessible active route with no horizontal overflow
+PASS navigation @ 320px: all 15 targets are at least 44px tall
+PASS navigation @ 320px: keyboard focus reaches a link with a 3px visible outline
+PASS contrast @ 320px: active nav 10.35:1, inactive nav 8.69:1, body 13.35:1
+PASS Menu (/menu) @ 1024px: accessible active route with no horizontal overflow
+PASS Stock (/stock) @ 1024px: accessible active route with no horizontal overflow
+PASS Sales (/sales) @ 1024px: accessible active route with no horizontal overflow
+PASS Promotions (/promotions) @ 1024px: accessible active route with no horizontal overflow
+PASS Online ordering (/ordering) @ 1024px: accessible active route with no horizontal overflow
+PASS Shifts (/shifts) @ 1024px: accessible active route with no horizontal overflow
+PASS Attendance (/attendance) @ 1024px: accessible active route with no horizontal overflow
+PASS Purchasing (/purchasing) @ 1024px: accessible active route with no horizontal overflow
+PASS Printers (/printers) @ 1024px: accessible active route with no horizontal overflow
+PASS Reports (/reports) @ 1024px: accessible active route with no horizontal overflow
+PASS Bookkeeping (/bookkeeping) @ 1024px: accessible active route with no horizontal overflow
+PASS Customers (/customers) @ 1024px: accessible active route with no horizontal overflow
+PASS Audit search (/audit) @ 1024px: accessible active route with no horizontal overflow
+PASS Permissions (/permissions) @ 1024px: accessible active route with no horizontal overflow
+PASS Settings (/settings) @ 1024px: accessible active route with no horizontal overflow
+PASS navigation @ 1024px: all 15 targets are at least 44px tall
+PASS navigation @ 1024px: keyboard focus reaches a link with a 3px visible outline
+PASS owner /reports shows the populated daily report and definitions
+PASS owner /reports downloads CSV sales-main-outlet-2026-01-01-to-2026-01-01.csv
+PASS printer empty state is explicit and never presented as a connection failure
+PASS printer populated state shows real non-secret metadata with no physical-connectivity claim
+PASS printer error state shows the failure and an explicit retry action
+PASS owner stock page opens the movement ledger (20 history actions)
+PASS stock-history 403 copy names the read action, not an outlet settings change
+PASS reference search reaches the API with outlet, date range and reference scope
+PASS unknown reference shows the explicit no-match state
+PASS clearing the reference restores the date-filtered sale list
+PASS cashier navigation shows only the seven permitted destinations
+PASS cashier direct /reports shows the owner-only state with zero report requests
+PASS cashier stock page has no guaranteed-403 movement-history action
+PASS cashier can still open the permitted menu route
+TOTAL CHECKS 53
+ALL BROWSER REGRESSION CHECKS PASSED

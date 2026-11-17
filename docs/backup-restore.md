@@ -1,5 +1,9 @@
 # Migration, backup and restore
 
+Current operations tooling and the 2026-11-16 isolated financial/stock restore
+drill are documented in [the #77 QA handoff](operations-qa.md). The observations
+below retain the earlier staging drill and its original environment.
+
 Status: migration deploy, backup, destroy and restore were executed against a scratch
 database on 2026-11-10. This document contains the commands and the observed row-count
 comparison. No production database was touched.

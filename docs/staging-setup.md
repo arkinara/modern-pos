@@ -1,5 +1,9 @@
 # Staging setup
 
+The proposed deployment controls, backup schedule and recovery/monitoring QA
+worksheet are in [the #77 operations handoff](operations-qa.md). The verified
+single-VPS environment below retains its 2026-11-10 evidence date.
+
 Status: single-VPS staging procedure verified on 2026-11-10 with synthetic data.
 This is not a production deployment procedure.
 

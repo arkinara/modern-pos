@@ -19,17 +19,34 @@
     "apps/api/src/test-support/checkout-recovery-worker.ts",
     "docs/database-regressions.md",
     "graphify-out/ticket-71-api-unit.txt",
-    "graphify-out/ticket-71-postgres.txt"
+    "graphify-out/ticket-71-postgres.txt",
+    "docs/qa-2026-11-17.md",
+    "graphify-out/qa-2026-11-17-unit.txt",
+    "graphify-out/qa-2026-11-17-postgres.txt",
+    "apps/web/components/menu-screen.tsx",
+    "graphify-out/qa-2026-11-17-browser.txt"
   ],
   "verification": {
     "node": "22.23.1",
     "postgresql": "17.6",
-    "unitTests": { "passed": 290, "failed": 0 },
-    "databaseTests": { "passedPerRun": 12, "failed": 0, "runsAgainstSameDatabase": 2 },
+    "unitTests": {
+      "passed": 290,
+      "failed": 0
+    },
+    "databaseTests": {
+      "passedPerRun": 12,
+      "failed": 0,
+      "runsAgainstSameDatabase": 2
+    },
     "apiTypecheck": "passed",
     "apiBuild": "passed",
     "formatting": "passed with Windows line-ending normalization",
     "remoteCIAtPublication": "pending; see PR checks and issue QA handoff for the final run"
   },
-  "handoff": "Stacked on #66 / PR #79. Retarget to main after the parent merges and review the resulting CI run."
+  "handoff": "Stacked on #66 / PR #79. Retarget to main after the parent merges and review the resulting CI run.",
+  "qaReview": {
+    "date": "2026-11-17",
+    "report": "docs/qa-2026-11-17.md",
+    "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+  }
 }

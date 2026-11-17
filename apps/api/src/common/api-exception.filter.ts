@@ -104,10 +104,24 @@ export class ApiExceptionFilter implements ExceptionFilter {
       status = mapped.status;
       body = mapped.body;
     } else {
-      this.logger.error(
-        `Unhandled error for request ${requestId}`,
-        exception instanceof Error ? exception.stack : String(exception),
-      );
+      if (process.env.NODE_ENV?.trim().toLowerCase() === 'production') {
+        const safeRequestId =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestId)
+            ? requestId
+            : randomUUID();
+        this.logger.error(
+          JSON.stringify({
+            event: 'api_unhandled_error',
+            requestId: safeRequestId,
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+          }),
+        );
+      } else {
+        this.logger.error(
+          `Unhandled error for request ${requestId}`,
+          exception instanceof Error ? exception.stack : String(exception),
+        );
+      }
     }
 
     const retryAfterSeconds =

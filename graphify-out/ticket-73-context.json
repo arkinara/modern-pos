@@ -8,13 +8,41 @@
   "qaTarget": "In QA",
   "evidence": "graphify-out/ticket-73-execution.md",
   "sources": [
-    "README.md", "ARCHITECTURE.md", "HANDOFF.md",
-    "docs/implementation-evidence.md", "docs/implementation-evidence.json",
-    "docs/known-limitations.md", "docs/printer-validation.md",
-    "docs/sale-reversal.md", "docs/promotions-refunds.md",
+    "README.md",
+    "ARCHITECTURE.md",
+    "HANDOFF.md",
+    "docs/implementation-evidence.md",
+    "docs/implementation-evidence.json",
+    "docs/known-limitations.md",
+    "docs/printer-validation.md",
+    "docs/sale-reversal.md",
+    "docs/promotions-refunds.md",
     "scripts/verify-implementation-evidence.cjs",
-    "graphify-out/ticket-73-doc-checks.txt", "graphify-out/ticket-73-api-unit.txt"
+    "graphify-out/ticket-73-doc-checks.txt",
+    "graphify-out/ticket-73-api-unit.txt",
+    "docs/qa-2026-11-17.md",
+    "graphify-out/qa-2026-11-17-unit.txt",
+    "graphify-out/qa-2026-11-17-docs.txt"
   ],
-  "verification": { "legacyIssues": 35, "localLinks": 22, "documentationChecks": "passed", "apiUnitTests": { "passed": 282, "failed": 0 } },
-  "acceptanceOwners": [74, 75, 76, 77, 78]
+  "verification": {
+    "legacyIssues": 35,
+    "localLinks": 22,
+    "documentationChecks": "passed",
+    "apiUnitTests": {
+      "passed": 282,
+      "failed": 0
+    }
+  },
+  "acceptanceOwners": [
+    74,
+    75,
+    76,
+    77,
+    78
+  ],
+  "qaReview": {
+    "date": "2026-11-17",
+    "report": "docs/qa-2026-11-17.md",
+    "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+  }
 }

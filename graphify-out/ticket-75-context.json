@@ -17,7 +17,10 @@
     ".github/workflows/ci.yml",
     "docs/payment-acceptance.md",
     "graphify-out/ticket-75-api-unit.txt",
-    "graphify-out/ticket-75-postgres.txt"
+    "graphify-out/ticket-75-postgres.txt",
+    "docs/qa-2026-11-17.md",
+    "graphify-out/qa-2026-11-17-unit.txt",
+    "graphify-out/qa-2026-11-17-postgres.txt"
   ],
   "verification": {
     "node": "22.23.1",
@@ -28,5 +31,10 @@
     "provider": "existing PostgreSQL-backed MOCK",
     "realProviderAcceptance": "pending provider selection, official contract and sandbox access"
   },
-  "handoff": "Review branch combines prerequisites #66, #69 and #71 without merging main. QA may run the mock workflow now and retains the external acceptance checklist on #75."
+  "handoff": "Review branch combines prerequisites #66, #69 and #71 without merging main. QA may run the mock workflow now and retains the external acceptance checklist on #75.",
+  "qaReview": {
+    "date": "2026-11-17",
+    "report": "docs/qa-2026-11-17.md",
+    "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+  }
 }

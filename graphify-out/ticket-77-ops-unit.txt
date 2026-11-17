@@ -1,0 +1,47 @@
+TAP version 13
+# Subtest: backup validates dedicated remote paths and retention before running commands
+ok 1 - backup validates dedicated remote paths and retention before running commands
+  ---
+  duration_ms: 0.9579
+  type: 'test'
+  ...
+# Subtest: database credentials stay in child environment and diagnostics are redacted
+ok 2 - database credentials stay in child environment and diagnostics are redacted
+  ---
+  duration_ms: 54.2548
+  type: 'test'
+  ...
+# Subtest: backup publishes success and retention only after remote checksum verification
+ok 3 - backup publishes success and retention only after remote checksum verification
+  ---
+  duration_ms: 18.8083
+  type: 'test'
+  ...
+# Subtest: restore drill rejects production and targets outside its synthetic namespace
+ok 4 - restore drill rejects production and targets outside its synthetic namespace
+  ---
+  duration_ms: 0.2978
+  type: 'test'
+  ...
+# Subtest: monitor requires HTTPS and explicit loopback opt-in
+ok 5 - monitor requires HTTPS and explicit loopback opt-in
+  ---
+  duration_ms: 0.1672
+  type: 'test'
+  ...
+# {"scenario":"loopback-notification-drill","events":["incident","recovered","incident"],"alertFailureRetry":"passed","redaction":"passed"}
+# Subtest: controlled health failure sends redacted incident/recovery alerts and retries rejected delivery
+ok 6 - controlled health failure sends redacted incident/recovery alerts and retries rejected delivery
+  ---
+  duration_ms: 143.4567
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 301.833

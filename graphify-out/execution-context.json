@@ -21,15 +21,24 @@
         "apps/api/src/sales/refund-intents.integration.ts",
         "docs/payments.md",
         "graphify-out/ticket-66-api-unit.txt",
-        "graphify-out/ticket-66-postgres.txt"
+        "graphify-out/ticket-66-postgres.txt",
+        "docs/qa-2026-11-17.md",
+        "graphify-out/qa-2026-11-17-unit.txt",
+        "graphify-out/qa-2026-11-17-postgres.txt"
       ],
       "verification": {
         "node": "22.23.1",
         "pnpm": "9.12.3",
         "prisma": "6.19.3",
         "postgresql": "17.6",
-        "apiUnitTests": { "passed": 287, "failed": 0 },
-        "postgresTests": { "passed": 6, "failed": 0 },
+        "apiUnitTests": {
+          "passed": 287,
+          "failed": 0
+        },
+        "postgresTests": {
+          "passed": 6,
+          "failed": 0
+        },
         "apiTypecheck": "passed",
         "apiBuild": "passed",
         "changedSourceFormatting": "passed"
@@ -39,7 +48,12 @@
         "Recovery is request-driven with original key/payload; no background refund worker.",
         "Do not mix legacy refund writers with durable-intent writers.",
         "Independent QA acceptance and required database CI coverage under #71 remain separate."
-      ]
+      ],
+      "qaReview": {
+        "date": "2026-11-17",
+        "report": "docs/qa-2026-11-17.md",
+        "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+      }
     }
   ]
 }
