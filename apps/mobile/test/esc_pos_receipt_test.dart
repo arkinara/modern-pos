@@ -125,8 +125,7 @@ void main() {
       outletName: 'Wide',
       items: [
         ReceiptLineItem(
-          name:
-              'A very long product name that must wrap somewhere across the paper width',
+          name: 'A very long product name that must wrap somewhere across the paper width',
           quantity: 1,
           unitPriceMinor: 1000,
           lineTotalMinor: 1000,
