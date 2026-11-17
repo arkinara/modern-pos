@@ -53,6 +53,29 @@ test('production accepts explicit HTTPS origins, secure cookies and non-mock pay
   assert.equal(sandboxPaymentsEnabled(), false);
 });
 
+test('manual recording production starts without provider credentials and retains auth safeguards', () => {
+  const manual = {
+    ...safe,
+    PAYMENT_PROVIDER: 'manual',
+    PAYMENT_MODE: undefined,
+    PAYMENT_WEBHOOK_SECRET: undefined,
+    PAYMENT_PROVIDER_API_KEY: undefined,
+    PAYMENT_PROVIDER_BASE_URL: undefined,
+  };
+  assert.equal(validateRuntimeConfig(manual).allowedOrigins.length, 2);
+  assert.equal(sandboxPaymentsEnabled(manual), false);
+  for (const key of ['JWT_SECRET', 'COOKIE_SECURE', 'WEB_ORIGIN']) {
+    assert.throws(
+      () => validateRuntimeConfig({ ...manual, [key]: undefined }),
+      RuntimeConfigurationError,
+    );
+  }
+  assert.throws(
+    () => validateRuntimeConfig({ ...manual, PAYMENT_SANDBOX_ENABLED: 'true' }),
+    RuntimeConfigurationError,
+  );
+});
+
 for (const key of [
   'JWT_SECRET',
   'COOKIE_SECURE',
@@ -209,7 +232,8 @@ test('committed environment example enables reproducible local development witho
   const example = parse(readFileSync(resolve(__dirname, '../../.env.example')));
   const config = validateRuntimeConfig(example);
   assert.deepEqual(config.allowedOrigins, ['http://localhost:3000', 'http://localhost:3001']);
-  assert.equal(sandboxPaymentsEnabled(example), true);
+  assert.equal(sandboxPaymentsEnabled(example), false);
+  assert.equal(example.PAYMENT_PROVIDER, 'manual');
   setEnv(example);
   assert.equal(loadAuthConfig().cookieSecure, false);
 });

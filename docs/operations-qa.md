@@ -1,5 +1,11 @@
 # Operations QA handoff for #77
 
+The owner subsequently selected manual QRIS/non-cash recording. Current payment
+operations compare POS records with receipts confirmed in the bank merchant app.
+Automated provider integration, provider credentials and related sandbox checks
+are deferred. Deployment/recovery acceptance can be completed for the manual
+recording scope independently of that future integration.
+
 Prepared on 2026-11-16 with Node 22.23.1 and PostgreSQL client/server 17.6.
 The verified environment was an isolated Windows PostgreSQL cluster with
 synthetic POS data. The deployment configuration below is a proposed Linux

@@ -1,0 +1,11 @@
+
+┌─────────────────────────────────────────────────────────┐
+│ A new version of Flutter is available!                  │
+│                                                         │
+│ To update to the latest version, run "flutter upgrade". │
+└─────────────────────────────────────────────────────────┘
+Resolving dependencies...
+The current Dart SDK version is 3.12.2.
+
+Because modern_pos_mobile requires SDK version ^3.13.0, version solving failed.
+Failed to update packages.

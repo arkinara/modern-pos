@@ -460,7 +460,7 @@ class _RecordCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '${payload.lines.length} line(s), ${payload.tenderKind == TenderKind.cash ? 'Cash' : 'Manual external'}, '
+              '${payload.lines.length} line(s), ${payload.tenderKind == TenderKind.cash ? 'Cash' : 'QRIS / Non-cash'}, '
               'key ${payload.idempotencyKey.substring(0, 8)}...',
               style: const TextStyle(color: PosColors.muted, fontSize: 12),
             ),

@@ -31,7 +31,7 @@ ReceiptData receiptDataForSale(
   final tenderLabel = switch (payment.kind) {
     PaymentKindEnum.CASH => 'Cash tendered',
     PaymentKindEnum.ONLINE => 'Online payment',
-    _ => 'Manual external',
+    _ => 'QRIS / Non-cash',
   };
   final footer = <String>[
     if (receiptIdentity.receiptFooter.isNotEmpty) receiptIdentity.receiptFooter,

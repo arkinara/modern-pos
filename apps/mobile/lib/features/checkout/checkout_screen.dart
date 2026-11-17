@@ -482,7 +482,7 @@ class _TenderBody extends ConsumerWidget {
             ),
             ButtonSegment(
               value: TenderKind.manualExternal,
-              label: Text('Manual external'),
+              label: Text('QRIS / Non-cash'),
               icon: Icon(Icons.receipt_long_outlined),
             ),
           ],
@@ -537,8 +537,8 @@ class _TenderBody extends ConsumerWidget {
                   ],
                 ] else ...[
                   const Text(
-                    'The manual external amount must equal the amount due. '
-                    'No provider charge is made.',
+                    'Confirm receipt in the bank merchant app before recording '
+                    'this payment. The amount must equal the amount due.',
                     style: TextStyle(color: PosColors.muted, fontSize: 12),
                   ),
                   const SizedBox(height: 8),
@@ -1021,7 +1021,7 @@ class _ReceiptBody extends ConsumerWidget {
                       ? 'Cash tendered'
                       : payment.kind == PaymentKindEnum.ONLINE
                       ? 'Online payment'
-                      : 'Manual external',
+                      : 'QRIS / Non-cash',
                   value: money.format(
                     payment.tenderedMinor ?? payment.amountMinor,
                   ),

@@ -98,8 +98,9 @@ real values.
 ## Production configuration gate (#69)
 
 Use `NODE_ENV=production` for shared staging and production deployments. `staging`
-is not an accepted `NODE_ENV`; use `PAYMENT_MODE=sandbox` to identify the payment
-environment for shared staging. The API validates configuration before constructing
+is not an accepted `NODE_ENV`. Current payment recording uses
+`PAYMENT_PROVIDER=manual`. An automated integration uses `PAYMENT_MODE=sandbox`
+for shared staging. The API validates configuration before constructing
 Nest, connecting to PostgreSQL or opening its listener.
 
 | Setting | Production requirement |
@@ -107,12 +108,12 @@ Nest, connecting to PostgreSQL or opening its listener.
 | `JWT_SECRET` | Independently generated, non-placeholder value of at least 32 characters; do not reuse the local development default |
 | `COOKIE_SECURE` | Explicit `true` (or `1`); serve browser traffic over HTTPS |
 | `WEB_ORIGIN` | Explicit comma-separated exact HTTPS origins, such as `https://office.example.test`; no wildcard, credentials, path, query or fragment |
-| `PAYMENT_PROVIDER` | Explicit `qris`; production never permits the in-repo MOCK provider |
-| `PAYMENT_MODE` | Explicit `sandbox` or `live`; configure matching provider credentials and base URL |
+| `PAYMENT_PROVIDER` | Explicit `manual` for current transaction recording, or `qris` for an automated integration; production rejects MOCK |
+| `PAYMENT_MODE` | Optional for manual recording; automated integrations require explicit `sandbox` or `live` |
 | `PAYMENT_SANDBOX_ENABLED` | Unset or `false`; `true` is rejected in production |
-| `PAYMENT_WEBHOOK_SECRET` | Independently generated non-placeholder value of at least 32 characters |
-| `PAYMENT_PROVIDER_API_KEY` | Non-placeholder provider key; obtain it from the selected provider, do not commit it |
-| `PAYMENT_PROVIDER_BASE_URL` | Explicit HTTPS provider endpoint; no embedded credentials, query or fragment |
+| `PAYMENT_WEBHOOK_SECRET` | Automated integration only; independently generated non-placeholder value of at least 32 characters |
+| `PAYMENT_PROVIDER_API_KEY` | Automated integration only; non-placeholder provider key stored securely |
+| `PAYMENT_PROVIDER_BASE_URL` | Automated integration only; HTTPS provider endpoint without embedded credentials, query or fragment |
 | `CHANNEL_WEBHOOK_SECRET` | Optional; if configured, non-placeholder and at least 32 characters. If absent, inbound channel signing remains unavailable |
 
 The checks reject common development/example placeholders and low-diversity values;

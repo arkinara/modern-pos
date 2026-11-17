@@ -52,7 +52,7 @@ function paymentLabel(kind: Sale['payment']['kind']): string {
   if (kind === 'ONLINE') {
     return 'Online provider';
   }
-  return 'Manual external';
+  return 'QRIS / Non-cash';
 }
 
 function paymentStatusLabel(status: Sale['payment']['status']): string {
@@ -858,8 +858,8 @@ function SaleDetail({
                   </div>
                 ) : (
                   <p className="text-xs text-muted">
-                    Manual external means recorded only. No provider verification or refund is
-                    implied.
+                    QRIS / Non-cash records an externally confirmed payment. Confirm any bank refund
+                    in the merchant app before recording the POS reversal.
                   </p>
                 )}
               </dl>

@@ -51,6 +51,31 @@ test('local mock provider requires explicit opt-in and no live credentials', () 
   assert.equal(config.describe().liveSandboxVerified, false);
 });
 
+test('manual-only recording disables automatic provider selection, webhooks and refunds', () => {
+  setEnv({
+    NODE_ENV: 'production',
+    PAYMENT_PROVIDER: 'manual',
+    PAYMENT_PROVIDER_API_KEY: 'synthetic-stale-provider-key',
+    PAYMENT_WEBHOOK_SECRET: 'synthetic-stale-webhook-secret',
+    PAYMENT_PROVIDER_BASE_URL: 'https://provider.example.test',
+  });
+  const config = new PaymentConfigService();
+  assert.equal(config.describe().provider, 'MANUAL');
+  assert.equal(config.sandboxEnabled, false);
+  for (const operation of [
+    () => config.provider,
+    () => config.requireWebhookSecret(),
+    () => config.requireQrisCredentials(),
+  ]) {
+    assert.throws(
+      operation,
+      (error: unknown) =>
+        error instanceof HttpException &&
+        (error.getResponse() as { code: string }).code === 'ONLINE_PAYMENTS_DISABLED',
+    );
+  }
+});
+
 test('mock selection without opt-in fails closed and production cannot select MOCK', () => {
   for (const env of [
     { PAYMENT_PROVIDER: 'mock' },

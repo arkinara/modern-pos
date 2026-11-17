@@ -1,5 +1,27 @@
 # Online payments, webhooks and reconciliation
 
+## Current transaction-recording scope
+
+Scope clarified by the owner on 2026-11-17. Customers pay using the merchant's
+static QRIS code or another external non-cash method. The cashier checks receipt
+in the bank merchant app, selects **QRIS / Non-cash**, and records the exact sale
+amount with an optional merchant transaction reference. The existing wire/storage
+kind is `MANUAL_EXTERNAL`. QRIS and other externally confirmed non-cash payments
+share this recording category.
+
+Set `PAYMENT_PROVIDER=manual` for this scope. Cash and manual non-cash checkout,
+receipts, reports, stock effects and reversal recording use the existing sale
+workflow. Provider API credentials, automatic QR creation, webhook confirmation
+and provider sandbox acceptance are deferred until an automated integration is
+requested. Manual reversals record a POS correction after the merchant handles
+any bank refund externally.
+
+Production manual mode requires the existing strong JWT secret, secure cookies
+and explicit HTTPS origins. Set `PAYMENT_SANDBOX_ENABLED=false`. Provider keys,
+webhook secrets and `PAYMENT_MODE` are optional in manual mode. Automatic online
+payments and provider webhooks are disabled in that mode. The provider workflow
+below is retained as the deferred integration reference.
+
 Status date: 2026-11-12. API version 0.9.0. Ticket #22.
 
 ## Provider selection status
@@ -25,8 +47,8 @@ are never written to the database, API responses, logs or diagnostics.
 
 | Variable | Required | Meaning |
 | --- | --- | --- |
-| `PAYMENT_PROVIDER` | Explicit in production | `mock` locally with opt-in, or `qris`. Production rejects MOCK and implicit fallback. |
-| `PAYMENT_MODE` | Explicit in production | `sandbox` or `live`. This declares deployment intent; credentials/base URL must match the selected provider environment. |
+| `PAYMENT_PROVIDER` | Explicit in production | `manual` for current recording scope, `mock` locally with opt-in, or `qris` for an automated integration. Production rejects MOCK and implicit fallback. |
+| `PAYMENT_MODE` | Automated production integration | `sandbox` or `live`. Optional in manual mode. Credentials/base URL must match an automated provider environment. |
 | `PAYMENT_SANDBOX_ENABLED` | Local MOCK only | `true` explicitly enables local/test mock payments; production always rejects enabled mock access. |
 | `PAYMENT_WEBHOOK_SECRET` | Yes for webhooks | HMAC-SHA256 secret used to verify provider webhook signatures. |
 | `PAYMENT_WEBHOOK_REPLAY_SECONDS` | No | Replay window, default `300` seconds. |
@@ -49,9 +71,10 @@ are never written to the database, API responses, logs or diagnostics.
 Never commit a real `.env`. Local values live in the ignored `apps/api/.env`.
 The unit suite asserts that secret values are absent from configuration dumps.
 
-Production startup requires secure cookies, exact HTTPS web origins, non-placeholder
-JWT/payment-webhook secrets of at least 32 characters, a configured provider key
-and HTTPS provider base URL. See the [production configuration gate](staging-setup.md#production-configuration-gate-69).
+Production startup requires secure cookies, exact HTTPS web origins and a
+non-placeholder JWT secret of at least 32 characters. Automated QRIS mode also
+requires the payment-webhook secret, provider key and HTTPS provider base URL.
+See the [production configuration gate](staging-setup.md#production-configuration-gate-69).
 Passing these checks does not verify a provider's actual sandbox contract (#75).
 
 ## Lifecycle and state

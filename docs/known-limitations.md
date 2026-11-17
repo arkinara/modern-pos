@@ -1,8 +1,18 @@
 # Known limitations and pending verification
 
+## Current payment scope clarified on 2026-11-17
+
+Current QRIS/non-cash support records payments confirmed in the bank merchant app
+using the merchant's static QR code or another external payment method. Cashier
+selection, receipts and reports use **QRIS / Non-cash** with the existing
+`MANUAL_EXTERNAL` record. `PAYMENT_PROVIDER=manual` supports this scope without
+provider credentials. Automated provider integration and its sandbox acceptance
+are deferred future scope. See [payment acceptance](payment-acceptance.md).
+
 The 2026-11-17 QA and merge results are recorded in [the QA review](qa-2026-11-17.md).
-This round uses mock external services and local/synthetic test infrastructure.
-Another testing round using real services is required before release acceptance.
+That QA round used mock external services and local/synthetic test infrastructure.
+Actual operator and deployment checks remain relevant for release acceptance.
+Provider sandbox testing applies when automated integration enters scope.
 
 The reconciliation snapshot below is dated 2026-11-16. Historical verification sections retain their original dated VPS observations. The implementation and acceptance owners at that snapshot are indexed in `implementation-evidence.md`. Physical device/printer, actual provider, operator and deployment evidence remain assigned to #74–#78.
 

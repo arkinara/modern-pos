@@ -1,0 +1,371 @@
+Node v22.23.1; PostgreSQL 17.6; isolated synthetic database
+
+> @modern-pos/api@0.1.0 migrate:deploy C:\devai\modern-pos\apps\api
+> prisma migrate deploy
+
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "pos_1794895639575_transaction_test", schema "public" at "127.0.0.1:55466"
+
+22 migrations found in prisma/migrations
+
+Applying migration `20261107162340_init`
+Applying migration `20261107174910_auth`
+Applying migration `20261107175200_unique_login_email`
+Applying migration `20261107190000_business_settings`
+Applying migration `20261108110558_catalog`
+Applying migration `20261108141454_stock`
+Applying migration `20261108155846_sales`
+Applying migration `20261108170000_sales_calculation_snapshot`
+Applying migration `20261108180000_recipes`
+Applying migration `20261110000000_printing`
+Applying migration `20261110180000_sale_reversals`
+Applying migration `20261111151732_table_orders`
+Applying migration `20261112134401_promotions_refunds_approvals`
+Applying migration `20261112180000_online_payment_enums`
+Applying migration `20261112180100_online_payments`
+Applying migration `20261112190000_online_payment_attempt`
+Applying migration `20261112193000_shifts_attendance_audit`
+Applying migration `20261112194500_purchasing_stock_control`
+Applying migration `20261113120000_kitchen_stations`
+Applying migration `20261113150000_bookkeeping`
+Applying migration `20261113170000_channel_orders_customers_receipts`
+Applying migration `20261115160000_durable_refund_intents`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261107162340_init/
+    └─ migration.sql
+  └─ 20261107174910_auth/
+    └─ migration.sql
+  └─ 20261107175200_unique_login_email/
+    └─ migration.sql
+  └─ 20261107190000_business_settings/
+    └─ migration.sql
+  └─ 20261108110558_catalog/
+    └─ migration.sql
+  └─ 20261108141454_stock/
+    └─ migration.sql
+  └─ 20261108155846_sales/
+    └─ migration.sql
+  └─ 20261108170000_sales_calculation_snapshot/
+    └─ migration.sql
+  └─ 20261108180000_recipes/
+    └─ migration.sql
+  └─ 20261110000000_printing/
+    └─ migration.sql
+  └─ 20261110180000_sale_reversals/
+    └─ migration.sql
+  └─ 20261111151732_table_orders/
+    └─ migration.sql
+  └─ 20261112134401_promotions_refunds_approvals/
+    └─ migration.sql
+  └─ 20261112180000_online_payment_enums/
+    └─ migration.sql
+  └─ 20261112180100_online_payments/
+    └─ migration.sql
+  └─ 20261112190000_online_payment_attempt/
+    └─ migration.sql
+  └─ 20261112193000_shifts_attendance_audit/
+    └─ migration.sql
+  └─ 20261112194500_purchasing_stock_control/
+    └─ migration.sql
+  └─ 20261113120000_kitchen_stations/
+    └─ migration.sql
+  └─ 20261113150000_bookkeeping/
+    └─ migration.sql
+  └─ 20261113170000_channel_orders_customers_receipts/
+    └─ migration.sql
+  └─ 20261115160000_durable_refund_intents/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+
+> @modern-pos/api@0.1.0 seed C:\devai\modern-pos\apps\api
+> prisma db seed
+
+Running seed command `tsx prisma/seed.ts` ...
+Synthetic demo data seeded: 6 users across 3 outlets and 2 businesses, 3 dining tables, 2 categories, 2 menu items, 3 variants, 3 stock items and 2 completed demo sales.
+
+The seed command has been executed.
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+
+> @modern-pos/api@0.1.0 seed C:\devai\modern-pos\apps\api
+> prisma db seed
+
+Running seed command `tsx prisma/seed.ts` ...
+Synthetic demo data seeded: 6 users across 3 outlets and 2 businesses, 3 dining tables, 2 categories, 2 menu items, 3 variants, 3 stock items and 2 completed demo sales.
+
+The seed command has been executed.
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+
+> @modern-pos/api@0.1.0 test:db C:\devai\modern-pos\apps\api
+> tsx --test --test-concurrency=1 src/sales/transactions.integration.ts src/sales/refund-intents.integration.ts src/payments/lifecycle.integration.ts
+
+TAP version 13
+# {"scenario":"signed-mock-webhook","saleId":"bb009446-3d07-4495-88e7-5d0557280618","providerRef":"mock_edd54854-0164-4a36-89ec-c1a78dd35322","eventId":"evt_b776c7c9-6db7-4770-8fc5-e672dee4b74a","outcome":"passed"}
+# Subtest: mock lifecycle: raw-body HTTP signatures, concurrent duplicate delivery and terminal ordering
+ok 1 - mock lifecycle: raw-body HTTP signatures, concurrent duplicate delivery and terminal ordering
+  ---
+  duration_ms: 729.7043
+  type: 'test'
+  ...
+# Subtest: mock lifecycle: lost webhook reconciles after fresh service instances
+ok 2 - mock lifecycle: lost webhook reconciles after fresh service instances
+  ---
+  duration_ms: 97.204
+  type: 'test'
+  ...
+# Subtest: mock lifecycle: failed payment retry gets a new provider reference and old events stay harmless
+ok 3 - mock lifecycle: failed payment retry gets a new provider reference and old events stay harmless
+  ---
+  duration_ms: 70.8335
+  type: 'test'
+  ...
+# Subtest: mock lifecycle: lost refund response replays the persisted provider key after restart
+ok 4 - mock lifecycle: lost refund response replays the persisted provider key after restart
+  ---
+  duration_ms: 78.2477
+  type: 'test'
+  ...
+# {"scenario":"mock-refund-reconciliation","saleId":"a6122012-92b0-41f4-9b9b-ceec59f9ad05","providerRef":"mock_33353cca-9411-405f-a768-34038f8653b9","capturedMinor":"2000","refundedMinor":"2000","unexplainedDriftMinor":"0","outcome":"passed"}
+# Subtest: mock lifecycle: real provider ledger survives local refund failure, partial/full refunds reconcile
+ok 5 - mock lifecycle: real provider ledger survives local refund failure, partial/full refunds reconcile
+  ---
+  duration_ms: 103.6419
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: distinct-key requests cannot reserve overlapping money, line or restock capacity
+ok 6 - PostgreSQL: distinct-key requests cannot reserve overlapping money, line or restock capacity
+  ---
+  duration_ms: 353.8669
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: concurrent same-key requests create one reversal, payment correction and restock set
+ok 7 - PostgreSQL: concurrent same-key requests create one reversal, payment correction and restock set
+  ---
+  duration_ms: 191.3556
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: provider success/local failure rolls back every local effect and restart completes once
+ok 8 - PostgreSQL: provider success/local failure rolls back every local effect and restart completes once
+  ---
+  duration_ms: 94.9101
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: ambiguous provider outcome survives restart; payload changes are refused
+ok 9 - PostgreSQL: ambiguous provider outcome survives restart; payload changes are refused
+  ---
+  duration_ms: 71.4334
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: completed partial refunds enforce remaining money, lines and restock before further I/O
+ok 10 - PostgreSQL: completed partial refunds enforce remaining money, lines and restock before further I/O
+  ---
+  duration_ms: 103.7661
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: a full online refund preserves FULL kind and exhausts refundable capacity
+ok 11 - PostgreSQL: a full online refund preserves FULL kind and exhausts refundable capacity
+  ---
+  duration_ms: 59.8032
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: invalid refund payloads create no intent, reversal or provider effect
+ok 12 - PostgreSQL: invalid refund payloads create no intent, reversal or provider effect
+  ---
+  duration_ms: 68.9725
+  type: 'test'
+  ...
+# {"invalidRequests":5,"intents":0,"reversals":0,"providerCalls":0}
+# Refund effects {"providerEffects":7,"reversals":7,"intents":7}
+# Subtest: manual QRIS/non-cash records payment and reversal once without a provider or online intent
+ok 13 - manual QRIS/non-cash records payment and reversal once without a provider or online intent
+  ---
+  duration_ms: 196.8549
+  type: 'test'
+  ...
+# Subtest: PostgreSQL checkout: concurrent distinct keys cannot oversell
+ok 14 - PostgreSQL checkout: concurrent distinct keys cannot oversell
+  ---
+  duration_ms: 237.7082
+  type: 'test'
+  ...
+# {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0"}
+# Subtest: PostgreSQL checkout: a late database failure rolls back sale, payment, stock and reservation
+ok 15 - PostgreSQL checkout: a late database failure rolls back sale, payment, stock and reservation
+  ---
+  duration_ms: 156.5678
+  type: 'test'
+  ...
+# {"saleCount":0,"paymentCount":0,"reservationCount":0,"saleMovements":0,"consumed":0,"balance":"6"}
+# Subtest: PostgreSQL checkout: concurrent duplicate keys commit exactly one sale and stock effect
+ok 16 - PostgreSQL checkout: concurrent duplicate keys commit exactly one sale and stock effect
+  ---
+  duration_ms: 72.8311
+  type: 'test'
+  ...
+# {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0"}
+# Subtest: PostgreSQL checkout: a lost response recovers in a fresh process without another effect
+ok 17 - PostgreSQL checkout: a lost response recovers in a fresh process without another effect
+  ---
+  duration_ms: 1108.7286
+  type: 'test'
+  ...
+# {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0","recoveryProcess":"fresh"}
+# Subtest: PostgreSQL transfer: concurrent receive and later replay create one destination movement
+ok 18 - PostgreSQL transfer: concurrent receive and later replay create one destination movement
+  ---
+  duration_ms: 91.4132
+  type: 'test'
+  ...
+# {"attempts":5,"sourceMovements":1,"destinationMovements":1,"sourceBalance":6,"destinationBalance":4}
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6267.1204
+
+Repeated suite against the same database
+
+> @modern-pos/api@0.1.0 test:db C:\devai\modern-pos\apps\api
+> tsx --test --test-concurrency=1 src/sales/transactions.integration.ts src/sales/refund-intents.integration.ts src/payments/lifecycle.integration.ts
+
+TAP version 13
+# {"scenario":"signed-mock-webhook","saleId":"7594dce1-d747-42f2-a06c-1714438c84a7","providerRef":"mock_b814b60f-38d6-43a4-b705-88cf41ed373c","eventId":"evt_42f7996b-5e9c-4750-81ed-b569603e0e69","outcome":"passed"}
+# Subtest: mock lifecycle: raw-body HTTP signatures, concurrent duplicate delivery and terminal ordering
+ok 1 - mock lifecycle: raw-body HTTP signatures, concurrent duplicate delivery and terminal ordering
+  ---
+  duration_ms: 1040.8478
+  type: 'test'
+  ...
+# Subtest: mock lifecycle: lost webhook reconciles after fresh service instances
+ok 2 - mock lifecycle: lost webhook reconciles after fresh service instances
+  ---
+  duration_ms: 149.8203
+  type: 'test'
+  ...
+# Subtest: mock lifecycle: failed payment retry gets a new provider reference and old events stay harmless
+ok 3 - mock lifecycle: failed payment retry gets a new provider reference and old events stay harmless
+  ---
+  duration_ms: 107.4387
+  type: 'test'
+  ...
+# Subtest: mock lifecycle: lost refund response replays the persisted provider key after restart
+ok 4 - mock lifecycle: lost refund response replays the persisted provider key after restart
+  ---
+  duration_ms: 126.1482
+  type: 'test'
+  ...
+# {"scenario":"mock-refund-reconciliation","saleId":"201328b0-4295-474e-a1bb-d32d121f7608","providerRef":"mock_b1ff16d8-962a-4a6f-8952-718b1502a7a9","capturedMinor":"2000","refundedMinor":"2000","unexplainedDriftMinor":"0","outcome":"passed"}
+# Subtest: mock lifecycle: real provider ledger survives local refund failure, partial/full refunds reconcile
+ok 5 - mock lifecycle: real provider ledger survives local refund failure, partial/full refunds reconcile
+  ---
+  duration_ms: 171.1435
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: distinct-key requests cannot reserve overlapping money, line or restock capacity
+ok 6 - PostgreSQL: distinct-key requests cannot reserve overlapping money, line or restock capacity
+  ---
+  duration_ms: 411.3787
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: concurrent same-key requests create one reversal, payment correction and restock set
+ok 7 - PostgreSQL: concurrent same-key requests create one reversal, payment correction and restock set
+  ---
+  duration_ms: 282.7198
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: provider success/local failure rolls back every local effect and restart completes once
+ok 8 - PostgreSQL: provider success/local failure rolls back every local effect and restart completes once
+  ---
+  duration_ms: 154.2507
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: ambiguous provider outcome survives restart; payload changes are refused
+ok 9 - PostgreSQL: ambiguous provider outcome survives restart; payload changes are refused
+  ---
+  duration_ms: 105.3324
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: completed partial refunds enforce remaining money, lines and restock before further I/O
+ok 10 - PostgreSQL: completed partial refunds enforce remaining money, lines and restock before further I/O
+  ---
+  duration_ms: 166.9791
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: a full online refund preserves FULL kind and exhausts refundable capacity
+ok 11 - PostgreSQL: a full online refund preserves FULL kind and exhausts refundable capacity
+  ---
+  duration_ms: 96.5563
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: invalid refund payloads create no intent, reversal or provider effect
+ok 12 - PostgreSQL: invalid refund payloads create no intent, reversal or provider effect
+  ---
+  duration_ms: 117.1899
+  type: 'test'
+  ...
+# {"invalidRequests":5,"intents":0,"reversals":0,"providerCalls":0}
+# Refund effects {"providerEffects":7,"reversals":7,"intents":7}
+# Subtest: manual QRIS/non-cash records payment and reversal once without a provider or online intent
+ok 13 - manual QRIS/non-cash records payment and reversal once without a provider or online intent
+  ---
+  duration_ms: 392.2822
+  type: 'test'
+  ...
+# Subtest: PostgreSQL checkout: concurrent distinct keys cannot oversell
+ok 14 - PostgreSQL checkout: concurrent distinct keys cannot oversell
+  ---
+  duration_ms: 335.6974
+  type: 'test'
+  ...
+# {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0"}
+# Subtest: PostgreSQL checkout: a late database failure rolls back sale, payment, stock and reservation
+ok 15 - PostgreSQL checkout: a late database failure rolls back sale, payment, stock and reservation
+  ---
+  duration_ms: 234.9027
+  type: 'test'
+  ...
+# {"saleCount":0,"paymentCount":0,"reservationCount":0,"saleMovements":0,"consumed":0,"balance":"6"}
+# Subtest: PostgreSQL checkout: concurrent duplicate keys commit exactly one sale and stock effect
+ok 16 - PostgreSQL checkout: concurrent duplicate keys commit exactly one sale and stock effect
+  ---
+  duration_ms: 84.103
+  type: 'test'
+  ...
+# {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0"}
+# Subtest: PostgreSQL checkout: a lost response recovers in a fresh process without another effect
+ok 17 - PostgreSQL checkout: a lost response recovers in a fresh process without another effect
+  ---
+  duration_ms: 1395.4866
+  type: 'test'
+  ...
+# {"saleCount":1,"paymentCount":1,"reservationCount":1,"saleMovements":1,"consumed":6,"balance":"0","recoveryProcess":"fresh"}
+# Subtest: PostgreSQL transfer: concurrent receive and later replay create one destination movement
+ok 18 - PostgreSQL transfer: concurrent receive and later replay create one destination movement
+  ---
+  duration_ms: 83.0787
+  type: 'test'
+  ...
+# {"attempts":5,"sourceMovements":1,"destinationMovements":1,"sourceBalance":6,"destinationBalance":4}
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8469.3142

@@ -1,5 +1,19 @@
 # Payment QA handoff for #75
 
+## Scope update on 2026-11-17
+
+The owner selected transaction recording using externally confirmed static QRIS
+or other non-cash payments. The cashier verifies receipt in the bank merchant app
+and records **QRIS / Non-cash** using `MANUAL_EXTERNAL`, the exact sale total and
+an optional merchant reference. QRIS and other non-cash methods share this category.
+
+Current #75 acceptance covers duplicate/restart-safe manual recording, receipts,
+reports, stock effects, manual reversal recording and credential-free manual
+production configuration. Actual bank-app confirmation belongs to operator UAT.
+Automated payment-provider integration and the sandbox worksheet below are
+deferred future scope. Provider sandbox access is unnecessary for current
+transaction-recording acceptance.
+
 The repository owner chose mock-first execution on 2026-11-16. This developer
 handoff uses the existing PostgreSQL-backed `MockPaymentProviderService` with
 IDR, currency exponent 0, and synthetic funds. Provider selection and genuine

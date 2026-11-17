@@ -611,6 +611,7 @@ export class PaymentsService {
       user: AuthenticatedUser;
     },
   ): Promise<{ provider: PaymentProvider; providerRef: string }> {
+    this.config.assertOnlineEnabled();
     const sale = await tx.sale.findFirst({
       where: {
         id: input.saleId,

@@ -322,7 +322,7 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
         current.copyWith(
           message: current.tenderKind == TenderKind.cash
               ? 'Tender is less than the amount due.'
-              : 'Manual external amount must equal the amount due.',
+              : 'QRIS / Non-cash amount must equal the amount due.',
         ),
       );
       return;

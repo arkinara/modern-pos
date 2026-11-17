@@ -1,12 +1,12 @@
 {
   "ticket": 75,
-  "title": "Mock-first payment lifecycle QA preparation",
+  "title": "Manual QRIS/non-cash transaction recording",
   "issueUrl": "https://github.com/arkinara/modern-pos/issues/75",
-  "branch": "codex/75-mock-payment-acceptance",
-  "baseCommit": "fc327cf",
+  "branch": "codex/75-manual-noncash-recording",
+  "baseCommit": "2c84ee3f946bd7f5f30218b3ade067d63369b828",
   "date": "2026-11-16",
   "qaTarget": "In QA",
-  "evidence": "graphify-out/ticket-75-execution.md",
+  "evidence": "graphify-out/ticket-75-manual-execution.md",
   "sources": [
     "apps/api/src/payments/lifecycle.integration.ts",
     "apps/api/src/payments/mock-payment-provider.service.ts",
@@ -20,21 +20,63 @@
     "graphify-out/ticket-75-postgres.txt",
     "docs/qa-2026-11-17.md",
     "graphify-out/qa-2026-11-17-unit.txt",
-    "graphify-out/qa-2026-11-17-postgres.txt"
+    "graphify-out/qa-2026-11-17-postgres.txt",
+    "graphify-out/ticket-75-execution.md",
+    "apps/api/src/config/runtime-config.ts",
+    "apps/api/src/config/runtime-config.test.ts",
+    "apps/api/src/payments/payment-config.service.ts",
+    "apps/api/src/payments/payment-config.service.test.ts",
+    "apps/api/src/sales/transactions.integration.ts",
+    "apps/api/.env.example",
+    "apps/mobile/lib/features/checkout/checkout_models.dart",
+    "apps/mobile/lib/features/checkout/checkout_screen.dart",
+    "apps/mobile/lib/features/checkout/checkout_controller.dart",
+    "apps/mobile/test/checkout_controller_test.dart",
+    "apps/mobile/lib/features/printing/sale_receipt.dart",
+    "apps/mobile/lib/features/offline/offline_sync_screen.dart",
+    "apps/web/components/sales-screen.tsx",
+    "apps/web/components/reports-screen.tsx",
+    "docs/payments.md",
+    "docs/staging-setup.md",
+    "docs/two-developer-work-plan.md",
+    "graphify-out/ticket-75-manual-unit.txt",
+    "graphify-out/ticket-75-manual-postgres.txt",
+    "graphify-out/ticket-75-manual-http.txt",
+    "graphify-out/ticket-75-manual-production.txt",
+    "graphify-out/ticket-75-manual-flutter.txt"
   ],
   "verification": {
+    "scope": "Manual transaction recording; automated provider integration deferred",
     "node": "22.23.1",
     "postgresql": "17.6",
-    "unitTestsPassed": 312,
-    "databaseTestsPassedPerRun": 17,
+    "apiUnitTestsPassed": 315,
+    "webUnitTestsPassed": 4,
+    "operationsUnitTestsPassed": 6,
+    "databaseTestsPassedPerRun": 18,
     "databaseRuns": 2,
-    "provider": "existing PostgreSQL-backed MOCK",
-    "realProviderAcceptance": "pending provider selection, official contract and sandbox access"
+    "compiledProductionStartup": "passed without provider credentials; health 200, sandbox 404, online webhook disabled",
+    "compiledHttpAssertions": 25,
+    "localFlutter": "Unavailable: installed Dart 3.12.2, required 3.13.0",
+    "remoteCI": "Pending pinned Flutter/browser/Android checks; final result in PR/issue"
   },
-  "handoff": "Review branch combines prerequisites #66, #69 and #71 without merging main. QA may run the mock workflow now and retains the external acceptance checklist on #75.",
+  "handoff": "Owner-selected manual scope uses bank merchant app confirmation and static QRIS. Provider sandbox acceptance is deferred future scope. Operator UAT remains in release gate #78.",
   "qaReview": {
     "date": "2026-11-17",
     "report": "docs/qa-2026-11-17.md",
     "scope": "Mock external services and local synthetic infrastructure; real-services testing round required before release acceptance."
+  },
+  "previousProviderScope": {
+    "title": "Mock-first payment lifecycle QA preparation",
+    "evidence": "graphify-out/ticket-75-execution.md",
+    "verification": {
+      "node": "22.23.1",
+      "postgresql": "17.6",
+      "unitTestsPassed": 312,
+      "databaseTestsPassedPerRun": 17,
+      "databaseRuns": 2,
+      "provider": "existing PostgreSQL-backed MOCK",
+      "realProviderAcceptance": "pending provider selection, official contract and sandbox access"
+    },
+    "handoff": "Review branch combines prerequisites #66, #69 and #71 without merging main. QA may run the mock workflow now and retains the external acceptance checklist on #75."
   }
 }
