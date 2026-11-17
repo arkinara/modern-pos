@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PaymentProvider } from '@prisma/client';
 import { apiError } from '../common/api-error';
+import { environmentName, sandboxPaymentsEnabled } from '../config/runtime-config';
 
 const DEFAULT_REPLAY_WINDOW_SECONDS = 300;
 
@@ -35,7 +36,29 @@ function readPositiveInteger(value: string | undefined, fallback: number): numbe
 @Injectable()
 export class PaymentConfigService {
   get provider(): PaymentProvider {
-    return readProvider(process.env.PAYMENT_PROVIDER);
+    const provider = readProvider(process.env.PAYMENT_PROVIDER);
+    if (
+      environmentName() === 'production' &&
+      (!process.env.PAYMENT_PROVIDER?.trim() || provider === PaymentProvider.MOCK)
+    ) {
+      throw apiError(
+        503,
+        'PAYMENT_PROVIDER_INVALID',
+        'Production requires an explicit non-mock provider',
+      );
+    }
+    if (provider === PaymentProvider.MOCK && !this.sandboxEnabled) {
+      throw apiError(
+        503,
+        'SANDBOX_PAYMENTS_DISABLED',
+        'Mock payments require explicit non-production sandbox opt-in',
+      );
+    }
+    return provider;
+  }
+
+  get sandboxEnabled(): boolean {
+    return sandboxPaymentsEnabled();
   }
 
   get providerName(): 'MOCK' | 'QRIS' {

@@ -5,6 +5,9 @@ import { HttpException } from '@nestjs/common';
 import { PaymentConfigService } from './payment-config.service';
 
 const KEYS = [
+  'NODE_ENV',
+  'PAYMENT_MODE',
+  'PAYMENT_SANDBOX_ENABLED',
   'PAYMENT_PROVIDER',
   'PAYMENT_PROVIDER_BASE_URL',
   'PAYMENT_PROVIDER_API_KEY',
@@ -39,13 +42,28 @@ afterEach(() => {
   saved.clear();
 });
 
-test('mock provider is the default and requires no live credentials', () => {
-  setEnv({ PAYMENT_PROVIDER: undefined });
+test('local mock provider requires explicit opt-in and no live credentials', () => {
+  setEnv({ PAYMENT_PROVIDER: undefined, PAYMENT_SANDBOX_ENABLED: 'true' });
   const config = new PaymentConfigService();
 
   assert.equal(config.provider, PaymentProvider.MOCK);
   assert.equal(config.describe().provider, 'MOCK');
   assert.equal(config.describe().liveSandboxVerified, false);
+});
+
+test('mock selection without opt-in fails closed and production cannot select MOCK', () => {
+  for (const env of [
+    { PAYMENT_PROVIDER: 'mock' },
+    { NODE_ENV: 'production', PAYMENT_PROVIDER: 'mock', PAYMENT_SANDBOX_ENABLED: 'true' },
+    { NODE_ENV: 'production', PAYMENT_SANDBOX_ENABLED: 'true' },
+  ]) {
+    setEnv(env);
+    assert.throws(
+      () => new PaymentConfigService().provider,
+      (error: unknown) => error instanceof HttpException && error.getStatus() === 503,
+    );
+    assert.equal(new PaymentConfigService().sandboxEnabled, false);
+  }
 });
 
 test('qris is selected only with complete configuration', () => {

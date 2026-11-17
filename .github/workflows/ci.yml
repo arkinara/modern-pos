@@ -37,6 +37,9 @@ jobs:
       PORT: '4000'
       WEB_ORIGIN: http://localhost:3000,http://localhost:3001
       NEXT_PUBLIC_API_URL: http://localhost:4000
+      PAYMENT_PROVIDER: mock
+      PAYMENT_MODE: sandbox
+      PAYMENT_SANDBOX_ENABLED: 'true'
 
     steps:
       - name: Checkout

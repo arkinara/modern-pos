@@ -91,6 +91,43 @@ real values.
 | `SEED_PASSWORD` | Synthetic demo-user password; never use in production | `<synthetic-demo-password>` |
 | `NEXT_PUBLIC_API_URL` | API base URL baked into the Next.js build | `https://api.example.test` |
 
+## Production configuration gate (#69)
+
+Use `NODE_ENV=production` for shared staging and production deployments. `staging`
+is not an accepted `NODE_ENV`; use `PAYMENT_MODE=sandbox` to identify the payment
+environment for shared staging. The API validates configuration before constructing
+Nest, connecting to PostgreSQL or opening its listener.
+
+| Setting | Production requirement |
+| --- | --- |
+| `JWT_SECRET` | Independently generated, non-placeholder value of at least 32 characters; do not reuse the local development default |
+| `COOKIE_SECURE` | Explicit `true` (or `1`); serve browser traffic over HTTPS |
+| `WEB_ORIGIN` | Explicit comma-separated exact HTTPS origins, such as `https://office.example.test`; no wildcard, credentials, path, query or fragment |
+| `PAYMENT_PROVIDER` | Explicit `qris`; production never permits the in-repo MOCK provider |
+| `PAYMENT_MODE` | Explicit `sandbox` or `live`; configure matching provider credentials and base URL |
+| `PAYMENT_SANDBOX_ENABLED` | Unset or `false`; `true` is rejected in production |
+| `PAYMENT_WEBHOOK_SECRET` | Independently generated non-placeholder value of at least 32 characters |
+| `PAYMENT_PROVIDER_API_KEY` | Non-placeholder provider key; obtain it from the selected provider, do not commit it |
+| `PAYMENT_PROVIDER_BASE_URL` | Explicit HTTPS provider endpoint; no embedded credentials, query or fragment |
+| `CHANNEL_WEBHOOK_SECRET` | Optional; if configured, non-placeholder and at least 32 characters. If absent, inbound channel signing remains unavailable |
+
+The checks reject common development/example placeholders and low-diversity values;
+they do not prove randomness or provision credentials. Store real values in a secret
+manager. Startup diagnostics list invalid variable names only. Do not paste secrets
+or full environment dumps into tickets or logs.
+
+Rollout: configure valid values and matching HTTPS routing before replacing API
+instances; keep the old instance available until the new health check succeeds.
+There is no schema migration or financial calculation change. If startup fails,
+correct the listed settings rather than downgrading to development mode to bypass
+the gate. A rollback to an earlier API version removes these safeguards, so keep
+that version private and its public sandbox routes blocked until the fix is restored.
+
+The existing database session checks, CSRF checks, outlet guards and role checks
+remain active. These configuration checks do not certify a real provider (#75),
+TLS termination, backups, monitoring or deployment operations (#77), and do not
+authorize production go-live.
+
 ## Health checks
 
 ```bash

@@ -9,7 +9,7 @@ implementations exist:
 
 | Provider | Selection | Verified on this VPS |
 | --- | --- | --- |
-| `MOCK` | Default for local development and tests | Yes, deterministic in-repo sandbox provider |
+| `MOCK` | Explicit local/test sandbox opt-in | Yes, deterministic in-repo sandbox provider |
 | `QRIS` | Real hosted QRIS provider selected by `PAYMENT_PROVIDER=qris` | `PENDING - requires provider credentials/commercial setup` |
 
 The QRIS adapter is implemented (`createPayment`, `fetchPayment`,
@@ -25,7 +25,9 @@ are never written to the database, API responses, logs or diagnostics.
 
 | Variable | Required | Meaning |
 | --- | --- | --- |
-| `PAYMENT_PROVIDER` | No | `mock` (default) or `qris`. Any other value fails closed. |
+| `PAYMENT_PROVIDER` | Explicit in production | `mock` locally with opt-in, or `qris`. Production rejects MOCK and implicit fallback. |
+| `PAYMENT_MODE` | Explicit in production | `sandbox` or `live`. This declares deployment intent; credentials/base URL must match the selected provider environment. |
+| `PAYMENT_SANDBOX_ENABLED` | Local MOCK only | `true` explicitly enables local/test mock payments; production always rejects enabled mock access. |
 | `PAYMENT_WEBHOOK_SECRET` | Yes for webhooks | HMAC-SHA256 secret used to verify provider webhook signatures. |
 | `PAYMENT_WEBHOOK_REPLAY_SECONDS` | No | Replay window, default `300` seconds. |
 | `PAYMENT_PROVIDER_BASE_URL` | QRIS only | Base URL of the provider sandbox or production API. |
@@ -46,6 +48,11 @@ are never written to the database, API responses, logs or diagnostics.
 
 Never commit a real `.env`. Local values live in the ignored `apps/api/.env`.
 The unit suite asserts that secret values are absent from configuration dumps.
+
+Production startup requires secure cookies, exact HTTPS web origins, non-placeholder
+JWT/payment-webhook secrets of at least 32 characters, a configured provider key
+and HTTPS provider base URL. See the [production configuration gate](staging-setup.md#production-configuration-gate-69).
+Passing these checks does not verify a provider's actual sandbox contract (#75).
 
 ## Lifecycle and state
 
@@ -272,7 +279,12 @@ Status: `PENDING - requires provider credentials/commercial setup`.
 
 ## Local sandbox
 
-The in-repo sandbox is enabled only when `PAYMENT_PROVIDER=mock`:
+The in-repo sandbox requires `NODE_ENV=development` or `test`,
+`PAYMENT_PROVIDER=mock`, `PAYMENT_MODE=sandbox` and explicit
+`PAYMENT_SANDBOX_ENABLED=true`. The committed API environment example supplies
+these local values. All three public routes below return 404 in production even
+if MOCK and the opt-in flag are mistakenly selected; direct mock-provider calls
+are gated too.
 
 | Endpoint | Purpose |
 | --- | --- |

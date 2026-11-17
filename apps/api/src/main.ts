@@ -1,12 +1,17 @@
 import 'dotenv/config';
-import { RequestMethod, ValidationPipe } from '@nestjs/common';
+import { type INestApplication, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ApiExceptionFilter } from './common/api-exception.filter';
+import { RuntimeConfigurationError, validateRuntimeConfig } from './config/runtime-config';
 
-async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+export async function bootstrap(
+  createApp: () => Promise<INestApplication> = () =>
+    NestFactory.create(AppModule, { rawBody: true }),
+): Promise<void> {
+  const runtime = validateRuntimeConfig();
+  const app = await createApp();
 
   app.use(cookieParser());
   app.useGlobalPipes(
@@ -22,10 +27,7 @@ async function bootstrap(): Promise<void> {
     exclude: [{ path: 'health', method: RequestMethod.GET }],
   });
 
-  const allowedOrigins = (process.env.WEB_ORIGIN ?? '')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  const allowedOrigins = runtime.allowedOrigins;
 
   app.enableCors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : true,
@@ -40,4 +42,11 @@ async function bootstrap(): Promise<void> {
   console.log(`Modern POS API listening on http://localhost:${port}`);
 }
 
-void bootstrap();
+if (require.main === module) {
+  void bootstrap().catch((error: unknown) => {
+    console.error(
+      error instanceof RuntimeConfigurationError ? error.message : 'API startup failed',
+    );
+    process.exitCode = 1;
+  });
+}
