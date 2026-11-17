@@ -7,8 +7,9 @@ manual, non-cash correction path is described here; online sales additionally us
 refund flow in `docs/payments.md`.
 
 The original sale row is immutable. A reversal is a separate append-only record linked to the sale.
-`sales_get` returns the linked `reversal` object when one exists. The sale totals, sale lines and
-payment record are never updated by a reversal.
+`sales_get` returns the linked `reversal` object when one exists. Sale totals and sale lines
+remain the historical snapshot. Online payment status and refunded totals follow the provider
+refund path in `docs/payments.md`, with real-provider acceptance tracked in #75.
 
 ## API operation
 
@@ -103,11 +104,11 @@ Reversals are attributed to the date they were recorded. The CSV export includes
 column with `SALE` or `REVERSAL`, a `reversalReason` column, and negative item amounts for reversal
 rows so spreadsheets can reconcile totals directly.
 
-## Out of scope
+## Related capabilities and remaining acceptance
 
-- Partial or line-level refunds.
-- Payment-provider refunds, voids or settlement reversal.
+- Partial and line-level refunds were delivered under #21 and are described in `docs/promotions-refunds.md`.
+- Actual provider sandbox certification, voids and settlement reversal acceptance, tracked in #75.
 - Cash drawer or tender adjustments.
 - Reopening or editing the original sale.
 - Mobile reversal entry.
-- Production verification and Phase 2 refund workflows.
+- Production and final release verification are tracked in #77/#78.

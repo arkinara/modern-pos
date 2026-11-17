@@ -1,6 +1,6 @@
 # Modern POS architecture — M01
 
-Status: architecture baseline delivered for implementation. Date: 2026-11-07. UI direction awaits owner review under #2. This is a specification, not implemented infrastructure.
+Architecture baseline dated 2026-11-07. Application implementation and remaining acceptance work are indexed in `docs/implementation-evidence.md`. The sections below preserve the original architectural decisions.
 
 ## 1. System and ownership
 
@@ -15,7 +15,7 @@ flowchart LR
 
 One API owns identity, authorization, prices, quotes, sale completion, inventory, and report calculations. Next.js must not access business tables directly. Flutter keeps presentation state, temporary carts, recovery references and local print jobs; it never independently decides the authoritative stock balance.
 
-Use the selected stack in [TECH_STACK.md](TECH_STACK.md). One repository; `apps/web`, `apps/mobile`, `services/api`, `packages/api-client`, `packages/design-tokens`. Use pnpm workspaces only for TypeScript packages. Flutter uses pub and generated Dart models. Maintain OpenAPI as a contract baseline and validate generated NestJS documentation against it in #3; don't maintain two contradictory contracts.
+Use the selected stack in [TECH_STACK.md](TECH_STACK.md). The repository contains `apps/web`, `apps/mobile`, `apps/api`, `packages/api-client` and `packages/api_client_dart`. Design tokens are stored in the root `design-tokens.json`. Use pnpm workspaces only for TypeScript packages. Flutter uses pub and generated Dart models. Maintain OpenAPI as the shared contract baseline and validate generated clients through CI.
 
 Nest modules: Identity, Business, Catalog, Inventory, Orders, Sales, Reports, PrintMetadata. Controllers validate DTOs and apply authorization; application services orchestrate transactions; repositories encapsulate Prisma access. Inventory consumption is invoked inside the Sales transaction, not by a post-sale webhook.
 

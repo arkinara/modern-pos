@@ -1,7 +1,17 @@
 # Known limitations and pending verification
 
-Status date: 2026-11-16. No device, printer, real payment-provider account or production infrastructure was available
-for this ticket. Nothing below is reported as passed without a reproduction recipe.
+Current reconciliation date is 2026-11-16. Historical verification sections retain their original dated VPS observations. The current implementation and acceptance owners are indexed in `implementation-evidence.md`. Physical device/printer, actual provider, operator and deployment evidence remain assigned to #74–#77.
+
+## Active integrity follow-ups
+
+| Work | Current evidence | Acceptance owner |
+| --- | --- | --- |
+| Durable online refund intents and recovery | PR #79 is In QA with unit/PostgreSQL evidence | #66, followed by actual provider acceptance in #75 |
+| Production secrets, cookie/origin validation and sandbox gating | PR #83 is In QA with startup/HTTP checks | #69, followed by deployment acceptance in #77 |
+| PostgreSQL transaction/recovery CI | PR #84 is In QA with checkout/refund/transfer regressions | #71 |
+| Browser regression retention | Shell verification merged under #70 | #72 |
+
+The evidence ledger records the tested revisions and current-main snapshot.
 
 ## Operator feedback and baselines (#28)
 
@@ -282,7 +292,7 @@ and record the visible state, queue JSON and paper result. Steps 10-11 of
 | Item | Status | Notes |
 | --- | --- | --- |
 | Offline checkout and conflict resolution | Implemented client-side in #19 | Encrypted queue + idempotent replay; no server sync API |
-| Production deployment and field rollout | Deferred to #20 | Not started in this ticket |
+| Production deployment and field rollout | Pending #77/#78 | Deployment recovery, operations ownership and release acceptance |
 | Stock reservation while offline | Not implemented | Server remains authoritative; rejected sales become conflicts |
 | Table order stock reservation | Not implemented by design | Opening/cancelling a draft reserves or consumes nothing; stock moves only at settlement (see `docs/table-orders.md`) |
 | Table management in the web back office | Not implemented | Tables are created through the API; the cashier app lists and uses them |
@@ -293,8 +303,8 @@ and record the visible state, queue JSON and paper result. Steps 10-11 of
 | User management UI and password reset | Not implemented | Users are seeded/provisioned outside the app |
 | Partial or line-level refunds | Implemented (#21) | Partial item refunds with independent money-return and restock. Online refunds now call the configured provider adapter (#22); cash and manual reversals keep `externalRefundPerformed = false`. |
 | Payment-provider refunds/voids | Sandbox-verified, real provider PENDING | Online refunds use the same reversal path and the provider adapter; live QRIS verification requires provider credentials/commercial setup. |
-| LAN and USB printer transports | Implemented (#25), physical output PENDING | Bluetooth Classic SPP is the only #74 candidate; see `docs/printer-hardware.md` |
-| Hardware-verified printer result | PENDING - no supported combination | #74 selection is `SELECTED, NOT YET VERIFIED`; run `docs/hardware-acceptance.md` on the exact hardware |
+| LAN and USB printer transports | Implemented adapters in #25 | Android station execution completed in #67. Exact hardware support remains pending #74 |
+| Hardware-verified Bluetooth result | PENDING | See `docs/printer-validation.md` |
 | Automated off-host backups and retention | Not implemented | Procedure and dry run exist in `docs/backup-restore.md` |
 | Point-in-time recovery | Not implemented | Logical dump only |
 | Monitoring, alerting, log shipping | Not implemented | Health endpoint exists |

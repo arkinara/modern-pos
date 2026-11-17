@@ -1,0 +1,3 @@
+PASS evidence ledger with 35 closed issues and reachable commits
+PASS 22 local documentation links and README command references
+PASS reconciled source-layout, transport and rollout claims
