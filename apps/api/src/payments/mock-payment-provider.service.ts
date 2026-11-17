@@ -15,7 +15,11 @@ import type {
 } from './payment-provider.types';
 
 function toProviderStatus(status: PaymentStatus): ProviderPaymentStatus {
-  if (status === PaymentStatus.SUCCEEDED) {
+  if (
+    status === PaymentStatus.SUCCEEDED ||
+    status === PaymentStatus.PARTIALLY_REFUNDED ||
+    status === PaymentStatus.REFUNDED
+  ) {
     return 'SUCCEEDED';
   }
 
