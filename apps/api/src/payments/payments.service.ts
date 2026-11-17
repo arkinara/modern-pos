@@ -602,14 +602,16 @@ export class PaymentsService {
     };
   }
 
-  async refundForReversal(input: {
-    outletId: string;
-    saleId: string;
-    idempotencyKey: string;
-    amountMinor: bigint;
-    user: AuthenticatedUser;
-  }): Promise<ProviderRefundResult> {
-    const sale = await this.prisma.sale.findFirst({
+  async prepareReversalRefund(
+    tx: Prisma.TransactionClient,
+    input: {
+      outletId: string;
+      saleId: string;
+      amountMinor: bigint;
+      user: AuthenticatedUser;
+    },
+  ): Promise<{ provider: PaymentProvider; providerRef: string }> {
+    const sale = await tx.sale.findFirst({
       where: {
         id: input.saleId,
         outletId: input.outletId,
@@ -619,13 +621,13 @@ export class PaymentsService {
     });
 
     if (!sale || sale.payment?.kind !== PaymentKind.ONLINE) {
-      return { performed: false, providerRefundRef: null };
+      throw apiError(409, 'PAYMENT_NOT_SETTLED', 'Online payment is required');
     }
 
     const payment = sale.onlinePayment;
 
-    if (input.amountMinor === 0n) {
-      return { performed: false, providerRefundRef: null };
+    if (input.amountMinor <= 0n) {
+      throw apiError(422, 'INVALID_REFUND_AMOUNT', 'Provider refund must be positive');
     }
 
     if (
@@ -655,11 +657,32 @@ export class PaymentsService {
       throw apiError(409, 'PAYMENT_NOT_SETTLED', 'Online payment has no provider reference');
     }
 
-    const refund = await this.adapter().refundPayment({
-      providerRef: payment.providerRef,
-      idempotencyKey: `reversal:${input.idempotencyKey}`,
-      amountMinor: input.amountMinor,
+    return { provider: payment.provider, providerRef: payment.providerRef };
+  }
+
+  async refundReservedIntent(intent: {
+    provider: PaymentProvider;
+    providerPaymentRef: string;
+    providerKey: string;
+    refundMinor: bigint;
+  }): Promise<ProviderRefundResult> {
+    // The immutable provider/reference/key come from a committed reservation.
+    const adapter =
+      intent.provider === PaymentProvider.MOCK ? this.mockProvider : this.qrisProvider;
+    const refund = await adapter.refundPayment({
+      providerRef: intent.providerPaymentRef,
+      idempotencyKey: intent.providerKey,
+      amountMinor: intent.refundMinor,
     });
+
+    if (refund.status === 'FAILED') {
+      throw apiError(409, 'PROVIDER_REFUND_REJECTED', 'Provider rejected the reserved refund');
+    }
+    if (refund.status !== 'SUCCEEDED') {
+      throw apiError(502, 'REFUND_OUTCOME_UNKNOWN', 'Provider refund is not confirmed', {
+        retryable: true,
+      });
+    }
 
     return { performed: true, providerRefundRef: refund.providerRef };
   }

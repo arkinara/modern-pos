@@ -1017,6 +1017,7 @@ model Sale {
   checkoutRequests CheckoutRequest[]
   printJobs        PrintJob[]
   stationJobs      StationJob[]
+  refundIntents    RefundIntent[]
 
   @@unique([outletId, reference])
   @@index([businessId, outletId, completedAt])
@@ -1088,6 +1089,44 @@ model SaleRefundLine {
   @@unique([reversalId, saleLineId])
   @@index([saleLineId])
   @@map("sale_refund_lines")
+}
+
+// A validated reservation is committed before provider I/O. Unresolved intents
+// exclusively reserve the sale's refundable money, lines and restock capacity.
+enum RefundIntentState {
+  PENDING
+  UNKNOWN
+  SUCCEEDED
+  FAILED
+  COMPLETED
+}
+
+model RefundIntent {
+  id                 String            @id @default(uuid()) @db.Uuid
+  businessId         String            @db.Uuid
+  outletId           String            @db.Uuid
+  saleId             String            @db.Uuid
+  actorId            String            @db.Uuid
+  idempotencyKey     String            @db.Uuid
+  requestHash        String
+  providerKey        String            @unique
+  provider           PaymentProvider
+  providerPaymentRef String
+  refundMinor        BigInt
+  reason             String
+  lines              Json
+  restock            Json
+  state              RefundIntentState @default(PENDING)
+  providerRefundRef  String?
+  lastErrorCode      String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Restrict)
+
+  @@unique([outletId, idempotencyKey])
+  @@index([saleId, state])
+  @@map("refund_intents")
 }
 
 // Configurable promotions are evaluated entirely on the server. Eligibility is

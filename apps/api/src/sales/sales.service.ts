@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { Injectable, Optional } from '@nestjs/common';
+import { HttpException, Injectable, Optional } from '@nestjs/common';
 import {
   ApprovalAction,
   OrderAuditAction,
@@ -7,6 +7,8 @@ import {
   PaymentKind,
   PaymentStatus,
   Prisma,
+  RefundIntentState,
+  type RefundIntent,
   PromotionKind,
   Role,
   SaleReversalKind,
@@ -52,6 +54,19 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 const QUOTE_TTL_MS = 60_000;
 const MAX_TRANSACTION_ATTEMPTS = 6;
 const ROUNDING_RULE = 'HALF_UP';
+
+interface ReversalContext {
+  outletId: string;
+  saleId: string;
+  idempotencyKey: string;
+  reason: string;
+  restock: { stockItemId: string; quantity: string }[];
+  refundLines: { saleLineId: string; quantity: number }[] | undefined;
+  refundMinor: bigint | null;
+  hash: string;
+  user: AuthenticatedUser;
+  providerRefund: { performed: boolean; providerRefundRef: string | null };
+}
 
 export interface OrderLineModifierResponse {
   modifierId: string;
@@ -1514,7 +1529,7 @@ export class SalesService {
   /**
    * Records one immutable reversal for a completed sale. The original sale row is
    * never updated. Stock moves only for the explicit restock selection, and the
-   * response never claims an external payment provider performed a refund.
+   * online refunds first reserve a durable, validated intent before provider I/O.
    */
   async reverse(
     outletId: string,
@@ -1528,6 +1543,17 @@ export class SalesService {
     const restock = this.normalizeRestock(dto.restock);
     const refundLines = this.normalizeRefundLines(dto.lines);
     const partial = refundLines !== undefined;
+
+    if (
+      dto.refundMinor !== undefined &&
+      (!Number.isSafeInteger(dto.refundMinor) || dto.refundMinor < 0)
+    ) {
+      throw apiError(
+        422,
+        'INVALID_REFUND_AMOUNT',
+        'refundMinor must be a nonnegative safe integer',
+      );
+    }
 
     if (partial && dto.refundMinor === undefined) {
       throw apiError(422, 'REFUND_AMOUNT_REQUIRED', 'A partial refund must state refundMinor');
@@ -1556,6 +1582,20 @@ export class SalesService {
       return this.replayReversal(prior, saleId, hash);
     }
 
+    const pending = await this.prisma.refundIntent.findUnique({
+      where: { outletId_idempotencyKey: { outletId, idempotencyKey } },
+    });
+    if (pending) {
+      if (
+        pending.saleId !== saleId ||
+        pending.requestHash !== hash ||
+        pending.businessId !== user.businessId
+      ) {
+        throw apiError(409, 'IDEMPOTENCY_CONFLICT', 'Refund key belongs to a different request');
+      }
+      return this.completeRefundIntent(pending, user);
+    }
+
     const preflightSale = await this.prisma.sale.findFirst({
       where: { id: saleId, outletId, businessId: user.businessId },
       select: {
@@ -1580,42 +1620,68 @@ export class SalesService {
       });
     }
 
-    let providerRefund: { performed: boolean; providerRefundRef: string | null } = {
-      performed: false,
-      providerRefundRef: null,
+    const context: ReversalContext = {
+      outletId,
+      saleId,
+      idempotencyKey,
+      reason,
+      restock,
+      refundLines,
+      refundMinor,
+      hash,
+      user,
+      providerRefund: { performed: false, providerRefundRef: null },
     };
 
-    if (preflightSale?.payment?.kind === PaymentKind.ONLINE) {
-      providerRefund = await this.requirePayments().refundForReversal({
-        outletId,
-        saleId,
-        idempotencyKey,
-        amountMinor: partial ? BigInt(dto.refundMinor ?? 0) : preflightSale.totalMinor,
-        user,
-      });
-    }
-
     try {
-      return await this.runSerializable(
+      const result = await this.runSerializable(
         () =>
           this.prisma.$transaction(
-            async (tx) =>
-              this.applyReversal(tx, {
-                outletId,
-                saleId,
-                idempotencyKey,
-                reason,
-                restock,
-                refundLines,
-                refundMinor,
-                hash,
-                user,
-                providerRefund,
-              }),
+            async (tx) => {
+              await tx.$queryRaw`
+            SELECT "id" FROM "sales"
+            WHERE "id" = ${saleId}::uuid AND "outletId" = ${outletId}::uuid
+            FOR UPDATE
+          `;
+              const intent = await tx.refundIntent.findUnique({
+                where: { outletId_idempotencyKey: { outletId, idempotencyKey } },
+              });
+              if (intent) {
+                if (
+                  intent.saleId !== saleId ||
+                  intent.requestHash !== hash ||
+                  intent.businessId !== user.businessId
+                ) {
+                  throw apiError(
+                    409,
+                    'IDEMPOTENCY_CONFLICT',
+                    'Refund key belongs to a different request',
+                  );
+                }
+                return intent;
+              }
+              const active = await tx.refundIntent.findFirst({
+                where: { saleId, state: { in: ['PENDING', 'UNKNOWN', 'SUCCEEDED'] } },
+              });
+              if (active) {
+                throw apiError(
+                  409,
+                  'REFUND_IN_PROGRESS',
+                  'Resolve the existing refund with its original key before starting another',
+                  { retryable: true },
+                );
+              }
+              return this.applyReversal(
+                tx,
+                context,
+                preflightSale?.payment?.kind === PaymentKind.ONLINE,
+              );
+            },
             { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
           ),
-        'Sale reversal',
+        'Sale reversal reservation',
       );
+      return 'providerKey' in result ? this.completeRefundIntent(result, user) : result;
     } catch (error) {
       if (isUniqueViolation(error)) {
         const sameKey = await this.prisma.saleReversal.findUnique({
@@ -1629,6 +1695,122 @@ export class SalesService {
 
       throw error;
     }
+  }
+
+  private async completeRefundIntent(
+    reserved: RefundIntent,
+    user: AuthenticatedUser,
+  ): Promise<ReversalResponse> {
+    let intent = reserved;
+    if (user.role !== Role.OWNER && user.id !== intent.actorId) {
+      throw apiError(
+        403,
+        'FORBIDDEN',
+        'Only the original refund actor or an owner can resume this intent',
+      );
+    }
+    if (intent.state === RefundIntentState.FAILED) {
+      throw apiError(
+        409,
+        'REFUND_FAILED',
+        'Provider rejected this refund; use a new key after review',
+      );
+    }
+
+    if (
+      intent.state !== RefundIntentState.SUCCEEDED &&
+      intent.state !== RefundIntentState.COMPLETED
+    ) {
+      try {
+        const result = await this.requirePayments().refundReservedIntent(intent);
+        await this.prisma.refundIntent.updateMany({
+          where: { id: intent.id, state: { in: ['PENDING', 'UNKNOWN'] } },
+          data: {
+            state: 'SUCCEEDED',
+            providerRefundRef: result.providerRefundRef,
+            lastErrorCode: null,
+          },
+        });
+      } catch (error) {
+        const code =
+          error instanceof HttpException
+            ? (error.getResponse() as { code?: string }).code
+            : undefined;
+        // Only an explicit provider refusal is terminal. Network errors, malformed
+        // responses and failures persisting success are ambiguous and keep capacity reserved.
+        const rejected =
+          code === 'PROVIDER_REFUND_REJECTED' || code === 'PROVIDER_REFUND_EXCEEDS_PAYMENT';
+        await this.prisma.refundIntent.updateMany({
+          where: { id: intent.id, state: { in: ['PENDING', 'UNKNOWN'] } },
+          data: {
+            state: rejected ? 'FAILED' : 'UNKNOWN',
+            lastErrorCode: code ?? 'REFUND_OUTCOME_UNKNOWN',
+          },
+        });
+        throw error;
+      }
+    }
+
+    return this.runSerializable(
+      () =>
+        this.prisma.$transaction(
+          async (tx) => {
+            await tx.$queryRaw`
+          SELECT "id" FROM "sales" WHERE "id" = ${intent.saleId}::uuid FOR UPDATE
+        `;
+            intent = await tx.refundIntent.findUniqueOrThrow({ where: { id: intent.id } });
+            const prior = await tx.saleReversal.findUnique({
+              where: {
+                outletId_idempotencyKey: {
+                  outletId: intent.outletId,
+                  idempotencyKey: intent.idempotencyKey,
+                },
+              },
+            });
+            if (prior) return this.replayReversal(prior, intent.saleId, intent.requestHash);
+            if (intent.state !== RefundIntentState.SUCCEEDED) {
+              throw apiError(
+                409,
+                'REFUND_OUTCOME_UNKNOWN',
+                'Retry this refund with its original key',
+                { retryable: true },
+              );
+            }
+            const sale = await tx.sale.findFirstOrThrow({
+              where: { id: intent.saleId, businessId: intent.businessId },
+            });
+            // Consume the already validated reservation, without re-evaluating mutable
+            // approval rules or inventory recipes after the provider has refunded.
+            const response = await this.recordReversal(
+              tx,
+              {
+                outletId: intent.outletId,
+                saleId: intent.saleId,
+                idempotencyKey: intent.idempotencyKey,
+                reason: intent.reason,
+                hash: intent.requestHash,
+                refundMinor: intent.refundMinor,
+                refundLines: intent.lines === null ? undefined : this.readRefundLines(intent.lines),
+                restock: this.readRestockEntries(intent.restock).map((item) => ({
+                  ...item,
+                  quantity: item.quantity.toString(),
+                })),
+                user: { ...user, id: intent.actorId, businessId: intent.businessId },
+                providerRefund: { performed: true, providerRefundRef: intent.providerRefundRef },
+              },
+              sale.orderId,
+              intent.refundMinor,
+            );
+            await tx.refundIntent.update({
+              where: { id: intent.id },
+              data: { state: 'COMPLETED' },
+            });
+            return response;
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        ),
+      'Refund completion',
+    );
   }
 
   private normalizeReason(value: string): string {
@@ -1763,19 +1945,9 @@ export class SalesService {
 
   private async applyReversal(
     tx: Prisma.TransactionClient,
-    context: {
-      outletId: string;
-      saleId: string;
-      idempotencyKey: string;
-      reason: string;
-      restock: { stockItemId: string; quantity: string }[];
-      refundLines: { saleLineId: string; quantity: number }[] | undefined;
-      refundMinor: bigint | null;
-      hash: string;
-      user: AuthenticatedUser;
-      providerRefund: { performed: boolean; providerRefundRef: string | null };
-    },
-  ): Promise<ReversalResponse> {
+    context: ReversalContext,
+    reserveOnline = false,
+  ): Promise<ReversalResponse | RefundIntent> {
     const { outletId, saleId, idempotencyKey, reason, restock, refundLines, hash, user } = context;
 
     await tx.$queryRaw`
@@ -1966,6 +2138,43 @@ export class SalesService {
       }
     }
 
+    if (reserveOnline && refundMinor > 0n) {
+      const payment = await this.requirePayments().prepareReversalRefund(tx, {
+        outletId,
+        saleId,
+        amountMinor: refundMinor,
+        user,
+      });
+      return tx.refundIntent.create({
+        data: {
+          businessId: user.businessId,
+          outletId,
+          saleId,
+          actorId: user.id,
+          idempotencyKey,
+          requestHash: hash,
+          providerKey: `reversal:${outletId}:${idempotencyKey}`,
+          provider: payment.provider,
+          providerPaymentRef: payment.providerRef,
+          refundMinor,
+          reason,
+          lines: refundLines ?? Prisma.JsonNull,
+          restock,
+        },
+      });
+    }
+
+    return this.recordReversal(tx, context, sale.orderId, refundMinor);
+  }
+
+  private async recordReversal(
+    tx: Prisma.TransactionClient,
+    context: ReversalContext,
+    orderId: string,
+    refundMinor: bigint,
+  ): Promise<ReversalResponse> {
+    const { outletId, saleId, idempotencyKey, reason, restock, refundLines, hash, user } = context;
+    const partial = refundLines !== undefined;
     const reversal = await tx.saleReversal.create({
       data: {
         businessId: user.businessId,
@@ -2010,7 +2219,7 @@ export class SalesService {
     await this.writeAudit(tx, {
       businessId: user.businessId,
       outletId,
-      orderId: sale.orderId,
+      orderId,
       actorId: user.id,
       action: OrderAuditAction.REFUND,
       metadata: {
