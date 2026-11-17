@@ -2214,8 +2214,12 @@ _Questions this graph is uniquely positioned to answer:_
   _Cohesion score 0.023574041457797047 - nodes in this community are weakly interconnected._
 ## Release acceptance evidence under #78
 
-The [QA handoff](../docs/release-acceptance-78.md) pins application source 08184e6c9842da52bcd59655cda12d7a3f8a6944 after the manual digital-receipt label correction. The AST source snapshot is 2ebbe361dde1112852d31979f08b3b0d2df91f04, including the handoff document. Graphify scanned 895 code inputs with all 23 SQL files represented. The enriched graph contains 10226 nodes and 16647 edges, nine ticket execution roots and 189 evidence relationships.
+The [QA handoff](../docs/release-acceptance-78.md) pins application source 08184e6c9842da52bcd59655cda12d7a3f8a6944 after the manual digital-receipt label correction. The AST source snapshot is 2ebbe361dde1112852d31979f08b3b0d2df91f04, including the handoff document. Graphify scanned 895 code inputs with all 23 SQL files represented. The enriched graph contains 10227 nodes and 16649 edges, nine ticket execution roots and 191 evidence relationships.
 
 The [execution record](ticket-78-execution.md), [machine-readable verification](ticket-78-verification.json), and raw unit/runtime/restore logs are attached to #78. The #75 context includes the receipt regression before/after correction. Local acceptance uses real PostgreSQL with synthetic data and actual Node API process restarts. Matching pinned CI is required before handoff, with its result attached to #78. Physical Android/printer acceptance remains in #74, operator testing is deferred by the owner under #76 and intended deployment testing is deferred under #77. #78 remains open for QA.
 
 Source clustering and extraction use no LLM calls. Six JSON/config inputs produced zero AST nodes, 32 inputs were unclassified and two were sensitivity-filtered. Ticket documents are attached explicitly. The dated [board audit](BOARD_VALIDATION_2026-11-17.md) and [owner decision for #76](ticket-76-owner-decision.md) remain available.
+
+## Subsequent owner printer-testing decision
+
+The owner accepted merged #74 delivery and will perform physical testing personally. #74 is closed and Done under this explicit decision. Physical results remain pending owner execution. The [decision record](ticket-74-owner-decision.md) is attached to #74 and #78. The updated board has 46 Done and two In QA (#77/#78). This documentation/evidence update retains the code-only AST source baseline.

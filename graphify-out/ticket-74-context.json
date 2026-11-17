@@ -1,10 +1,10 @@
 {
   "ticket": 74,
-  "title": "Physical hardware acceptance pending after protocol delivery",
+  "title": "Printer delivery accepted for owner testing",
   "issueUrl": "https://github.com/arkinara/modern-pos/issues/74",
   "baseCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c",
   "date": "2026-11-17",
-  "qaTarget": "In QA",
+  "qaTarget": "Done",
   "evidence": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
   "sources": [
     "docs/hardware-acceptance.md",
@@ -21,7 +21,8 @@
     "apps/mobile/test/printer_models_test.dart",
     "apps/mobile/test/printer_screen_test.dart",
     "apps/mobile/test/printer_adapter_test.dart",
-    "apps/mobile/test/esc_pos_receipt_test.dart"
+    "apps/mobile/test/esc_pos_receipt_test.dart",
+    "graphify-out/ticket-74-owner-decision.md"
   ],
   "verification": {
     "protocolPr": "https://github.com/arkinara/modern-pos/pull/89",
@@ -47,5 +48,14 @@
     ],
     "flutterVerification": "Pinned Flutter 3.47.0 CI; pipeline result recorded in PR and #74 before handoff",
     "physicalAcceptance": "pending"
+  },
+  "ownerDecision": {
+    "date": "2026-11-17",
+    "decision": "Accept merged printer delivery now; owner will perform physical testing personally",
+    "issueState": "CLOSED",
+    "boardStatus": "Done",
+    "physicalTesting": "pending owner execution",
+    "evidence": "graphify-out/ticket-74-owner-decision.md",
+    "comment": "https://github.com/arkinara/modern-pos/issues/74#issuecomment-6948002640"
   }
 }

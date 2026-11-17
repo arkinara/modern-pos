@@ -169,5 +169,17 @@
     "#77 owner-deferred intended deployment acceptance",
     "three opt-in Dart live entry points skipped by ordinary CI"
   ],
-  "targetStatus": "In QA; final release decision pending"
+  "targetStatus": "In QA; final release decision pending",
+  "subsequentOwnerDecisions": [
+    {
+      "ticket": 74,
+      "date": "2026-11-17",
+      "decision": "Accept merged printer delivery now; owner will perform physical testing personally",
+      "issueState": "CLOSED",
+      "boardStatus": "Done",
+      "physicalTesting": "pending owner execution",
+      "evidence": "graphify-out/ticket-74-owner-decision.md",
+      "comment": "https://github.com/arkinara/modern-pos/issues/74#issuecomment-6948002640"
+    }
+  ]
 }

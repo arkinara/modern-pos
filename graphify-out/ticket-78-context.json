@@ -23,7 +23,8 @@
     "docs/hardware-acceptance.md",
     "docs/operator-pilot.md",
     "docs/operations-qa.md",
-    "docs/payment-acceptance.md"
+    "docs/payment-acceptance.md",
+    "graphify-out/ticket-74-owner-decision.md"
   ],
   "verification": {
     "apiUnitTestsPassed": 319,
@@ -43,7 +44,8 @@
   "ownerScopeDecisions": {
     "payments": "manual recording; automatic provider integration deferred",
     "operators": "owner will test later under #76",
-    "operations": "#77 execution deferred until deployment preparation"
+    "operations": "#77 execution deferred until deployment preparation",
+    "printers": "Owner accepted merged #74 delivery and will perform physical testing personally; #74 Done"
   },
   "acceptanceOwners": [
     74,

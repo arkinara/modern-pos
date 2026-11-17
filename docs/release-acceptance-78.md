@@ -1,5 +1,9 @@
 # Release candidate QA handoff for #78
 
+## Subsequent owner decision for physical printer testing
+
+On 2026-11-17 the owner accepted the merged printer software and chose to perform physical testing personally. #74 is now closed and Done under that scope decision. Physical results remain pending owner execution. The dated handoff below retains its original snapshot. [Owner decision](../graphify-out/ticket-74-owner-decision.md)
+
 Prepared on 2026-11-17 against pulled `main` revision `aa052c733105525c3dc904c6ea3d7b7b25d64a65`. The software candidate includes the receipt-label correction in `08184e6c9842da52bcd59655cda12d7a3f8a6944`. Evidence-only commits and a merge with an identical tested tree retain this source candidate. The #78 handoff comment records the reviewed PR head and CI result.
 
 ## Acceptance decision

@@ -49,10 +49,10 @@
       "source_nodes": 10081,
       "source_edges": 16458,
       "source_communities": 588,
-      "final_nodes": 10226,
-      "final_edges": 16647,
+      "final_nodes": 10227,
+      "final_edges": 16649,
       "ticket_contexts": 9,
-      "evidence_links": 189
+      "evidence_links": 191
     },
     "release_acceptance": {
       "ticket": 78,
@@ -61,7 +61,13 @@
       "evidence": "graphify-out/ticket-78-verification.json",
       "qa_target": "In QA",
       "software_scope": "local synthetic acceptance and matching full CI required before handoff",
-      "final_acceptance": "pending physical #74 and recorded owner/operator/deployment decisions"
+      "final_acceptance": "pending physical #74 and recorded owner/operator/deployment decisions",
+      "printer_owner_decision": {
+        "ticket": 74,
+        "status": "Done",
+        "physicalTesting": "pending owner execution",
+        "evidence": "graphify-out/ticket-74-owner-decision.md"
+      }
     }
   },
   "nodes": [
@@ -111899,18 +111905,18 @@
     },
     {
       "id": "ticket_execution_74",
-      "label": "#74: Physical hardware acceptance pending after protocol delivery",
+      "label": "#74: Printer delivery accepted for owner testing",
       "file_type": "documentation",
       "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "ticket_execution",
         "ticket": 74,
-        "title": "Physical hardware acceptance pending after protocol delivery",
+        "title": "Printer delivery accepted for owner testing",
         "issueUrl": "https://github.com/arkinara/modern-pos/issues/74",
         "baseCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c",
         "date": "2026-11-17",
-        "qaTarget": "In QA",
+        "qaTarget": "Done",
         "evidence": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
         "sources": [
           "docs/hardware-acceptance.md",
@@ -111927,7 +111933,8 @@
           "apps/mobile/test/printer_models_test.dart",
           "apps/mobile/test/printer_screen_test.dart",
           "apps/mobile/test/printer_adapter_test.dart",
-          "apps/mobile/test/esc_pos_receipt_test.dart"
+          "apps/mobile/test/esc_pos_receipt_test.dart",
+          "graphify-out/ticket-74-owner-decision.md"
         ],
         "verification": {
           "protocolPr": "https://github.com/arkinara/modern-pos/pull/89",
@@ -111953,6 +111960,15 @@
           ],
           "flutterVerification": "Pinned Flutter 3.47.0 CI; pipeline result recorded in PR and #74 before handoff",
           "physicalAcceptance": "pending"
+        },
+        "ownerDecision": {
+          "date": "2026-11-17",
+          "decision": "Accept merged printer delivery now; owner will perform physical testing personally",
+          "issueState": "CLOSED",
+          "boardStatus": "Done",
+          "physicalTesting": "pending owner execution",
+          "evidence": "graphify-out/ticket-74-owner-decision.md",
+          "comment": "https://github.com/arkinara/modern-pos/issues/74#issuecomment-6948002640"
         }
       }
     },
@@ -112081,6 +112097,16 @@
       "label": "esc_pos_receipt_test.dart",
       "file_type": "evidence",
       "source_file": "apps/mobile/test/esc_pos_receipt_test.dart",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_74_owner_decision_md",
+      "label": "ticket-74-owner-decision.md",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-74-owner-decision.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -112912,7 +112938,8 @@
           "docs/hardware-acceptance.md",
           "docs/operator-pilot.md",
           "docs/operations-qa.md",
-          "docs/payment-acceptance.md"
+          "docs/payment-acceptance.md",
+          "graphify-out/ticket-74-owner-decision.md"
         ],
         "verification": {
           "apiUnitTestsPassed": 319,
@@ -112932,7 +112959,8 @@
         "ownerScopeDecisions": {
           "payments": "manual recording; automatic provider integration deferred",
           "operators": "owner will test later under #76",
-          "operations": "#77 execution deferred until deployment preparation"
+          "operations": "#77 execution deferred until deployment preparation",
+          "printers": "Owner accepted merged #74 delivery and will perform physical testing personally; #74 Done"
         },
         "acceptanceOwners": [
           74,
@@ -301904,6 +301932,15 @@
       "weight": 1.0
     },
     {
+      "source": "ticket_execution_74",
+      "target": "execution_file_graphify_out_ticket_74_owner_decision_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
       "source": "ticket_execution_75",
       "target": "execution_file_graphify_out_ticket_75_manual_execution_md",
       "relation": "supported_by",
@@ -302779,6 +302816,15 @@
     {
       "source": "ticket_execution_78",
       "target": "execution_file_docs_payment_acceptance_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-78-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_78",
+      "target": "execution_file_graphify_out_ticket_74_owner_decision_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
       "source_file": "graphify-out/ticket-78-execution.md",
