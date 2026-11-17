@@ -1,17 +1,40 @@
-# Graph Report - .  (2026-11-15)
+# Graph Report - .  (2026-11-17)
 
 ## Corpus Check
 - cluster-only mode — file stats not available
 
-## Summary
-- 9425 nodes · 15345 edges · 563 communities (384 shown, 179 thin omitted)
+## Source AST summary
+- 10076 nodes · 16447 edges · 577 communities (389 shown, 188 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 10 edges (avg confidence: 0.68)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d4b3ac17`
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Built from commit: `a0d1393c`
+- This identifies the source revision. Commits containing only graphify-out artifacts retain the same source baseline.
+- Check tracked source changes with `git diff --name-only a0d1393 HEAD -- . ':(exclude)graphify-out/**'`.
 - Run `graphify update .` after code changes (no API cost).
+
+## Rebuild verification on 2026-11-17
+
+- Source revision `a0d1393c4f5a9e1dabbf7340a581c161eabd0ac0`.
+- Graphify 0.9.29 scanned 894 code inputs in code-only mode. All 23 SQL files are represented after loading tree-sitter-sql 0.3.13 from isolated workspace tooling.
+- Source clustering produced 10,076 nodes, 16,447 edges and 577 communities. The final enriched graph contains 10,186 nodes and 16,585 edges, including six ticket execution roots and 138 evidence relationships.
+- Unique node identifiers, edge endpoints, evidence-file paths and representative manual-payment, kitchen-delivery and durable-refund symbols passed verification.
+- A real Chromium load matched the HTML datasets to graph.json, found ticket #75 through search, opened its evidence details and reported zero page errors. Displayed counts match the enriched graph. Repeated evidence injection leaves JSON and HTML unchanged.
+- The injector now includes evidence nodes/edges in the HTML search data and updates displayed counts after enrichment.
+- Code-only scope skipped 283 documents and five images. Graphify reported six JSON/config inputs with zero AST nodes, 32 unclassified inputs and two sensitivity-filtered inputs. Ticket evidence is attached explicitly. Extraction and clustering used no LLM calls.
+
+### Rebuild commands
+
+```powershell
+# The optional SQL parser was installed into ignored workspace tooling using
+# uv pip install --python <Graphify Python> --target node_modules/refund-qa-tools/graphify-sql tree-sitter-sql==0.3.13
+$env:PYTHONPATH = (Resolve-Path node_modules/refund-qa-tools/graphify-sql).Path
+graphify extract . --code-only --force --no-cluster --max-workers 4
+$env:GRAPHIFY_VIZ_NODE_LIMIT = "12000"
+graphify cluster-only . --no-label
+node graphify-out/inject-execution-context.mjs
+```
 
 ## Community Hubs (Navigation)
 - Community 0
@@ -397,6 +420,7 @@
 - Community 380
 - Community 381
 - Community 382
+- Community 383
 - Community 384
 - Community 385
 - Community 386
@@ -410,7 +434,6 @@
 - Community 394
 - Community 395
 - Community 396
-- Community 397
 - Community 398
 - Community 399
 - Community 400
@@ -570,20 +593,32 @@
 - Community 554
 - Community 555
 - Community 556
+- Community 557
+- Community 558
+- Community 559
 - Community 560
 - Community 561
 - Community 562
+- Community 563
+- Community 564
+- Community 565
+- Community 566
+- Community 567
+- Community 568
+- Community 569
+- Community 570
+- Community 575
 
 ## God Nodes (most connected - your core abstractions)
-1. `AuthenticatedUser` - 329 edges
-2. `apiError()` - 257 edges
+1. `AuthenticatedUser` - 331 edges
+2. `apiError()` - 263 edges
 3. `CurrentUser` - 142 edges
-4. `PrismaService` - 121 edges
+4. `PrismaService` - 127 edges
 5. `ApiClient` - 103 edges
 6. `Roles()` - 87 edges
-7. `SalesService` - 73 edges
-8. `_Body` - 64 edges
-9. `PurchasingService` - 36 edges
+7. `SalesService` - 80 edges
+8. `PurchasingService` - 37 edges
+9. `PaymentsService` - 36 edges
 10. `useAuth()` - 35 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -593,1195 +628,1199 @@
   apps/mobile/lib/core/database/app_database.dart → packages/api_client_dart/lib/model/table.dart
 - `CheckoutIntents` --inherits--> `Table`  [EXTRACTED]
   apps/mobile/lib/core/database/app_database.dart → packages/api_client_dart/lib/model/table.dart
-- `PrintQueueJobs` --inherits--> `Table`  [EXTRACTED]
+- `OfflineCatalogSnapshots` --inherits--> `Table`  [EXTRACTED]
   apps/mobile/lib/core/database/app_database.dart → packages/api_client_dart/lib/model/table.dart
-- `PrintQueueAudits` --inherits--> `Table`  [EXTRACTED]
+- `PrintQueueJobs` --inherits--> `Table`  [EXTRACTED]
   apps/mobile/lib/core/database/app_database.dart → packages/api_client_dart/lib/model/table.dart
 
 ## Import Cycles
 - None detected.
 
-## Communities (563 total, 179 thin omitted)
+## Communities (577 total, 188 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.01
-Nodes (164): action, actorEmail, actorId, attempts, copy, createdAt, currency, currencyExponent (+156 more)
+Nodes (171): action, actorEmail, actorId, attempts, copy, createdAt, currency, currencyExponent (+163 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.04
-Nodes (79): AccessTokenPayload, IssuedSession, SessionResponseUser, SessionUser, JwtStrategy, Injectable, ALL_PERMISSIONS, hasPermission() (+71 more)
-
-### Community 2 - "Community 2"
-Cohesion: 0.04
-Nodes (79): AuthenticatedUser, row(), StationJobListQueryDto, IsIn, IsInt, IsOptional, IsString, IsUUID (+71 more)
+Cohesion: 0.02
+Nodes (111): CheckoutQueryDto, IsUUID, OrderCancelDto, IsInt, Min, OrderCreateDto, ArrayMaxSize, ArrayMinSize (+103 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.08
-Nodes (44): HttpCode, Param, Post, CurrentUser, RequirePermission(), Get, Param, ShiftsController (+36 more)
+Cohesion: 0.05
+Nodes (62): BookkeepingController, Body, Controller, Get, Param, Post, Put, Query (+54 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.05
-Nodes (66): BookkeepingController, Controller, Get, Param, Post, Put, Query, Res (+58 more)
+Cohesion: 0.04
+Nodes (53): @prisma/client, databaseUrl, db, onlineSale(), prisma, services(), Module, WebhookTestModule (+45 more)
+
+### Community 5 - "Community 5"
+Cohesion: 0.04
+Nodes (47): IssuedSession, SessionResponseUser, SessionUser, OutletScopeGuard, reflector, Injectable, RolesGuard, Injectable (+39 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.10
-Nodes (31): Roles(), PrintingController, Controller, Get, Headers, HttpCode, Param, Patch (+23 more)
+Cohesion: 0.04
+Nodes (42): AccessTokenPayload, JwtStrategy, Inject, Injectable, ApiErrorPayload, Public(), HealthController, HealthResponse (+34 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.03
-Nodes (94): build, CartScreen, catalogControllerProvider, _addVariant, build, _buildCatalog, _CatalogError, _CatalogLoading (+86 more)
+Nodes (80): CartRepository, DriftCartRepository, CatalogSnapshotStore, DriftCatalogSnapshotStore, createContainer, database, main, auth (+72 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.09
-Nodes (6): apiError(), isUniqueViolation(), requestHash(), requireIdempotencyKey(), SalesService, Injectable
+Cohesion: 0.08
+Nodes (12): apiError(), toWireMinor(), harness(), isUniqueViolation(), requestHash(), requireIdempotencyKey(), SalesService, prepareOrder() (+4 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.05
-Nodes (37): IsValidTimeZone, OutletUpdateDto, IsInt, IsNotEmpty, IsString, Max, MaxLength, Min (+29 more)
+Cohesion: 0.03
+Nodes (74): apiBaseUrl, appDatabaseProvider, contractClientProvider, database, dio, dioProvider, response, AuthRepository (+66 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.03
-Nodes (71): changeMinor, connect, connected, createOrder, createOrderCalls, createOrderError, createQuote, createQuoteCalls (+63 more)
+Cohesion: 0.04
+Nodes (64): StationJobListQueryDto, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, Min (+56 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.04
-Nodes (44): BookkeepingModule, Module, JwtAuthGuard, Injectable, OutletScopeGuard, reflector, Injectable, RolesGuard (+36 more)
+Cohesion: 0.03
+Nodes (71): _, @DriftDatabase, AppDatabase, clear, _database, delete, load, save (+63 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.03
-Nodes (57): CheckoutQueryDto, IsUUID, OrderCancelDto, IsInt, Min, OrderListQueryDto, IsInt, IsOptional (+49 more)
+Nodes (73): changeMinor, connect, connected, createOrder, createOrderCalls, createOrderError, createQuote, createQuoteCalls (+65 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.03
-Nodes (59): amountMinor, canSubmit, CheckoutPhase, code, copyWith, createdAt, currency, currencyExponent (+51 more)
+Nodes (62): PrinterException, _ascii, builder, _contains, _countNewlines, data, false, main (+54 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.03
-Nodes (30): package:modern_pos_api_client/api.dart, main, main, main, main, main, main, main (+22 more)
+Cohesion: 0.08
+Nodes (35): ALL_PERMISSIONS, hasPermission(), Permission, PERMISSION_DEFINITIONS, PermissionDefinition, PERMISSIONS, permissionsForRole(), ROLE_PERMISSIONS (+27 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.03
-Nodes (30): package:test/test.dart, main, main, main, main, main, main, main (+22 more)
+Nodes (66): _accessToken, CheckoutGateway, createOrder, createQuote, _dio, finalize, HttpCheckoutGateway, listSales (+58 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.03
-Nodes (57): active, amountMinor, attempts, blocksNewSale, checkedAt, conflict, copyWith, createdAt (+49 more)
+Cohesion: 0.04
+Nodes (66): _addVariant, _age, _buildCatalog, _CachedSnapshotCard, _CatalogError, _CatalogLoading, _catalogSections, count (+58 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.06
-Nodes (33): PRINT_JOB_STATES, PrintJobStateDto, PrintJobStateValue, IsIn, IsInt, IsOptional, IsString, IsUUID (+25 more)
+Nodes (23): ChannelAdapter, ChannelAvailability, ChannelDescriptor, ChannelConfigService, Injectable, ChannelRegistryService, StaticChannelAdapter, Injectable (+15 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.04
-Nodes (51): AuthRepository, _dio, refresh, _session, signIn, signOut, build, CatalogController (+43 more)
+Cohesion: 0.03
+Nodes (32): package:modern_pos_api_client/api.dart, main, main, main, main, main, main, main (+24 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.04
-Nodes (55): address, appendAudit, attempts, audits, byId, check, checkCount, clear (+47 more)
+Cohesion: 0.03
+Nodes (32): package:test/test.dart, main, main, main, main, main, main, main (+24 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.04
-Nodes (54): _add, _addColumns, address, alignment, asCopy, bold, build, buildTestReceipt (+46 more)
+Cohesion: 0.03
+Nodes (59): amountMinor, canSubmit, CheckoutPhase, code, copyWith, createdAt, currency, currencyExponent (+51 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.04
-Nodes (50): CheckoutApiException, OfflineDecryptionException, OfflineKeyMissingException, OfflineCryptoProviderNotConfiguredException, PaymentsApiException, TableOrdersException, chars, _flipBase64 (+42 more)
+Cohesion: 0.06
+Nodes (51): ChannelCustomerDto, ChannelOrderCancelDto, ChannelOrderFulfillDto, ChannelOrderLineDto, ChannelOrderListQueryDto, ChannelOrderManualDto, ChannelOrderWebhookDto, ArrayMaxSize (+43 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.08
-Nodes (29): CustomersController, Controller, Get, HttpCode, Param, Post, Put, Query (+21 more)
+Cohesion: 0.04
+Nodes (54): PrintQueueService, EscPosPrinterAdapter, PrinterAdapter, cartLine, cartRepository, configStore, container, controller (+46 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.07
-Nodes (29): RequestWithCookies, Get, AuthUserProfile, Public(), HealthController, HealthResponse, Controller, ReceiptCreateDto (+21 more)
+Cohesion: 0.03
+Nodes (57): active, amountMinor, attempts, blocksNewSale, checkedAt, conflict, copyWith, createdAt (+49 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.04
-Nodes (50): acknowledge, _actionableMessage, appendDigit, backspace, build, clearEntered, _completeSale, _deletePending (+42 more)
+Nodes (56): address, appendAudit, attempts, audits, byId, check, checkCount, clear (+48 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.05
-Nodes (42): PrinterException, _ascii, builder, _contains, _countNewlines, data, false, main (+34 more)
+Cohesion: 0.06
+Nodes (33): PRINT_JOB_STATES, PrintJobStateDto, PrintJobStateValue, IsIn, IsInt, IsOptional, IsString, IsUUID (+25 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.14
-Nodes (31): ACTIONS, AuditAction, defaultsFor(), Feedback, SettingsForm(), SettingsFormValues, settingsSchema, Shift (+23 more)
+Cohesion: 0.06
+Nodes (40): FakeOptions, fakePrisma(), fakeReports(), outlet(), reportFor(), cell(), CSV_COLUMNS, CsvSaleRow (+32 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.08
-Nodes (49): ChannelAvailability, ChannelDescriptor, ChannelCustomerDto, ChannelOrderCancelDto, ChannelOrderFulfillDto, ChannelOrderLineDto, ChannelOrderListQueryDto, ChannelOrderManualDto (+41 more)
+Cohesion: 0.04
+Nodes (53): acknowledge, _actionableMessage, appendDigit, backspace, build, clearEntered, _completeSale, _deletePending (+45 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.08
-Nodes (33): metadata, metadata, metadata, BookkeepingScreen(), ConsolidatedReport, money(), ProfitReport, REASON_LABELS (+25 more)
+Cohesion: 0.04
+Nodes (54): _add, _addColumns, address, alignment, asCopy, bold, build, buildLines (+46 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.07
-Nodes (31): cell(), CSV_COLUMNS, CsvSaleRow, formulaSafe(), quote(), toCsv(), ReportsController, Controller (+23 more)
+Cohesion: 0.04
+Nodes (51): AesGcm, bytes, deviceId, DeviceIdentity, generateUuidV4, hex, random, SecureDeviceIdentity (+43 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.04
-Nodes (44): _, Movement, fromJson, hashCode, line, listFromJson, mapFromJson, mapListFromJson (+36 more)
+Cohesion: 0.08
+Nodes (30): CustomersController, Body, Controller, Get, HttpCode, Param, Post, Put (+22 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.05
-Nodes (41): AndroidBluetoothPrinterTransport, _channel, _classify, connect, _connected, disconnect, discover, isConnected (+33 more)
+Cohesion: 0.04
+Nodes (50): CheckoutApiException, OfflineDecryptionException, OfflineKeyMissingException, OfflineCryptoProviderNotConfiguredException, PaymentsApiException, StationJobApiException, StationJobConflictException, TableOrdersException (+42 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.05
-Nodes (42): @DriftDatabase, AppDatabase, CartRepository, clear, _database, delete, DriftCartRepository, load (+34 more)
+Cohesion: 0.04
+Nodes (53): accessToken, archived, availableUnits, build, clear, currency, currencyExponent, delete (+45 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.05
-Nodes (43): ReceiptData, action, active, actorEmail, actorId, attempts, canRetry, copy (+35 more)
+Cohesion: 0.04
+Nodes (51): secureStorageProvider, _acceptOnlineSession, accessToken, AuthController, authorizedAt, AuthRefreshPolicy, authRefreshPolicyProvider, authRepositoryProvider (+43 more)
 
 ### Community 34 - "Community 34"
 Cohesion: 0.05
-Nodes (39): _, decode, deviceId, encode, fromJson, hashCode, id, _instance (+31 more)
+Nodes (46): android_printer_transport.dart, AndroidBluetoothPrinterTransport, _channel, _classify, connect, _connected, disconnect, discover (+38 more)
 
 ### Community 35 - "Community 35"
-Cohesion: 0.07
-Nodes (36): OrderCreateDto, ArrayMaxSize, ArrayMinSize, IsArray, IsOptional, IsUUID, Type, ValidateNested (+28 more)
+Cohesion: 0.14
+Nodes (31): ACTIONS, AuditAction, defaultsFor(), Feedback, SettingsForm(), SettingsFormValues, settingsSchema, Shift (+23 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.05
-Nodes (38): apiHealthProvider, build, color, DashboardScreen, icon, label, onRefresh, payment (+30 more)
+Cohesion: 0.04
+Nodes (48): fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson, menuItemId, menuItemName (+40 more)
 
 ### Community 37 - "Community 37"
-Cohesion: 0.08
-Nodes (23): StockChangeDto, IsNotEmpty, IsString, IsUUID, Matches, MaxLength, MinLength, Transform (+15 more)
+Cohesion: 0.11
+Nodes (16): Get, AuthenticatedUser, StationRoutingController, Body, Controller, Get, Headers, HttpCode (+8 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.06
-Nodes (31): addApprovalRule(), ApprovalRuleRow, BalanceRow, CheckoutRow, clone(), createFakePrisma(), DiningTableRow, FakeState (+23 more)
+Cohesion: 0.04
+Nodes (48): authorizedAt, clear, defaultOfflineSessionAllowance, fromJson, matches, OfflineQueueScope, OfflineQueueScopeStore, OfflineSessionProfile (+40 more)
 
 ### Community 39 - "Community 39"
-Cohesion: 0.06
-Nodes (38): _adapter, build, busy, canTestPrint, clearConfig, config, connect, copyWith (+30 more)
+Cohesion: 0.08
+Nodes (33): metadata, metadata, metadata, BookkeepingScreen(), ConsolidatedReport, money(), ProfitReport, REASON_LABELS (+25 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.05
-Nodes (38): _, actorId, createdAt, decode, delta, encode, fromJson, hashCode (+30 more)
+Cohesion: 0.04
+Nodes (46): List, AuditPage, fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson (+38 more)
 
 ### Community 41 - "Community 41"
-Cohesion: 0.05
-Nodes (38): _, costingMethod, currency, currencyExponent, cogs, expenses, revenue, waste (+30 more)
+Cohesion: 0.12
+Nodes (25): Roles(), PromotionsController, Body, Controller, Get, Param, Patch, Post (+17 more)
 
 ### Community 42 - "Community 42"
-Cohesion: 0.05
-Nodes (36): _, deviceId, Finalize, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+28 more)
+Cohesion: 0.04
+Nodes (45): code, innerException, message, stackTrace, toString, AttendanceWrite, fromJson, hashCode (+37 more)
 
 ### Community 43 - "Community 43"
 Cohesion: 0.05
-Nodes (37): _, attempts, copy, createdAt, kind, decode, encode, fromJson (+29 more)
+Nodes (43): app.dart, createState, ModernPosApp, _ModernPosAppState, _router, _StartupScreen, build, createState (+35 more)
 
 ### Community 44 - "Community 44"
-Cohesion: 0.05
-Nodes (37): build, _gateway, load, OnlinePaymentsController, refreshSale, _accessToken, _base, code (+29 more)
+Cohesion: 0.04
+Nodes (46): attempts, claim, claimCalls, claimGate, copy, dispatch, dispatched, false (+38 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.05
-Nodes (36): archived, availableUnits, build, clear, currency, currencyExponent, delete, description (+28 more)
+Cohesion: 0.04
+Nodes (45): _, cancelledAt, createdAt, decode, destinationOutletId, destinationOutletName, dispatchedAt, encode (+37 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.05
-Nodes (36): _, amountMinor, createdAt, currency, currencyExponent, decode, encode, failedAt (+28 more)
+Cohesion: 0.04
+Nodes (44): _, amountMinor, currency, fromJson, hashCode, idempotencyKey, listFromJson, mapFromJson (+36 more)
 
 ### Community 47 - "Community 47"
-Cohesion: 0.05
-Nodes (36): _, active, amountMinor, createdAt, eligibility, decode, encode, endsAt (+28 more)
+Cohesion: 0.04
+Nodes (44): _, Movement, fromJson, hashCode, line, listFromJson, mapFromJson, mapListFromJson (+36 more)
 
 ### Community 48 - "Community 48"
-Cohesion: 0.05
-Nodes (36): _, cashSalesMinor, closedAt, closedById, closeNote, countedCashMinor, currency, currencyExponent (+28 more)
+Cohesion: 0.08
+Nodes (22): AppliedPromotion, applyPromotions(), eligibleSubtotal(), isWithinWindow(), matchesCustomer(), normalizeEligibility(), PromotionCandidateLine, PromotionContext (+14 more)
 
 ### Community 49 - "Community 49"
-Cohesion: 0.10
-Nodes (14): PaymentListQueryDto, SettlementQueryDto, IsInt, IsOptional, IsString, Matches, Max, Min (+6 more)
+Cohesion: 0.05
+Nodes (43): ReceiptData, action, active, actorEmail, actorId, attempts, canRetry, copy (+35 more)
 
 ### Community 50 - "Community 50"
-Cohesion: 0.17
-Nodes (7): assertQuantity(), assertRepresentable(), isUniqueViolation(), PurchasingService, referenceFor(), Injectable, Tx
+Cohesion: 0.08
+Nodes (25): ReceiptCreateDto, IsInt, IsOptional, IsUUID, Max, Min, Type, PublicReceiptsController (+17 more)
 
 ### Community 51 - "Community 51"
 Cohesion: 0.07
-Nodes (35): printerControllerProvider, _addressController, build, _buildActions, _buildConfigForm, _buildDangerZone, _CandidateNotice, _confirmClear (+27 more)
+Nodes (31): BookkeepingModule, Module, CustomersModule, Module, OperationsModule, Module, OrderingModule, Module (+23 more)
 
 ### Community 52 - "Community 52"
-Cohesion: 0.06
-Nodes (35): _, amountMinor, createdAt, currency, currencyExponent, decode, encode, failedAt (+27 more)
+Cohesion: 0.08
+Nodes (29): CatalogModule, Module, CategoryResponse, MenuPageResponse, MenuRecord, MenuResponse, FakeCalls, fakePrisma() (+21 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.06
-Nodes (35): apiClient, PrintingApi, printingCreate, printingCreateWithHttpInfo, printingJob, printingJobWithHttpInfo, printingList, printingListWithHttpInfo (+27 more)
+Cohesion: 0.14
+Nodes (11): transferInTransitQuantity(), assertQuantity(), assertRepresentable(), fractionDigits(), isUniqueViolation(), PurchasingService, referenceFor(), createOrder() (+3 more)
 
 ### Community 54 - "Community 54"
-Cohesion: 0.06
-Nodes (35): acceptedAt, cancellationReason, cancelledAt, channel, ChannelOrder, channelReference, createdAt, currency (+27 more)
-
-### Community 55 - "Community 55"
-Cohesion: 0.07
-Nodes (30): app.dart, _autoRetry, build, enqueueSale, printQueueControllerProvider, refresh, reprint, reprintSale (+22 more)
-
-### Community 56 - "Community 56"
-Cohesion: 0.11
-Nodes (15): ByteArray, MethodChannel, MainActivity, ByteArray, MethodChannel, UsbPrinterChannel, BluetoothSocket, FlutterActivity (+7 more)
-
-### Community 57 - "Community 57"
-Cohesion: 0.06
-Nodes (34): active, _backoff, _baseBackoff, build, copyWith, discard, error, _finalizeWithCurrentQuote (+26 more)
-
-### Community 58 - "Community 58"
-Cohesion: 0.06
-Nodes (34): _, calculation, completedAt, currency, currencyExponent, decode, encode, fromJson (+26 more)
-
-### Community 59 - "Community 59"
-Cohesion: 0.21
-Nodes (33): PurchaseOrderCreateDto, PurchaseOrderLineWriteDto, PurchaseOrderListQueryDto, PurchaseOrderReceiptDto, StockCountCreateDto, StockCountLineWriteDto, StockCountListQueryDto, SupplierCreateDto (+25 more)
-
-### Community 60 - "Community 60"
-Cohesion: 0.08
-Nodes (19): RecipeWriteDto, ArrayMaxSize, ArrayMinSize, IsArray, IsInt, Min, Type, ValidateNested (+11 more)
-
-### Community 61 - "Community 61"
-Cohesion: 0.06
-Nodes (33): _, active, amountMinor, decode, eligibility, encode, endsAt, fromJson (+25 more)
-
-### Community 62 - "Community 62"
-Cohesion: 0.06
-Nodes (33): _, active, amountMinor, decode, eligibility, encode, endsAt, fromJson (+25 more)
-
-### Community 63 - "Community 63"
-Cohesion: 0.06
-Nodes (33): _, baseUnit, decode, encode, fromJson, hashCode, id, _instance (+25 more)
-
-### Community 64 - "Community 64"
-Cohesion: 0.07
-Nodes (30): bytes, deviceId, DeviceIdentity, generateUuidV4, hex, random, SecureDeviceIdentity, _storage (+22 more)
-
-### Community 65 - "Community 65"
-Cohesion: 0.06
-Nodes (32): activeJobs, _actorEmail, _actorId, _adapter, _audit, auditsForSale, _configStore, enqueueSale (+24 more)
-
-### Community 66 - "Community 66"
-Cohesion: 0.08
-Nodes (20): metadata, metadata, metadata, metadata, metadata, metadata, AttendanceScreen(), AuditScreen() (+12 more)
-
-### Community 67 - "Community 67"
-Cohesion: 0.10
-Nodes (21): metadata, ApiStatus(), AuthGate(), OutletSwitcher(), ICONS, SidebarNav(), SignInForm(), UserMenu() (+13 more)
-
-### Community 68 - "Community 68"
-Cohesion: 0.09
-Nodes (28): metadata, describePurchasingError(), ErrorCard(), Feedback, formatTimestamp(), LedgerSection(), Movement, PurchaseOrder (+20 more)
-
-### Community 69 - "Community 69"
-Cohesion: 0.06
-Nodes (32): _, cancelledAt, createdAt, decode, destinationOutletId, destinationOutletName, dispatchedAt, encode (+24 more)
-
-### Community 70 - "Community 70"
-Cohesion: 0.06
-Nodes (32): apiClient, purchaseOrderCancel, purchaseOrderCancelWithHttpInfo, purchaseOrderCreate, purchaseOrderCreateWithHttpInfo, purchaseOrderList, purchaseOrderListWithHttpInfo, purchaseOrderReceive (+24 more)
-
-### Community 71 - "Community 71"
-Cohesion: 0.06
-Nodes (28): checkoutTimes, completed, finalizeTimes, percentile(), PRINT_CONCURRENCY, PRINT_REQUESTS, printErrors, printItems (+20 more)
-
-### Community 72 - "Community 72"
-Cohesion: 0.09
-Nodes (24): CatalogController, Controller, Get, Patch, Query, CatalogModule, Module, CategoryResponse (+16 more)
-
-### Community 73 - "Community 73"
-Cohesion: 0.09
-Nodes (25): metadata, AvailabilityFilter, ChangeMode, ChangeTarget, Feedback, formatTimestamp(), isSaleMovement(), MenuVariant (+17 more)
-
-### Community 74 - "Community 74"
-Cohesion: 0.06
-Nodes (31): _, businessName, currency, currencyExponent, decode, encode, fromJson, hashCode (+23 more)
-
-### Community 75 - "Community 75"
-Cohesion: 0.06
-Nodes (31): dependencies, argon2, class-transformer, class-validator, cookie-parser, dotenv, @nestjs/common, @nestjs/core (+23 more)
-
-### Community 76 - "Community 76"
-Cohesion: 0.13
-Nodes (21): AUTH_CONFIG, AuthConfig, booleanValue(), loadAuthConfig(), AuthConfigModule, Module, positiveInteger(), AuthModule (+13 more)
-
-### Community 77 - "Community 77"
-Cohesion: 0.07
-Nodes (29): AesGcm, _algorithm, ciphertext, _decodeKey, decryptJson, _defaultKey, encryptJson, _keyLength (+21 more)
-
-### Community 78 - "Community 78"
-Cohesion: 0.07
-Nodes (28): PrintQueueService, EscPosPrinterAdapter, PrinterAdapter, cartRepository, configStore, gateway, main, offlineStore (+20 more)
-
-### Community 79 - "Community 79"
-Cohesion: 0.07
-Nodes (29): _, decode, deviceId, encode, encoding, fromJson, hashCode, id (+21 more)
-
-### Community 80 - "Community 80"
-Cohesion: 0.07
-Nodes (29): _, connectionSettings, decode, deviceId, encode, encoding, fromJson, hashCode (+21 more)
-
-### Community 81 - "Community 81"
-Cohesion: 0.09
-Nodes (27): build, createState, ModernPosApp, _ModernPosAppState, _router, _StartupScreen, authControllerProvider, build (+19 more)
-
-### Community 82 - "Community 82"
-Cohesion: 0.07
-Nodes (28): address, columns, connection, copyWith, encoding, fromJson, fromMillimetres, fromWireName (+20 more)
-
-### Community 83 - "Community 83"
-Cohesion: 0.07
-Nodes (28): _, currency, currencyExponent, decode, encode, fromJson, hashCode, id (+20 more)
-
-### Community 84 - "Community 84"
-Cohesion: 0.07
-Nodes (28): _, connectionSettings, decode, deviceId, encode, encoding, fromJson, hashCode (+20 more)
-
-### Community 85 - "Community 85"
-Cohesion: 0.07
-Nodes (28): _, closedAt, createdAt, decode, encode, fromJson, hashCode, id (+20 more)
-
-### Community 86 - "Community 86"
-Cohesion: 0.07
-Nodes (28): _, createdAt, decode, encode, externalRefundPerformed, fromJson, hashCode, id (+20 more)
-
-### Community 87 - "Community 87"
-Cohesion: 0.07
-Nodes (28): attendanceClockIns, averageBillMinor, ConsolidatedOutlet, currency, currencyExponent, fromJson, grossItemSalesMinor, hashCode (+20 more)
-
-### Community 88 - "Community 88"
-Cohesion: 0.16
-Nodes (7): isSerializationFailure(), isUniqueViolation(), normaliseContact(), OrderingService, requestHash(), sleep(), Injectable
-
-### Community 89 - "Community 89"
-Cohesion: 0.08
-Nodes (21): balanceFor(), BalanceRow, createOrder(), createTransfer(), fakePrisma(), FakeState, MovementRow, OutletRow (+13 more)
-
-### Community 90 - "Community 90"
 Cohesion: 0.05
 Nodes (39): build, _busy, cancel, _ensureIdle, _gateway, isOccupied, _load, occupiedCount (+31 more)
 
-### Community 91 - "Community 91"
-Cohesion: 0.09
-Nodes (25): createContainer, database, main, auth, cartRepository, catalog, container, fixture (+17 more)
-
-### Community 92 - "Community 92"
-Cohesion: 0.07
-Nodes (27): _, channel, ChannelOrderManualWrite, ChannelOrderManualWriteChannelEnum, ChannelOrderManualWriteChannelEnumTypeTransformer, ChannelOrderManualWritePaymentModeEnum, ChannelOrderManualWritePaymentModeEnumTypeTransformer, customer (+19 more)
-
-### Community 93 - "Community 93"
-Cohesion: 0.07
-Nodes (27): _, amountMinor, changeMinor, decode, encode, fromJson, hashCode, _instance (+19 more)
-
-### Community 94 - "Community 94"
-Cohesion: 0.07
-Nodes (27): _, capturedMinor, completedAt, decode, encode, fromJson, hashCode, _instance (+19 more)
-
-### Community 95 - "Community 95"
-Cohesion: 0.15
-Nodes (14): AuthController, Controller, Headers, HttpCode, Post, Req, Res, MobileSessionResponse (+6 more)
-
-### Community 96 - "Community 96"
-Cohesion: 0.17
-Nodes (15): PaymentsController, PaymentWebhookController, Controller, Get, Headers, HttpCode, Param, Post (+7 more)
-
-### Community 97 - "Community 97"
-Cohesion: 0.07
-Nodes (27): dependencies, class-variance-authority, clsx, @hookform/resolvers, lucide-react, @modern-pos/api-client, next, @radix-ui/react-slot (+19 more)
-
-### Community 98 - "Community 98"
-Cohesion: 0.07
-Nodes (26): _, action, actorId, AuditEntry, AuditEntryActionEnum, AuditEntryActionEnumTypeTransformer, createdAt, decode (+18 more)
-
-### Community 99 - "Community 99"
-Cohesion: 0.07
-Nodes (26): _, consent, consentSource, contact, contactType, CustomerWrite, CustomerWriteConsentSourceEnum, CustomerWriteConsentSourceEnumTypeTransformer (+18 more)
-
-### Community 100 - "Community 100"
-Cohesion: 0.07
-Nodes (26): _, baseUnit, decode, dispatchedQuantity, encode, fromJson, hashCode, id (+18 more)
-
-### Community 101 - "Community 101"
-Cohesion: 0.07
-Nodes (26): apiClient, BookkeepingApi, bookkeepingConsolidated, bookkeepingConsolidatedWithHttpInfo, bookkeepingCostingUpdate, bookkeepingCostingUpdateWithHttpInfo, bookkeepingExportAccounting, bookkeepingExportAccountingWithHttpInfo (+18 more)
-
-### Community 102 - "Community 102"
-Cohesion: 0.07
-Nodes (26): capturedMinor, currency, currencyExponent, days, driftMinor, failedMinor, from, fromJson (+18 more)
-
-### Community 103 - "Community 103"
-Cohesion: 0.13
-Nodes (18): PurchaseOrderReceiptUnit, assertPositiveQuantity(), assertRepresentableQuantity(), convertReceiptQuantity(), countVariance(), fractionDigits(), MAX_QUANTITY, nextPurchaseOrderState() (+10 more)
-
-### Community 104 - "Community 104"
-Cohesion: 0.08
-Nodes (23): build, SettingsScreen, build, navigationShell, _titles, createAppRouter, ../cart/cart_controller.dart, ../features/cart/cart_screen.dart (+15 more)
-
-### Community 105 - "Community 105"
-Cohesion: 0.08
-Nodes (25): _, BookkeepingConfiguration, BookkeepingConfigurationCostingMethodEnum, BookkeepingConfigurationCostingMethodEnumTypeTransformer, costingMethod, costingMethodDefined, decode, encode (+17 more)
-
-### Community 106 - "Community 106"
-Cohesion: 0.08
-Nodes (25): _, CalculationRulesPricingModeEnum, CalculationRulesPricingModeEnumTypeTransformer, CalculationRulesRoundingEnum, CalculationRulesRoundingEnumTypeTransformer, currencyExponent, decode, encode (+17 more)
-
-### Community 107 - "Community 107"
-Cohesion: 0.08
-Nodes (25): _, ChannelCustomerInputConsentSourceEnum, ChannelCustomerInputConsentSourceEnumTypeTransformer, ChannelCustomerInputContactTypeEnum, ChannelCustomerInputContactTypeEnumTypeTransformer, consent, consentSource, contact (+17 more)
-
-### Community 108 - "Community 108"
-Cohesion: 0.08
-Nodes (25): _, ChannelCustomerInput, ChannelOrderWebhookWrite, ChannelOrderWebhookWritePaymentModeEnum, ChannelOrderWebhookWritePaymentModeEnumTypeTransformer, customer, decode, encode (+17 more)
-
-### Community 109 - "Community 109"
-Cohesion: 0.08
-Nodes (25): _, action, actorId, createdAt, decode, encode, entityId, entityType (+17 more)
-
-### Community 110 - "Community 110"
-Cohesion: 0.08
-Nodes (25): _, attempts, copy, decode, deviceId, encode, fromJson, hashCode (+17 more)
-
-### Community 111 - "Community 111"
-Cohesion: 0.08
-Nodes (25): _, baseUnit, decode, encode, fromJson, hashCode, id, _instance (+17 more)
-
-### Community 112 - "Community 112"
-Cohesion: 0.08
-Nodes (25): _, baseUnit, countedQuantity, decode, encode, fromJson, hashCode, _instance (+17 more)
-
-### Community 113 - "Community 113"
-Cohesion: 0.08
-Nodes (25): _, availableUnits, decode, enabled, encode, fromJson, hashCode, id (+17 more)
-
-### Community 114 - "Community 114"
-Cohesion: 0.08
-Nodes (24): ChannelList, webhook, fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson (+16 more)
-
-### Community 115 - "Community 115"
-Cohesion: 0.09
-Nodes (23): android_printer_transport.dart, EscPosReceiptBuilder, _activeTransport, builder, _config, connect, disconnect, _fixedTransport (+15 more)
-
-### Community 116 - "Community 116"
-Cohesion: 0.21
-Nodes (10): SandboxEventDto, SandboxPaymentCreateDto, IsIn, IsInt, IsOptional, IsString, IsUUID, Max (+2 more)
-
-### Community 117 - "Community 117"
-Cohesion: 0.08
-Nodes (24): canDecrement, canIncrement, _CartError, _CartLineCard, _confirmClear, _EmptyCart, itemName, line (+16 more)
-
-### Community 118 - "Community 118"
-Cohesion: 0.08
-Nodes (24): _, amountMinor, currency, decode, encode, fromJson, hashCode, _instance (+16 more)
-
-### Community 119 - "Community 119"
-Cohesion: 0.08
-Nodes (24): _, actorId, amountMinor, createdAt, decode, encode, fromJson, hashCode (+16 more)
-
-### Community 120 - "Community 120"
-Cohesion: 0.17
-Nodes (11): AuditPage, fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, operator (+3 more)
-
-### Community 121 - "Community 121"
-Cohesion: 0.08
-Nodes (24): averageBillMinor, currency, currencyExponent, DailyReport, from, fromJson, generatedAt, grossItemSalesMinor (+16 more)
-
-### Community 122 - "Community 122"
-Cohesion: 0.15
-Nodes (14): CashInputs, cashSalesMinorFromTenders(), discrepancyMinor(), expectedCashMinor(), isSettledTender(), TenderRecord, toSignedWireMinor(), requireOutlet() (+6 more)
-
-### Community 123 - "Community 123"
-Cohesion: 0.10
-Nodes (23): secureStorageProvider, accessToken, AuthController, authRepositoryProvider, AuthSession, build, _clearStoredSession, _deviceIdentity (+15 more)
-
-### Community 124 - "Community 124"
-Cohesion: 0.08
-Nodes (23): _, availability, channel, ChannelDescriptor, ChannelDescriptorAvailabilityEnum, ChannelDescriptorAvailabilityEnumTypeTransformer, decode, encode (+15 more)
-
-### Community 125 - "Community 125"
-Cohesion: 0.08
-Nodes (23): _, decode, enabled, encode, fromJson, hashCode, _instance, listFromJson (+15 more)
-
-### Community 126 - "Community 126"
-Cohesion: 0.09
-Nodes (19): ApiClient, apiClient, AuditApi, auditSearch, auditSearchWithHttpInfo, apiClient, DeviceApi, deviceCreate (+11 more)
-
-### Community 127 - "Community 127"
-Cohesion: 0.09
-Nodes (16): BalanceRow, createOrder(), CustomerRow, EventRow, FakeOptions, FakeState, LineRow, manualDto() (+8 more)
-
-### Community 128 - "Community 128"
-Cohesion: 0.15
-Nodes (23): ApprovalRuleUpsertDto, ModifierCreateDto, PromotionCreateDto, PromotionEligibilityDto, PromotionUpdateDto, ArrayMaxSize, IsArray, IsBoolean (+15 more)
-
-### Community 129 - "Community 129"
-Cohesion: 0.09
-Nodes (22): CheckoutGateway, HttpCheckoutGateway, CheckoutRepository, DriftCheckoutRepository, cartLine, cartRepository, configStore, container (+14 more)
-
-### Community 130 - "Community 130"
-Cohesion: 0.10
-Nodes (13): metadata, metadata, metadata, PrintersScreen(), ApprovalRule, describePromotionError(), listText(), Promotion (+5 more)
-
-### Community 131 - "Community 131"
-Cohesion: 0.09
-Nodes (22): _, action, active, ApprovalRule, ApprovalRuleActionEnum, ApprovalRuleActionEnumTypeTransformer, decode, encode (+14 more)
-
-### Community 132 - "Community 132"
-Cohesion: 0.09
-Nodes (22): _, accessToken, decode, encode, expiresInSeconds, fromJson, hashCode, _instance (+14 more)
-
-### Community 133 - "Community 133"
-Cohesion: 0.09
-Nodes (22): _, attempts, decode, deviceId, encode, fromJson, hashCode, _instance (+14 more)
-
-### Community 134 - "Community 134"
-Cohesion: 0.09
-Nodes (22): _, decode, discountMinor, encode, fromJson, hashCode, _instance, kind (+14 more)
-
-### Community 135 - "Community 135"
-Cohesion: 0.09
-Nodes (22): _, decode, encode, fromJson, hashCode, _instance, lineId, listFromJson (+14 more)
-
-### Community 136 - "Community 136"
-Cohesion: 0.09
-Nodes (22): _, baseUnit, decode, encode, fromJson, hashCode, _instance, listFromJson (+14 more)
-
-### Community 137 - "Community 137"
-Cohesion: 0.09
-Nodes (22): _, decode, email, encode, fromJson, hashCode, id, _instance (+14 more)
-
-### Community 138 - "Community 138"
-Cohesion: 0.09
-Nodes (22): _, decode, encode, fromJson, hashCode, _instance, listFromJson, mapFromJson (+14 more)
-
-### Community 139 - "Community 139"
-Cohesion: 0.09
-Nodes (22): _, decode, duplicate, encode, eventId, fromJson, hashCode, _instance (+14 more)
-
-### Community 140 - "Community 140"
-Cohesion: 0.09
-Nodes (22): CalculationRules, calculation, currency, currencyExponent, expiresAt, fromJson, hashCode, id (+14 more)
-
-### Community 141 - "Community 141"
-Cohesion: 0.09
-Nodes (22): attendanceClockIns, averageBillMinor, fromJson, grossItemSalesMinor, hashCode, listFromJson, mapFromJson, mapListFromJson (+14 more)
-
-### Community 142 - "Community 142"
-Cohesion: 0.09
-Nodes (21): accent, accentSoft, border, buildAppTheme, canvas, controlBorder, danger, dangerSoft (+13 more)
-
-### Community 143 - "Community 143"
-Cohesion: 0.14
-Nodes (15): metadata, Providers(), readCsrfToken(), setAccessToken(), setUnauthorizedHandler(), AuthContext, AuthContextValue, AuthProvider() (+7 more)
-
-### Community 144 - "Community 144"
-Cohesion: 0.09
-Nodes (21): _, amountMinor, decode, encode, fromJson, hashCode, _instance, kind (+13 more)
-
-### Community 145 - "Community 145"
-Cohesion: 0.09
-Nodes (21): _, amountMinor, count, decode, encode, fromJson, hashCode, _instance (+13 more)
-
-### Community 146 - "Community 146"
-Cohesion: 0.09
-Nodes (21): _, attempts, decode, encode, fromJson, hashCode, _instance, lastError (+13 more)
-
-### Community 147 - "Community 147"
-Cohesion: 0.09
-Nodes (21): _, decode, encode, fromJson, hashCode, _instance, listFromJson, mapFromJson (+13 more)
-
-### Community 148 - "Community 148"
-Cohesion: 0.09
-Nodes (21): _, accessToken, decode, encode, expiresInSeconds, fromJson, hashCode, _instance (+13 more)
-
-### Community 149 - "Community 149"
-Cohesion: 0.09
-Nodes (21): channelOrderId, customerId, DigitalReceipt, expiresAt, fromJson, hashCode, html, id (+13 more)
-
-### Community 150 - "Community 150"
-Cohesion: 0.19
-Nodes (12): PromotionEligibility, PromotionsController, Controller, Get, Param, Patch, Post, Put (+4 more)
-
-### Community 151 - "Community 151"
-Cohesion: 0.19
-Nodes (6): normalizeOptionalList(), PromotionsService, requireOwner(), Injectable, validateDates(), Optional
-
-### Community 152 - "Community 152"
-Cohesion: 0.10
-Nodes (21): compilerOptions, allowSyntheticDefaultImports, baseUrl, declaration, emitDecoratorMetadata, esModuleInterop, experimentalDecorators, forceConsistentCasingInFileNames (+13 more)
-
-### Community 153 - "Community 153"
-Cohesion: 0.10
-Nodes (19): currency, currencyExponent, format, _groupDigits, idr, MoneyFormat, _pow10, CategoryWrite (+11 more)
-
-### Community 154 - "Community 154"
-Cohesion: 0.10
-Nodes (20): _, DailyReportPaymentBreakdownInner, DailyReportPaymentBreakdownInnerKindEnum, DailyReportPaymentBreakdownInnerKindEnumTypeTransformer, decode, encode, fromJson, hashCode (+12 more)
-
-### Community 155 - "Community 155"
-Cohesion: 0.10
-Nodes (20): _, decode, encode, fromJson, hashCode, _instance, kind, listFromJson (+12 more)
-
-### Community 156 - "Community 156"
-Cohesion: 0.10
-Nodes (20): _, decode, encode, fromJson, hashCode, _instance, listFromJson, mapFromJson (+12 more)
-
-### Community 157 - "Community 157"
-Cohesion: 0.10
-Nodes (20): _, decode, encode, eventId, fromJson, hashCode, _instance, listFromJson (+12 more)
-
-### Community 158 - "Community 158"
-Cohesion: 0.10
-Nodes (20): apiClient, CatalogApi, catalogArchive, catalogArchiveWithHttpInfo, catalogCategories, catalogCategoriesWithHttpInfo, catalogCreate, catalogCreateCategory (+12 more)
-
-### Community 159 - "Community 159"
-Cohesion: 0.10
-Nodes (20): apiClient, OrderApi, orderAuditList, orderAuditListWithHttpInfo, orderCancel, orderCancelWithHttpInfo, orderCreate, orderCreateWithHttpInfo (+12 more)
-
-### Community 160 - "Community 160"
-Cohesion: 0.10
-Nodes (20): ConsolidatedReportConsolidated, ConsolidatedReport, currency, currencyConsistent, currencyExponent, consolidated, from, fromJson (+12 more)
-
-### Community 161 - "Community 161"
+### Community 55 - "Community 55"
+Cohesion: 0.05
+Nodes (39): @apidevtools/swagger-cli, openapi-typescript, @openapitools/openapi-generator-cli, devDependencies, @apidevtools/swagger-cli, openapi-typescript, @openapitools/openapi-generator-cli, prettier (+31 more)
+
+### Community 56 - "Community 56"
 Cohesion: 0.11
-Nodes (19): @Deprecated, Client get, addDefaultHeader, ApiClient, authentication, basePath, _client, decodeAsync (+11 more)
+Nodes (35): CashInputs, cashSalesMinorFromTenders(), discrepancyMinor(), expectedCashMinor(), isSettledTender(), TenderRecord, toSignedWireMinor(), AttendanceClockDto (+27 more)
 
-### Community 163 - "Community 163"
-Cohesion: 0.10
-Nodes (20): MenuCreateDto, ArrayMaxSize, ArrayMinSize, IsArray, IsNotEmpty, IsString, IsUUID, MaxLength (+12 more)
-
-### Community 164 - "Community 164"
-Cohesion: 0.10
-Nodes (19): CartEntries, CheckoutIntents, PrintQueueAudits, PrintQueueJobs, RecoveryJobs, active, fromJson, hashCode (+11 more)
-
-### Community 165 - "Community 165"
+### Community 57 - "Community 57"
 Cohesion: 0.07
 Nodes (38): deviceIdentityProvider, add, build, CartController, cartControllerProvider, cartRepositoryProvider, CartState, _clampQuantity (+30 more)
 
-### Community 166 - "Community 166"
+### Community 58 - "Community 58"
+Cohesion: 0.06
+Nodes (38): _adapter, build, busy, canTestPrint, clearConfig, config, connect, copyWith (+30 more)
+
+### Community 59 - "Community 59"
+Cohesion: 0.05
+Nodes (38): _, actorId, createdAt, decode, delta, encode, fromJson, hashCode (+30 more)
+
+### Community 60 - "Community 60"
+Cohesion: 0.05
+Nodes (38): _, costingMethod, currency, currencyExponent, cogs, expenses, revenue, waste (+30 more)
+
+### Community 61 - "Community 61"
+Cohesion: 0.05
+Nodes (37): _, attempts, copy, createdAt, kind, decode, encode, fromJson (+29 more)
+
+### Community 62 - "Community 62"
+Cohesion: 0.06
+Nodes (32): addApprovalRule(), addStockItem(), ApprovalRuleRow, BalanceRow, CheckoutRow, clone(), createFakePrisma(), DiningTableRow (+24 more)
+
+### Community 63 - "Community 63"
+Cohesion: 0.06
+Nodes (36): checkoutControllerProvider, actionLabel, body, _bootstrap, canPop, CheckoutScreen, _CheckoutScreenState, createState (+28 more)
+
+### Community 64 - "Community 64"
+Cohesion: 0.05
+Nodes (36): _, amountMinor, createdAt, currency, currencyExponent, decode, encode, failedAt (+28 more)
+
+### Community 65 - "Community 65"
+Cohesion: 0.05
+Nodes (36): _, active, amountMinor, createdAt, eligibility, decode, encode, endsAt (+28 more)
+
+### Community 66 - "Community 66"
+Cohesion: 0.05
+Nodes (36): _, cashSalesMinor, closedAt, closedById, closeNote, countedCashMinor, currency, currencyExponent (+28 more)
+
+### Community 67 - "Community 67"
+Cohesion: 0.07
+Nodes (35): printerControllerProvider, _addressController, build, _buildActions, _buildConfigForm, _buildDangerZone, _CandidateNotice, _confirmClear (+27 more)
+
+### Community 68 - "Community 68"
+Cohesion: 0.06
+Nodes (35): _, amountMinor, createdAt, currency, currencyExponent, decode, encode, failedAt (+27 more)
+
+### Community 69 - "Community 69"
+Cohesion: 0.06
+Nodes (35): acceptedAt, cancellationReason, cancelledAt, channel, ChannelOrder, channelReference, createdAt, currency (+27 more)
+
+### Community 70 - "Community 70"
+Cohesion: 0.08
+Nodes (19): RecipeWriteDto, ArrayMaxSize, ArrayMinSize, IsArray, IsInt, Min, Type, ValidateNested (+11 more)
+
+### Community 71 - "Community 71"
+Cohesion: 0.11
+Nodes (15): ByteArray, MethodChannel, MainActivity, ByteArray, MethodChannel, UsbPrinterChannel, BluetoothSocket, FlutterActivity (+7 more)
+
+### Community 72 - "Community 72"
+Cohesion: 0.06
+Nodes (34): active, _backoff, _baseBackoff, build, copyWith, discard, error, _finalizeWithCurrentQuote (+26 more)
+
+### Community 73 - "Community 73"
+Cohesion: 0.06
+Nodes (34): _, calculation, completedAt, currency, currencyExponent, decode, encode, fromJson (+26 more)
+
+### Community 74 - "Community 74"
+Cohesion: 0.11
+Nodes (10): PaymentWebhookController, Controller, Headers, Req, isSerializationFailure(), isUniqueViolation(), PaymentsService, Injectable (+2 more)
+
+### Community 75 - "Community 75"
+Cohesion: 0.21
+Nodes (33): PurchaseOrderCreateDto, PurchaseOrderLineWriteDto, PurchaseOrderListQueryDto, PurchaseOrderReceiptDto, StockCountCreateDto, StockCountLineWriteDto, StockCountListQueryDto, SupplierCreateDto (+25 more)
+
+### Community 76 - "Community 76"
+Cohesion: 0.06
+Nodes (32): build, failure, jobs, main, _pump, pumpAndSettle, pumpWidget, resume (+24 more)
+
+### Community 77 - "Community 77"
+Cohesion: 0.06
+Nodes (33): _, active, amountMinor, decode, eligibility, encode, endsAt, fromJson (+25 more)
+
+### Community 78 - "Community 78"
+Cohesion: 0.06
+Nodes (33): _, active, amountMinor, decode, eligibility, encode, endsAt, fromJson (+25 more)
+
+### Community 79 - "Community 79"
+Cohesion: 0.06
+Nodes (33): _, baseUnit, decode, encode, fromJson, hashCode, id, _instance (+25 more)
+
+### Community 80 - "Community 80"
+Cohesion: 0.06
+Nodes (33): apiClient, PrintingApi, printingCreate, printingCreateWithHttpInfo, printingJob, printingJobWithHttpInfo, printingList, printingListWithHttpInfo (+25 more)
+
+### Community 81 - "Community 81"
+Cohesion: 0.08
+Nodes (20): metadata, metadata, metadata, metadata, metadata, metadata, AttendanceScreen(), AuditScreen() (+12 more)
+
+### Community 82 - "Community 82"
 Cohesion: 0.10
-Nodes (19): all, cartLineUnavailableReason, categories, currency, currencyExponent, menu, menuById, menuDisplayPriceMinor (+11 more)
+Nodes (21): metadata, ApiStatus(), AuthGate(), OutletSwitcher(), ICONS, SidebarNav(), SignInForm(), UserMenu() (+13 more)
+
+### Community 83 - "Community 83"
+Cohesion: 0.09
+Nodes (28): metadata, describePurchasingError(), ErrorCard(), Feedback, formatTimestamp(), LedgerSection(), Movement, PurchaseOrder (+20 more)
+
+### Community 84 - "Community 84"
+Cohesion: 0.06
+Nodes (32): apiClient, purchaseOrderCancel, purchaseOrderCancelWithHttpInfo, purchaseOrderCreate, purchaseOrderCreateWithHttpInfo, purchaseOrderList, purchaseOrderListWithHttpInfo, purchaseOrderReceive (+24 more)
+
+### Community 85 - "Community 85"
+Cohesion: 0.06
+Nodes (28): checkoutTimes, completed, finalizeTimes, percentile(), PRINT_CONCURRENCY, PRINT_REQUESTS, printErrors, printItems (+20 more)
+
+### Community 86 - "Community 86"
+Cohesion: 0.09
+Nodes (25): metadata, AvailabilityFilter, ChangeMode, ChangeTarget, Feedback, formatTimestamp(), isSaleMovement(), MenuVariant (+17 more)
+
+### Community 87 - "Community 87"
+Cohesion: 0.11
+Nodes (15): StockChangeDto, IsNotEmpty, IsString, IsUUID, Matches, MaxLength, MinLength, Transform (+7 more)
+
+### Community 88 - "Community 88"
+Cohesion: 0.06
+Nodes (30): compilerOptions, allowSyntheticDefaultImports, baseUrl, declaration, emitDecoratorMetadata, esModuleInterop, experimentalDecorators, forceConsistentCasingInFileNames (+22 more)
+
+### Community 89 - "Community 89"
+Cohesion: 0.07
+Nodes (30): build, canDecrement, canIncrement, _CartError, _CartLineCard, CartScreen, _confirmClear, _EmptyCart (+22 more)
+
+### Community 90 - "Community 90"
+Cohesion: 0.07
+Nodes (29): _autoRetry, build, enqueueSale, PrintQueueController, printQueueControllerProvider, refresh, reprint, reprintSale (+21 more)
+
+### Community 91 - "Community 91"
+Cohesion: 0.06
+Nodes (30): activeJobs, _actorEmail, _actorId, _adapter, _audit, auditsForSale, _configStore, enqueueSale (+22 more)
+
+### Community 92 - "Community 92"
+Cohesion: 0.06
+Nodes (30): _adapter, _configStore, copyJob, copyWith, delivered, _deliverOne, deliverPending, deliverStation (+22 more)
+
+### Community 93 - "Community 93"
+Cohesion: 0.09
+Nodes (24): createHarness(), fakeAdapter(), FakeState, makePayment(), makePaymentRecord(), makeSale(), OnlinePaymentRow, OutletRow (+16 more)
+
+### Community 94 - "Community 94"
+Cohesion: 0.09
+Nodes (24): FinalizeDto, IsUUID, Type, ValidateNested, PaymentInputDto, IsEnum, IsInt, IsOptional (+16 more)
+
+### Community 95 - "Community 95"
+Cohesion: 0.07
+Nodes (28): stationDeliveryServiceProvider, dispatchOrderStationJobs, dispatchSaleStationJobs, stationJobGatewayProvider, build, busy, copyWith, deliverAll (+20 more)
+
+### Community 96 - "Community 96"
+Cohesion: 0.07
+Nodes (29): _, decode, deviceId, encode, encoding, fromJson, hashCode, id (+21 more)
+
+### Community 97 - "Community 97"
+Cohesion: 0.07
+Nodes (29): _, connectionSettings, decode, deviceId, encode, encoding, fromJson, hashCode (+21 more)
+
+### Community 98 - "Community 98"
+Cohesion: 0.15
+Nodes (16): ShiftsController, Body, Controller, Get, HttpCode, Param, Post, Query (+8 more)
+
+### Community 99 - "Community 99"
+Cohesion: 0.13
+Nodes (19): PaymentListQueryDto, SettlementQueryDto, IsInt, IsOptional, IsString, Matches, Max, Min (+11 more)
+
+### Community 100 - "Community 100"
+Cohesion: 0.07
+Nodes (28): address, columns, connection, copyWith, encoding, fromJson, fromMillimetres, fromWireName (+20 more)
+
+### Community 101 - "Community 101"
+Cohesion: 0.07
+Nodes (28): _, currency, currencyExponent, decode, encode, fromJson, hashCode, id (+20 more)
+
+### Community 102 - "Community 102"
+Cohesion: 0.07
+Nodes (28): _, connectionSettings, decode, deviceId, encode, encoding, fromJson, hashCode (+20 more)
+
+### Community 103 - "Community 103"
+Cohesion: 0.07
+Nodes (28): _, closedAt, createdAt, decode, encode, fromJson, hashCode, id (+20 more)
+
+### Community 104 - "Community 104"
+Cohesion: 0.07
+Nodes (28): _, createdAt, decode, encode, externalRefundPerformed, fromJson, hashCode, id (+20 more)
+
+### Community 105 - "Community 105"
+Cohesion: 0.07
+Nodes (28): attendanceClockIns, averageBillMinor, ConsolidatedOutlet, currency, currencyExponent, fromJson, grossItemSalesMinor, hashCode (+20 more)
+
+### Community 106 - "Community 106"
+Cohesion: 0.10
+Nodes (27): build, authControllerProvider, AuthSession, _requireOutletId, build, _CheckoutScaffold, _canReplay, offlineSyncControllerProvider (+19 more)
+
+### Community 107 - "Community 107"
+Cohesion: 0.07
+Nodes (27): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+19 more)
+
+### Community 108 - "Community 108"
+Cohesion: 0.07
+Nodes (27): _, channel, ChannelOrderManualWrite, ChannelOrderManualWriteChannelEnum, ChannelOrderManualWriteChannelEnumTypeTransformer, ChannelOrderManualWritePaymentModeEnum, ChannelOrderManualWritePaymentModeEnumTypeTransformer, customer (+19 more)
+
+### Community 109 - "Community 109"
+Cohesion: 0.07
+Nodes (27): _, amountMinor, changeMinor, decode, encode, fromJson, hashCode, _instance (+19 more)
+
+### Community 110 - "Community 110"
+Cohesion: 0.07
+Nodes (27): _, capturedMinor, completedAt, decode, encode, fromJson, hashCode, _instance (+19 more)
+
+### Community 111 - "Community 111"
+Cohesion: 0.08
+Nodes (26): _accessToken, _base, claim, code, _dio, dispatch, _failure, HttpStationJobGateway (+18 more)
+
+### Community 112 - "Community 112"
+Cohesion: 0.07
+Nodes (24): baseUrl, _deviceId, main, _ownerEmail, baseUrl, _cashierEmail, _deviceId, main (+16 more)
+
+### Community 113 - "Community 113"
+Cohesion: 0.07
+Nodes (26): _, action, actorId, AuditEntry, AuditEntryActionEnum, AuditEntryActionEnumTypeTransformer, createdAt, decode (+18 more)
+
+### Community 114 - "Community 114"
+Cohesion: 0.07
+Nodes (26): _, consent, consentSource, contact, contactType, CustomerWrite, CustomerWriteConsentSourceEnum, CustomerWriteConsentSourceEnumTypeTransformer (+18 more)
+
+### Community 115 - "Community 115"
+Cohesion: 0.07
+Nodes (26): _, decode, deviceId, encode, fromJson, hashCode, id, _instance (+18 more)
+
+### Community 116 - "Community 116"
+Cohesion: 0.07
+Nodes (26): _, baseUnit, decode, dispatchedQuantity, encode, fromJson, hashCode, id (+18 more)
+
+### Community 117 - "Community 117"
+Cohesion: 0.07
+Nodes (26): apiClient, BookkeepingApi, bookkeepingConsolidated, bookkeepingConsolidatedWithHttpInfo, bookkeepingCostingUpdate, bookkeepingCostingUpdateWithHttpInfo, bookkeepingExportAccounting, bookkeepingExportAccountingWithHttpInfo (+18 more)
+
+### Community 118 - "Community 118"
+Cohesion: 0.07
+Nodes (26): capturedMinor, currency, currencyExponent, days, driftMinor, failedMinor, from, fromJson (+18 more)
+
+### Community 119 - "Community 119"
+Cohesion: 0.08
+Nodes (19): balanceFor(), BalanceRow, createTransfer(), fakePrisma(), FakeState, MovementRow, OutletRow, owner() (+11 more)
+
+### Community 120 - "Community 120"
+Cohesion: 0.08
+Nodes (25): build, _center, copy, fromJsonList, fromWire, isCancellation, issuedAtLabel, itemName (+17 more)
+
+### Community 121 - "Community 121"
+Cohesion: 0.08
+Nodes (25): _, BookkeepingConfiguration, BookkeepingConfigurationCostingMethodEnum, BookkeepingConfigurationCostingMethodEnumTypeTransformer, costingMethod, costingMethodDefined, decode, encode (+17 more)
+
+### Community 122 - "Community 122"
+Cohesion: 0.08
+Nodes (25): _, CalculationRulesPricingModeEnum, CalculationRulesPricingModeEnumTypeTransformer, CalculationRulesRoundingEnum, CalculationRulesRoundingEnumTypeTransformer, currencyExponent, decode, encode (+17 more)
+
+### Community 123 - "Community 123"
+Cohesion: 0.08
+Nodes (25): _, ChannelCustomerInputConsentSourceEnum, ChannelCustomerInputConsentSourceEnumTypeTransformer, ChannelCustomerInputContactTypeEnum, ChannelCustomerInputContactTypeEnumTypeTransformer, consent, consentSource, contact (+17 more)
+
+### Community 124 - "Community 124"
+Cohesion: 0.08
+Nodes (25): _, ChannelCustomerInput, ChannelOrderWebhookWrite, ChannelOrderWebhookWritePaymentModeEnum, ChannelOrderWebhookWritePaymentModeEnumTypeTransformer, customer, decode, encode (+17 more)
+
+### Community 125 - "Community 125"
+Cohesion: 0.08
+Nodes (25): _, action, actorId, createdAt, decode, encode, entityId, entityType (+17 more)
+
+### Community 126 - "Community 126"
+Cohesion: 0.08
+Nodes (25): _, attempts, copy, decode, deviceId, encode, fromJson, hashCode (+17 more)
+
+### Community 127 - "Community 127"
+Cohesion: 0.08
+Nodes (25): _, baseUnit, decode, encode, fromJson, hashCode, id, _instance (+17 more)
+
+### Community 128 - "Community 128"
+Cohesion: 0.08
+Nodes (25): _, baseUnit, countedQuantity, decode, encode, fromJson, hashCode, _instance (+17 more)
+
+### Community 129 - "Community 129"
+Cohesion: 0.08
+Nodes (25): _, availableUnits, decode, enabled, encode, fromJson, hashCode, id (+17 more)
+
+### Community 130 - "Community 130"
+Cohesion: 0.08
+Nodes (24): ChannelList, webhook, fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson (+16 more)
+
+### Community 131 - "Community 131"
+Cohesion: 0.18
+Nodes (15): ChannelWebhookController, OrderingController, Body, Controller, Get, Headers, HttpCode, Param (+7 more)
+
+### Community 132 - "Community 132"
+Cohesion: 0.14
+Nodes (21): PurchasingModule, Module, MAX_QUANTITY, MAX_UNIT_FACTOR, PurchaseOrderLineResponse, PurchaseOrderPageResponse, PurchaseOrderReceiptResponse, PurchaseOrderResponse (+13 more)
+
+### Community 133 - "Community 133"
+Cohesion: 0.08
+Nodes (24): _, amountMinor, currency, decode, encode, fromJson, hashCode, _instance (+16 more)
+
+### Community 134 - "Community 134"
+Cohesion: 0.08
+Nodes (24): _, actorId, amountMinor, createdAt, decode, encode, fromJson, hashCode (+16 more)
+
+### Community 135 - "Community 135"
+Cohesion: 0.08
+Nodes (23): int get, CatalogArchiveRequest, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+15 more)
+
+### Community 136 - "Community 136"
+Cohesion: 0.08
+Nodes (24): averageBillMinor, currency, currencyExponent, DailyReport, from, fromJson, generatedAt, grossItemSalesMinor (+16 more)
+
+### Community 137 - "Community 137"
+Cohesion: 0.17
+Nodes (15): AUTH_CONFIG, AuthConfig, booleanValue(), loadAuthConfig(), AuthConfigModule, Module, positiveInteger(), RequestWithCookies (+7 more)
+
+### Community 138 - "Community 138"
+Cohesion: 0.21
+Nodes (11): AuthController, Body, Controller, Headers, HttpCode, Post, Req, Res (+3 more)
+
+### Community 139 - "Community 139"
+Cohesion: 0.12
+Nodes (18): SandboxEventDto, SandboxPaymentCreateDto, IsIn, IsInt, IsOptional, IsString, IsUUID, Max (+10 more)
+
+### Community 140 - "Community 140"
+Cohesion: 0.15
+Nodes (23): ApprovalRuleUpsertDto, ModifierCreateDto, PromotionCreateDto, PromotionEligibilityDto, PromotionUpdateDto, ArrayMaxSize, IsArray, IsBoolean (+15 more)
+
+### Community 141 - "Community 141"
+Cohesion: 0.08
+Nodes (23): _, availability, channel, ChannelDescriptor, ChannelDescriptorAvailabilityEnum, ChannelDescriptorAvailabilityEnumTypeTransformer, decode, encode (+15 more)
+
+### Community 142 - "Community 142"
+Cohesion: 0.08
+Nodes (23): _, decode, enabled, encode, fromJson, hashCode, _instance, listFromJson (+15 more)
+
+### Community 143 - "Community 143"
+Cohesion: 0.09
+Nodes (19): ApiClient, apiClient, AuditApi, auditSearch, auditSearchWithHttpInfo, apiClient, DeviceApi, deviceCreate (+11 more)
+
+### Community 144 - "Community 144"
+Cohesion: 0.16
+Nodes (16): AppModule, Module, enabled(), Environment, environmentName(), placeholder(), RuntimeConfig, RuntimeConfigurationError (+8 more)
+
+### Community 145 - "Community 145"
+Cohesion: 0.19
+Nodes (8): trim(), LedgerMovement, MovementPageResponse, MovementReferences, StockPageResponse, StockResponse, WriteMovementInput, ZERO
+
+### Community 146 - "Community 146"
+Cohesion: 0.09
+Nodes (22): all, cartLineUnavailableReason, categories, copyWith, currency, currencyExponent, fetchedAt, fromCache (+14 more)
+
+### Community 147 - "Community 147"
+Cohesion: 0.10
+Nodes (13): metadata, metadata, metadata, PrintersScreen(), ApprovalRule, describePromotionError(), listText(), Promotion (+5 more)
+
+### Community 148 - "Community 148"
+Cohesion: 0.15
+Nodes (20): assert, channel(), checkCashier(), checkKeyboardAndTargets(), checkLayout(), checkPrinters(), checkReports(), checkSalesReferenceSearch() (+12 more)
+
+### Community 149 - "Community 149"
+Cohesion: 0.09
+Nodes (22): _, action, active, ApprovalRule, ApprovalRuleActionEnum, ApprovalRuleActionEnumTypeTransformer, decode, encode (+14 more)
+
+### Community 150 - "Community 150"
+Cohesion: 0.09
+Nodes (22): _, accessToken, decode, encode, expiresInSeconds, fromJson, hashCode, _instance (+14 more)
+
+### Community 151 - "Community 151"
+Cohesion: 0.09
+Nodes (22): _, attempts, decode, deviceId, encode, fromJson, hashCode, _instance (+14 more)
+
+### Community 152 - "Community 152"
+Cohesion: 0.09
+Nodes (22): _, decode, discountMinor, encode, fromJson, hashCode, _instance, kind (+14 more)
+
+### Community 153 - "Community 153"
+Cohesion: 0.09
+Nodes (22): _, decode, encode, fromJson, hashCode, _instance, lineId, listFromJson (+14 more)
+
+### Community 154 - "Community 154"
+Cohesion: 0.09
+Nodes (22): _, baseUnit, decode, encode, fromJson, hashCode, _instance, listFromJson (+14 more)
+
+### Community 155 - "Community 155"
+Cohesion: 0.09
+Nodes (22): _, decode, email, encode, fromJson, hashCode, id, _instance (+14 more)
+
+### Community 156 - "Community 156"
+Cohesion: 0.09
+Nodes (22): _, decode, encode, fromJson, hashCode, _instance, listFromJson, mapFromJson (+14 more)
+
+### Community 157 - "Community 157"
+Cohesion: 0.09
+Nodes (22): _, decode, duplicate, encode, eventId, fromJson, hashCode, _instance (+14 more)
+
+### Community 158 - "Community 158"
+Cohesion: 0.09
+Nodes (22): CalculationRules, calculation, currency, currencyExponent, expiresAt, fromJson, hashCode, id (+14 more)
+
+### Community 159 - "Community 159"
+Cohesion: 0.09
+Nodes (22): attendanceClockIns, averageBillMinor, fromJson, grossItemSalesMinor, hashCode, listFromJson, mapFromJson, mapListFromJson (+14 more)
+
+### Community 160 - "Community 160"
+Cohesion: 0.09
+Nodes (21): accent, accentSoft, border, buildAppTheme, canvas, controlBorder, danger, dangerSoft (+13 more)
+
+### Community 161 - "Community 161"
+Cohesion: 0.14
+Nodes (15): metadata, Providers(), readCsrfToken(), setAccessToken(), setUnauthorizedHandler(), AuthContext, AuthContextValue, AuthProvider() (+7 more)
+
+### Community 162 - "Community 162"
+Cohesion: 0.09
+Nodes (21): _, amountMinor, decode, encode, fromJson, hashCode, _instance, kind (+13 more)
+
+### Community 163 - "Community 163"
+Cohesion: 0.09
+Nodes (21): _, amountMinor, decode, encode, fromJson, hashCode, _instance, kind (+13 more)
+
+### Community 164 - "Community 164"
+Cohesion: 0.09
+Nodes (21): _, amountMinor, count, decode, encode, fromJson, hashCode, _instance (+13 more)
+
+### Community 165 - "Community 165"
+Cohesion: 0.09
+Nodes (21): _, attempts, decode, encode, fromJson, hashCode, _instance, lastError (+13 more)
+
+### Community 166 - "Community 166"
+Cohesion: 0.09
+Nodes (21): _, decode, encode, fromJson, hashCode, _instance, listFromJson, mapFromJson (+13 more)
 
 ### Community 167 - "Community 167"
-Cohesion: 0.11
-Nodes (18): AndroidPrinterPermissionService, channel, check, PrinterPermissionService, PrinterPermissionStatus, request, _statusFrom, _channel (+10 more)
+Cohesion: 0.09
+Nodes (21): _, accessToken, decode, encode, expiresInSeconds, fromJson, hashCode, _instance (+13 more)
 
 ### Community 168 - "Community 168"
-Cohesion: 0.10
-Nodes (19): copy, day, _ensureTimezones, footer, _format, hour, isCash, minute (+11 more)
+Cohesion: 0.09
+Nodes (21): channelOrderId, customerId, DigitalReceipt, expiresAt, fromJson, hashCode, html, id (+13 more)
 
 ### Community 169 - "Community 169"
-Cohesion: 0.11
-Nodes (19): _accessToken, _base, cancel, code, _dio, HttpTableOrdersGateway, listOpenOrders, listTables (+11 more)
+Cohesion: 0.14
+Nodes (7): Inject, ARGON2_OPTIONS, PasswordService, Injectable, SignInRateLimiter, Inject, Injectable
 
 ### Community 170 - "Community 170"
-Cohesion: 0.15
-Nodes (13): metadata, ConfirmDialog(), CatalogFormValues, CatalogVariantValues, emptyVariant(), initialValues(), MenuForm(), Feedback (+5 more)
+Cohesion: 0.10
+Nodes (19): currency, currencyExponent, format, _groupDigits, idr, MoneyFormat, _pow10, DeviceCreateRequest (+11 more)
 
 ### Community 171 - "Community 171"
-Cohesion: 0.16
-Nodes (17): baseUnitOf(), blankLine(), describeRecipeError(), DraftLine, Feedback, fromRecipe(), isMissingRecipe(), normalizeDecimal() (+9 more)
+Cohesion: 0.10
+Nodes (20): _, DailyReportPaymentBreakdownInner, DailyReportPaymentBreakdownInnerKindEnum, DailyReportPaymentBreakdownInnerKindEnumTypeTransformer, decode, encode, fromJson, hashCode (+12 more)
 
 ### Community 172 - "Community 172"
 Cohesion: 0.10
-Nodes (19): _, costingMethod, CostingUpdate, CostingUpdateCostingMethodEnum, CostingUpdateCostingMethodEnumTypeTransformer, decode, encode, fromJson (+11 more)
+Nodes (20): _, decode, encode, fromJson, hashCode, _instance, kind, listFromJson (+12 more)
 
 ### Community 173 - "Community 173"
 Cohesion: 0.10
-Nodes (16): dynamic get, ApiKeyAuth, applyToParams, Authentication, applyToParams, HttpBasicAuth, password, username (+8 more)
+Nodes (20): _, decode, encode, fromJson, hashCode, _instance, listFromJson, mapFromJson (+12 more)
 
 ### Community 174 - "Community 174"
 Cohesion: 0.10
-Nodes (20): scripts, build, build:api, build:web, dev:api, dev:web, format, format:check (+12 more)
+Nodes (20): _, decode, encode, eventId, fromJson, hashCode, _instance, listFromJson (+12 more)
 
 ### Community 175 - "Community 175"
 Cohesion: 0.10
-Nodes (19): anonymizedAt, consentAt, consentSource, createdAt, Customer, email, fromJson, hashCode (+11 more)
+Nodes (20): apiClient, CatalogApi, catalogArchive, catalogArchiveWithHttpInfo, catalogCategories, catalogCategoriesWithHttpInfo, catalogCreate, catalogCreateCategory (+12 more)
 
 ### Community 176 - "Community 176"
 Cohesion: 0.10
-Nodes (19): amountMinor, categoryId, categoryName, createdAt, createdById, Expense, fromJson, hashCode (+11 more)
+Nodes (20): apiClient, OrderApi, orderAuditList, orderAuditListWithHttpInfo, orderCancel, orderCancelWithHttpInfo, orderCreate, orderCreateWithHttpInfo (+12 more)
 
 ### Community 177 - "Community 177"
 Cohesion: 0.10
-Nodes (19): businessName, currency, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+11 more)
+Nodes (20): ConsolidatedReportConsolidated, ConsolidatedReport, currency, currencyConsistent, currencyExponent, consolidated, from, fromJson (+12 more)
 
 ### Community 178 - "Community 178"
+Cohesion: 0.11
+Nodes (19): @Deprecated, Client get, addDefaultHeader, ApiClient, authentication, basePath, _client, decodeAsync (+11 more)
+
+### Community 179 - "Community 179"
+Cohesion: 0.16
+Nodes (5): SessionService, Inject, Injectable, TokenService, Injectable
+
+### Community 180 - "Community 180"
+Cohesion: 0.10
+Nodes (20): MenuCreateDto, ArrayMaxSize, ArrayMinSize, IsArray, IsNotEmpty, IsString, IsUUID, MaxLength (+12 more)
+
+### Community 181 - "Community 181"
+Cohesion: 0.10
+Nodes (19): copy, day, _ensureTimezones, footer, _format, hour, isCash, minute (+11 more)
+
+### Community 182 - "Community 182"
+Cohesion: 0.10
+Nodes (18): build, SettingsScreen, createAppRouter, ../features/cart/cart_screen.dart, ../features/catalog/catalog_screen.dart, ../features/checkout/checkout_screen.dart, ../features/dashboard/dashboard_screen.dart, ../features/offline/offline_sync_screen.dart (+10 more)
+
+### Community 183 - "Community 183"
+Cohesion: 0.15
+Nodes (13): metadata, ConfirmDialog(), CatalogFormValues, CatalogVariantValues, emptyVariant(), initialValues(), MenuForm(), Feedback (+5 more)
+
+### Community 184 - "Community 184"
+Cohesion: 0.16
+Nodes (17): baseUnitOf(), blankLine(), describeRecipeError(), DraftLine, Feedback, fromRecipe(), isMissingRecipe(), normalizeDecimal() (+9 more)
+
+### Community 185 - "Community 185"
+Cohesion: 0.10
+Nodes (19): _, costingMethod, CostingUpdate, CostingUpdateCostingMethodEnum, CostingUpdateCostingMethodEnumTypeTransformer, decode, encode, fromJson (+11 more)
+
+### Community 186 - "Community 186"
+Cohesion: 0.10
+Nodes (16): dynamic get, ApiKeyAuth, applyToParams, Authentication, applyToParams, HttpBasicAuth, password, username (+8 more)
+
+### Community 187 - "Community 187"
+Cohesion: 0.10
+Nodes (19): anonymizedAt, consentAt, consentSource, createdAt, Customer, email, fromJson, hashCode (+11 more)
+
+### Community 188 - "Community 188"
+Cohesion: 0.10
+Nodes (19): amountMinor, categoryId, categoryName, createdAt, createdById, Expense, fromJson, hashCode (+11 more)
+
+### Community 189 - "Community 189"
+Cohesion: 0.10
+Nodes (19): businessName, currency, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+11 more)
+
+### Community 190 - "Community 190"
 Cohesion: 0.10
 Nodes (19): kind, fromJson, hashCode, id, isDefault, listFromJson, mapFromJson, mapListFromJson (+11 more)
 
-### Community 179 - "Community 179"
-Cohesion: 0.13
-Nodes (15): createHarness(), fakeAdapter(), FakeState, makePayment(), makePaymentRecord(), makeSale(), OnlinePaymentRow, OutletRow (+7 more)
-
-### Community 180 - "Community 180"
-Cohesion: 0.16
-Nodes (14): AppliedPromotion, applyPromotions(), eligibleSubtotal(), isWithinWindow(), matchesCustomer(), normalizeEligibility(), PromotionCandidateLine, PromotionContext (+6 more)
-
-### Community 181 - "Community 181"
-Cohesion: 0.11
-Nodes (18): appendAudit, byId, _companion, _database, _decode, DriftPrintQueueRepository, _emptyReceipt, findOriginalForSale (+10 more)
-
-### Community 182 - "Community 182"
-Cohesion: 0.11
-Nodes (17): container, controller, current, main, permissions, pump, store, transport (+9 more)
-
-### Community 183 - "Community 183"
-Cohesion: 0.11
-Nodes (18): claim, delete, key, loadAll, loadById, loadLatestActive, markConflict, markFailed (+10 more)
-
-### Community 184 - "Community 184"
-Cohesion: 0.11
-Nodes (18): cancel, failure, listOpenOrders, listTables, main, openTableOrder, order, orders (+10 more)
-
-### Community 185 - "Community 185"
-Cohesion: 0.11
-Nodes (18): apiClient, channelOrderAccept, channelOrderAcceptWithHttpInfo, channelOrderCancel, channelOrderCancelWithHttpInfo, channelOrderCreateManual, channelOrderCreateManualWithHttpInfo, channelOrderFulfill (+10 more)
-
-### Community 186 - "Community 186"
-Cohesion: 0.11
-Nodes (18): ChannelOrderLine, fromJson, hashCode, id, lineSubtotalMinor, listFromJson, mapFromJson, mapListFromJson (+10 more)
-
-### Community 187 - "Community 187"
-Cohesion: 0.11
-Nodes (18): fromJson, hashCode, lineSubtotalMinor, listFromJson, mapFromJson, mapListFromJson, modifiers, name (+10 more)
-
-### Community 188 - "Community 188"
-Cohesion: 0.11
-Nodes (18): fromJson, hashCode, id, lineSubtotalMinor, listFromJson, mapFromJson, mapListFromJson, modifiers (+10 more)
-
-### Community 189 - "Community 189"
-Cohesion: 0.11
-Nodes (18): actorId, createdAt, fromJson, hashCode, id, lines, listFromJson, mapFromJson (+10 more)
-
-### Community 190 - "Community 190"
-Cohesion: 0.11
-Nodes (17): description, name, prisma, seed, private, scripts, build, dev (+9 more)
-
 ### Community 191 - "Community 191"
-Cohesion: 0.18
-Nodes (6): Inject, SessionService, Inject, Injectable, TokenService, Injectable
+Cohesion: 0.14
+Nodes (17): apiErrors, auth(), CASHIER, CHECKOUT_RUNS, checkoutTimes, childSales, countLines, createOrder() (+9 more)
 
 ### Community 192 - "Community 192"
 Cohesion: 0.11
-Nodes (17): CartLine, copyWith, currency, currencyExponent, itemName, key, maxQuantity, menuId (+9 more)
+Nodes (19): dependencies, argon2, class-transformer, class-validator, dotenv, @nestjs/jwt, @nestjs/passport, @nestjs/platform-express (+11 more)
 
 ### Community 193 - "Community 193"
 Cohesion: 0.11
-Nodes (17): AttendanceRecord, clockInAt, clockInNote, clockOutAt, clockOutNote, fromJson, hashCode, id (+9 more)
+Nodes (19): dependencies, class-variance-authority, @hookform/resolvers, @modern-pos/api-client, next, @radix-ui/react-slot, react, react-dom (+11 more)
 
 ### Community 194 - "Community 194"
 Cohesion: 0.11
-Nodes (17): archived, categoryId, description, fromJson, hashCode, id, listFromJson, mapFromJson (+9 more)
+Nodes (18): apiClient, channelOrderAccept, channelOrderAcceptWithHttpInfo, channelOrderCancel, channelOrderCancelWithHttpInfo, channelOrderCreateManual, channelOrderCreateManualWithHttpInfo, channelOrderFulfill (+10 more)
 
 ### Community 195 - "Community 195"
 Cohesion: 0.11
-Nodes (17): active, fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson, menuItemId (+9 more)
+Nodes (18): ChannelOrderLine, fromJson, hashCode, id, lineSubtotalMinor, listFromJson, mapFromJson, mapListFromJson (+10 more)
 
 ### Community 196 - "Community 196"
 Cohesion: 0.11
-Nodes (17): capturedMinor, date, failedMinor, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+9 more)
+Nodes (18): fromJson, hashCode, lineSubtotalMinor, listFromJson, mapFromJson, mapListFromJson, modifiers, name (+10 more)
 
 ### Community 197 - "Community 197"
-Cohesion: 0.12
-Nodes (16): @apidevtools/swagger-cli, openapi-typescript, @openapitools/openapi-generator-cli, devDependencies, @apidevtools/swagger-cli, openapi-typescript, @openapitools/openapi-generator-cli, prettier (+8 more)
+Cohesion: 0.11
+Nodes (18): fromJson, hashCode, id, lineSubtotalMinor, listFromJson, mapFromJson, mapListFromJson, modifiers (+10 more)
 
 ### Community 198 - "Community 198"
-Cohesion: 0.15
-Nodes (10): AppModule, Module, ApiExceptionFilter, ErrorBody, fromHttpException(), STATUS_CODES, RequestIdMiddleware, RequestWithId (+2 more)
+Cohesion: 0.11
+Nodes (18): actorId, createdAt, fromJson, hashCode, id, lines, listFromJson, mapFromJson (+10 more)
 
-### Community 200 - "Community 200"
-Cohesion: 0.23
-Nodes (9): readRefundKeys(), toProviderStatus(), CreateProviderPaymentInput, PaymentProviderAdapter, ProviderPaymentStatus, ProviderRefund, RefundProviderPaymentInput, mapStatus() (+1 more)
+### Community 199 - "Community 199"
+Cohesion: 0.16
+Nodes (13): build(), FakePrisma, FakeSessions, USER, CreateSessionInput, IssuedSession, RotatedSession, RotateSessionInput (+5 more)
 
 ### Community 201 - "Community 201"
-Cohesion: 0.13
-Nodes (6): PaymentConfigService, readPositiveInteger(), readProvider(), KEYS, saved, Injectable
-
-### Community 202 - "Community 202"
 Cohesion: 0.14
 Nodes (17): RefundLineDto, RestockItemDto, ReversalDto, ArrayMaxSize, IsArray, IsInt, IsOptional, IsString (+9 more)
 
+### Community 202 - "Community 202"
+Cohesion: 0.11
+Nodes (17): CartLine, copyWith, currency, currencyExponent, itemName, key, maxQuantity, menuId (+9 more)
+
 ### Community 203 - "Community 203"
-Cohesion: 0.12
-Nodes (16): apiClient, PaymentsApi, paymentsCreate, paymentsCreateWithHttpInfo, paymentsGet, paymentsGetWithHttpInfo, paymentsList, paymentsListWithHttpInfo (+8 more)
+Cohesion: 0.11
+Nodes (17): EscPosReceiptBuilder, _activeTransport, builder, _config, connect, disconnect, _fixedTransport, isConnected (+9 more)
 
 ### Community 204 - "Community 204"
-Cohesion: 0.12
-Nodes (16): actorId, ChannelOrderEvent, createdAt, fromJson, fromState, hashCode, id, listFromJson (+8 more)
+Cohesion: 0.11
+Nodes (17): AttendanceRecord, clockInAt, clockInNote, clockOutAt, clockOutNote, fromJson, hashCode, id (+9 more)
 
 ### Community 205 - "Community 205"
-Cohesion: 0.12
-Nodes (16): amountMinor, ChannelOrderPayment, createdAt, fromJson, hashCode, id, listFromJson, mapFromJson (+8 more)
+Cohesion: 0.11
+Nodes (17): archived, categoryId, description, fromJson, hashCode, id, listFromJson, mapFromJson (+9 more)
 
 ### Community 206 - "Community 206"
-Cohesion: 0.12
-Nodes (16): customerRetentionDays, defaults, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+8 more)
+Cohesion: 0.11
+Nodes (17): active, fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson, menuItemId (+9 more)
 
 ### Community 207 - "Community 207"
-Cohesion: 0.12
-Nodes (16): fromJson, hashCode, lineDeltaMinor, LineModifier, listFromJson, mapFromJson, mapListFromJson, modifierId (+8 more)
+Cohesion: 0.11
+Nodes (17): capturedMinor, date, failedMinor, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+9 more)
 
 ### Community 208 - "Community 208"
-Cohesion: 0.12
-Nodes (16): active, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, menuItemId, ModifierWrite (+8 more)
+Cohesion: 0.20
+Nodes (12): PrintingController, Body, Controller, Get, Headers, HttpCode, Param, Patch (+4 more)
 
 ### Community 209 - "Community 209"
 Cohesion: 0.12
-Nodes (16): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, name, operator, OutletUpdate (+8 more)
+Nodes (17): devDependencies, playwright, postcss, tailwindcss, @tailwindcss/postcss, @types/node, @types/react, @types/react-dom (+9 more)
 
 ### Community 210 - "Community 210"
-Cohesion: 0.12
-Nodes (16): checked, errors, failed, fromJson, hashCode, items, listFromJson, mapFromJson (+8 more)
+Cohesion: 0.29
+Nodes (12): backup(), backupConfiguration(), fileSha256(), transfer(), monitor(), monitorUrl(), databaseEnvironment(), postgresTool() (+4 more)
 
 ### Community 211 - "Community 211"
 Cohesion: 0.12
-Nodes (16): fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson, menuItemId, menuItemName (+8 more)
+Nodes (16): apiClient, PaymentsApi, paymentsCreate, paymentsCreateWithHttpInfo, paymentsGet, paymentsGetWithHttpInfo, paymentsList, paymentsListWithHttpInfo (+8 more)
 
 ### Community 212 - "Community 212"
 Cohesion: 0.12
-Nodes (16): fromJson, hashCode, isDefault, kind, listFromJson, mapFromJson, mapListFromJson, name (+8 more)
+Nodes (16): actorId, ChannelOrderEvent, createdAt, fromJson, fromState, hashCode, id, listFromJson (+8 more)
 
 ### Community 213 - "Community 213"
 Cohesion: 0.12
-Nodes (16): fromJson, hashCode, isDefault, kind, listFromJson, mapFromJson, mapListFromJson, name (+8 more)
+Nodes (16): amountMinor, ChannelOrderPayment, createdAt, fromJson, hashCode, id, listFromJson, mapFromJson (+8 more)
 
 ### Community 214 - "Community 214"
-Cohesion: 0.22
-Nodes (6): isUniqueViolation(), MockPaymentProviderService, Injectable, ProviderPayment, QrisPaymentProviderService, Injectable
+Cohesion: 0.12
+Nodes (16): customerRetentionDays, defaults, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+8 more)
 
 ### Community 215 - "Community 215"
-Cohesion: 0.13
-Nodes (15): _accessToken, address, businessName, _dio, fallback, HttpReceiptIdentityRepository, load, outletName (+7 more)
+Cohesion: 0.12
+Nodes (16): fromJson, hashCode, lineDeltaMinor, LineModifier, listFromJson, mapFromJson, mapListFromJson, modifierId (+8 more)
 
 ### Community 216 - "Community 216"
 Cohesion: 0.12
-Nodes (15): aliases, components, lib, ui, utils, iconLibrary, rsc, $schema (+7 more)
+Nodes (16): active, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, menuItemId, ModifierWrite (+8 more)
 
 ### Community 217 - "Community 217"
 Cohesion: 0.12
-Nodes (15): typescript, typescript, typescript, description, devDependencies, typescript, exports, name (+7 more)
+Nodes (16): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, name, operator, OutletUpdate (+8 more)
 
 ### Community 218 - "Community 218"
 Cohesion: 0.12
-Nodes (15): DateTime, active, createdAt, ExpenseCategory, fromJson, hashCode, id, listFromJson (+7 more)
+Nodes (16): checked, errors, failed, fromJson, hashCode, items, listFromJson, mapFromJson (+8 more)
 
 ### Community 219 - "Community 219"
-Cohesion: 0.12
-Nodes (15): Map, event, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+7 more)
+Cohesion: 0.24
+Nodes (9): CatalogController, Body, Controller, Get, HttpCode, Param, Patch, Post (+1 more)
 
 ### Community 220 - "Community 220"
-Cohesion: 0.12
-Nodes (15): CustomerPurgeResult, customersAnonymised, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+7 more)
+Cohesion: 0.21
+Nodes (10): PurchaseOrderReceiptUnit, assertPositiveQuantity(), assertRepresentableQuantity(), convertReceiptQuantity(), countVariance(), fractionDigits(), MAX_QUANTITY, nextPurchaseOrderState() (+2 more)
 
 ### Community 221 - "Community 221"
-Cohesion: 0.12
-Nodes (15): DigitalReceiptPublic, expiresAt, fromJson, hashCode, html, issuedAt, listFromJson, mapFromJson (+7 more)
+Cohesion: 0.14
+Nodes (15): apiHealthProvider, build, color, DashboardScreen, icon, label, onRefresh, payment (+7 more)
 
 ### Community 222 - "Community 222"
 Cohesion: 0.12
-Nodes (15): code, details, Error, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+7 more)
+Nodes (15): aliases, components, lib, ui, utils, iconLibrary, rsc, $schema (+7 more)
 
 ### Community 223 - "Community 223"
 Cohesion: 0.12
-Nodes (15): copy, deviceId, fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson (+7 more)
+Nodes (15): DateTime, active, createdAt, ExpenseCategory, fromJson, hashCode, id, listFromJson (+7 more)
 
 ### Community 224 - "Community 224"
 Cohesion: 0.12
-Nodes (15): fromJson, grossItemSalesMinor, hashCode, listFromJson, mapFromJson, mapListFromJson, netItemSalesMinor, operator (+7 more)
+Nodes (15): Map, event, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+7 more)
 
 ### Community 225 - "Community 225"
 Cohesion: 0.12
-Nodes (15): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, orderedQuantity, PurchaseOrderLineWrite (+7 more)
+Nodes (15): CustomerPurgeResult, customersAnonymised, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+7 more)
 
 ### Community 226 - "Community 226"
 Cohesion: 0.12
-Nodes (15): fromJson, generatedAt, hashCode, listFromJson, mapFromJson, mapListFromJson, movements, operator (+7 more)
+Nodes (15): DigitalReceiptPublic, expiresAt, fromJson, hashCode, html, issuedAt, listFromJson, mapFromJson (+7 more)
 
 ### Community 227 - "Community 227"
 Cohesion: 0.12
-Nodes (15): contact, createdAt, fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson (+7 more)
+Nodes (15): code, details, Error, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+7 more)
 
 ### Community 228 - "Community 228"
 Cohesion: 0.12
-Nodes (15): discountMinor, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+7 more)
+Nodes (15): deviceId, Finalize, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+7 more)
 
 ### Community 229 - "Community 229"
-Cohesion: 0.27
-Nodes (4): Inject, SignInResult, AuthService, Injectable
+Cohesion: 0.12
+Nodes (15): copy, deviceId, fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson (+7 more)
 
 ### Community 230 - "Community 230"
-Cohesion: 0.16
-Nodes (10): FakeCalls, fakePrisma(), menuRecord(), trackedMenuRecord(), variantRecord(), CategoryCreateDto, IsNotEmpty, IsString (+2 more)
+Cohesion: 0.12
+Nodes (15): fromJson, grossItemSalesMinor, hashCode, listFromJson, mapFromJson, mapListFromJson, netItemSalesMinor, operator (+7 more)
 
 ### Community 231 - "Community 231"
-Cohesion: 0.23
-Nodes (11): calculateDiscountedTotals(), calculateTotals(), DiscountedTotals, halfUpDiv(), lineSubtotalMinor(), MoneyTotals, NormalizedPayment, normalizePayment() (+3 more)
+Cohesion: 0.12
+Nodes (15): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, orderedQuantity, PurchaseOrderLineWrite (+7 more)
 
 ### Community 232 - "Community 232"
-Cohesion: 0.14
-Nodes (8): BalanceRow, fakePrisma(), FakeState, IdemRow, ItemRow, MovementRow, SaleRow, uniqueError()
+Cohesion: 0.12
+Nodes (15): fromJson, generatedAt, hashCode, listFromJson, mapFromJson, mapListFromJson, movements, operator (+7 more)
 
 ### Community 233 - "Community 233"
-Cohesion: 0.13
-Nodes (14): build, failure, jobs, main, _pump, pumpAndSettle, pumpWidget, resume (+6 more)
+Cohesion: 0.12
+Nodes (15): contact, createdAt, fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson (+7 more)
 
 ### Community 234 - "Community 234"
-Cohesion: 0.13
-Nodes (11): assert, fs, labels, layout, nav, path, printers, reports (+3 more)
+Cohesion: 0.12
+Nodes (15): discountMinor, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+7 more)
 
 ### Community 235 - "Community 235"
 Cohesion: 0.13
-Nodes (15): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, module, moduleResolution (+7 more)
+Nodes (15): devDependencies, prisma, tsx, @types/cookie-parser, @types/express, @types/node, @types/passport-jwt, typescript (+7 more)
 
 ### Community 236 - "Community 236"
-Cohesion: 0.13
-Nodes (14): apiClient, AuthApi, authLogout, authLogoutWithHttpInfo, authMe, authMeWithHttpInfo, authMobileLogin, authMobileLoginWithHttpInfo (+6 more)
+Cohesion: 0.14
+Nodes (8): BalanceRow, fakePrisma(), FakeState, IdemRow, ItemRow, MovementRow, SaleRow, uniqueError()
 
 ### Community 237 - "Community 237"
-Cohesion: 0.13
-Nodes (14): apiClient, customerCreate, customerCreateWithHttpInfo, customerGet, customerGetWithHttpInfo, customerPurge, customerPurgeWithHttpInfo, customerRetentionGet (+6 more)
+Cohesion: 0.23
+Nodes (15): CartEntriesCompanion, CartEntry, CheckoutIntent, CheckoutIntentsCompanion, DataClass, OfflineCatalogSnapshot, OfflineCatalogSnapshotsCompanion, PrintQueueAudit (+7 more)
 
 ### Community 238 - "Community 238"
 Cohesion: 0.13
-Nodes (14): apiClient, ShiftsApi, shiftsCashMovement, shiftsCashMovementWithHttpInfo, shiftsClose, shiftsCloseWithHttpInfo, shiftsGet, shiftsGetWithHttpInfo (+6 more)
+Nodes (14): apiClient, AuthApi, authLogout, authLogoutWithHttpInfo, authMe, authMeWithHttpInfo, authMobileLogin, authMobileLoginWithHttpInfo (+6 more)
 
 ### Community 239 - "Community 239"
 Cohesion: 0.13
-Nodes (14): apiClient, stockAdjust, stockAdjustWithHttpInfo, StockApi, stockCreate, stockCreateWithHttpInfo, stockList, stockListWithHttpInfo (+6 more)
+Nodes (14): apiClient, customerCreate, customerCreateWithHttpInfo, customerGet, customerGetWithHttpInfo, customerPurge, customerPurgeWithHttpInfo, customerRetentionGet (+6 more)
 
 ### Community 240 - "Community 240"
 Cohesion: 0.13
-Nodes (14): Adjustment, delta, expectedBalanceVersion, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+6 more)
+Nodes (14): apiClient, ShiftsApi, shiftsCashMovement, shiftsCashMovementWithHttpInfo, shiftsClose, shiftsCloseWithHttpInfo, shiftsGet, shiftsGetWithHttpInfo (+6 more)
 
 ### Community 241 - "Community 241"
 Cohesion: 0.13
-Nodes (14): archived, Category, fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson (+6 more)
+Nodes (14): apiClient, stockAdjust, stockAdjustWithHttpInfo, StockApi, stockCreate, stockCreateWithHttpInfo, stockList, stockListWithHttpInfo (+6 more)
 
 ### Community 242 - "Community 242"
 Cohesion: 0.13
-Nodes (14): amountMinor, categoryId, derived, ExpenseBreakdownEntry, fromJson, hashCode, listFromJson, mapFromJson (+6 more)
+Nodes (14): Adjustment, delta, expectedBalanceVersion, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+6 more)
 
 ### Community 243 - "Community 243"
 Cohesion: 0.13
-Nodes (14): amountMinor, categoryId, ExpenseWrite, fromJson, hashCode, incurredOn, listFromJson, mapFromJson (+6 more)
+Nodes (14): archived, Category, fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson (+6 more)
 
 ### Community 244 - "Community 244"
 Cohesion: 0.13
-Nodes (14): categoryId, description, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, MenuUpdate (+6 more)
+Nodes (14): amountMinor, categoryId, derived, ExpenseBreakdownEntry, fromJson, hashCode, listFromJson, mapFromJson (+6 more)
 
 ### Community 245 - "Community 245"
 Cohesion: 0.13
-Nodes (14): categoryId, description, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, MenuWrite (+6 more)
+Nodes (14): amountMinor, categoryId, ExpenseWrite, fromJson, hashCode, incurredOn, listFromJson, mapFromJson (+6 more)
 
 ### Community 246 - "Community 246"
 Cohesion: 0.13
-Nodes (14): destinationOutletId, fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator (+6 more)
+Nodes (14): categoryId, description, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, MenuUpdate (+6 more)
 
 ### Community 247 - "Community 247"
 Cohesion: 0.13
-Nodes (14): breakdown, fromJson, hashCode, listFromJson, manualMinor, mapFromJson, mapListFromJson, operator (+6 more)
+Nodes (14): categoryId, description, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, MenuWrite (+6 more)
 
 ### Community 248 - "Community 248"
 Cohesion: 0.13
-Nodes (14): fromJson, hashCode, id, lines, listFromJson, mapFromJson, mapListFromJson, operator (+6 more)
+Nodes (14): breakdown, fromJson, hashCode, listFromJson, manualMinor, mapFromJson, mapListFromJson, operator (+6 more)
 
 ### Community 249 - "Community 249"
 Cohesion: 0.13
-Nodes (14): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, reason (+6 more)
+Nodes (14): fromJson, hashCode, id, lines, listFromJson, mapFromJson, mapListFromJson, operator (+6 more)
 
 ### Community 250 - "Community 250"
 Cohesion: 0.13
-Nodes (14): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, modifiers, operator, quantity (+6 more)
+Nodes (14): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, reason (+6 more)
 
 ### Community 251 - "Community 251"
 Cohesion: 0.13
-Nodes (14): compilerOptions, forceConsistentCasingInFileNames, lib, module, moduleResolution, noEmit, skipLibCheck, strict (+6 more)
+Nodes (14): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, modifiers, operator, quantity (+6 more)
 
 ### Community 252 - "Community 252"
 Cohesion: 0.13
-Nodes (12): api, boundary, contrast, errors, fs, html, ids, output (+4 more)
+Nodes (14): compilerOptions, forceConsistentCasingInFileNames, lib, module, moduleResolution, noEmit, skipLibCheck, strict (+6 more)
 
 ### Community 253 - "Community 253"
-Cohesion: 0.14
-Nodes (14): @types/node, @types/node, devDependencies, postcss, tailwindcss, @tailwindcss/postcss, @types/node, @types/react (+6 more)
+Cohesion: 0.13
+Nodes (12): api, boundary, contrast, errors, fs, html, ids, output (+4 more)
 
 ### Community 254 - "Community 254"
-Cohesion: 0.14
-Nodes (3): Get, PrismaService, Injectable
+Cohesion: 0.31
+Nodes (8): StockController, Body, Controller, Get, Headers, Param, Post, Query
 
 ### Community 255 - "Community 255"
-Cohesion: 0.22
-Nodes (4): ChannelAdapter, ChannelRegistryService, StaticChannelAdapter, Injectable
-
-### Community 256 - "Community 256"
-Cohesion: 0.20
-Nodes (10): signature(), webhook(), parseSignatureHeader(), SignatureVerification, signWebhookPayload(), BODY, header(), NOW (+2 more)
-
-### Community 257 - "Community 257"
-Cohesion: 0.15
-Nodes (13): FinalizeDto, IsUUID, Type, ValidateNested, PaymentInputDto, IsEnum, IsInt, IsOptional (+5 more)
-
-### Community 258 - "Community 258"
-Cohesion: 0.14
-Nodes (13): description, name, private, scripts, build, dev, dev:3001, format:check (+5 more)
-
-### Community 259 - "Community 259"
 Cohesion: 0.14
 Nodes (13): bool?, active, ApprovalRuleWrite, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+5 more)
 
-### Community 260 - "Community 260"
+### Community 256 - "Community 256"
 Cohesion: 0.14
 Nodes (13): ChannelOrder, ChannelOrderCreateResult, duplicate, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+5 more)
 
-### Community 261 - "Community 261"
+### Community 257 - "Community 257"
 Cohesion: 0.14
-Nodes (13): int?, customerId, expiresInMinutes, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson (+5 more)
+Nodes (13): int?, fromJson, hashCode, LineModifierWrite, listFromJson, mapFromJson, mapListFromJson, modifierId (+5 more)
 
-### Community 262 - "Community 262"
+### Community 258 - "Community 258"
 Cohesion: 0.14
 Nodes (13): customerRetentionDays, CustomerRetentionPolicyUpdate, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+5 more)
 
-### Community 263 - "Community 263"
+### Community 259 - "Community 259"
 Cohesion: 0.14
 Nodes (13): active, Device, fromJson, hashCode, id, listFromJson, mapFromJson, mapListFromJson (+5 more)
 
-### Community 264 - "Community 264"
+### Community 260 - "Community 260"
 Cohesion: 0.14
 Nodes (13): Finalized, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, replayed (+5 more)
 
-### Community 265 - "Community 265"
+### Community 261 - "Community 261"
 Cohesion: 0.14
 Nodes (13): deviceId, email, fromJson, hashCode, listFromJson, Login, mapFromJson, mapListFromJson (+5 more)
 
-### Community 266 - "Community 266"
+### Community 262 - "Community 262"
+Cohesion: 0.14
+Nodes (13): Order, bills, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+5 more)
+
+### Community 263 - "Community 263"
 Cohesion: 0.14
 Nodes (13): customerEmail, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, OrderQuoteRequest (+5 more)
 
-### Community 267 - "Community 267"
+### Community 264 - "Community 264"
 Cohesion: 0.14
 Nodes (13): deviceId, fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator (+5 more)
 
-### Community 268 - "Community 268"
+### Community 265 - "Community 265"
 Cohesion: 0.14
 Nodes (13): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, modifiers, operator, OrderWriteLinesInner (+5 more)
 
-### Community 269 - "Community 269"
-Cohesion: 0.14
-Nodes (13): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, movements, operator, OutletTransferMutation (+5 more)
-
-### Community 270 - "Community 270"
+### Community 266 - "Community 266"
 Cohesion: 0.14
 Nodes (13): description, fromJson, hashCode, key, label, listFromJson, mapFromJson, mapListFromJson (+5 more)
 
-### Community 271 - "Community 271"
+### Community 267 - "Community 267"
 Cohesion: 0.14
 Nodes (13): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, netCogsMinor, operator, ProfitReportCogs (+5 more)
 
-### Community 272 - "Community 272"
+### Community 268 - "Community 268"
 Cohesion: 0.14
 Nodes (13): customerEmails, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, menuItemIds, operator (+5 more)
 
-### Community 273 - "Community 273"
+### Community 269 - "Community 269"
 Cohesion: 0.14
 Nodes (13): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, PurchaseOrderWrite (+5 more)
 
-### Community 274 - "Community 274"
-Cohesion: 0.14
-Nodes (13): amountMinor, currency, fromJson, hashCode, idempotencyKey, listFromJson, mapFromJson, mapListFromJson (+5 more)
-
-### Community 275 - "Community 275"
-Cohesion: 0.14
-Nodes (13): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, modifierId, name, operator (+5 more)
-
-### Community 276 - "Community 276"
+### Community 270 - "Community 270"
 Cohesion: 0.14
 Nodes (13): fromJson, hashCode, kind, lines, listFromJson, mapFromJson, mapListFromJson, operator (+5 more)
 
-### Community 277 - "Community 277"
+### Community 271 - "Community 271"
 Cohesion: 0.14
 Nodes (13): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, quantity, reason (+5 more)
 
-### Community 278 - "Community 278"
+### Community 272 - "Community 272"
 Cohesion: 0.14
 Nodes (13): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, reason (+5 more)
 
-### Community 279 - "Community 279"
+### Community 273 - "Community 273"
 Cohesion: 0.14
 Nodes (13): contact, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, name, operator (+5 more)
 
-### Community 280 - "Community 280"
+### Community 274 - "Community 274"
+Cohesion: 0.14
+Nodes (13): active, fromJson, hashCode, id, label, listFromJson, mapFromJson, mapListFromJson (+5 more)
+
+### Community 275 - "Community 275"
+Cohesion: 0.14
+Nodes (13): description, devDependencies, typescript, exports, typescript, name, private, scripts (+5 more)
+
+### Community 276 - "Community 276"
+Cohesion: 0.15
+Nodes (13): scripts, build, dev, format:check, migrate:deploy, migrate:dev, prisma:generate, seed (+5 more)
+
+### Community 277 - "Community 277"
+Cohesion: 0.21
+Nodes (8): ApiExceptionFilter, ErrorBody, fromHttpException(), STATUS_CODES, RequestIdMiddleware, RequestWithId, Injectable, Catch
+
+### Community 278 - "Community 278"
 Cohesion: 0.18
 Nodes (9): applyData(), AuditRow, FakeState, matches(), MovementRow, RuleRow, SaleRow, setup() (+1 more)
 
-### Community 281 - "Community 281"
+### Community 279 - "Community 279"
 Cohesion: 0.15
 Nodes (12): amountMinor, listCalls, listPayments, payments, refreshCalls, refreshPayment, saleId, saleReference (+4 more)
 
-### Community 282 - "Community 282"
-Cohesion: 0.26
-Nodes (13): CartEntriesCompanion, CartEntry, CheckoutIntent, CheckoutIntentsCompanion, PrintQueueAudit, PrintQueueAuditsCompanion, PrintQueueJob, PrintQueueJobsCompanion (+5 more)
-
-### Community 283 - "Community 283"
+### Community 280 - "Community 280"
 Cohesion: 0.15
 Nodes (12): _, ChannelPaymentMode, ChannelPaymentModeTypeTransformer, decode, encode, fromJson, _instance, listFromJson (+4 more)
 
-### Community 284 - "Community 284"
+### Community 281 - "Community 281"
 Cohesion: 0.15
 Nodes (12): _, ChannelPaymentStatus, ChannelPaymentStatusTypeTransformer, decode, encode, fromJson, _instance, listFromJson (+4 more)
 
-### Community 285 - "Community 285"
+### Community 282 - "Community 282"
 Cohesion: 0.15
 Nodes (12): _, decode, encode, fromJson, _instance, listFromJson, OrderChannel, OrderChannelTypeTransformer (+4 more)
 
-### Community 286 - "Community 286"
-Cohesion: 0.15
-Nodes (12): int get, CatalogArchiveRequest, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+4 more)
-
-### Community 287 - "Community 287"
+### Community 283 - "Community 283"
 Cohesion: 0.15
 Nodes (12): apiClient, SalesApi, salesFinalize, salesFinalizeWithHttpInfo, salesGet, salesGetWithHttpInfo, salesList, salesListWithHttpInfo (+4 more)
 
-### Community 288 - "Community 288"
+### Community 284 - "Community 284"
 Cohesion: 0.15
 Nodes (12): AttendancePage, fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor (+4 more)
 
-### Community 289 - "Community 289"
+### Community 285 - "Community 285"
 Cohesion: 0.15
 Nodes (12): AuthMobileRefreshRequest, deviceId, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+4 more)
 
-### Community 290 - "Community 290"
+### Community 286 - "Community 286"
 Cohesion: 0.15
 Nodes (12): AuthWebLoginRequest, email, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+4 more)
 
-### Community 291 - "Community 291"
+### Community 287 - "Community 287"
 Cohesion: 0.15
 Nodes (12): ChannelOrderFulfillWrite, collectedMinor, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+4 more)
 
-### Community 292 - "Community 292"
+### Community 288 - "Community 288"
 Cohesion: 0.15
 Nodes (12): ChannelOrderLineInput, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, quantity (+4 more)
 
-### Community 293 - "Community 293"
+### Community 289 - "Community 289"
 Cohesion: 0.15
 Nodes (12): DailyReportTopItemsInner, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, name, operator (+4 more)
 
-### Community 294 - "Community 294"
-Cohesion: 0.15
-Nodes (12): fromJson, hashCode, LineModifierWrite, listFromJson, mapFromJson, mapListFromJson, modifierId, operator (+4 more)
-
-### Community 295 - "Community 295"
-Cohesion: 0.15
-Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, MenuPage, nextCursor (+4 more)
-
-### Community 296 - "Community 296"
+### Community 290 - "Community 290"
 Cohesion: 0.15
 Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, MovementPage, nextCursor (+4 more)
 
-### Community 297 - "Community 297"
+### Community 291 - "Community 291"
 Cohesion: 0.15
 Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, OperationAuditPage (+4 more)
+
+### Community 292 - "Community 292"
+Cohesion: 0.15
+Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
+
+### Community 293 - "Community 293"
+Cohesion: 0.15
+Nodes (12): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, OrderUpdate (+4 more)
+
+### Community 294 - "Community 294"
+Cohesion: 0.15
+Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, OutletTransferLineWrite, quantity (+4 more)
+
+### Community 295 - "Community 295"
+Cohesion: 0.15
+Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
+
+### Community 296 - "Community 296"
+Cohesion: 0.15
+Nodes (12): fromJson, hashCode, lineId, listFromJson, mapFromJson, mapListFromJson, operator, OutletTransferReceiveLineWrite (+4 more)
+
+### Community 297 - "Community 297"
+Cohesion: 0.15
+Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operations, operator, PermissionMatrix (+4 more)
 
 ### Community 298 - "Community 298"
 Cohesion: 0.15
@@ -1789,55 +1828,55 @@ Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJso
 
 ### Community 299 - "Community 299"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, OrderUpdate (+4 more)
+Nodes (12): customerId, expiresInMinutes, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator (+4 more)
 
 ### Community 300 - "Community 300"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, OutletTransferLineWrite, quantity (+4 more)
+Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, quantityPerSaleUnit, RecipeLine (+4 more)
 
 ### Community 301 - "Community 301"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
+Nodes (12): expectedVersion, fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator (+4 more)
 
 ### Community 302 - "Community 302"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, lineId, listFromJson, mapFromJson, mapListFromJson, operator, OutletTransferReceiveLineWrite (+4 more)
+Nodes (12): code, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, paymentId (+4 more)
 
 ### Community 303 - "Community 303"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operations, operator, PermissionMatrix (+4 more)
+Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, quantity, RefundLine (+4 more)
 
 ### Community 304 - "Community 304"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
+Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, quantity, requiredKeys (+4 more)
 
 ### Community 305 - "Community 305"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, quantityPerSaleUnit, RecipeLine (+4 more)
+Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
 
 ### Community 306 - "Community 306"
 Cohesion: 0.15
-Nodes (12): expectedVersion, fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator (+4 more)
+Nodes (12): countedCashMinor, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, note, operator (+4 more)
 
 ### Community 307 - "Community 307"
 Cohesion: 0.15
-Nodes (12): code, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, paymentId (+4 more)
+Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
 
 ### Community 308 - "Community 308"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, quantity, RefundLine (+4 more)
+Nodes (12): bills, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+4 more)
 
 ### Community 309 - "Community 309"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, quantity, requiredKeys (+4 more)
+Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
 
 ### Community 310 - "Community 310"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
+Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, menuItemId, operator, requiredKeys (+4 more)
 
 ### Community 311 - "Community 311"
 Cohesion: 0.15
-Nodes (12): countedCashMinor, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, note, operator (+4 more)
+Nodes (12): countedQuantity, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+4 more)
 
 ### Community 312 - "Community 312"
 Cohesion: 0.15
@@ -1845,7 +1884,7 @@ Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJso
 
 ### Community 313 - "Community 313"
 Cohesion: 0.15
-Nodes (12): bills, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+4 more)
+Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
 
 ### Community 314 - "Community 314"
 Cohesion: 0.15
@@ -1853,11 +1892,11 @@ Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJso
 
 ### Community 315 - "Community 315"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, menuItemId, operator, requiredKeys (+4 more)
+Nodes (12): fromJson, hashCode, label, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+4 more)
 
 ### Community 316 - "Community 316"
 Cohesion: 0.15
-Nodes (12): countedQuantity, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+4 more)
+Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys, tableId (+4 more)
 
 ### Community 317 - "Community 317"
 Cohesion: 0.15
@@ -1865,283 +1904,291 @@ Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJso
 
 ### Community 318 - "Community 318"
 Cohesion: 0.15
-Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
-
-### Community 319 - "Community 319"
-Cohesion: 0.15
-Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
-
-### Community 320 - "Community 320"
-Cohesion: 0.15
-Nodes (12): fromJson, hashCode, label, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+4 more)
-
-### Community 321 - "Community 321"
-Cohesion: 0.15
-Nodes (12): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys, tableId (+4 more)
-
-### Community 322 - "Community 322"
-Cohesion: 0.15
-Nodes (12): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, nextCursor, operator (+4 more)
-
-### Community 323 - "Community 323"
-Cohesion: 0.15
 Nodes (9): API_PID, child, CONCURRENCY, inFlight, killedAt, payloads, REQUESTS, resolved (+1 more)
 
-### Community 324 - "Community 324"
+### Community 319 - "Community 319"
 Cohesion: 0.17
-Nodes (12): devDependencies, prisma, tsx, @types/cookie-parser, @types/express, @types/passport-jwt, typescript, prisma (+4 more)
+Nodes (11): _buildTable, Cp437Encoder, encode, PrinterTextEncoder, supportedCharacterCount, _table, _unsupported, _upper (+3 more)
 
-### Community 325 - "Community 325"
+### Community 320 - "Community 320"
+Cohesion: 0.23
+Nodes (11): assert, assertNoForbiddenHref(), exists(), EXPECTED_CASHIER_HREFS, EXPECTED_OWNER_HREFS, fs, main(), path (+3 more)
+
+### Community 321 - "Community 321"
 Cohesion: 0.17
-Nodes (11): AttendanceWrite, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, note, operator (+3 more)
+Nodes (11): CategoryWrite, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, name, operator (+3 more)
 
-### Community 326 - "Community 326"
+### Community 322 - "Community 322"
 Cohesion: 0.17
 Nodes (11): ChannelOrderCancelWrite, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, reason (+3 more)
 
-### Community 327 - "Community 327"
-Cohesion: 0.08
-Nodes (23): List, ChannelOrderList, fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson (+15 more)
-
-### Community 328 - "Community 328"
-Cohesion: 0.17
+### Community 323 - "Community 323"
+Cohesion: 0.18
 Nodes (12): ChannelOrderState, ChannelOrderStateTypeTransformer, _, decode, encode, fromJson, _instance, listFromJson (+4 more)
 
-### Community 329 - "Community 329"
-Cohesion: 0.07
-Nodes (24): baseUrl, _deviceId, main, _ownerEmail, baseUrl, _cashierEmail, _deviceId, main (+16 more)
-
-### Community 330 - "Community 330"
+### Community 324 - "Community 324"
 Cohesion: 0.17
-Nodes (11): DeviceCreateRequest, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, name, operator (+3 more)
+Nodes (11): CustomerList, fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, operator (+3 more)
 
-### Community 331 - "Community 331"
-Cohesion: 0.17
-Nodes (11): ExpenseCategoryWrite, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, name, operator (+3 more)
-
-### Community 332 - "Community 332"
+### Community 325 - "Community 325"
 Cohesion: 0.17
 Nodes (11): ExpenseCategoryList, fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, operator (+3 more)
 
-### Community 333 - "Community 333"
-Cohesion: 0.17
-Nodes (11): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, OnlinePaymentList, operator (+3 more)
-
-### Community 334 - "Community 334"
-Cohesion: 0.17
-Nodes (11): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, OrderCancelRequest, requiredKeys (+3 more)
-
-### Community 335 - "Community 335"
-Cohesion: 0.17
-Nodes (11): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, operator, OutletList (+3 more)
-
-### Community 336 - "Community 336"
-Cohesion: 0.17
-Nodes (11): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, OutletTransferReceiveWrite (+3 more)
-
-### Community 337 - "Community 337"
-Cohesion: 0.17
-Nodes (11): costMinor, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, ProfitReportWaste (+3 more)
-
-### Community 338 - "Community 338"
-Cohesion: 0.17
-Nodes (11): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, openingFloatMinor, operator, requiredKeys (+3 more)
-
-### Community 339 - "Community 339"
-Cohesion: 0.17
-Nodes (11): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+3 more)
-
-### Community 340 - "Community 340"
-Cohesion: 0.17
-Nodes (12): _, decode, encode, fromJson, _instance, listFromJson, StationJobKind, StationJobKindTypeTransformer (+4 more)
-
-### Community 341 - "Community 341"
-Cohesion: 0.17
-Nodes (12): _, decode, encode, fromJson, _instance, listFromJson, StationKind, StationKindTypeTransformer (+4 more)
-
-### Community 342 - "Community 342"
-Cohesion: 0.17
-Nodes (11): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys, routes (+3 more)
-
-### Community 343 - "Community 343"
-Cohesion: 0.17
-Nodes (11): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+3 more)
-
-### Community 344 - "Community 344"
-Cohesion: 0.24
-Nodes (6): build(), build(), FakePrisma, FakeSession, FakeUser, testAuthConfig()
-
-### Community 345 - "Community 345"
-Cohesion: 0.18
-Nodes (3): ChannelConfigService, Injectable, saved
-
-### Community 346 - "Community 346"
-Cohesion: 0.18
-Nodes (11): MovementListQueryDto, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength (+3 more)
-
-### Community 347 - "Community 347"
-Cohesion: 0.18
-Nodes (7): assert, context, fs, handlers, html, nodes, vm
-
-### Community 348 - "Community 348"
-Cohesion: 0.24
-Nodes (8): MobileLoginDto, IsUUID, IsEmail, IsString, MaxLength, MinLength, Transform, WebLoginDto
-
-### Community 349 - "Community 349"
-Cohesion: 0.20
-Nodes (10): MenuListQueryDto, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min (+2 more)
-
-### Community 350 - "Community 350"
-Cohesion: 0.20
-Nodes (10): MenuVariantUpdateDto, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsString, Max, MaxLength (+2 more)
-
-### Community 351 - "Community 351"
-Cohesion: 0.20
-Nodes (10): QuoteCreateDto, ArrayMaxSize, IsArray, IsEmail, IsInt, IsOptional, IsUUID, MaxLength (+2 more)
-
-### Community 352 - "Community 352"
-Cohesion: 0.20
-Nodes (10): StockAdjustmentDto, IsInt, IsNotEmpty, IsString, IsUUID, Matches, MaxLength, Min (+2 more)
-
-### Community 353 - "Community 353"
-Cohesion: 0.20
-Nodes (10): StockCreateDto, IsEnum, IsInt, IsNotEmpty, IsString, Matches, Max, MaxLength (+2 more)
-
-### Community 354 - "Community 354"
-Cohesion: 0.20
-Nodes (10): StockListQueryDto, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min (+2 more)
-
-### Community 355 - "Community 355"
-Cohesion: 0.20
-Nodes (9): apiClient, PromotionsApi, promotionsCreate, promotionsCreateWithHttpInfo, promotionsList, promotionsListWithHttpInfo, promotionsUpdate, promotionsUpdateWithHttpInfo (+1 more)
-
-### Community 356 - "Community 356"
-Cohesion: 0.28
-Nodes (3): ARGON2_OPTIONS, PasswordService, Injectable
-
-### Community 357 - "Community 357"
-Cohesion: 0.31
-Nodes (3): SignInRateLimiter, Inject, Injectable
-
-### Community 358 - "Community 358"
-Cohesion: 0.47
-Nodes (7): addDays(), DateParts, localDateRangeUtc(), offsetMilliseconds(), parseDateOnly(), startOfDayUtc(), zonedParts()
-
-### Community 359 - "Community 359"
-Cohesion: 0.22
-Nodes (8): apiClient, AttendanceApi, attendanceClockIn, attendanceClockInWithHttpInfo, attendanceClockOut, attendanceClockOutWithHttpInfo, attendanceList, attendanceListWithHttpInfo
-
-### Community 360 - "Community 360"
-Cohesion: 0.22
-Nodes (8): apiClient, OutletApi, outletGet, outletGetWithHttpInfo, outletsList, outletsListWithHttpInfo, outletUpdate, outletUpdateWithHttpInfo
-
-### Community 361 - "Community 361"
-Cohesion: 0.22
-Nodes (8): apiClient, receiptCreate, receiptCreateWithHttpInfo, receiptPublicGet, receiptPublicGetWithHttpInfo, receiptPublicHtml, receiptPublicHtmlWithHttpInfo, ReceiptsApi
-
-### Community 362 - "Community 362"
-Cohesion: 0.22
-Nodes (8): apiClient, SandboxApi, sandboxPaymentCreate, sandboxPaymentCreateWithHttpInfo, sandboxPaymentEvent, sandboxPaymentEventWithHttpInfo, sandboxPaymentGet, sandboxPaymentGetWithHttpInfo
-
-### Community 363 - "Community 363"
-Cohesion: 0.25
-Nodes (7): ApprovalRule, apiClient, approvalRulesList, approvalRulesListWithHttpInfo, approvalRulesUpsert, approvalRulesUpsertWithHttpInfo, ApprovalsApi
-
-### Community 364 - "Community 364"
-Cohesion: 0.25
-Nodes (6): CHICKEN_RICE_RECIPE_LINES, outletDefaults, prisma, SEED_COMPLETED_AT, STOCK_ITEMS, STOCK_OPENING
-
-### Community 365 - "Community 365"
-Cohesion: 0.25
-Nodes (8): cloneState(), fakePrisma(), restoreState(), serializationError(), serviceFor(), setEnv(), uniqueError(), webhookSetup()
-
-### Community 366 - "Community 366"
-Cohesion: 0.25
-Nodes (7): exclude, include, .next/dev/types/**/*.ts, next-env.d.ts, .next/types/**/*.ts, **/*.ts, **/*.tsx
-
-### Community 367 - "Community 367"
-Cohesion: 0.25
-Nodes (7): code, innerException, message, stackTrace, toString, StackTrace?, String?
-
-### Community 368 - "Community 368"
-Cohesion: 0.29
-Nodes (6): localDate(), OnlinePaymentRow, PROVIDER_NAMES, ProviderRefundResult, SettlementDayResponse, SettlementPaymentResponse
-
-### Community 369 - "Community 369"
-Cohesion: 0.29
-Nodes (6): apiClient, RecipeApi, recipeGet, recipeGetWithHttpInfo, recipePublish, recipePublishWithHttpInfo
-
-### Community 370 - "Community 370"
-Cohesion: 0.29
-Nodes (6): apiClient, ReportsApi, reportsDaily, reportsDailyWithHttpInfo, reportsExport, reportsExportWithHttpInfo
-
-### Community 371 - "Community 371"
-Cohesion: 0.29
-Nodes (6): apiClient, TableApi, tableCreate, tableCreateWithHttpInfo, tableList, tableListWithHttpInfo
-
-### Community 372 - "Community 372"
-Cohesion: 0.33
-Nodes (5): exclude, include, node_modules, dist, src/**/*.ts
-
-### Community 373 - "Community 373"
-Cohesion: 0.33
-Nodes (5): columns, divider, ReceiptLayout, truncate, wrap
-
-### Community 374 - "Community 374"
-Cohesion: 0.33
-Nodes (5): apiKey, apiKeyPrefix, applyToParams, location, paramName
-
-### Community 375 - "Community 375"
-Cohesion: 0.33
-Nodes (5): components, $defs, operations, paths, webhooks
-
-### Community 376 - "Community 376"
-Cohesion: 0.33
-Nodes (5): printWidth, semi, singleQuote, tabWidth, trailingComma
-
-### Community 377 - "Community 377"
-Cohesion: 0.47
-Nodes (3): fail(), pass(), verify-mvp.sh script
-
-### Community 378 - "Community 378"
-Cohesion: 0.40
-Nodes (5): RecipeLineDto, IsString, IsUUID, Matches, Transform
-
-### Community 379 - "Community 379"
-Cohesion: 0.40
-Nodes (4): generator-cli, version, $schema, spaces
-
-### Community 380 - "Community 380"
-Cohesion: 0.50
-Nodes (4): lib, dom, dom.iterable, esnext
-
-### Community 392 - "Community 392"
+### Community 326 - "Community 326"
 Cohesion: 0.17
 Nodes (11): ExpensePage, fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, operator (+3 more)
 
-### Community 561 - "Community 561"
+### Community 327 - "Community 327"
+Cohesion: 0.17
+Nodes (11): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, OnlinePaymentList, operator (+3 more)
+
+### Community 328 - "Community 328"
+Cohesion: 0.17
+Nodes (11): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, OrderCancelRequest, requiredKeys (+3 more)
+
+### Community 329 - "Community 329"
+Cohesion: 0.17
+Nodes (11): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, OutletTransferReceiveWrite (+3 more)
+
+### Community 330 - "Community 330"
+Cohesion: 0.17
+Nodes (11): costMinor, fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, ProfitReportWaste (+3 more)
+
+### Community 331 - "Community 331"
+Cohesion: 0.17
+Nodes (11): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, openingFloatMinor, operator, requiredKeys (+3 more)
+
+### Community 332 - "Community 332"
+Cohesion: 0.17
+Nodes (11): fromJson, hashCode, lines, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+3 more)
+
+### Community 333 - "Community 333"
+Cohesion: 0.18
+Nodes (12): _, decode, encode, fromJson, _instance, listFromJson, StationJobKind, StationJobKindTypeTransformer (+4 more)
+
+### Community 334 - "Community 334"
+Cohesion: 0.18
+Nodes (12): _, decode, encode, fromJson, _instance, listFromJson, StationKind, StationKindTypeTransformer (+4 more)
+
+### Community 335 - "Community 335"
+Cohesion: 0.17
+Nodes (11): fromJson, hashCode, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys, routes (+3 more)
+
+### Community 336 - "Community 336"
+Cohesion: 0.17
+Nodes (11): fromJson, hashCode, items, listFromJson, mapFromJson, mapListFromJson, operator, requiredKeys (+3 more)
+
+### Community 337 - "Community 337"
+Cohesion: 0.17
+Nodes (11): api, assert, { execFileSync }, expected, files, fs, ledger, limitations (+3 more)
+
+### Community 338 - "Community 338"
+Cohesion: 0.18
+Nodes (11): MovementListQueryDto, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength (+3 more)
+
+### Community 339 - "Community 339"
+Cohesion: 0.20
+Nodes (10): AndroidPrinterPermissionService, channel, check, PrinterPermissionService, PrinterPermissionStatus, request, _statusFrom, FakePrinterPermissions (+2 more)
+
+### Community 340 - "Community 340"
+Cohesion: 0.18
+Nodes (11): scripts, build, dev, dev:3001, format:check, start, test, test:browser (+3 more)
+
+### Community 341 - "Community 341"
+Cohesion: 0.18
+Nodes (7): assert, context, fs, handlers, html, nodes, vm
+
+### Community 342 - "Community 342"
+Cohesion: 0.24
+Nodes (9): "approval_rules", "menu_item_modifiers", "order_lines", "promotions", "quotes", "sale_lines", "sale_refund_lines", "sale_reversals" (+1 more)
+
+### Community 343 - "Community 343"
+Cohesion: 0.40
+Nodes (9): "outlet_transfer_lines", "outlet_transfers", "purchase_order_lines", "purchase_orders", "stock_count_lines", "stock_counts", "stock_movements", "stock_wastes" (+1 more)
+
+### Community 344 - "Community 344"
+Cohesion: 0.24
+Nodes (8): MobileLoginDto, IsUUID, IsEmail, IsString, MaxLength, MinLength, Transform, WebLoginDto
+
+### Community 345 - "Community 345"
+Cohesion: 0.20
+Nodes (10): MenuListQueryDto, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min (+2 more)
+
+### Community 346 - "Community 346"
+Cohesion: 0.20
+Nodes (10): MenuVariantUpdateDto, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsString, Max, MaxLength (+2 more)
+
+### Community 347 - "Community 347"
+Cohesion: 0.20
+Nodes (10): StockAdjustmentDto, IsInt, IsNotEmpty, IsString, IsUUID, Matches, MaxLength, Min (+2 more)
+
+### Community 348 - "Community 348"
+Cohesion: 0.20
+Nodes (10): StockCreateDto, IsEnum, IsInt, IsNotEmpty, IsString, Matches, Max, MaxLength (+2 more)
+
+### Community 349 - "Community 349"
+Cohesion: 0.20
+Nodes (10): StockListQueryDto, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min (+2 more)
+
+### Community 350 - "Community 350"
+Cohesion: 0.20
+Nodes (9): apiClient, PromotionsApi, promotionsCreate, promotionsCreateWithHttpInfo, promotionsList, promotionsListWithHttpInfo, promotionsUpdate, promotionsUpdateWithHttpInfo (+1 more)
+
+### Community 351 - "Community 351"
 Cohesion: 0.33
-Nodes (6): SandboxProviderController, Controller, Get, HttpCode, Param, Post
+Nodes (3): Inject, AuthService, Injectable
+
+### Community 352 - "Community 352"
+Cohesion: 0.22
+Nodes (8): apiClient, AttendanceApi, attendanceClockIn, attendanceClockInWithHttpInfo, attendanceClockOut, attendanceClockOutWithHttpInfo, attendanceList, attendanceListWithHttpInfo
+
+### Community 353 - "Community 353"
+Cohesion: 0.22
+Nodes (8): apiClient, OutletApi, outletGet, outletGetWithHttpInfo, outletsList, outletsListWithHttpInfo, outletUpdate, outletUpdateWithHttpInfo
+
+### Community 354 - "Community 354"
+Cohesion: 0.22
+Nodes (8): apiClient, receiptCreate, receiptCreateWithHttpInfo, receiptPublicGet, receiptPublicGetWithHttpInfo, receiptPublicHtml, receiptPublicHtmlWithHttpInfo, ReceiptsApi
+
+### Community 355 - "Community 355"
+Cohesion: 0.22
+Nodes (8): apiClient, SandboxApi, sandboxPaymentCreate, sandboxPaymentCreateWithHttpInfo, sandboxPaymentEvent, sandboxPaymentEventWithHttpInfo, sandboxPaymentGet, sandboxPaymentGetWithHttpInfo
+
+### Community 356 - "Community 356"
+Cohesion: 0.25
+Nodes (7): ApprovalRule, apiClient, approvalRulesList, approvalRulesListWithHttpInfo, approvalRulesUpsert, approvalRulesUpsertWithHttpInfo, ApprovalsApi
+
+### Community 357 - "Community 357"
+Cohesion: 0.39
+Nodes (7): modern_pos_stock_movement_append_only(), "stock_balances", "stock_idempotency", "stock_items", "stock_movements", stock_movements_no_delete, stock_movements_no_update
+
+### Community 358 - "Community 358"
+Cohesion: 0.46
+Nodes (7): "checkout_requests", "order_lines", "orders", "payment_records", "quotes", "sale_lines", "sales"
+
+### Community 359 - "Community 359"
+Cohesion: 0.43
+Nodes (7): modern_pos_recipe_append_only(), "recipe_lines", recipe_lines_no_delete, recipe_lines_no_update, "recipe_versions", recipe_versions_no_delete, recipe_versions_no_update
+
+### Community 360 - "Community 360"
+Cohesion: 0.39
+Nodes (7): "channel_order_events", "channel_order_lines", "channel_order_payments", "channel_orders", "customer_retention_policies", "customers", "digital_receipts"
+
+### Community 361 - "Community 361"
+Cohesion: 0.25
+Nodes (6): CHICKEN_RICE_RECIPE_LINES, outletDefaults, prisma, SEED_COMPLETED_AT, STOCK_ITEMS, STOCK_OPENING
+
+### Community 362 - "Community 362"
+Cohesion: 0.29
+Nodes (6): description, name, prisma, seed, private, version
+
+### Community 363 - "Community 363"
+Cohesion: 0.52
+Nodes (6): "dining_tables", "order_audits", order_audits_append_only, "order_splits", "orders", reject_order_audit_mutation()
+
+### Community 364 - "Community 364"
+Cohesion: 0.38
+Nodes (6): "attendance_records", "operation_audits", operation_audits_append_only, reject_operation_audit_mutation(), "shift_cash_movements", "shifts"
+
+### Community 365 - "Community 365"
+Cohesion: 0.29
+Nodes (7): CartEntries, CheckoutIntents, OfflineCatalogSnapshots, PrintQueueAudits, PrintQueueJobs, RecoveryJobs, Table
+
+### Community 366 - "Community 366"
+Cohesion: 0.29
+Nodes (6): apiClient, RecipeApi, recipeGet, recipeGetWithHttpInfo, recipePublish, recipePublishWithHttpInfo
+
+### Community 367 - "Community 367"
+Cohesion: 0.29
+Nodes (6): apiClient, ReportsApi, reportsDaily, reportsDailyWithHttpInfo, reportsExport, reportsExportWithHttpInfo
+
+### Community 368 - "Community 368"
+Cohesion: 0.29
+Nodes (6): apiClient, TableApi, tableCreate, tableCreateWithHttpInfo, tableList, tableListWithHttpInfo
+
+### Community 369 - "Community 369"
+Cohesion: 0.33
+Nodes (5): MobileRefreshDto, IsString, IsUUID, MaxLength, MinLength
+
+### Community 370 - "Community 370"
+Cohesion: 0.33
+Nodes (5): columns, divider, ReceiptLayout, truncate, wrap
+
+### Community 371 - "Community 371"
+Cohesion: 0.33
+Nodes (5): apiKey, apiKeyPrefix, applyToParams, location, paramName
+
+### Community 372 - "Community 372"
+Cohesion: 0.33
+Nodes (5): components, $defs, operations, paths, webhooks
+
+### Community 373 - "Community 373"
+Cohesion: 0.33
+Nodes (5): printWidth, semi, singleQuote, tabWidth, trailingComma
+
+### Community 374 - "Community 374"
+Cohesion: 0.47
+Nodes (3): fail(), pass(), verify-mvp.sh script
+
+### Community 375 - "Community 375"
+Cohesion: 0.70
+Nodes (4): "categories", "menu_items", "menu_variants", "outlet_menu"
+
+### Community 376 - "Community 376"
+Cohesion: 0.60
+Nodes (4): modern_pos_sale_reversal_append_only(), "sale_reversals", sale_reversals_no_delete, sale_reversals_no_update
+
+### Community 377 - "Community 377"
+Cohesion: 0.50
+Nodes (4): "online_payments", "payment_webhook_events", "sale_reversals", "sandbox_provider_payments"
+
+### Community 379 - "Community 379"
+Cohesion: 0.40
+Nodes (5): RecipeLineDto, IsString, IsUUID, Matches, Transform
+
+### Community 380 - "Community 380"
+Cohesion: 0.40
+Nodes (4): description, name, private, version
+
+### Community 381 - "Community 381"
+Cohesion: 0.40
+Nodes (4): generator-cli, version, $schema, spaces
+
+### Community 382 - "Community 382"
+Cohesion: 1.00
+Nodes (3): "businesses", "outlets", "users"
+
+### Community 383 - "Community 383"
+Cohesion: 0.67
+Nodes (3): "outlets", "sessions", "users"
+
+### Community 384 - "Community 384"
+Cohesion: 0.83
+Nodes (3): "station_jobs", "station_routes", "stations"
+
+### Community 385 - "Community 385"
+Cohesion: 0.67
+Nodes (3): "bookkeeping_settings", "expense_categories", "expenses"
 
 ## Knowledge Gaps
-- **5869 isolated node(s):** `prefetch-sqlite3-assets.sh script`, `semi`, `singleQuote`, `trailingComma`, `printWidth` (+5864 more)
+- **6227 isolated node(s):** `prefetch-sqlite3-assets.sh script`, `semi`, `singleQuote`, `trailingComma`, `printWidth` (+6222 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **179 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **188 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `_Body` connect `Community 3` to `Community 1`, `Community 2`, `Community 4`, `Community 36`, `Community 6`, `Community 7`, `Community 72`, `Community 9`, `Community 11`, `Community 561`, `Community 23`, `Community 22`, `Community 150`, `Community 27`, `Community 95`?**
-  _High betweenness centrality (0.309) - this node is a cross-community bridge._
-- **Why does `offlineSyncControllerProvider` connect `Community 7` to `Community 104`, `Community 57`, `Community 3`?**
-  _High betweenness centrality (0.229) - this node is a cross-community bridge._
-- **Why does `AuthenticatedUser` connect `Community 2` to `Community 1`, `Community 3`, `Community 4`, `Community 6`, `Community 8`, `Community 9`, `Community 11`, `Community 12`, `Community 17`, `Community 22`, `Community 23`, `Community 280`, `Community 150`, `Community 151`, `Community 27`, `Community 29`, `Community 37`, `Community 38`, `Community 49`, `Community 50`, `Community 179`, `Community 60`, `Community 199`, `Community 72`, `Community 88`, `Community 89`, `Community 95`, `Community 96`, `Community 230`, `Community 103`, `Community 232`, `Community 368`, `Community 122`, `Community 127`?**
-  _High betweenness centrality (0.113) - this node is a cross-community bridge._
+- **Why does `AuthenticatedUser` connect `Community 37` to `Community 1`, `Community 3`, `Community 131`, `Community 5`, `Community 6`, `Community 4`, `Community 132`, `Community 137`, `Community 138`, `Community 10`, `Community 8`, `Community 14`, `Community 17`, `Community 145`, `Community 21`, `Community 278`, `Community 25`, `Community 26`, `Community 30`, `Community 41`, `Community 48`, `Community 50`, `Community 51`, `Community 52`, `Community 53`, `Community 56`, `Community 62`, `Community 70`, `Community 200`, `Community 74`, `Community 208`, `Community 87`, `Community 219`, `Community 93`, `Community 98`, `Community 99`, `Community 236`, `Community 119`, `Community 254`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Why does `apiError()` connect `Community 8` to `Community 1`, `Community 3`, `Community 131`, `Community 5`, `Community 6`, `Community 4`, `Community 132`, `Community 137`, `Community 138`, `Community 139`, `Community 10`, `Community 14`, `Community 17`, `Community 145`, `Community 25`, `Community 26`, `Community 30`, `Community 37`, `Community 169`, `Community 48`, `Community 50`, `Community 179`, `Community 52`, `Community 53`, `Community 56`, `Community 70`, `Community 199`, `Community 200`, `Community 74`, `Community 87`, `Community 220`, `Community 94`, `Community 351`, `Community 98`, `Community 99`, `Community 378`?**
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
+- **Why does `PrismaService` connect `Community 6` to `Community 1`, `Community 3`, `Community 4`, `Community 5`, `Community 132`, `Community 8`, `Community 137`, `Community 10`, `Community 14`, `Community 17`, `Community 145`, `Community 21`, `Community 278`, `Community 25`, `Community 26`, `Community 30`, `Community 37`, `Community 169`, `Community 48`, `Community 50`, `Community 179`, `Community 52`, `Community 53`, `Community 56`, `Community 62`, `Community 70`, `Community 199`, `Community 200`, `Community 74`, `Community 87`, `Community 93`, `Community 98`, `Community 236`, `Community 119`?**
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
 - **What connects `prefetch-sqlite3-assets.sh script`, `semi`, `singleQuote` to the rest of the system?**
-  _5869 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _6227 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.012121212121212121 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.011627906976744186 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.03703225806451613 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.023574041457797047 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.03741935483870968 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0196078431372549 - nodes in this community are weakly interconnected._
