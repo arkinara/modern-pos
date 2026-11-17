@@ -1,7 +1,17 @@
 # Known limitations and pending verification
 
-Status date: 2026-11-14. No device, printer, real payment-provider account or production infrastructure was available
-for this ticket. Nothing below is reported as passed without a reproduction recipe.
+Current reconciliation date is 2026-11-16. Historical verification sections retain their original dated VPS observations. The current implementation and acceptance owners are indexed in `implementation-evidence.md`. Physical device/printer, actual provider, operator and deployment evidence remain assigned to #74–#77.
+
+## Active integrity follow-ups
+
+| Work | Current evidence | Acceptance owner |
+| --- | --- | --- |
+| Durable online refund intents and recovery | PR #79 is In QA with unit/PostgreSQL evidence | #66, followed by actual provider acceptance in #75 |
+| Production secrets, cookie/origin validation and sandbox gating | PR #83 is In QA with startup/HTTP checks | #69, followed by deployment acceptance in #77 |
+| PostgreSQL transaction/recovery CI | PR #84 is In QA with checkout/refund/transfer regressions | #71 |
+| Browser regression retention | Shell verification merged under #70 | #72 |
+
+The evidence ledger records the tested revisions and current-main snapshot.
 
 ## Operator feedback and baselines (#28)
 
@@ -19,6 +29,32 @@ baseline is `0 observed / PENDING — requires real usage` because no support
 channel or CRM exists on this VPS. The walkthrough collected no customer data and
 used synthetic identities only. Do not treat the synthetic values in
 `docs/operator-feedback.md` as production service levels.
+
+## Operator acceptance pilot (#76)
+
+Status: `PROTOCOL READY; real cashier and owner observation PENDING`. Operator
+acceptance is **not established**.
+
+What exists: `docs/operator-pilot.md` defines participant roles, consent and
+data minimisation, task scenarios for catalog/cart/checkout, uncertain recovery,
+offline/reconnect, table/split and owner stock/sales/report, supported devices
+and viewports, observation-date slots, measurement definitions and an
+empty-slot accept/defer template. The accessibility sweep and the synthetic
+walkthrough in that document are runnable and labelled `SYNTHETIC`.
+
+What is unknown: real participant roles, real observations, operator checkout
+time, mistake counts, stock discrepancies, support friction and the acceptance
+decision. Every such value is `PENDING — requires participants`; no participant
+feedback, support incident or usage number is invented. The synthetic walkthrough
+does not observe a human, a physical device or a network toggle.
+
+What establishes operator acceptance: executing the protocol in
+`docs/operator-pilot.md` with a representative cashier and owner, filling every
+evidence slot, repeating the accessibility sweep on the observed device, and
+recording `ACCEPT` or `DEFER` with a date and evidence. Until then, completed
+implementation tickets do not establish operator acceptance. Physical printing
+acceptance remains the separate prerequisite in
+`docs/hardware-acceptance.md` (#74).
 
 ## Usability refinement (#29)
 
@@ -104,6 +140,13 @@ What was not verified: physical paper from any station printer, model-specific
 command support, Bluetooth pairing on a device, USB host permission and bulk
 transfer. The app-to-printer path used fake transports, not paper. See
 `docs/kitchen-delivery.md` and `docs/printer-hardware.md`.
+
+#74 records one proposed combination (Samsung Galaxy Tab A9 `SM-X110`,
+Android 14; Star Micronics TSP143IIIBI; Bluetooth Classic SPP; 80 mm; CP437) as
+`SELECTED, NOT YET VERIFIED`. No printer combination is supported yet. The
+executable six-AC runbook, including the physical kitchen ORIGINAL/AMEND/CANCEL
+and UNKNOWN/COPY steps, is `docs/hardware-acceptance.md`; the selection and
+reasoning are in `docs/hardware-selection.md`.
 
 Boundary: cancelling an item prints a `CANCEL` station job but does not reverse
 the sale or restock ingredients. Money and stock reversal remain the explicit
@@ -240,15 +283,16 @@ cover `FAILED` versus `UNCERTAIN` and no automatic resend.
 
 What was not verified: a physical Bluetooth disconnect during a write.
 
-Reproduction: follow steps 10-11 of the device checklist in `docs/android-build.md`
-and record the visible state and paper result.
+Reproduction: run AC4 of `docs/hardware-acceptance.md` on the selected hardware
+and record the visible state, queue JSON and paper result. Steps 10-11 of
+`docs/android-build.md` remain a shorter alternate recipe.
 
 ## Deferred product scope
 
 | Item | Status | Notes |
 | --- | --- | --- |
 | Offline checkout and conflict resolution | Implemented client-side in #19 | Encrypted queue + idempotent replay; no server sync API |
-| Production deployment and field rollout | Deferred to #20 | Not started in this ticket |
+| Production deployment and field rollout | Pending #77/#78 | Deployment recovery, operations ownership and release acceptance |
 | Stock reservation while offline | Not implemented | Server remains authoritative; rejected sales become conflicts |
 | Table order stock reservation | Not implemented by design | Opening/cancelling a draft reserves or consumes nothing; stock moves only at settlement (see `docs/table-orders.md`) |
 | Table management in the web back office | Not implemented | Tables are created through the API; the cashier app lists and uses them |
@@ -259,7 +303,7 @@ and record the visible state and paper result.
 | User management UI and password reset | Not implemented | Users are seeded/provisioned outside the app |
 | Partial or line-level refunds | Implemented (#21) | Partial item refunds with independent money-return and restock. Online refunds now call the configured provider adapter (#22); cash and manual reversals keep `externalRefundPerformed = false`. |
 | Payment-provider refunds/voids | Sandbox-verified, real provider PENDING | Online refunds use the same reversal path and the provider adapter; live QRIS verification requires provider credentials/commercial setup. |
-| LAN and USB printer transports | Not implemented | Bluetooth Classic SPP is the only candidate |
+| LAN and USB printer transports | Implemented adapters in #25 | Android station execution completed in #67. Exact hardware support remains pending #74 |
 | Hardware-verified Bluetooth result | PENDING | See `docs/printer-validation.md` |
 | Automated off-host backups and retention | Not implemented | Procedure and dry run exist in `docs/backup-restore.md` |
 | Point-in-time recovery | Not implemented | Logical dump only |

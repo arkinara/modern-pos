@@ -7,6 +7,7 @@
     "ticket_contexts": [
       "graphify-out/ticket-69-context.json",
       "graphify-out/ticket-71-context.json",
+      "graphify-out/ticket-73-context.json",
       "graphify-out/ticket-75-context.json"
     ]
   },
@@ -104279,6 +104280,184 @@
       "label": "ticket-71-postgres.txt",
       "file_type": "evidence",
       "source_file": "graphify-out/ticket-71-postgres.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "ticket_execution_73",
+      "label": "#73: Implementation status and deferred acceptance evidence",
+      "file_type": "documentation",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "ticket_execution",
+        "ticket": 73,
+        "title": "Implementation status and deferred acceptance evidence",
+        "issueUrl": "https://github.com/arkinara/modern-pos/issues/73",
+        "branch": "docs/73-evidence-reconciliation",
+        "baseCommit": "c82c32bfc9510cac9b896a1eba16185070a5fd86",
+        "date": "2026-11-16",
+        "qaTarget": "In QA",
+        "evidence": "graphify-out/ticket-73-execution.md",
+        "sources": [
+          "README.md",
+          "ARCHITECTURE.md",
+          "HANDOFF.md",
+          "docs/implementation-evidence.md",
+          "docs/implementation-evidence.json",
+          "docs/known-limitations.md",
+          "docs/printer-validation.md",
+          "docs/sale-reversal.md",
+          "docs/promotions-refunds.md",
+          "scripts/verify-implementation-evidence.cjs",
+          "graphify-out/ticket-73-doc-checks.txt",
+          "graphify-out/ticket-73-api-unit.txt"
+        ],
+        "verification": {
+          "legacyIssues": 35,
+          "localLinks": 22,
+          "documentationChecks": "passed",
+          "apiUnitTests": {
+            "passed": 282,
+            "failed": 0
+          }
+        },
+        "acceptanceOwners": [
+          74,
+          75,
+          76,
+          77,
+          78
+        ]
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_73_execution_md",
+      "label": "ticket-73-execution.md",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_README_md",
+      "label": "README.md",
+      "file_type": "evidence",
+      "source_file": "README.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_ARCHITECTURE_md",
+      "label": "ARCHITECTURE.md",
+      "file_type": "evidence",
+      "source_file": "ARCHITECTURE.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_HANDOFF_md",
+      "label": "HANDOFF.md",
+      "file_type": "evidence",
+      "source_file": "HANDOFF.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_implementation_evidence_md",
+      "label": "implementation-evidence.md",
+      "file_type": "evidence",
+      "source_file": "docs/implementation-evidence.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_implementation_evidence_json",
+      "label": "implementation-evidence.json",
+      "file_type": "evidence",
+      "source_file": "docs/implementation-evidence.json",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_known_limitations_md",
+      "label": "known-limitations.md",
+      "file_type": "evidence",
+      "source_file": "docs/known-limitations.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_printer_validation_md",
+      "label": "printer-validation.md",
+      "file_type": "evidence",
+      "source_file": "docs/printer-validation.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_sale_reversal_md",
+      "label": "sale-reversal.md",
+      "file_type": "evidence",
+      "source_file": "docs/sale-reversal.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_promotions_refunds_md",
+      "label": "promotions-refunds.md",
+      "file_type": "evidence",
+      "source_file": "docs/promotions-refunds.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_scripts_verify_implementation_evidence_cjs",
+      "label": "verify-implementation-evidence.cjs",
+      "file_type": "evidence",
+      "source_file": "scripts/verify-implementation-evidence.cjs",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_73_doc_checks_txt",
+      "label": "ticket-73-doc-checks.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-73-doc-checks.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_73_api_unit_txt",
+      "label": "ticket-73-api-unit.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-73-api-unit.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -280278,6 +280457,123 @@
       "relation": "supported_by",
       "confidence": "EXPLICIT",
       "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_graphify_out_ticket_73_execution_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_README_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_ARCHITECTURE_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_HANDOFF_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_docs_implementation_evidence_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_docs_implementation_evidence_json",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_docs_known_limitations_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_docs_printer_validation_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_docs_sale_reversal_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_docs_promotions_refunds_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_scripts_verify_implementation_evidence_cjs",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_graphify_out_ticket_73_doc_checks_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_73",
+      "target": "execution_file_graphify_out_ticket_73_api_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-73-execution.md",
       "_origin": "ticket_execution",
       "weight": 1.0
     },
