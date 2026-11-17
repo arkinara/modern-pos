@@ -1,4 +1,4 @@
-# Printer transports and station routing hardware record (#25)
+# Printer transports and station routing hardware record (#25, #74)
 
 Status: **implemented per transport, physical hardware acceptance PENDING**. No
 printer, Bluetooth adapter, USB device or Android device was available on this
@@ -6,12 +6,40 @@ host. Nothing below claims that paper was produced. LAN byte framing was
 validated against a real local TCP listener; Bluetooth and USB framing and state
 transitions were unit-tested with fakes/mocked platform channels.
 
-Date: 2026-11-13.
+Date: 2026-11-13; updated 2026-11-16 for #74.
+
+For #74, one combination is proposed but not verified:
+Samsung Galaxy Tab A9 `SM-X110` (Android 14) with a Star Micronics TSP143IIIBI
+over Bluetooth Classic SPP, 80 mm, CP437. See
+`docs/hardware-selection.md` for the selection and reasoning and
+`docs/hardware-acceptance.md` for the executable six-AC checklist. The
+labels `SELECTED, NOT YET VERIFIED` and `PENDING` are not interchangeable with
+supported.
 
 ## Supported hardware policy
 
 Only evidence observed on real hardware may move a row out of `PENDING`. No
-printer model is listed as supported by this project yet.
+printer model is listed as supported by this project yet. A combination becomes
+supported only after every AC in `docs/hardware-acceptance.md` passes on the
+exact device, printer and firmware and dated logs plus paper photographs are
+attached.
+
+### Selected candidate for the first acceptance run (#74)
+
+| Field | Candidate | State |
+| --- | --- | --- |
+| Device | Samsung Galaxy Tab A9 `SM-X110`, Android 14 | SELECTED, NOT YET VERIFIED |
+| Printer | Star Micronics TSP143IIIBI, 80 mm, ESC/POS emulation | SELECTED, NOT YET VERIFIED |
+| Firmware | Exact self-test string to be recorded at AC1 | NOT YET OBSERVED |
+| Transport | Bluetooth Classic SPP (RFCOMM) | SELECTED, NOT YET VERIFIED |
+| Paper / columns | 80 mm, 48 columns Font A | SELECTED, NOT YET VERIFIED |
+| Code page | CP437 (printer code page 0; set with vendor utility) | SELECTED, NOT YET VERIFIED |
+| Commands | `ESC @`, `ESC a`, `ESC E`, `LF`, `ESC d`, `GS V B 0` | Implemented; printer support PENDING |
+
+The app does not send `ESC t`; the printer must already be configured to CP437.
+Barcode, QR, partial cut, status back-channel and BLE are not implemented and are
+not claimed. See `docs/hardware-selection.md` for why this combination was
+chosen and which alternatives remain PENDING.
 
 | Transport | Implementation | Host evidence | Physical state |
 | --- | --- | --- | --- |
@@ -58,6 +86,13 @@ cd apps/mobile
 flutter test test/lan_printer_transport_test.dart
 ```
 
+#74 re-ran the same loopback test on 2026-11-16: 4 tests passed. The committed
+test receipt is 592 bytes at 58 mm. A one-off probe in the same package (not
+committed) measured 746 bytes for the 80 mm test receipt and 297 bytes for an
+80 mm kitchen ticket, both ending in `1B 64 02 1D 56 42 00` (feed two lines,
+full cut). This is byte transport evidence only; the selected printer's command
+support and paper output remain PENDING.
+
 Tests cover:
 
 - real local TCP listener receiving the ESC/POS stream;
@@ -70,8 +105,10 @@ lack a cutter. Those outcomes remain PENDING.
 
 ## Physical acceptance recipes
 
-Do not replace `PENDING` with a result unless the exact model and device are
-recorded.
+The authoritative six-AC runbook for #74 is `docs/hardware-acceptance.md`. The
+per-transport recipes below remain for future LAN, USB and alternate Bluetooth
+models. Do not replace `PENDING` with a result unless the exact model and device
+are recorded and every AC in the runbook passes.
 
 ### Bluetooth Classic
 
@@ -124,4 +161,8 @@ State: `PENDING - requires USB printer + Android device`.
   are in `docs/kitchen-delivery.md`.
 - The physical station ORIGINAL/AMEND/CANCEL observation remains `PENDING -
   requires Android device + ESC/POS printer`; fake transports cannot replace
-  paper evidence.
+  paper evidence. AC3 of `docs/hardware-acceptance.md` is the executable recipe,
+  including the AMEND/CANCEL job creation command because the app has no AMEND
+  dispatch UI.
+- The selected #74 combination is still `SELECTED, NOT YET VERIFIED`. No row in
+  this document is supported until AC1-AC6 pass on that exact hardware.
