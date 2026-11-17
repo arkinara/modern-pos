@@ -19,7 +19,7 @@ function readProvider(value: string | undefined): PaymentProvider {
   throw apiError(
     503,
     'PAYMENT_PROVIDER_INVALID',
-    'PAYMENT_PROVIDER must be either "mock" or "qris"',
+    'PAYMENT_PROVIDER must be "manual", "mock" or "qris"',
   );
 }
 
@@ -35,7 +35,18 @@ function readPositiveInteger(value: string | undefined, fallback: number): numbe
  */
 @Injectable()
 export class PaymentConfigService {
+  get manualOnly(): boolean {
+    return process.env.PAYMENT_PROVIDER?.trim().toLowerCase() === 'manual';
+  }
+
+  assertOnlineEnabled(): void {
+    if (this.manualOnly) {
+      throw apiError(503, 'ONLINE_PAYMENTS_DISABLED', 'Payments are recorded manually');
+    }
+  }
+
   get provider(): PaymentProvider {
+    this.assertOnlineEnabled();
     const provider = readProvider(process.env.PAYMENT_PROVIDER);
     if (
       environmentName() === 'production' &&
@@ -61,7 +72,8 @@ export class PaymentConfigService {
     return sandboxPaymentsEnabled();
   }
 
-  get providerName(): 'MOCK' | 'QRIS' {
+  get providerName(): 'MANUAL' | 'MOCK' | 'QRIS' {
+    if (this.manualOnly) return 'MANUAL';
     return this.provider === PaymentProvider.MOCK ? 'MOCK' : 'QRIS';
   }
 
@@ -85,6 +97,7 @@ export class PaymentConfigService {
   }
 
   requireWebhookSecret(): string {
+    this.assertOnlineEnabled();
     const secret = this.webhookSecret;
 
     if (!secret) {
@@ -99,6 +112,7 @@ export class PaymentConfigService {
   }
 
   requireQrisCredentials(): { baseUrl: string; apiKey: string; secret: string } {
+    this.assertOnlineEnabled();
     const baseUrl = this.providerBaseUrl;
     const apiKey = this.providerApiKey;
     const secret = this.webhookSecret;
@@ -116,7 +130,7 @@ export class PaymentConfigService {
 
   /** Credential names and configuration state, never credential values. */
   describe(): {
-    provider: 'MOCK' | 'QRIS';
+    provider: 'MANUAL' | 'MOCK' | 'QRIS';
     webhookSecretConfigured: boolean;
     apiKeyConfigured: boolean;
     baseUrlConfigured: boolean;

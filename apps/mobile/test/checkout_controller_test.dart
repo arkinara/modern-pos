@@ -89,6 +89,13 @@ class Harness {
 }
 
 void main() {
+  test('QRIS and non-cash label preserves manual recording contract', () {
+    expect(TenderKind.manualExternal.label, 'QRIS / Non-cash');
+    expect(
+      TenderKind.manualExternal.wire,
+      PaymentInputKindEnum.MANUAL_EXTERNAL,
+    );
+  });
   group('tender and change', () {
     test('cash change and shortfall stay in integer minor units', () {
       final quote = testQuote(totalMinor: 50000);

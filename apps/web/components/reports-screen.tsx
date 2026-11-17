@@ -56,7 +56,7 @@ const DEFINITIONS = [
   {
     term: 'Payment-method totals',
     detail:
-      'Recorded payment amount grouped by method. Manual external is recorded only and never proves a provider transaction.',
+      'Recorded payment amount grouped by method. QRIS / Non-cash payments are confirmed externally by the cashier.',
   },
 ] as const;
 
@@ -405,8 +405,8 @@ export function ReportsScreen() {
               <CardHeader>
                 <CardTitle>Payment-method totals</CardTitle>
                 <CardDescription>
-                  Recorded amount grouped by payment method. Manual external does not process or
-                  verify a provider payment.
+                  Recorded amount grouped by payment method. The cashier confirms QRIS / Non-cash
+                  receipt in the bank merchant app.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -426,7 +426,7 @@ export function ReportsScreen() {
                       {report.paymentBreakdown.map((entry) => (
                         <tr key={entry.kind} className="border-t border-border">
                           <td className="px-4 py-3 text-text">
-                            {entry.kind === 'CASH' ? 'Cash' : 'Manual external'}
+                            {entry.kind === 'CASH' ? 'Cash' : 'QRIS / Non-cash'}
                           </td>
                           <td className="px-4 py-3 text-right tabular-nums text-text">
                             {money(entry.receivedMinor)}

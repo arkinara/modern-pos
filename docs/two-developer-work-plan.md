@@ -17,7 +17,7 @@ Keep backend/payment work in Track A and Android/printing/web verification in Tr
 | [#66](https://github.com/arkinara/modern-pos/issues/66) | Durable refund intents, validation before provider effects, deduplication and recovery | None | Immediately |
 | [#69](https://github.com/arkinara/modern-pos/issues/69) | Reject unsafe production configuration and disable mock payment endpoints | None | Immediately |
 | [#71](https://github.com/arkinara/modern-pos/issues/71) | Required PostgreSQL transaction/concurrency/recovery regressions in CI | #66 | After refund fix |
-| [#75](https://github.com/arkinara/modern-pos/issues/75) | Integrate and verify a selected real payment-provider sandbox | #66, #69, #71 | Prepare provider access early; finish after prerequisites |
+| [#75](https://github.com/arkinara/modern-pos/issues/75) | Verify manually recorded QRIS/non-cash payments confirmed in the bank merchant app | #66, #69, #71 | Owner scope clarified on 2026-11-17; automated provider integration deferred |
 | [#77](https://github.com/arkinara/modern-pos/issues/77) | Validate deployment recovery, off-host backups, monitoring and operational ownership | #69, #71 | Prepare environment early; finish after prerequisites |
 | [#73](https://github.com/arkinara/modern-pos/issues/73) | Reconcile implementation status, historical evidence and deferred acceptance in documentation | None | Immediately; maintain as evidence arrives |
 
@@ -70,7 +70,7 @@ Neither developer can independently close #78 before the other track is ready.
 
 | Track | Access or decision needed |
 | --- | --- |
-| A / #75 | Selected payment provider, actual sandbox credentials/access, and its official integration contract |
+| A / #75 | Cashier confirmation workflow using the bank merchant app/static QRIS; provider API credentials apply to deferred automated integration |
 | A / #77 | Intended staging/deployment target, backup destination, monitoring access and named operational owners |
 | B / #68 | Explicit bounded offline lifetime and revocation/reconnect policy; document any scope decision |
 | B / #74 | Exact Android device/version and printer model/firmware/transport, with access for paper and disconnect/restart tests |

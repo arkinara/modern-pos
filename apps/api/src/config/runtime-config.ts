@@ -76,7 +76,7 @@ export function validateRuntimeConfig(env: Environment = process.env): RuntimeCo
   const provider = (env.PAYMENT_PROVIDER ?? 'mock').trim().toLowerCase();
   const mode = (env.PAYMENT_MODE ?? 'sandbox').trim().toLowerCase();
   const flag = (env.PAYMENT_SANDBOX_ENABLED ?? 'false').trim().toLowerCase();
-  if (!['mock', 'qris'].includes(provider)) errors.push('PAYMENT_PROVIDER');
+  if (!['manual', 'mock', 'qris'].includes(provider)) errors.push('PAYMENT_PROVIDER');
   if (!['sandbox', 'live'].includes(mode)) errors.push('PAYMENT_MODE');
   if (!['true', 'false', '1', '0'].includes(flag)) errors.push('PAYMENT_SANDBOX_ENABLED');
   if (provider === 'mock' && !sandboxPaymentsEnabled(env)) errors.push('PAYMENT_SANDBOX_ENABLED');
@@ -87,13 +87,16 @@ export function validateRuntimeConfig(env: Environment = process.env): RuntimeCo
     if (!enabled(env.COOKIE_SECURE)) errors.push('COOKIE_SECURE');
     if (!env.WEB_ORIGIN?.trim() || origins.some((origin) => !validUrl(origin, true)))
       errors.push('WEB_ORIGIN');
-    if (!env.PAYMENT_PROVIDER?.trim() || provider !== 'qris') errors.push('PAYMENT_PROVIDER');
-    if (!env.PAYMENT_MODE?.trim()) errors.push('PAYMENT_MODE');
+    if (!env.PAYMENT_PROVIDER?.trim() || !['manual', 'qris'].includes(provider))
+      errors.push('PAYMENT_PROVIDER');
     if (enabled(env.PAYMENT_SANDBOX_ENABLED)) errors.push('PAYMENT_SANDBOX_ENABLED');
-    if (placeholder(env.PAYMENT_WEBHOOK_SECRET, 32)) errors.push('PAYMENT_WEBHOOK_SECRET');
-    if (placeholder(env.PAYMENT_PROVIDER_API_KEY, 8)) errors.push('PAYMENT_PROVIDER_API_KEY');
-    if (!validUrl(env.PAYMENT_PROVIDER_BASE_URL?.trim() ?? '', false))
-      errors.push('PAYMENT_PROVIDER_BASE_URL');
+    if (provider !== 'manual') {
+      if (!env.PAYMENT_MODE?.trim()) errors.push('PAYMENT_MODE');
+      if (placeholder(env.PAYMENT_WEBHOOK_SECRET, 32)) errors.push('PAYMENT_WEBHOOK_SECRET');
+      if (placeholder(env.PAYMENT_PROVIDER_API_KEY, 8)) errors.push('PAYMENT_PROVIDER_API_KEY');
+      if (!validUrl(env.PAYMENT_PROVIDER_BASE_URL?.trim() ?? '', false))
+        errors.push('PAYMENT_PROVIDER_BASE_URL');
+    }
     // Channels are optional and already fail closed when unset; reject an unsafe
     // configured secret rather than letting a local example reach production.
     if (env.CHANNEL_WEBHOOK_SECRET !== undefined && placeholder(env.CHANNEL_WEBHOOK_SECRET, 32))

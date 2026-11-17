@@ -1,0 +1,7 @@
+PASS compiled unsafe startup: exit 1 before DB/listener; diagnostics omit submitted secrets
+PASS HTTP production forced MOCK: 404/404/404 with 0 provider calls
+PASS HTTP production QRIS: 404/404/404 with 0 provider calls
+PASS HTTP production manual recording: 404/404/404 with 0 provider calls
+PASS HTTP local no opt-in: 404/404/404 with 0 provider calls
+PASS HTTP local explicit opt-in: 201/200/201 with 3 provider calls
+PASS 6 startup/HTTP scenarios; 25 endpoint assertions including invalid payloads; synthetic provider I/O only

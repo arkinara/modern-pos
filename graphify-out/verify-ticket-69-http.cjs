@@ -34,6 +34,7 @@ async function main() {
     for (const [label, env, expected] of [
       ['production forced MOCK', { NODE_ENV: 'production', PAYMENT_PROVIDER: 'mock', PAYMENT_MODE: 'sandbox', PAYMENT_SANDBOX_ENABLED: 'true' }, [404,404,404]],
       ['production QRIS', { NODE_ENV: 'production', PAYMENT_PROVIDER: 'qris', PAYMENT_MODE: 'live', PAYMENT_SANDBOX_ENABLED: 'false' }, [404,404,404]],
+      ['production manual recording', { NODE_ENV: 'production', PAYMENT_PROVIDER: 'manual', PAYMENT_SANDBOX_ENABLED: 'false' }, [404,404,404]],
       ['local no opt-in', { NODE_ENV: 'test', PAYMENT_PROVIDER: 'mock', PAYMENT_MODE: 'sandbox', PAYMENT_SANDBOX_ENABLED: 'false' }, [404,404,404]],
       ['local explicit opt-in', { NODE_ENV: 'test', PAYMENT_PROVIDER: 'mock', PAYMENT_MODE: 'sandbox', PAYMENT_SANDBOX_ENABLED: 'true' }, [201,200,201]],
     ]) {
@@ -76,6 +77,6 @@ async function main() {
       if(value===undefined)delete process.env[key];else process.env[key]=value;
     }
   }
-  console.log('PASS 5 startup/HTTP scenarios; 20 endpoint assertions including invalid payloads; synthetic provider I/O only');
+  console.log('PASS 6 startup/HTTP scenarios; 25 endpoint assertions including invalid payloads; synthetic provider I/O only');
 }
 main().catch((error)=>{console.error(error);process.exitCode=1;});

@@ -5,7 +5,11 @@ import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { after, test } from 'node:test';
 import { HttpException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PaymentKind, PrismaClient } from '@prisma/client';
+import { PaymentConfigService } from '../payments/payment-config.service';
+import { PaymentsService } from '../payments/payments.service';
+import type { MockPaymentProviderService } from '../payments/mock-payment-provider.service';
+import type { QrisPaymentProviderService } from '../payments/qris-payment-provider.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import { PromotionsService } from '../promotions/promotions.service';
 import { PurchasingService } from '../purchasing/purchasing.service';
@@ -30,6 +34,81 @@ function code(error: unknown): string | undefined {
     ? (error.getResponse() as { code?: string }).code
     : undefined;
 }
+
+test('manual QRIS/non-cash records payment and reversal once without a provider or online intent', async () => {
+  const previous = process.env.PAYMENT_PROVIDER;
+  process.env.PAYMENT_PROVIDER = 'manual';
+  let providerCalls = 0;
+  const refuseProviderCall = async () => {
+    providerCalls++;
+    throw new Error('Unexpected provider call');
+  };
+  const provider = {
+    createPayment: refuseProviderCall,
+    fetchPayment: refuseProviderCall,
+    refundPayment: refuseProviderCall,
+  };
+  const payments = new PaymentsService(
+    prisma,
+    new PaymentConfigService(),
+    provider as unknown as MockPaymentProviderService,
+    provider as unknown as QrisPaymentProviderService,
+  );
+  const service = new SalesService(prisma, new PromotionsService(prisma), payments);
+  try {
+    const fixture = await createTrackedFixture(db);
+    const checkout = await prepareCheckout(service, fixture.variantId);
+    const dto = {
+      ...checkout.dto,
+      payment: {
+        kind: PaymentKind.MANUAL_EXTERNAL,
+        amountMinor: checkout.dto.payment.amountMinor,
+        reference: 'QRIS merchant confirmation synthetic-75',
+      },
+    };
+    const result = await service.finalize(outletId, checkout.key, dto, actor);
+    assert.equal(
+      (await service.finalize(outletId, checkout.key, dto, actor)).sale.id,
+      result.sale.id,
+    );
+    const stored = await db.paymentRecord.findUniqueOrThrow({ where: { saleId: result.sale.id } });
+    assert.equal(stored.kind, 'MANUAL_EXTERNAL');
+    assert.equal(stored.amountMinor, BigInt(dto.payment.amountMinor));
+    assert.equal(stored.reference, dto.payment.reference);
+    assert.equal(await db.onlinePayment.count({ where: { saleId: result.sale.id } }), 0);
+    const reverseKey = randomUUID();
+    const reversal = { reason: 'Manual bank refund recorded', restock: [] };
+    const first = await service.reverse(outletId, result.sale.id, reverseKey, reversal, actor);
+    assert.equal(
+      (await service.reverse(outletId, result.sale.id, reverseKey, reversal, actor)).id,
+      first.id,
+    );
+    assert.equal(await db.refundIntent.count({ where: { saleId: result.sale.id } }), 0);
+    assert.equal(first.externalRefundPerformed, false);
+    const onlineCheckout = await prepareCheckout(service, fixture.variantId);
+    await assert.rejects(
+      () =>
+        service.finalize(
+          outletId,
+          onlineCheckout.key,
+          {
+            ...onlineCheckout.dto,
+            payment: {
+              kind: PaymentKind.ONLINE,
+              amountMinor: onlineCheckout.dto.payment.amountMinor,
+            },
+          },
+          actor,
+        ),
+      (error: unknown) => code(error) === 'ONLINE_PAYMENTS_DISABLED',
+    );
+    assert.equal(await db.sale.count({ where: { orderId: onlineCheckout.dto.orderId } }), 0);
+    assert.equal(providerCalls, 0);
+  } finally {
+    if (previous === undefined) delete process.env.PAYMENT_PROVIDER;
+    else process.env.PAYMENT_PROVIDER = previous;
+  }
+});
 
 async function effects(stockItemId: string, orderIds: string[]) {
   const orders = await db.order.findMany({

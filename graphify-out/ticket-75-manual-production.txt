@@ -1,0 +1,4 @@
+PASS compiled NODE_ENV=production manual startup without provider keys, webhook secret or PAYMENT_MODE
+PASS real PostgreSQL health HTTP 200
+PASS sandbox HTTP 404 and online webhook HTTP 503 ONLINE_PAYMENTS_DISABLED
+Synthetic local database and authentication configuration only

@@ -18,7 +18,7 @@ extension TenderKindWire on TenderKind {
   String get label {
     return switch (this) {
       TenderKind.cash => 'Cash',
-      TenderKind.manualExternal => 'Manual external',
+      TenderKind.manualExternal => 'QRIS / Non-cash',
     };
   }
 }
