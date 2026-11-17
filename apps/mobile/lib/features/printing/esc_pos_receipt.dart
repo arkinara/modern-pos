@@ -412,6 +412,33 @@ class EscPosReceiptBuilder {
     return writer.toBytes();
   }
 
+  /// Renders already prepared document lines. Kitchen tickets use the same
+  /// ESC/POS writer and cut/feed commands without a monetary receipt layout.
+  Uint8List buildLines(
+    List<ReceiptDocumentLine> lines,
+    PrinterConfig config, {
+    bool cut = true,
+  }) {
+    final writer = _EscPosWriter(
+      columns: config.paperWidth.columns,
+      encoding: config.encoding,
+    );
+
+    writer.initialise();
+    for (final line in lines) {
+      writer.alignment(line.alignment);
+      writer.bold(line.bold);
+      writer.line(line.text);
+    }
+    writer.alignment(ReceiptLineAlignment.left);
+    writer.bold(false);
+    writer.feed(2);
+    if (cut) {
+      writer.cut();
+    }
+    return writer.toBytes();
+  }
+
   /// Small, clearly labelled test receipt used by the cashier Test print action.
   Uint8List buildTestReceipt(
     PrinterConfig config, {

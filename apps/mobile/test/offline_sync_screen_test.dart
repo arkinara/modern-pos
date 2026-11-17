@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:modern_pos_mobile/features/auth/auth_controller.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_gateway.dart';
 import 'package:modern_pos_mobile/features/checkout/checkout_models.dart';
 import 'package:modern_pos_mobile/features/offline/offline_sale_models.dart';
@@ -9,6 +10,7 @@ import 'package:modern_pos_mobile/features/offline/offline_sync_screen.dart';
 import 'package:modern_pos_mobile/theme/app_theme.dart';
 
 import 'support/checkout_fakes.dart';
+import 'support/fakes.dart';
 import 'support/offline_fakes.dart';
 
 OfflineSalePayload payload({String key = 'screen-key-1'}) {
@@ -52,6 +54,9 @@ Future<void> pumpScreen(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        authControllerProvider.overrideWith(
+          () => FakeAuthController(testSession()),
+        ),
         offlineSaleStoreProvider.overrideWithValue(store),
         checkoutGatewayProvider.overrideWithValue(gateway),
       ],

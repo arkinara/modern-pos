@@ -20,6 +20,7 @@ class FakePrinterTransport implements PrinterTransport {
   bool connected = false;
   int connectCount = 0;
   int writeCount = 0;
+  int writeAttempts = 0;
   int disconnectCount = 0;
   Uint8List? lastBytes;
 
@@ -45,6 +46,7 @@ class FakePrinterTransport implements PrinterTransport {
 
   @override
   Future<void> write(Uint8List bytes) async {
+    writeAttempts++;
     final failure = writeFailure;
     if (failure != null) {
       connected = false;

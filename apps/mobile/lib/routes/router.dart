@@ -7,6 +7,7 @@ import '../features/dashboard/dashboard_screen.dart';
 import '../features/offline/offline_sync_screen.dart';
 import '../features/printing/print_queue_screen.dart';
 import '../features/printing/printer_screen.dart';
+import '../features/printing/station_queue_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/cashier_shell.dart';
 import '../features/tables/tables_screen.dart';
@@ -55,6 +56,10 @@ GoRouter createAppRouter() => GoRouter(
                 GoRoute(
                   path: 'print-queue',
                   builder: (context, state) => const PrintQueueScreen(),
+                ),
+                GoRoute(
+                  path: 'station-queue',
+                  builder: (context, state) => const StationQueueScreen(),
                 ),
                 GoRoute(
                   path: 'offline-sync',

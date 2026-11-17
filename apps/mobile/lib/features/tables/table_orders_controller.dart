@@ -179,6 +179,7 @@ class TableOrdersController extends AsyncNotifier<TableOrdersState> {
         outletId: outletId,
         orderId: order.id,
         version: order.version,
+        lines: order.lines,
       );
       state = await AsyncValue.guard(_load);
     } catch (_) {

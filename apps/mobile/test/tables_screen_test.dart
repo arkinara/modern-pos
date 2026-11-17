@@ -92,6 +92,7 @@ class FakeTableOrdersGateway implements TableOrdersGateway {
     required String outletId,
     required String orderId,
     required int version,
+    required List<OrderWriteLinesInner> lines,
   }) async {
     orders = const [];
   }
