@@ -24,10 +24,10 @@
       "source_nodes": 10076,
       "source_edges": 16447,
       "source_communities": 577,
-      "final_nodes": 10200,
-      "final_edges": 16604,
+      "final_nodes": 10201,
+      "final_edges": 16605,
       "ticket_contexts": 8,
-      "evidence_links": 157,
+      "evidence_links": 158,
       "verification": "Unique node IDs, valid endpoints, existing evidence paths, current manual-payment/kitchen/refund symbols, HTML counts, ticket search/details and zero browser errors passed. Repeat injection is idempotent."
     },
     "board_audit": {
@@ -46,7 +46,13 @@
       "todo": [
         78
       ],
-      "source_delta": "Evidence artifacts only; source AST baseline remains a0d1393c4f5a9e1dabbf7340a581c161eabd0ac0"
+      "source_delta": "Evidence artifacts only; source AST baseline remains a0d1393c4f5a9e1dabbf7340a581c161eabd0ac0",
+      "subsequent_owner_decision": {
+        "ticket": 76,
+        "status": "Done",
+        "testing": "pending owner execution",
+        "evidence": "graphify-out/ticket-76-owner-decision.md"
+      }
     }
   },
   "nodes": [
@@ -112238,7 +112244,7 @@
         "issueUrl": "https://github.com/arkinara/modern-pos/issues/76",
         "baseCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c",
         "date": "2026-11-17",
-        "qaTarget": "In QA",
+        "qaTarget": "Done",
         "evidence": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
         "sources": [
           "docs/operator-pilot.md",
@@ -112246,7 +112252,8 @@
           "docs/usability-refinement.md",
           "scripts/operator-pilot-synthetic.mjs",
           "graphify-out/pre78-synthetic-pilot.txt",
-          "graphify-out/board-validation-2026-11-17.json"
+          "graphify-out/board-validation-2026-11-17.json",
+          "graphify-out/ticket-76-owner-decision.md"
         ],
         "verification": {
           "protocolPr": "https://github.com/arkinara/modern-pos/pull/90",
@@ -112256,6 +112263,15 @@
           "operatorAcceptance": "pending representative observations, measurements, accessibility and dated accept/defer decision",
           "auditCorrection": "reopened and returned from Done to In QA",
           "auditComment": "https://github.com/arkinara/modern-pos/issues/76#issuecomment-6943626454"
+        },
+        "ownerDecision": {
+          "date": "2026-11-17",
+          "decision": "Accept merged protocol/preparation now; owner will perform representative operator testing later",
+          "issueState": "CLOSED",
+          "boardStatus": "Done",
+          "operatorTesting": "pending owner execution",
+          "evidence": "graphify-out/ticket-76-owner-decision.md",
+          "comment": "https://github.com/arkinara/modern-pos/issues/76#issuecomment-6944904683"
         }
       }
     },
@@ -112294,6 +112310,16 @@
       "label": "operator-pilot-synthetic.mjs",
       "file_type": "evidence",
       "source_file": "scripts/operator-pilot-synthetic.mjs",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_76_owner_decision_md",
+      "label": "ticket-76-owner-decision.md",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-76-owner-decision.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -301735,6 +301761,15 @@
     {
       "source": "ticket_execution_76",
       "target": "execution_file_graphify_out_board_validation_2026_11_17_json",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_76",
+      "target": "execution_file_graphify_out_ticket_76_owner_decision_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
       "source_file": "graphify-out/BOARD_VALIDATION_2026-11-17.md",

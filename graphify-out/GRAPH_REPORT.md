@@ -18,7 +18,7 @@
 
 - Source revision `a0d1393c4f5a9e1dabbf7340a581c161eabd0ac0`.
 - Graphify 0.9.29 scanned 894 code inputs in code-only mode. All 23 SQL files are represented after loading tree-sitter-sql 0.3.13 from isolated workspace tooling.
-- Source clustering produced 10,076 nodes, 16,447 edges and 577 communities. After the pre-#78 board audit, the enriched graph contains 10,200 nodes and 16,604 edges, including eight ticket execution roots and 157 evidence relationships.
+- Source clustering produced 10,076 nodes, 16,447 edges and 577 communities. After the pre-#78 board audit, the enriched graph contains 10,201 nodes and 16,605 edges, including eight ticket execution roots and 158 evidence relationships.
 - Unique node identifiers, edge endpoints, evidence-file paths and representative manual-payment, kitchen-delivery and durable-refund symbols passed verification.
 - A real Chromium load matched the HTML datasets to graph.json, found ticket #75 through search, opened its evidence details and reported zero page errors. Displayed counts match the enriched graph. Repeated evidence injection leaves JSON and HTML unchanged.
 - The injector now includes evidence nodes/edges in the HTML search data and updates displayed counts after enrichment.
@@ -2198,3 +2198,7 @@ _Questions this graph is uniquely positioned to answer:_
   _Cohesion score 0.023574041457797047 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.0196078431372549 - nodes in this community are weakly interconnected._
+
+## Subsequent owner decision for #76
+
+The owner accepted the merged protocol/preparation and deferred real operator testing to their later execution. #76 is closed and Done. The current board contains 45 Done, two In QA (#74/#77) and one Todo (#78). The [decision record](ticket-76-owner-decision.md) is attached to the #76 graph context. Actual operator testing remains pending.

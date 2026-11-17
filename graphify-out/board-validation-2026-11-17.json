@@ -3407,5 +3407,17 @@
   "statusCorrectionEvidence": [
     "https://github.com/arkinara/modern-pos/issues/74#issuecomment-6943624891",
     "https://github.com/arkinara/modern-pos/issues/76#issuecomment-6943626454"
+  ],
+  "subsequentOwnerDecisions": [
+    {
+      "ticket": 76,
+      "date": "2026-11-17",
+      "decision": "Accept merged protocol/preparation now; owner will perform representative operator testing later",
+      "issueState": "CLOSED",
+      "boardStatus": "Done",
+      "operatorTesting": "pending owner execution",
+      "evidence": "graphify-out/ticket-76-owner-decision.md",
+      "comment": "https://github.com/arkinara/modern-pos/issues/76#issuecomment-6944904683"
+    }
   ]
 }

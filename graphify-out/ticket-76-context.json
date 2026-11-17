@@ -4,7 +4,7 @@
   "issueUrl": "https://github.com/arkinara/modern-pos/issues/76",
   "baseCommit": "c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c",
   "date": "2026-11-17",
-  "qaTarget": "In QA",
+  "qaTarget": "Done",
   "evidence": "graphify-out/BOARD_VALIDATION_2026-11-17.md",
   "sources": [
     "docs/operator-pilot.md",
@@ -12,7 +12,8 @@
     "docs/usability-refinement.md",
     "scripts/operator-pilot-synthetic.mjs",
     "graphify-out/pre78-synthetic-pilot.txt",
-    "graphify-out/board-validation-2026-11-17.json"
+    "graphify-out/board-validation-2026-11-17.json",
+    "graphify-out/ticket-76-owner-decision.md"
   ],
   "verification": {
     "protocolPr": "https://github.com/arkinara/modern-pos/pull/90",
@@ -22,5 +23,14 @@
     "operatorAcceptance": "pending representative observations, measurements, accessibility and dated accept/defer decision",
     "auditCorrection": "reopened and returned from Done to In QA",
     "auditComment": "https://github.com/arkinara/modern-pos/issues/76#issuecomment-6943626454"
+  },
+  "ownerDecision": {
+    "date": "2026-11-17",
+    "decision": "Accept merged protocol/preparation now; owner will perform representative operator testing later",
+    "issueState": "CLOSED",
+    "boardStatus": "Done",
+    "operatorTesting": "pending owner execution",
+    "evidence": "graphify-out/ticket-76-owner-decision.md",
+    "comment": "https://github.com/arkinara/modern-pos/issues/76#issuecomment-6944904683"
   }
 }

@@ -1,5 +1,9 @@
 # Project 19 validation before ticket #78
 
+## Subsequent owner decision for #76
+
+After this audit, the owner accepted the merged #76 preparation work and chose to perform operator testing later. #76 is now closed and Done under that explicit scope decision. Actual operator testing remains pending. [Decision record](ticket-76-owner-decision.md)
+
 Audit date 2026-11-17. Reviewed all 48 items in [Project 19](https://github.com/users/arkinara/projects/19/views/1) against issue bodies/comments, merged PRs, current source/tests and exact-revision CI.
 
 The audited `main` revision is `c4aaedd1bcc4b3de5e3d140cfaffabe01b22bb8c`. All 47 predecessor tickets have implementation or protocol commits reachable from this revision. The 35 original delivery records retain their dated history in `docs/implementation-evidence.json`. The complete refreshed inventory, exact merge commits, closure links, evidence files and pending acceptance owners are in [the machine-readable audit](board-validation-2026-11-17.json).
