@@ -22,7 +22,9 @@
     "graphify-out/ticket-71-postgres.txt",
     "docs/qa-2026-11-17.md",
     "graphify-out/qa-2026-11-17-unit.txt",
-    "graphify-out/qa-2026-11-17-postgres.txt"
+    "graphify-out/qa-2026-11-17-postgres.txt",
+    "apps/web/components/menu-screen.tsx",
+    "graphify-out/qa-2026-11-17-browser.txt"
   ],
   "verification": {
     "node": "22.23.1",
