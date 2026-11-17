@@ -4,6 +4,9 @@ import { fileURLToPath } from 'node:url';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const context = JSON.parse(fs.readFileSync(path.join(dir, 'execution-context.json'), 'utf8'));
+const ticketFiles = fs.readdirSync(dir).filter((name) => /^ticket-\d+-context\.json$/.test(name));
+const ticketRecords = ticketFiles.map((name) => JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8')));
+context.executions = context.executions.filter((entry) => !ticketRecords.some((ticket) => ticket.ticket === entry.ticket)).concat(ticketRecords);
 const graphPath = path.join(dir, 'graph.json');
 const graph = JSON.parse(fs.readFileSync(graphPath, 'utf8'));
 // Remove only this script's prior overlay, preserving Graphify's original data.
@@ -14,7 +17,7 @@ const overlayEdges = [];
 const byFile = new Map(graph.nodes.filter((n) => n.metadata?.kind === 'file').map((n) => [n.source_file, n]));
 const add = (node) => { graph.nodes.push(node); overlayNodes.push(node); return node; };
 for (const entry of context.executions) {
-  const root = add({ id: `ticket_execution_${entry.ticket}`, label: `#${entry.ticket}: refund execution evidence`,
+  const root = add({ id: `ticket_execution_${entry.ticket}`, label: `#${entry.ticket}: ${entry.title ?? 'execution evidence'}`,
     file_type: 'documentation', source_file: entry.evidence, _origin: 'ticket_execution',
     metadata: { kind: 'ticket_execution', ...entry } });
   for (const source of [entry.evidence, ...entry.sources]) {
@@ -30,6 +33,7 @@ for (const entry of context.executions) {
   }
 }
 graph.graph.execution_context = 'graphify-out/execution-context.json';
+graph.graph.ticket_contexts = ticketFiles.map((name) => `graphify-out/${name}`);
 graph.graph.ast_note = 'built_at_commit identifies the historical AST baseline; ticket_execution nodes are evidence overlays, not a full AST rebuild.';
 // Preserve Graphify's float spelling so evidence injection does not rewrite
 // thousands of unrelated weight/confidence lines from the Python serializer.
