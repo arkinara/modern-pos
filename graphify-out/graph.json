@@ -7,7 +7,8 @@
     "ticket_contexts": [
       "graphify-out/ticket-69-context.json",
       "graphify-out/ticket-71-context.json",
-      "graphify-out/ticket-73-context.json"
+      "graphify-out/ticket-73-context.json",
+      "graphify-out/ticket-75-context.json"
     ]
   },
   "nodes": [
@@ -104457,6 +104458,106 @@
       "label": "ticket-73-api-unit.txt",
       "file_type": "evidence",
       "source_file": "graphify-out/ticket-73-api-unit.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "ticket_execution_75",
+      "label": "#75: Mock-first payment lifecycle QA preparation",
+      "file_type": "documentation",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "ticket_execution",
+        "ticket": 75,
+        "title": "Mock-first payment lifecycle QA preparation",
+        "issueUrl": "https://github.com/arkinara/modern-pos/issues/75",
+        "branch": "codex/75-mock-payment-acceptance",
+        "baseCommit": "fc327cf",
+        "date": "2026-11-16",
+        "qaTarget": "In QA",
+        "evidence": "graphify-out/ticket-75-execution.md",
+        "sources": [
+          "apps/api/src/payments/lifecycle.integration.ts",
+          "apps/api/src/payments/mock-payment-provider.service.ts",
+          "apps/api/src/payments/payments.controller.ts",
+          "apps/api/src/payments/payments.service.ts",
+          "apps/api/src/sales/sales.service.ts",
+          "apps/api/package.json",
+          ".github/workflows/ci.yml",
+          "docs/payment-acceptance.md",
+          "graphify-out/ticket-75-api-unit.txt",
+          "graphify-out/ticket-75-postgres.txt"
+        ],
+        "verification": {
+          "node": "22.23.1",
+          "postgresql": "17.6",
+          "unitTestsPassed": 312,
+          "databaseTestsPassedPerRun": 17,
+          "databaseRuns": 2,
+          "provider": "existing PostgreSQL-backed MOCK",
+          "realProviderAcceptance": "pending provider selection, official contract and sandbox access"
+        },
+        "handoff": "Review branch combines prerequisites #66, #69 and #71 without merging main. QA may run the mock workflow now and retains the external acceptance checklist on #75."
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_75_execution_md",
+      "label": "ticket-75-execution.md",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_payments_lifecycle_integration_ts",
+      "label": "lifecycle.integration.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/payments/lifecycle.integration.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_payments_payments_controller_ts",
+      "label": "payments.controller.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/payments/payments.controller.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_payment_acceptance_md",
+      "label": "payment-acceptance.md",
+      "file_type": "evidence",
+      "source_file": "docs/payment-acceptance.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_75_api_unit_txt",
+      "label": "ticket-75-api-unit.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-75-api-unit.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_75_postgres_txt",
+      "label": "ticket-75-postgres.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-75-postgres.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -280473,6 +280574,105 @@
       "relation": "supported_by",
       "confidence": "EXPLICIT",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_graphify_out_ticket_75_execution_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_apps_api_src_payments_lifecycle_integration_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_apps_api_src_payments_mock_payment_provider_service_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_apps_api_src_payments_payments_controller_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_apps_api_src_payments_payments_service_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_apps_api_src_sales_sales_service_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_apps_api_package_json",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file__github_workflows_ci_yml",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_docs_payment_acceptance_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_graphify_out_ticket_75_api_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_75",
+      "target": "execution_file_graphify_out_ticket_75_postgres_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-75-execution.md",
       "_origin": "ticket_execution",
       "weight": 1.0
     }
