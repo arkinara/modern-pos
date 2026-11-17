@@ -14,7 +14,7 @@ concurrency:
 jobs:
   verify:
     name: Format, type, build, contract and Android
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     services:
@@ -23,20 +23,24 @@ jobs:
         env:
           POSTGRES_USER: pos
           POSTGRES_PASSWORD: pos_local_dev
-          POSTGRES_DB: modern_pos
+          POSTGRES_DB: modern_pos_ci_transaction_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U pos -d modern_pos"
+          --health-cmd "pg_isready -U pos -d modern_pos_ci_transaction_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://pos:pos_local_dev@localhost:5432/modern_pos?schema=public
+      DATABASE_URL: postgresql://pos:pos_local_dev@localhost:5432/modern_pos_ci_transaction_test?schema=public
+      TRANSACTION_TEST_DATABASE_URL: postgresql://pos:pos_local_dev@localhost:5432/modern_pos_ci_transaction_test?schema=public
       PORT: '4000'
       WEB_ORIGIN: http://localhost:3000,http://localhost:3001
       NEXT_PUBLIC_API_URL: http://localhost:4000
+      PAYMENT_PROVIDER: mock
+      PAYMENT_MODE: sandbox
+      PAYMENT_SANDBOX_ENABLED: 'true'
 
     steps:
       - name: Checkout
@@ -92,6 +96,10 @@ jobs:
           pnpm --filter @modern-pos/api seed
           pnpm --filter @modern-pos/api seed
 
+      - name: PostgreSQL transaction and recovery regressions
+        timeout-minutes: 3
+        run: pnpm --filter @modern-pos/api test:db
+
       - name: API health check
         run: |
           (cd apps/api && node dist/main.js > /tmp/api.log 2>&1 & echo $! > /tmp/api.pid)
@@ -100,6 +108,28 @@ jobs:
 
       - name: Next.js build
         run: pnpm --filter @modern-pos/web build
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @modern-pos/web test:browser:install
+
+      - name: Browser regression suite
+        timeout-minutes: 10
+        env:
+          WEB_BASE_URL: http://localhost:3001
+          API_BASE_URL: http://localhost:4000
+        run: |
+          set -euo pipefail
+          (cd apps/api && node dist/main.js > /tmp/browser-api.log 2>&1 & echo $! > /tmp/browser-api.pid)
+          pnpm --filter @modern-pos/web exec next start -p 3001 > /tmp/browser-web.log 2>&1 &
+          echo $! > /tmp/browser-web.pid
+          cleanup() {
+            kill "$(cat /tmp/browser-web.pid)" 2>/dev/null || true
+            kill "$(cat /tmp/browser-api.pid)" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          curl -fsS --retry 30 --retry-delay 1 --retry-connrefused http://localhost:4000/health
+          curl -fsS --retry 30 --retry-delay 1 --retry-connrefused http://localhost:3001/login
+          pnpm --filter @modern-pos/web test:browser
 
       - name: OpenAPI validation, generation and drift check
         run: pnpm openapi:check

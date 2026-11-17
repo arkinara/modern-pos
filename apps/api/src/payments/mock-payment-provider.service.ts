@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import { PaymentProvider, PaymentStatus } from '@prisma/client';
+import { PaymentStatus } from '@prisma/client';
 import { apiError } from '../common/api-error';
 import { PaymentConfigService } from './payment-config.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -15,7 +15,11 @@ import type {
 } from './payment-provider.types';
 
 function toProviderStatus(status: PaymentStatus): ProviderPaymentStatus {
-  if (status === PaymentStatus.SUCCEEDED) {
+  if (
+    status === PaymentStatus.SUCCEEDED ||
+    status === PaymentStatus.PARTIALLY_REFUNDED ||
+    status === PaymentStatus.REFUNDED
+  ) {
     return 'SUCCEEDED';
   }
 
@@ -48,6 +52,12 @@ export class MockPaymentProviderService implements PaymentProviderAdapter {
     private readonly config: PaymentConfigService,
   ) {}
 
+  private assertEnabled(): void {
+    if (!this.config.sandboxEnabled) {
+      throw apiError(404, 'NOT_FOUND', 'Sandbox provider is disabled');
+    }
+  }
+
   private toProviderPayment(row: {
     providerRef: string;
     status: PaymentStatus;
@@ -66,6 +76,7 @@ export class MockPaymentProviderService implements PaymentProviderAdapter {
   }
 
   async createPayment(input: CreateProviderPaymentInput): Promise<ProviderPayment> {
+    this.assertEnabled();
     const existing = await this.prisma.sandboxProviderPayment.findUnique({
       where: { idempotencyKey: input.idempotencyKey },
     });
@@ -101,6 +112,7 @@ export class MockPaymentProviderService implements PaymentProviderAdapter {
   }
 
   async fetchPayment(providerRef: string): Promise<ProviderPayment> {
+    this.assertEnabled();
     const row = await this.prisma.sandboxProviderPayment.findUnique({
       where: { providerRef },
     });
@@ -115,6 +127,7 @@ export class MockPaymentProviderService implements PaymentProviderAdapter {
   }
 
   async refundPayment(input: RefundProviderPaymentInput): Promise<ProviderRefund> {
+    this.assertEnabled();
     const row = await this.prisma.sandboxProviderPayment.findUnique({
       where: { providerRef: input.providerRef },
     });
@@ -174,9 +187,7 @@ export class MockPaymentProviderService implements PaymentProviderAdapter {
     signature: string;
     rawBody: string;
   }> {
-    if (this.config.provider !== PaymentProvider.MOCK) {
-      throw apiError(404, 'NOT_FOUND', 'Sandbox provider endpoints are disabled');
-    }
+    this.assertEnabled();
 
     const row = await this.prisma.sandboxProviderPayment.findUnique({
       where: { providerRef },

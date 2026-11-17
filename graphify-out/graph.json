@@ -2,10 +2,13 @@
   "directed": false,
   "multigraph": false,
   "graph": {
+    "execution_context": "graphify-out/execution-context.json",
+    "ast_note": "built_at_commit identifies the historical AST baseline; ticket_execution nodes are evidence overlays, not a full AST rebuild.",
     "ticket_contexts": [
+      "graphify-out/ticket-69-context.json",
+      "graphify-out/ticket-71-context.json",
       "graphify-out/ticket-73-context.json"
-    ],
-    "ast_note": "built_at_commit identifies the historical AST baseline; ticket_execution nodes are evidence overlays, not a full AST rebuild."
+    ]
   },
   "nodes": [
     {
@@ -103732,130 +103735,550 @@
       "id": "verify_foundation_output"
     },
     {
-      "id": "execution_file_graphify_out_ticket_73_execution_md",
-      "label": "ticket-73-execution.md",
-      "source_file": "graphify-out/ticket-73-execution.md",
+      "id": "ticket_execution_66",
+      "label": "#66: execution evidence",
+      "file_type": "documentation",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "ticket_execution",
+        "ticket": 66,
+        "issueUrl": "https://github.com/arkinara/modern-pos/issues/66",
+        "branch": "fix/66-durable-refund-intents",
+        "baseCommit": "ee5f696aaaadb002b7356dccdb52466e4f5b8b2f",
+        "qaTarget": "In QA",
+        "date": "2026-11-15",
+        "evidence": "graphify-out/ticket-66-execution.md",
+        "sources": [
+          "apps/api/src/sales/sales.service.ts",
+          "apps/api/src/payments/payments.service.ts",
+          "apps/api/src/payments/mock-payment-provider.service.ts",
+          "apps/api/prisma/schema.prisma",
+          "apps/api/prisma/migrations/20261115160000_durable_refund_intents/migration.sql",
+          "apps/api/src/sales/sales.service.test.ts",
+          "apps/api/src/payments/payments.service.test.ts",
+          "apps/api/src/sales/refund-intents.integration.ts",
+          "docs/payments.md",
+          "graphify-out/ticket-66-api-unit.txt",
+          "graphify-out/ticket-66-postgres.txt"
+        ],
+        "verification": {
+          "node": "22.23.1",
+          "pnpm": "9.12.3",
+          "prisma": "6.19.3",
+          "postgresql": "17.6",
+          "apiUnitTests": {
+            "passed": 287,
+            "failed": 0
+          },
+          "postgresTests": {
+            "passed": 6,
+            "failed": 0
+          },
+          "apiTypecheck": "passed",
+          "apiBuild": "passed",
+          "changedSourceFormatting": "passed"
+        },
+        "limits": [
+          "Controlled provider I/O; actual provider sandbox acceptance remains #75.",
+          "Recovery is request-driven with original key/payload; no background refund worker.",
+          "Do not mix legacy refund writers with durable-intent writers.",
+          "Independent QA acceptance and required database CI coverage under #71 remain separate."
+        ]
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_66_execution_md",
+      "label": "ticket-66-execution.md",
       "file_type": "evidence",
+      "source_file": "graphify-out/ticket-66-execution.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_README_md",
-      "label": "README.md",
-      "source_file": "README.md",
+      "id": "execution_file_apps_api_src_sales_sales_service_ts",
+      "label": "sales.service.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/sales/sales.service.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_ARCHITECTURE_md",
-      "label": "ARCHITECTURE.md",
-      "source_file": "ARCHITECTURE.md",
+      "id": "execution_file_apps_api_src_payments_payments_service_ts",
+      "label": "payments.service.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/payments/payments.service.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_HANDOFF_md",
-      "label": "HANDOFF.md",
-      "source_file": "HANDOFF.md",
+      "id": "execution_file_apps_api_src_payments_mock_payment_provider_service_ts",
+      "label": "mock-payment-provider.service.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/payments/mock-payment-provider.service.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_docs_implementation_evidence_md",
-      "label": "implementation-evidence.md",
-      "source_file": "docs/implementation-evidence.md",
+      "id": "execution_file_apps_api_prisma_schema_prisma",
+      "label": "schema.prisma",
       "file_type": "evidence",
+      "source_file": "apps/api/prisma/schema.prisma",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_docs_implementation_evidence_json",
-      "label": "implementation-evidence.json",
-      "source_file": "docs/implementation-evidence.json",
+      "id": "execution_file_apps_api_prisma_migrations_20261115160000_durable_refund_intents_migration_sql",
+      "label": "migration.sql",
       "file_type": "evidence",
+      "source_file": "apps/api/prisma/migrations/20261115160000_durable_refund_intents/migration.sql",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_docs_known_limitations_md",
-      "label": "known-limitations.md",
-      "source_file": "docs/known-limitations.md",
+      "id": "execution_file_apps_api_src_sales_sales_service_test_ts",
+      "label": "sales.service.test.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/sales/sales.service.test.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_docs_printer_validation_md",
-      "label": "printer-validation.md",
-      "source_file": "docs/printer-validation.md",
+      "id": "execution_file_apps_api_src_payments_payments_service_test_ts",
+      "label": "payments.service.test.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/payments/payments.service.test.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_docs_sale_reversal_md",
-      "label": "sale-reversal.md",
-      "source_file": "docs/sale-reversal.md",
+      "id": "execution_file_apps_api_src_sales_refund_intents_integration_ts",
+      "label": "refund-intents.integration.ts",
       "file_type": "evidence",
+      "source_file": "apps/api/src/sales/refund-intents.integration.ts",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_docs_promotions_refunds_md",
-      "label": "promotions-refunds.md",
-      "source_file": "docs/promotions-refunds.md",
+      "id": "execution_file_docs_payments_md",
+      "label": "payments.md",
       "file_type": "evidence",
+      "source_file": "docs/payments.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_scripts_verify_implementation_evidence_cjs",
-      "label": "verify-implementation-evidence.cjs",
-      "source_file": "scripts/verify-implementation-evidence.cjs",
+      "id": "execution_file_graphify_out_ticket_66_api_unit_txt",
+      "label": "ticket-66-api-unit.txt",
       "file_type": "evidence",
+      "source_file": "graphify-out/ticket-66-api-unit.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_graphify_out_ticket_73_doc_checks_txt",
-      "label": "ticket-73-doc-checks.txt",
-      "source_file": "graphify-out/ticket-73-doc-checks.txt",
+      "id": "execution_file_graphify_out_ticket_66_postgres_txt",
+      "label": "ticket-66-postgres.txt",
       "file_type": "evidence",
+      "source_file": "graphify-out/ticket-66-postgres.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
       }
     },
     {
-      "id": "execution_file_graphify_out_ticket_73_api_unit_txt",
-      "label": "ticket-73-api-unit.txt",
-      "source_file": "graphify-out/ticket-73-api-unit.txt",
+      "id": "ticket_execution_69",
+      "label": "#69: Production configuration and sandbox gate",
+      "file_type": "documentation",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "ticket_execution",
+        "ticket": 69,
+        "title": "Production configuration and sandbox gate",
+        "issueUrl": "https://github.com/arkinara/modern-pos/issues/69",
+        "branch": "fix/69-production-config",
+        "baseCommit": "2485f8c1d836d741ab62f11d8e60bdbb26d59937",
+        "date": "2026-11-16",
+        "qaTarget": "In QA",
+        "evidence": "graphify-out/ticket-69-execution.md",
+        "sources": [
+          "apps/api/src/config/runtime-config.ts",
+          "apps/api/src/config/runtime-config.test.ts",
+          "apps/api/src/main.ts",
+          "apps/api/src/auth/auth.config.ts",
+          "apps/api/src/payments/payment-config.service.ts",
+          "apps/api/src/payments/payment-config.service.test.ts",
+          "apps/api/src/payments/payments.service.test.ts",
+          "apps/api/src/payments/mock-payment-provider.service.ts",
+          "apps/api/src/payments/payments.module.ts",
+          "apps/api/src/payments/sandbox-provider.controller.ts",
+          "apps/api/src/payments/sandbox-provider.controller.test.ts",
+          "apps/api/.env.example",
+          ".github/workflows/ci.yml",
+          "DEVELOPMENT.md",
+          "docs/payments.md",
+          "docs/staging-setup.md",
+          "graphify-out/ticket-69-api-unit.txt",
+          "graphify-out/ticket-69-http.txt",
+          "graphify-out/verify-ticket-69-http.cjs"
+        ],
+        "verification": {
+          "node": "22.23.1",
+          "pnpm": "9.12.3",
+          "unitTests": {
+            "passed": 302,
+            "failed": 0
+          },
+          "compiledStartupAndHttp": "5 scenarios passed; 20 endpoint assertions",
+          "apiTypecheck": "passed",
+          "apiBuild": "passed",
+          "apiFormattingWithWindowsLineEndingNormalization": "passed"
+        },
+        "limits": [
+          "No deployed vulnerability or production exposure is claimed.",
+          "HTTP checks use compiled controllers with synthetic provider I/O and no database.",
+          "Real provider acceptance is #75; deployment and operations acceptance is #77.",
+          "Independent QA remains pending; stop at In QA."
+        ]
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_69_execution_md",
+      "label": "ticket-69-execution.md",
       "file_type": "evidence",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_config_runtime_config_ts",
+      "label": "runtime-config.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/config/runtime-config.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_config_runtime_config_test_ts",
+      "label": "runtime-config.test.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/config/runtime-config.test.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_main_ts",
+      "label": "main.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/main.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_auth_auth_config_ts",
+      "label": "auth.config.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/auth/auth.config.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_payments_payment_config_service_ts",
+      "label": "payment-config.service.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/payments/payment-config.service.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_payments_payment_config_service_test_ts",
+      "label": "payment-config.service.test.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/payments/payment-config.service.test.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_payments_payments_module_ts",
+      "label": "payments.module.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/payments/payments.module.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_payments_sandbox_provider_controller_ts",
+      "label": "sandbox-provider.controller.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/payments/sandbox-provider.controller.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_payments_sandbox_provider_controller_test_ts",
+      "label": "sandbox-provider.controller.test.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/payments/sandbox-provider.controller.test.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api__env_example",
+      "label": ".env.example",
+      "file_type": "evidence",
+      "source_file": "apps/api/.env.example",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file__github_workflows_ci_yml",
+      "label": "ci.yml",
+      "file_type": "evidence",
+      "source_file": ".github/workflows/ci.yml",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_DEVELOPMENT_md",
+      "label": "DEVELOPMENT.md",
+      "file_type": "evidence",
+      "source_file": "DEVELOPMENT.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_staging_setup_md",
+      "label": "staging-setup.md",
+      "file_type": "evidence",
+      "source_file": "docs/staging-setup.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_69_api_unit_txt",
+      "label": "ticket-69-api-unit.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-69-api-unit.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_69_http_txt",
+      "label": "ticket-69-http.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-69-http.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_verify_ticket_69_http_cjs",
+      "label": "verify-ticket-69-http.cjs",
+      "file_type": "evidence",
+      "source_file": "graphify-out/verify-ticket-69-http.cjs",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "ticket_execution_71",
+      "label": "#71: PostgreSQL transaction and recovery regressions in CI",
+      "file_type": "documentation",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "ticket_execution",
+        "ticket": 71,
+        "title": "PostgreSQL transaction and recovery regressions in CI",
+        "issueUrl": "https://github.com/arkinara/modern-pos/issues/71",
+        "branch": "test/71-postgres-ci",
+        "baseCommit": "589e5aa4e21f923ec373eb17d7a0e1a83926a0e4",
+        "parentPullRequest": "https://github.com/arkinara/modern-pos/pull/79",
+        "date": "2026-11-16",
+        "qaTarget": "In QA",
+        "evidence": "graphify-out/ticket-71-execution.md",
+        "sources": [
+          ".github/workflows/ci.yml",
+          "apps/api/package.json",
+          "apps/api/src/sales/transactions.integration.ts",
+          "apps/api/src/sales/refund-intents.integration.ts",
+          "apps/api/src/test-support/integration-database.ts",
+          "apps/api/src/test-support/integration-database.test.ts",
+          "apps/api/src/test-support/transaction-fixture.ts",
+          "apps/api/src/test-support/checkout-recovery-worker.ts",
+          "docs/database-regressions.md",
+          "graphify-out/ticket-71-api-unit.txt",
+          "graphify-out/ticket-71-postgres.txt"
+        ],
+        "verification": {
+          "node": "22.23.1",
+          "postgresql": "17.6",
+          "unitTests": {
+            "passed": 290,
+            "failed": 0
+          },
+          "databaseTests": {
+            "passedPerRun": 12,
+            "failed": 0,
+            "runsAgainstSameDatabase": 2
+          },
+          "apiTypecheck": "passed",
+          "apiBuild": "passed",
+          "formatting": "passed with Windows line-ending normalization",
+          "remoteCIAtPublication": "pending; see PR checks and issue QA handoff for the final run"
+        },
+        "handoff": "Stacked on #66 / PR #79. Retarget to main after the parent merges and review the resulting CI run."
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_71_execution_md",
+      "label": "ticket-71-execution.md",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_package_json",
+      "label": "package.json",
+      "file_type": "evidence",
+      "source_file": "apps/api/package.json",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_sales_transactions_integration_ts",
+      "label": "transactions.integration.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/sales/transactions.integration.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_test_support_integration_database_ts",
+      "label": "integration-database.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/test-support/integration-database.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_test_support_integration_database_test_ts",
+      "label": "integration-database.test.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/test-support/integration-database.test.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_test_support_transaction_fixture_ts",
+      "label": "transaction-fixture.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/test-support/transaction-fixture.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_apps_api_src_test_support_checkout_recovery_worker_ts",
+      "label": "checkout-recovery-worker.ts",
+      "file_type": "evidence",
+      "source_file": "apps/api/src/test-support/checkout-recovery-worker.ts",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_database_regressions_md",
+      "label": "database-regressions.md",
+      "file_type": "evidence",
+      "source_file": "docs/database-regressions.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_71_api_unit_txt",
+      "label": "ticket-71-api-unit.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-71-api-unit.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_71_postgres_txt",
+      "label": "ticket-71-postgres.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-71-postgres.txt",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "file"
@@ -103864,8 +104287,8 @@
     {
       "id": "ticket_execution_73",
       "label": "#73: Implementation status and deferred acceptance evidence",
-      "source_file": "graphify-out/ticket-73-execution.md",
       "file_type": "documentation",
+      "source_file": "graphify-out/ticket-73-execution.md",
       "_origin": "ticket_execution",
       "metadata": {
         "kind": "ticket_execution",
@@ -103907,6 +104330,136 @@
           77,
           78
         ]
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_73_execution_md",
+      "label": "ticket-73-execution.md",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_README_md",
+      "label": "README.md",
+      "file_type": "evidence",
+      "source_file": "README.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_ARCHITECTURE_md",
+      "label": "ARCHITECTURE.md",
+      "file_type": "evidence",
+      "source_file": "ARCHITECTURE.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_HANDOFF_md",
+      "label": "HANDOFF.md",
+      "file_type": "evidence",
+      "source_file": "HANDOFF.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_implementation_evidence_md",
+      "label": "implementation-evidence.md",
+      "file_type": "evidence",
+      "source_file": "docs/implementation-evidence.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_implementation_evidence_json",
+      "label": "implementation-evidence.json",
+      "file_type": "evidence",
+      "source_file": "docs/implementation-evidence.json",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_known_limitations_md",
+      "label": "known-limitations.md",
+      "file_type": "evidence",
+      "source_file": "docs/known-limitations.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_printer_validation_md",
+      "label": "printer-validation.md",
+      "file_type": "evidence",
+      "source_file": "docs/printer-validation.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_sale_reversal_md",
+      "label": "sale-reversal.md",
+      "file_type": "evidence",
+      "source_file": "docs/sale-reversal.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_docs_promotions_refunds_md",
+      "label": "promotions-refunds.md",
+      "file_type": "evidence",
+      "source_file": "docs/promotions-refunds.md",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_scripts_verify_implementation_evidence_cjs",
+      "label": "verify-implementation-evidence.cjs",
+      "file_type": "evidence",
+      "source_file": "scripts/verify-implementation-evidence.cjs",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_73_doc_checks_txt",
+      "label": "ticket-73-doc-checks.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-73-doc-checks.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
+      }
+    },
+    {
+      "id": "execution_file_graphify_out_ticket_73_api_unit_txt",
+      "label": "ticket-73-api-unit.txt",
+      "file_type": "evidence",
+      "source_file": "graphify-out/ticket-73-api-unit.txt",
+      "_origin": "ticket_execution",
+      "metadata": {
+        "kind": "file"
       }
     }
   ],
@@ -279411,12 +279964,408 @@
       "target": "verify_foundation_walk"
     },
     {
+      "source": "ticket_execution_66",
+      "target": "execution_file_graphify_out_ticket_66_execution_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_apps_api_src_sales_sales_service_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_apps_api_src_payments_payments_service_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_apps_api_src_payments_mock_payment_provider_service_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_apps_api_prisma_schema_prisma",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_apps_api_prisma_migrations_20261115160000_durable_refund_intents_migration_sql",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_apps_api_src_sales_sales_service_test_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_apps_api_src_payments_payments_service_test_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_apps_api_src_sales_refund_intents_integration_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_docs_payments_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_graphify_out_ticket_66_api_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_66",
+      "target": "execution_file_graphify_out_ticket_66_postgres_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-66-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_graphify_out_ticket_69_execution_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_config_runtime_config_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_config_runtime_config_test_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_main_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_auth_auth_config_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_payments_payment_config_service_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_payments_payment_config_service_test_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_payments_payments_service_test_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_payments_mock_payment_provider_service_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_payments_payments_module_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_payments_sandbox_provider_controller_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api_src_payments_sandbox_provider_controller_test_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_apps_api__env_example",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file__github_workflows_ci_yml",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_DEVELOPMENT_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_docs_payments_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_docs_staging_setup_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_graphify_out_ticket_69_api_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_graphify_out_ticket_69_http_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_69",
+      "target": "execution_file_graphify_out_verify_ticket_69_http_cjs",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-69-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_graphify_out_ticket_71_execution_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file__github_workflows_ci_yml",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_package_json",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_sales_transactions_integration_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_sales_refund_intents_integration_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_test_support_integration_database_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_test_support_integration_database_test_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_test_support_transaction_fixture_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_apps_api_src_test_support_checkout_recovery_worker_ts",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_docs_database_regressions_md",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_graphify_out_ticket_71_api_unit_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
+      "source": "ticket_execution_71",
+      "target": "execution_file_graphify_out_ticket_71_postgres_txt",
+      "relation": "supported_by",
+      "confidence": "EXPLICIT",
+      "source_file": "graphify-out/ticket-71-execution.md",
+      "_origin": "ticket_execution",
+      "weight": 1.0
+    },
+    {
       "source": "ticket_execution_73",
       "target": "execution_file_graphify_out_ticket_73_execution_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279424,8 +280373,8 @@
       "target": "execution_file_README_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279433,8 +280382,8 @@
       "target": "execution_file_ARCHITECTURE_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279442,8 +280391,8 @@
       "target": "execution_file_HANDOFF_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279451,8 +280400,8 @@
       "target": "execution_file_docs_implementation_evidence_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279460,8 +280409,8 @@
       "target": "execution_file_docs_implementation_evidence_json",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279469,8 +280418,8 @@
       "target": "execution_file_docs_known_limitations_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279478,8 +280427,8 @@
       "target": "execution_file_docs_printer_validation_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279487,8 +280436,8 @@
       "target": "execution_file_docs_sale_reversal_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279496,8 +280445,8 @@
       "target": "execution_file_docs_promotions_refunds_md",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279505,8 +280454,8 @@
       "target": "execution_file_scripts_verify_implementation_evidence_cjs",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279514,8 +280463,8 @@
       "target": "execution_file_graphify_out_ticket_73_doc_checks_txt",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     },
     {
@@ -279523,8 +280472,8 @@
       "target": "execution_file_graphify_out_ticket_73_api_unit_txt",
       "relation": "supported_by",
       "confidence": "EXPLICIT",
-      "_origin": "ticket_execution",
       "source_file": "graphify-out/ticket-73-execution.md",
+      "_origin": "ticket_execution",
       "weight": 1.0
     }
   ],

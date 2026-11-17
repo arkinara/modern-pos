@@ -28,12 +28,18 @@ const PROVIDER_REF = 'prov_test_1';
 const WEBHOOK_SECRET = 'unit-test-webhook-secret';
 
 const savedEnv = {
+  PAYMENT_SANDBOX_ENABLED: process.env.PAYMENT_SANDBOX_ENABLED,
+  PAYMENT_MODE: process.env.PAYMENT_MODE,
+  NODE_ENV: process.env.NODE_ENV,
   PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER,
   PAYMENT_WEBHOOK_SECRET: process.env.PAYMENT_WEBHOOK_SECRET,
   PAYMENT_WEBHOOK_REPLAY_SECONDS: process.env.PAYMENT_WEBHOOK_REPLAY_SECONDS,
 };
 
 process.env.PAYMENT_PROVIDER = 'mock';
+process.env.PAYMENT_SANDBOX_ENABLED = 'true';
+process.env.PAYMENT_MODE = 'sandbox';
+process.env.NODE_ENV = 'test';
 process.env.PAYMENT_WEBHOOK_SECRET = WEBHOOK_SECRET;
 delete process.env.PAYMENT_WEBHOOK_REPLAY_SECONDS;
 
@@ -794,75 +800,57 @@ test('reconcile leaves a consistent pending provider state unchanged', async () 
   assert.equal(adapter.state.createCalls.length, 0);
 });
 
-test('refundForReversal uses the reversal idempotency key and records the provider refund', async () => {
+test('reserved refund snapshots the provider before I/O and applies one local payment correction', async () => {
   const { service, prisma, state, adapter } = createHarness();
   state.onlinePayments[0]!.status = PaymentStatus.SUCCEEDED;
-  state.onlinePayments[0]!.settledAt = new Date('2026-11-10T03:01:00.000Z');
   state.paymentRecords[0]!.status = PaymentStatus.SUCCEEDED;
-
-  const result = await service.refundForReversal({
-    outletId: OUTLET_ID,
-    saleId: SALE_ID,
-    idempotencyKey: '11111111-1111-4111-8111-111111111111',
-    amountMinor: 4_000n,
-    user: user(),
+  const payment = await service.prepareReversalRefund(
+    prisma as unknown as Prisma.TransactionClient,
+    {
+      outletId: OUTLET_ID,
+      saleId: SALE_ID,
+      amountMinor: 4_000n,
+      user: user(),
+    },
+  );
+  assert.equal(adapter.state.refundCalls.length, 0);
+  const result = await service.refundReservedIntent({
+    provider: payment.provider,
+    providerPaymentRef: payment.providerRef,
+    providerKey: 'reversal:reserved-key',
+    refundMinor: 4_000n,
   });
-
   assert.equal(result.performed, true);
   assert.equal(result.providerRefundRef, 'prov_refund_1');
-  assert.equal(adapter.state.refundCalls.length, 1);
-  assert.equal(
-    adapter.state.refundCalls[0]?.idempotencyKey,
-    'reversal:11111111-1111-4111-8111-111111111111',
-  );
-  assert.equal(adapter.state.refundCalls[0]?.amountMinor, 4_000n);
-
+  assert.equal(adapter.state.refundCalls[0]?.idempotencyKey, 'reversal:reserved-key');
   await service.applyReversalRefund(prisma as unknown as Prisma.TransactionClient, SALE_ID, 4_000n);
-
   assert.equal(state.onlinePayments[0]?.refundedMinor, 4_000n);
-  assert.equal(state.onlinePayments[0]?.status, PaymentStatus.PARTIALLY_REFUNDED);
   assert.equal(state.paymentRecords[0]?.status, PaymentStatus.PARTIALLY_REFUNDED);
 });
 
-test('refundForReversal keeps financial-only corrections out of the provider', async () => {
-  const { service, state, adapter } = createHarness();
-
-  const result = await service.refundForReversal({
-    outletId: OUTLET_ID,
-    saleId: SALE_ID,
-    idempotencyKey: '22222222-2222-4222-8222-222222222222',
-    amountMinor: 0n,
-    user: user(),
-  });
-
-  assert.equal(result.performed, false);
-  assert.equal(result.providerRefundRef, null);
-  assert.equal(adapter.state.refundCalls.length, 0);
-  assert.equal(state.onlinePayments[0]?.refundedMinor, 0n);
-});
-
-test('refundForReversal rejects a double refund with 409', async () => {
+test('refund preparation rejects unsettled, nonpositive and excessive refunds without provider I/O', async () => {
   const { service, prisma, state, adapter } = createHarness();
-  state.onlinePayments[0]!.status = PaymentStatus.SUCCEEDED;
-  state.paymentRecords[0]!.status = PaymentStatus.SUCCEEDED;
-  const input = {
-    outletId: OUTLET_ID,
-    saleId: SALE_ID,
-    idempotencyKey: '33333333-3333-4333-8333-333333333333',
-    amountMinor: 6_000n,
-    user: user(),
-  };
-
-  await service.refundForReversal(input);
-  await service.applyReversalRefund(prisma as unknown as Prisma.TransactionClient, SALE_ID, 6_000n);
-
+  const prepare = (amountMinor: bigint) =>
+    service.prepareReversalRefund(prisma as unknown as Prisma.TransactionClient, {
+      outletId: OUTLET_ID,
+      saleId: SALE_ID,
+      amountMinor,
+      user: user(),
+    });
   await assert.rejects(
-    () => service.refundForReversal(input),
-    (error: unknown) => statusOf(error) === 409 && codeOf(error) === 'REFUND_EXCEEDS_PAYMENT',
+    () => prepare(1n),
+    (e: unknown) => codeOf(e) === 'PAYMENT_NOT_SETTLED',
   );
-
-  assert.equal(adapter.state.refundCalls.length, 1);
-  assert.equal(state.onlinePayments[0]?.refundedMinor, 6_000n);
+  state.onlinePayments[0]!.status = PaymentStatus.SUCCEEDED;
+  await assert.rejects(
+    () => prepare(0n),
+    (e: unknown) => codeOf(e) === 'INVALID_REFUND_AMOUNT',
+  );
+  await assert.rejects(
+    () => prepare(100_000n),
+    (e: unknown) => codeOf(e) === 'REFUND_EXCEEDS_PAYMENT',
+  );
+  assert.equal(adapter.state.refundCalls.length, 0);
 });
 
 test('settlementReport totals reconcile against hand-computable payment fixtures', async () => {

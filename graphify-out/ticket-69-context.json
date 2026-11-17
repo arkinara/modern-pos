@@ -1,0 +1,46 @@
+{
+  "ticket": 69,
+  "title": "Production configuration and sandbox gate",
+  "issueUrl": "https://github.com/arkinara/modern-pos/issues/69",
+  "branch": "fix/69-production-config",
+  "baseCommit": "2485f8c1d836d741ab62f11d8e60bdbb26d59937",
+  "date": "2026-11-16",
+  "qaTarget": "In QA",
+  "evidence": "graphify-out/ticket-69-execution.md",
+  "sources": [
+    "apps/api/src/config/runtime-config.ts",
+    "apps/api/src/config/runtime-config.test.ts",
+    "apps/api/src/main.ts",
+    "apps/api/src/auth/auth.config.ts",
+    "apps/api/src/payments/payment-config.service.ts",
+    "apps/api/src/payments/payment-config.service.test.ts",
+    "apps/api/src/payments/payments.service.test.ts",
+    "apps/api/src/payments/mock-payment-provider.service.ts",
+    "apps/api/src/payments/payments.module.ts",
+    "apps/api/src/payments/sandbox-provider.controller.ts",
+    "apps/api/src/payments/sandbox-provider.controller.test.ts",
+    "apps/api/.env.example",
+    ".github/workflows/ci.yml",
+    "DEVELOPMENT.md",
+    "docs/payments.md",
+    "docs/staging-setup.md",
+    "graphify-out/ticket-69-api-unit.txt",
+    "graphify-out/ticket-69-http.txt",
+    "graphify-out/verify-ticket-69-http.cjs"
+  ],
+  "verification": {
+    "node": "22.23.1",
+    "pnpm": "9.12.3",
+    "unitTests": { "passed": 302, "failed": 0 },
+    "compiledStartupAndHttp": "5 scenarios passed; 20 endpoint assertions",
+    "apiTypecheck": "passed",
+    "apiBuild": "passed",
+    "apiFormattingWithWindowsLineEndingNormalization": "passed"
+  },
+  "limits": [
+    "No deployed vulnerability or production exposure is claimed.",
+    "HTTP checks use compiled controllers with synthetic provider I/O and no database.",
+    "Real provider acceptance is #75; deployment and operations acceptance is #77.",
+    "Independent QA remains pending; stop at In QA."
+  ]
+}

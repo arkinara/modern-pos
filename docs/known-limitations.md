@@ -30,6 +30,32 @@ channel or CRM exists on this VPS. The walkthrough collected no customer data an
 used synthetic identities only. Do not treat the synthetic values in
 `docs/operator-feedback.md` as production service levels.
 
+## Operator acceptance pilot (#76)
+
+Status: `PROTOCOL READY; real cashier and owner observation PENDING`. Operator
+acceptance is **not established**.
+
+What exists: `docs/operator-pilot.md` defines participant roles, consent and
+data minimisation, task scenarios for catalog/cart/checkout, uncertain recovery,
+offline/reconnect, table/split and owner stock/sales/report, supported devices
+and viewports, observation-date slots, measurement definitions and an
+empty-slot accept/defer template. The accessibility sweep and the synthetic
+walkthrough in that document are runnable and labelled `SYNTHETIC`.
+
+What is unknown: real participant roles, real observations, operator checkout
+time, mistake counts, stock discrepancies, support friction and the acceptance
+decision. Every such value is `PENDING — requires participants`; no participant
+feedback, support incident or usage number is invented. The synthetic walkthrough
+does not observe a human, a physical device or a network toggle.
+
+What establishes operator acceptance: executing the protocol in
+`docs/operator-pilot.md` with a representative cashier and owner, filling every
+evidence slot, repeating the accessibility sweep on the observed device, and
+recording `ACCEPT` or `DEFER` with a date and evidence. Until then, completed
+implementation tickets do not establish operator acceptance. Physical printing
+acceptance remains the separate prerequisite in
+`docs/hardware-acceptance.md` (#74).
+
 ## Usability refinement (#29)
 
 Status: `IMPLEMENTED and verified with synthetic Playwright/API checks; real operator validation PENDING`.
@@ -114,6 +140,13 @@ What was not verified: physical paper from any station printer, model-specific
 command support, Bluetooth pairing on a device, USB host permission and bulk
 transfer. The app-to-printer path used fake transports, not paper. See
 `docs/kitchen-delivery.md` and `docs/printer-hardware.md`.
+
+#74 records one proposed combination (Samsung Galaxy Tab A9 `SM-X110`,
+Android 14; Star Micronics TSP143IIIBI; Bluetooth Classic SPP; 80 mm; CP437) as
+`SELECTED, NOT YET VERIFIED`. No printer combination is supported yet. The
+executable six-AC runbook, including the physical kitchen ORIGINAL/AMEND/CANCEL
+and UNKNOWN/COPY steps, is `docs/hardware-acceptance.md`; the selection and
+reasoning are in `docs/hardware-selection.md`.
 
 Boundary: cancelling an item prints a `CANCEL` station job but does not reverse
 the sale or restock ingredients. Money and stock reversal remain the explicit
@@ -250,8 +283,9 @@ cover `FAILED` versus `UNCERTAIN` and no automatic resend.
 
 What was not verified: a physical Bluetooth disconnect during a write.
 
-Reproduction: follow steps 10-11 of the device checklist in `docs/android-build.md`
-and record the visible state and paper result.
+Reproduction: run AC4 of `docs/hardware-acceptance.md` on the selected hardware
+and record the visible state, queue JSON and paper result. Steps 10-11 of
+`docs/android-build.md` remain a shorter alternate recipe.
 
 ## Deferred product scope
 

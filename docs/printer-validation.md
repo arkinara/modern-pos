@@ -1,10 +1,17 @@
-# Receipt printer validation record (#15)
+# Receipt printer validation record (#15, #74)
 
 Status: **candidate implementation, hardware acceptance PENDING**. No printer model and no Android
-test device were supplied for this ticket. LAN raw TCP was added in #25 and validated against a
-local TCP listener; Bluetooth/LAN/USB physical output remains PENDING. Nothing in this document claims a transport, code page,
-command or print result was verified on hardware. Every hardware-dependent item is marked
-`PENDING — requires <X>` with a reproduction recipe.
+test device were supplied for this ticket or #74. LAN raw TCP was added in #25 and validated against
+a local TCP listener; Bluetooth/LAN/USB physical output remains PENDING. Nothing in this document
+claims a transport, code page, command or print result was verified on hardware. Every
+hardware-dependent item is marked `PENDING — requires <X>` with a reproduction recipe.
+
+For #74 one combination is recorded as `SELECTED, NOT YET VERIFIED`:
+Samsung Galaxy Tab A9 `SM-X110` (Android 14) with a Star Micronics TSP143IIIBI over Bluetooth
+Classic SPP, 80 mm, CP437. Selection and reasoning are in `docs/hardware-selection.md`; the
+executable six-AC runbook is `docs/hardware-acceptance.md`. **No printer combination is supported
+yet.** A combination becomes supported only after AC1-AC6 pass on the exact hardware with dated
+logs and paper photographs attached.
 
 ## Implemented in this ticket
 
@@ -31,16 +38,16 @@ result until the acceptance checklist below has actually been run.
 
 | Field | Value | Source or status |
 | --- | --- | --- |
-| Printer model | `PENDING — requires selected printer model` | No model supplied. Record the exact vendor model and firmware. |
-| Transport | Bluetooth Classic (RFCOMM/SPP) candidate | Implemented because SPP is the conventional receipt-printer serial profile. **Transport not verified on this project.** |
-| Paper width | 58 mm (32 columns) or 80 mm (48 columns), selected in app | ESC/POS Font A convention. `PENDING — requires printer model datasheet` to confirm the model's column count. |
-| Encoding | CP437 (implemented) or UTF-8 (implemented) | CP437 table implemented from the published IBM code page. `PENDING — requires printer model manual` to confirm the active code page and the code-page select command. |
+| Printer model | `PENDING — requires selected printer model` | Candidate: Star Micronics TSP143IIIBI, labelled `SELECTED, NOT YET VERIFIED`. No model supplied for execution. Record the exact vendor model and firmware from the self-test at AC1. |
+| Transport | Bluetooth Classic (RFCOMM/SPP) candidate | Implemented because SPP is the conventional receipt-printer serial profile. **Transport not verified on this project.** The #74 candidate is Bluetooth Classic; LAN and USB remain implemented but not physically verified. |
+| Paper width | 58 mm (32 columns) or 80 mm (48 columns), selected in app | ESC/POS Font A convention. `PENDING — requires printer model datasheet` to confirm the model's column count. #74 candidate: 80 mm, 48 columns, `SELECTED, NOT YET VERIFIED`. |
+| Encoding | CP437 (implemented) or UTF-8 (implemented) | CP437 table implemented from the published IBM code page. `PENDING — requires printer model manual` to confirm the active code page and the code-page select command. The app does not send `ESC t`; the printer must be configured to CP437. #74 candidate: CP437, `SELECTED, NOT YET VERIFIED`. |
 | ESC/POS text | Implemented: `ESC @`, `ESC a`, `ESC E`, line feed, `ESC d` | Common ESC/POS subset. `PENDING — requires printer model command manual` before claiming support. |
 | ESC/POS cut | Implemented: `GS V B 0` full cut with feed | `PENDING — requires printer model command manual`; not every printer has a cutter. |
 | Cash drawer pulse | Implemented: `ESC p 0 25 250` (disabled by default; not wired to UI) | `PENDING — requires printer model + drawer hardware`; cable, pinout and pulse must be tested. |
 | Barcode | Not implemented | `PENDING — requires printer model command manual and a documented barcode requirement`. |
 | QR code | Not implemented | `PENDING — requires printer model command manual`. |
-| Android version | `PENDING — requires Android test device` | App targets API 36, minimum from the Flutter toolchain. Record the exact device model and Android release. |
+| Android version | `PENDING — requires Android test device` | App targets API 36, minimum from the Flutter toolchain. Record the exact device model and Android release. #74 candidate: Samsung Galaxy Tab A9 `SM-X110`, Android 14, `SELECTED, NOT YET VERIFIED`; exact build and security patch to be recorded at AC1. |
 | Runtime permissions | `BLUETOOTH_CONNECT` + `BLUETOOTH_SCAN` on API 31+; `BLUETOOTH`/`BLUETOOTH_ADMIN` install-time and `ACCESS_FINE_LOCATION` for discovery on API 23–30 | Documented source: Android Bluetooth permissions guidance. Manifest comments tie each permission to the printer feature. On-device prompts and denial paths are `PENDING — requires Android device`. |
 
 ### Transports implemented but not physically verified on this project
@@ -56,8 +63,10 @@ transport, not proof of paper. The detailed per-transport record and recipes are
 
 ## Physical acceptance checklist
 
-Run this only with a real printer and Android device. Record the actual model, device and Android
-version next to each step; do not report results otherwise.
+The authoritative #74 runbook is `docs/hardware-acceptance.md` (six ACs, exact commands, expected
+results and evidence slots). The per-printer checklist below is kept for alternate models and
+general troubleshooting. Run it only with a real printer and Android device. Record the actual
+model, device and Android version next to each step; do not report results otherwise.
 
 1. **Prepare the printer**
    - Power the printer and load paper matching the selected width.
@@ -119,11 +128,20 @@ host. They do not prove printer behaviour.
 
 ## Known limitations
 
-- No hardware result exists yet; everything physical is PENDING.
+- No hardware result exists yet; everything physical is PENDING. No printer combination is
+  supported by this project.
+- The #74 selection is a proposal only. It remains `SELECTED, NOT YET VERIFIED` until
+  `docs/hardware-acceptance.md` is executed on the exact device and printer.
 - The adapter sends bytes and assumes the printer accepts them. It does not read status back
-  (paper out, cover open, buffer full); that requires a model-specific status query.
+  (paper out, cover open, buffer full); that requires a model-specific status query. A printer that
+  silently discards bytes can still leave the app reporting a transport-level success.
 - Cut and cash-drawer commands are built but their support is model dependent.
-- Physical queue delivery remains unverified until the hardware checklist is run. Software-only queue states, restart recovery, retry policy, COPY reprints and audit are covered by #16 tests.
-- LAN and USB adapters were delivered in #25. Exact physical support is tracked in #74 and `printer-hardware.md`.
+- Physical queue delivery remains unverified until the hardware checklist is run. Software-only
+  queue states, restart recovery, retry policy, COPY reprints and audit are covered by #16/#67
+  tests.
+- LAN and USB transports are implemented (#25) but their physical output is PENDING; Bluetooth
+  Classic is the only #74 candidate.
 - The app does not create or manage `printing_*` server records for this adapter; the OpenAPI
   contract was not changed by this ticket.
+- AMEND station jobs have no Android dispatch UI. The #74 AC3 recipe creates them through the
+  server endpoint and the Android app delivers the resulting job.

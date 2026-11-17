@@ -1,0 +1,35 @@
+{
+  "ticket": 71,
+  "title": "PostgreSQL transaction and recovery regressions in CI",
+  "issueUrl": "https://github.com/arkinara/modern-pos/issues/71",
+  "branch": "test/71-postgres-ci",
+  "baseCommit": "589e5aa4e21f923ec373eb17d7a0e1a83926a0e4",
+  "parentPullRequest": "https://github.com/arkinara/modern-pos/pull/79",
+  "date": "2026-11-16",
+  "qaTarget": "In QA",
+  "evidence": "graphify-out/ticket-71-execution.md",
+  "sources": [
+    ".github/workflows/ci.yml",
+    "apps/api/package.json",
+    "apps/api/src/sales/transactions.integration.ts",
+    "apps/api/src/sales/refund-intents.integration.ts",
+    "apps/api/src/test-support/integration-database.ts",
+    "apps/api/src/test-support/integration-database.test.ts",
+    "apps/api/src/test-support/transaction-fixture.ts",
+    "apps/api/src/test-support/checkout-recovery-worker.ts",
+    "docs/database-regressions.md",
+    "graphify-out/ticket-71-api-unit.txt",
+    "graphify-out/ticket-71-postgres.txt"
+  ],
+  "verification": {
+    "node": "22.23.1",
+    "postgresql": "17.6",
+    "unitTests": { "passed": 290, "failed": 0 },
+    "databaseTests": { "passedPerRun": 12, "failed": 0, "runsAgainstSameDatabase": 2 },
+    "apiTypecheck": "passed",
+    "apiBuild": "passed",
+    "formatting": "passed with Windows line-ending normalization",
+    "remoteCIAtPublication": "pending; see PR checks and issue QA handoff for the final run"
+  },
+  "handoff": "Stacked on #66 / PR #79. Retarget to main after the parent merges and review the resulting CI run."
+}

@@ -1,3 +1,5 @@
+import { validateProductionAuth } from '../config/runtime-config';
+
 const DEFAULT_ACCESS_TOKEN_TTL_SECONDS = 600;
 const DEFAULT_REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
 const DEFAULT_SIGN_IN_MAX_ATTEMPTS = 5;
@@ -17,7 +19,7 @@ function booleanValue(value: string | undefined, fallback: boolean): boolean {
     return fallback;
   }
 
-  return value === '1' || value.toLowerCase() === 'true';
+  return value.trim() === '1' || value.trim().toLowerCase() === 'true';
 }
 
 export interface AuthConfig {
@@ -34,6 +36,7 @@ export interface AuthConfig {
 }
 
 export function loadAuthConfig(): AuthConfig {
+  validateProductionAuth();
   return {
     accessTokenTtlSeconds: positiveInteger(
       process.env.ACCESS_TOKEN_TTL_SECONDS,
