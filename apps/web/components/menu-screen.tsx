@@ -422,13 +422,13 @@ export function MenuScreen() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex min-w-0 flex-col gap-2">
               <label className="text-sm font-medium text-text" htmlFor="catalog-category">
                 Category filter
               </label>
               <select
                 id="catalog-category"
-                className="h-12 w-full rounded-control border border-control bg-surface px-3 text-sm text-text"
+                className="h-12 min-w-0 w-full rounded-control border border-control bg-surface px-3 text-sm text-text"
                 value={categoryFilter}
                 onChange={(event) => setCategoryFilter(event.target.value)}
               >
@@ -559,9 +559,9 @@ export function MenuScreen() {
                         {item.description || 'No description.'}
                       </CardDescription>
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <div className="flex max-w-full flex-wrap items-center gap-2">
                       {item.archived ? <Badge tone="warning">Archived</Badge> : null}
-                      <Badge tone="neutral">
+                      <Badge tone="neutral" className="max-w-full [overflow-wrap:anywhere]">
                         {categoryNames.get(item.categoryId) ?? 'Unknown category'}
                       </Badge>
                     </div>
