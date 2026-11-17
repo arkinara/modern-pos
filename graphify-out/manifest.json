@@ -1455,9 +1455,9 @@
     "semantic_hash": "8568fc0cd76bda51a89b4ddb80477724"
   },
   "apps/mobile/test/esc_pos_receipt_test.dart": {
-    "mtime": 1794910312.731526,
-    "ast_hash": "7d89532a03c75eaea2f618f54146a7d2",
-    "semantic_hash": "7d89532a03c75eaea2f618f54146a7d2"
+    "mtime": 1794910864.2806647,
+    "ast_hash": "b2aa41ea706060043a2be513e646f54a",
+    "semantic_hash": "b2aa41ea706060043a2be513e646f54a"
   },
   "apps/mobile/test/lan_printer_transport_test.dart": {
     "mtime": 1794745134.4591353,
