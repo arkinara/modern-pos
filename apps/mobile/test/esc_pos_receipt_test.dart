@@ -68,14 +68,26 @@ void main() {
     expect(_contains(bytes, _ascii('SALE-1')), isTrue);
   });
 
-  test('ends with feed and a full cut command by default', () {
+  test('feeds paper without a cut command by default', () {
     final bytes = builder.build(data, testPrinterConfig());
     expect(_contains(bytes, const [0x1B, 0x64, 0x02]), isTrue);
+    expect(_contains(bytes, const [0x1D, 0x56, 0x42, 0x00]), isFalse);
+  });
+
+  test('ends with a cut command when automatic cutter is enabled', () {
+    final bytes = builder.build(
+      data,
+      testPrinterConfig().copyWith(automaticCutter: true),
+    );
     expect(bytes.sublist(bytes.length - 4), const [0x1D, 0x56, 0x42, 0x00]);
   });
 
   test('can omit cut and optionally pulse the cash drawer', () {
-    final noCut = builder.build(data, testPrinterConfig(), cut: false);
+    final noCut = builder.build(
+      data,
+      testPrinterConfig().copyWith(automaticCutter: true),
+      cut: false,
+    );
     expect(_contains(noCut, const [0x1D, 0x56, 0x42, 0x00]), isFalse);
 
     final drawer = builder.build(
@@ -113,7 +125,8 @@ void main() {
       outletName: 'Wide',
       items: [
         ReceiptLineItem(
-          name: 'A very long product name that must wrap somewhere across the paper width',
+          name:
+              'A very long product name that must wrap somewhere across the paper width',
           quantity: 1,
           unitPriceMinor: 1000,
           lineTotalMinor: 1000,

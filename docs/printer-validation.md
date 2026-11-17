@@ -43,7 +43,7 @@ result until the acceptance checklist below has actually been run.
 | Paper width | 58 mm (32 columns) or 80 mm (48 columns), selected in app | ESC/POS Font A convention. `PENDING — requires printer model datasheet` to confirm the model's column count. #74 candidate: 80 mm, 48 columns, `SELECTED, NOT YET VERIFIED`. |
 | Encoding | CP437 (implemented) or UTF-8 (implemented) | CP437 table implemented from the published IBM code page. `PENDING — requires printer model manual` to confirm the active code page and the code-page select command. The app does not send `ESC t`; the printer must be configured to CP437. #74 candidate: CP437, `SELECTED, NOT YET VERIFIED`. |
 | ESC/POS text | Implemented: `ESC @`, `ESC a`, `ESC E`, line feed, `ESC d` | Common ESC/POS subset. `PENDING — requires printer model command manual` before claiming support. |
-| ESC/POS cut | Implemented: `GS V B 0` full cut with feed | `PENDING — requires printer model command manual`; not every printer has a cutter. |
+| ESC/POS cut | Optional `GS V B 0` full cut with feed, controlled by the saved Automatic cutter switch, off by default | `PENDING — requires printer model command manual`; enable only for a printer with an automatic cutter. |
 | Cash drawer pulse | Implemented: `ESC p 0 25 250` (disabled by default; not wired to UI) | `PENDING — requires printer model + drawer hardware`; cable, pinout and pulse must be tested. |
 | Barcode | Not implemented | `PENDING — requires printer model command manual and a documented barcode requirement`. |
 | QR code | Not implemented | `PENDING — requires printer model command manual`. |
